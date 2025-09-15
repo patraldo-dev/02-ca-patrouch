@@ -1,7 +1,6 @@
 <!-- src/routes/+layout.svelte -->
 <script>
     import { page } from '$app/stores';
-    import { link } from '$app/paths';
 
     // For mobile menu toggle
     let mobileMenuOpen = false;
