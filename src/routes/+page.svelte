@@ -54,10 +54,11 @@
     }
     .cover {
 	width: 100%;
-	aspect-ratio: 2/3;
-	object-fit: cover;
+	height: auto;
+	display: block; /* removes inline spacing */
 	border-radius: 8px 8px 0 0;
-	background: #f0f0f0; /* fallback background while loading */
+	background: #f0f0f0; /* fallback while loading */
+	object-fit: cover; /* still useful if container constrains it */
     }
     .cover-placeholder {
         width: 100%;
