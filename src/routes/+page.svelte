@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-    <title>My Book Reviews</title>
+    <title>Libros</title>
 </svelte:head>
 
 <div class="container">
