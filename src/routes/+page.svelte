@@ -53,9 +53,11 @@
         transform: translateY(-4px);
     }
     .cover {
-        width: 100%;
-        aspect-ratio: 2/3;
-        object-fit: cover;
+	width: 100%;
+	aspect-ratio: 2/3;
+	object-fit: cover;
+	border-radius: 8px 8px 0 0;
+	background: #f0f0f0; /* fallback background while loading */
     }
     .cover-placeholder {
         width: 100%;

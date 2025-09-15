@@ -28,35 +28,35 @@ export async function handle({ event, resolve }) {
                                     return {
                                         results: [
                                             {
-                                                id: 'book-1',
-                                                title: 'The Name of the Wind',
-                                                author: 'Patrick Rothfuss',
-                                                cover_image_url: 'https://via.placeholder.com/300x450?text=Book+1',
-                                                description: 'Epic fantasy about Kvothe, a magically gifted young man.',
-                                                published_year: 2007,
-                                                avg_rating: 4.8,
-                                                review_count: 215
-                                            },
-                                            {
-                                                id: 'book-2',
-                                                title: 'Project Hail Mary',
-                                                author: 'Andy Weir',
-                                                cover_image_url: 'https://via.placeholder.com/300x450?text=Book+2',
-                                                description: 'A lone astronaut must save Earth from disaster.',
-                                                published_year: 2021,
-                                                avg_rating: 4.7,
-                                                review_count: 189
-                                            },
-                                            {
-                                                id: 'book-3',
-                                                title: 'Piranesi',
-                                                author: 'Susanna Clarke',
-                                                cover_image_url: 'https://via.placeholder.com/300x450?text=Book+3',
-                                                description: 'A man dwells in a mysterious, infinite house.',
-                                                published_year: 2020,
-                                                avg_rating: 4.3,
-                                                review_count: 94
-                                            }
+    id: 'book-1',
+    title: 'The Name of the Wind',
+    author: 'Patrick Rothfuss',
+    cover_image_url: 'https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/f8a136eb-363e-4a24-0f54-70bb4f4bf800/thumbnail',
+    description: 'Epic fantasy about Kvothe, a magically gifted young man.',
+    published_year: 2007,
+    avg_rating: 4.8,
+    review_count: 215
+},
+{
+    id: 'book-2',
+    title: 'Project Hail Mary',
+    author: 'Andy Weir',
+    cover_image_url: 'https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/f8a136eb-363e-4a24-0f54-70bb4f4bf800/thumbnail',
+    description: 'A lone astronaut must save Earth from disaster.',
+    published_year: 2021,
+    avg_rating: 4.7,
+    review_count: 189
+},
+{
+    id: 'book-3',
+    title: 'Piranesi',
+    author: 'Susanna Clarke',
+    cover_image_url: 'https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/f8a136eb-363e-4a24-0f54-70bb4f4bf800/thumbnail',
+    description: 'A man dwells in a mysterious, infinite house.',
+    published_year: 2020,
+    avg_rating: 4.3,
+    review_count: 94
+}
                                         ]
                                     };
                                 }
