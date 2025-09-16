@@ -12,6 +12,17 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Add after users table
+CREATE TABLE IF NOT EXISTS user_session (
+    id TEXT PRIMARY KEY NOT NULL,        -- session token
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL,         -- unix timestamp (seconds)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_session_user_id ON user_session(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_session_expires_at ON user_session(expires_at);
+
 -- Books table
 CREATE TABLE IF NOT EXISTS books (
     id TEXT PRIMARY KEY NOT NULL,

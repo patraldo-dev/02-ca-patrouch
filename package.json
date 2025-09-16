@@ -21,5 +21,8 @@
 		"typescript": "^5.0.0",
 		"vite": "^7.0.4",
 		"wrangler": "^4.37.0"
+	},
+	"dependencies": {
+		"@oslojs/encoding": "^1.1.0"
 	}
 }
