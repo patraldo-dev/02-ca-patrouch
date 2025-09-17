@@ -141,6 +141,7 @@ export async function handle({ event, resolve }) {
 	else {
 	   throw new Error('❌ No D1 database available in production');
 }
+}
 
         event.locals.db = {
             prepare: (sql) => {
