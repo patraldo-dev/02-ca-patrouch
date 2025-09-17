@@ -3,6 +3,10 @@
  * SvelteKit server hook — implements session management per Lucia v3 migration guide.
  * @see https://lucia-auth.com/lucia-v3/migrate
  */
+// src/hooks.server.js — LINE 1
+globalThis.process = globalThis.process || {};
+globalThis.process.env = globalThis.process.env || {};
+globalThis.process.env.OSLO_PASSWORD_DISABLE_NATIVE = "1";
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
