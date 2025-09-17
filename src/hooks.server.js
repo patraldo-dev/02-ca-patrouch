@@ -3,7 +3,6 @@
  * SvelteKit server hook — implements session management per Lucia v3 migration guide.
  * @see https://lucia-auth.com/lucia-v3/migrate
  */
-// src/hooks.server.js — LINE 1
 globalThis.process = globalThis.process || {};
 globalThis.process.env = globalThis.process.env || {};
 globalThis.process.env.OSLO_PASSWORD_DISABLE_NATIVE = "1";
@@ -133,15 +132,9 @@ export async function handle({ event, resolve }) {
     if (event.platform?.env?.DB) {
         event.locals.db = event.platform.env.DB;
         console.log('✅ Using REAL D1 database');
-
-    } else if {
+    } else if (process.env.NODE_ENV === 'development') {
         // Mock D1 for local dev
         console.warn('⚠️ Using MOCK D1 database');
-	   }
-	else {
-	   throw new Error('❌ No D1 database available in production');
-}
-}
 
         event.locals.db = {
             prepare: (sql) => {
@@ -201,6 +194,8 @@ export async function handle({ event, resolve }) {
                 return stmt;
             }
         };
+    } else {
+        throw new Error('❌ No D1 database available in production');
     }
 
     // Validate session from cookie
