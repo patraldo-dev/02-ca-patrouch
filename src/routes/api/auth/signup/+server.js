@@ -1,9 +1,8 @@
 // src/routes/api/auth/signup/+server.js
 import { hashPassword } from '$lib/server/password.js';
-import { generateId } from '$lib/server/utils.js';
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request, locals, event }) {
+export async function POST({ request, locals }) { // ← Remove `event` — not available
     try {
         const { email, username, password } = await request.json();
         const db = locals.db;
@@ -53,7 +52,7 @@ export async function POST({ request, locals, event }) {
         const userId = crypto.randomUUID();
         const emailVerificationToken = crypto.randomUUID();
 
-        // Insert user (store hash + salt)
+        // Insert user
         const result = await db.prepare(`
             INSERT INTO users (
                 id, email, username, hashed_password, password_salt, email_verification_token
@@ -71,8 +70,8 @@ export async function POST({ request, locals, event }) {
             throw new Error('Failed to create user');
         }
 
-        // ✅ FIXED: Get origin and log correct verification link
-        const origin = event.url.origin;
+        // ✅ FIXED: Use request.url instead of event.url
+        const origin = new URL(request.url).origin;
 
         console.log(`
 📧 SIMULATED EMAIL — Copy this link to verify:
