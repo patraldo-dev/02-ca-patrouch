@@ -132,9 +132,15 @@ export async function handle({ event, resolve }) {
     // Attach DB
     if (event.platform?.env?.DB) {
         event.locals.db = event.platform.env.DB;
-    } else {
+        console.log('✅ Using REAL D1 database');
+
+    } else if {
         // Mock D1 for local dev
         console.warn('⚠️ Using MOCK D1 database');
+	   }
+	else {
+	   throw new Error('❌ No D1 database available in production');
+}
 
         event.locals.db = {
             prepare: (sql) => {
