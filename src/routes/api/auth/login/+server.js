@@ -1,14 +1,13 @@
 // src/routes/api/auth/login/+server.js
-import { Argon2id } from "oslo/password";
-import { generateId } from '$lib/server/utils.js'; // We'll create this next
+import { verifyPassword } from '$lib/server/password.js';
+import { generateId } from '$lib/server/utils.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request, locals }) {
     try {
-        const { identifier, password } = await request.json(); // "identifier" = email or username
+        const { identifier, password } = await request.json();
         const db = locals.db;
 
-        // Validate input
         if (!identifier || !password) {
             return new Response(
                 JSON.stringify({ error: 'Email/username and password required' }),
@@ -16,16 +15,15 @@ export async function POST({ request, locals }) {
             );
         }
 
-        // Look up user by email OR username
+        // Look up user
         const { results } = await db.prepare(`
-            SELECT id, username, email, hashed_password, email_verified_at
+            SELECT id, username, email, hashed_password, password_salt, email_verified_at
             FROM users
             WHERE email = ? OR username = ?
             LIMIT 1
         `).bind(identifier, identifier).all();
 
         if (results.length === 0) {
-            // Generic error to prevent user enumeration
             return new Response(
                 JSON.stringify({ error: 'Invalid credentials' }),
                 { status: 400 }
@@ -35,7 +33,7 @@ export async function POST({ request, locals }) {
         const user = results[0];
 
         // Verify password
-        const validPassword = await new Argon2id().verify(user.hashed_password, password);
+        const validPassword = await verifyPassword(password, user.hashed_password, user.password_salt);
         if (!validPassword) {
             return new Response(
                 JSON.stringify({ error: 'Invalid credentials' }),
@@ -52,8 +50,8 @@ export async function POST({ request, locals }) {
         }
 
         // Create session
-        const sessionId = generateId(40); // 40-char secure ID
-        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+        const sessionId = generateId(40);
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
         await db.prepare(`
             INSERT INTO user_session (id, user_id, expires_at)
@@ -69,7 +67,6 @@ export async function POST({ request, locals }) {
             status: 200
         });
 
-        // Set session cookie
         const cookie = [
             `session=${sessionId}`,
             'HttpOnly',

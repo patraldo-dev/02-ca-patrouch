@@ -1,12 +1,6 @@
 // src/routes/api/auth/signup/+server.js
-import { Argon2id } from "oslo/password";
-
-// Optional: if you want custom-length IDs (like Lucia's 15-char)
-function generateId(length = 15) {
-    const bytes = new Uint8Array(length);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('').substring(0, length);
-}
+import { hashPassword } from '$lib/server/password.js';
+import { generateId } from '$lib/server/utils.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request, locals }) {
@@ -14,7 +8,7 @@ export async function POST({ request, locals }) {
         const { email, username, password } = await request.json();
         const db = locals.db;
 
-        // Validate input
+        // Validate
         if (!email || !username || !password) {
             return new Response(
                 JSON.stringify({ error: 'Missing required fields' }),
@@ -29,7 +23,7 @@ export async function POST({ request, locals }) {
             );
         }
 
-        // Check for duplicate email
+        // Check duplicates
         const emailCheck = await db.prepare(`
             SELECT id FROM users WHERE email = ?
         `).bind(email).all();
@@ -41,7 +35,6 @@ export async function POST({ request, locals }) {
             );
         }
 
-        // Check for duplicate username
         const usernameCheck = await db.prepare(`
             SELECT id FROM users WHERE username = ?
         `).bind(username).all();
@@ -54,22 +47,23 @@ export async function POST({ request, locals }) {
         }
 
         // Hash password
-        const hashedPassword = await new Argon2id().hash(password);
+        const { hash, salt } = await hashPassword(password);
 
-        // Generate IDs (using crypto.randomUUID)
-        const userId = crypto.randomUUID(); // or generateId(15)
-        const emailVerificationToken = crypto.randomUUID(); // or generateId(32)
+        // Generate IDs
+        const userId = crypto.randomUUID();
+        const emailVerificationToken = crypto.randomUUID();
 
-        // Insert user
+        // Insert user (store hash + salt)
         const result = await db.prepare(`
             INSERT INTO users (
-                id, email, username, hashed_password, email_verification_token
-            ) VALUES (?, ?, ?, ?, ?)
+                id, email, username, hashed_password, password_salt, email_verification_token
+            ) VALUES (?, ?, ?, ?, ?, ?)
         `).bind(
             userId,
             email,
             username,
-            hashedPassword,
+            hash,
+            salt,
             emailVerificationToken
         ).run();
 
@@ -77,7 +71,6 @@ export async function POST({ request, locals }) {
             throw new Error('Failed to create user');
         }
 
-        // 📧 SIMULATE email
         console.log(`
 📧 SIMULATED EMAIL — Copy this link to verify:
 http://localhost:5173/verify?token=${emailVerificationToken}
