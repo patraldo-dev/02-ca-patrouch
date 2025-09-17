@@ -1,11 +1,4 @@
 // src/lib/server/mailgun.js
-/**
- * Sends verification email via Mailgun
- * @param {string} to - Recipient email
- * @param {string} verifyUrl - Full verification URL
- * @param {any} env - Cloudflare environment (from event.platform.env)
- * @returns {Promise<void>}
- */
 export async function sendVerificationEmail(to, verifyUrl, env) {
     const apiKey = env.MAILGUN_API_KEY;
     const domain = env.MAILGUN_DOMAIN;
