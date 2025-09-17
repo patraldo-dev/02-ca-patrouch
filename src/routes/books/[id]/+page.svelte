@@ -55,6 +55,10 @@
     </div>
 </div>
 
+{#if $page.data.user}
+    <a href="/books/{$page.data.book.id}/review" class="btn-primary">Write a Review</a>
+{/if}
+
 <style>
     .container {
         max-width: 900px;

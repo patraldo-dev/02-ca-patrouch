@@ -1,33 +1,145 @@
 // src/hooks.server.js
-import { validateSession, invalidateSession } from '$lib/server/session.js';
-import { setSessionCookie, deleteSessionCookie } from '$lib/server/cookies.js';
+/**
+ * SvelteKit server hook — implements session management per Lucia v3 migration guide.
+ * @see https://lucia-auth.com/lucia-v3/migrate
+ */
+
+import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
+
+// Session constants (from Lucia guide)
+const SESSION_EXPIRES_IN_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+/**
+ * Generates a cryptographically secure session ID (from Lucia guide)
+ * @returns {string}
+ */
+function generateSessionId() {
+    const bytes = new Uint8Array(25);
+    crypto.getRandomValues(bytes);
+    return encodeBase32LowerCaseNoPadding(bytes);
+}
+
+/**
+ * Validates a session (from Lucia guide, adapted for D1)
+ * @param {any} db - D1 database instance
+ * @param {string} sessionId - Session ID to validate
+ * @returns {Promise<{ id: string, userId: string, expiresAt: Date, fresh: boolean } | null>}
+ */
+async function validateSession(db, sessionId) {
+    const now = Math.floor(Date.now() / 1000);
+
+    const { results } = await db.prepare(`
+        SELECT id, user_id, expires_at
+        FROM user_session
+        WHERE id = ?
+    `).bind(sessionId).all();
+
+    if (results.length === 0) {
+        return null;
+    }
+
+    const row = results[0];
+    const session = {
+        id: row.id,
+        userId: row.user_id,
+        expiresAt: new Date(row.expires_at * 1000),
+        fresh: false
+    };
+
+    // Expired?
+    if (now >= row.expires_at) {
+        await invalidateSession(db, sessionId);
+        return null;
+    }
+
+    // Auto-refresh if past halfway (Lucia guide pattern)
+    if (now >= row.expires_at - (SESSION_EXPIRES_IN_SECONDS / 2)) {
+        const newExpiresAt = now + SESSION_EXPIRES_IN_SECONDS;
+        await db.prepare(`
+            UPDATE user_session
+            SET expires_at = ?
+            WHERE id = ?
+        `).bind(newExpiresAt, sessionId).run();
+
+        session.expiresAt = new Date(newExpiresAt * 1000);
+        session.fresh = true;
+    }
+
+    return session;
+}
+
+/**
+ * Invalidates a session (from Lucia guide)
+ * @param {any} db - D1 database instance
+ * @param {string} sessionId - Session ID to invalidate
+ * @returns {Promise<void>}
+ */
+async function invalidateSession(db, sessionId) {
+    await db.prepare(`
+        DELETE FROM user_session
+        WHERE id = ?
+    `).bind(sessionId).run();
+}
+
+/**
+ * Sets session cookie (from Lucia guide)
+ * @param {Headers} headers - Response headers
+ * @param {string} sessionId - Session ID
+ * @param {Date} expiresAt - Expiration date
+ */
+function setSessionCookie(headers, sessionId, expiresAt) {
+    const cookie = [
+        `session=${sessionId}`,
+        'HttpOnly',
+        'SameSite=Lax',
+        `Expires=${expiresAt.toUTCString()}`,
+        'Path=/'
+    ];
+
+    if (process.env.NODE_ENV === 'production') {
+        cookie.push('Secure');
+    }
+
+    headers.set('Set-Cookie', cookie.join('; '));
+}
+
+/**
+ * Deletes session cookie (from Lucia guide)
+ * @param {Headers} headers - Response headers
+ */
+function deleteSessionCookie(headers) {
+    const cookie = [
+        'session=',
+        'HttpOnly',
+        'SameSite=Lax',
+        'Max-Age=0',
+        'Path=/'
+    ];
+
+    if (process.env.NODE_ENV === 'production') {
+        cookie.push('Secure');
+    }
+
+    headers.set('Set-Cookie', cookie.join('; '));
+}
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-    // Attach real D1 if available (production or `wrangler dev --remote`)
+    // Attach DB
     if (event.platform?.env?.DB) {
         event.locals.db = event.platform.env.DB;
     } else {
-        // 🧪 Mock D1 for local development — SAFE, ASYNC, DEBUGGABLE
-        console.warn('⚠️ Using MOCK D1 database — no real DB connected. For real data, use `wrangler dev --remote`.');
+        // Mock D1 for local dev
+        console.warn('⚠️ Using MOCK D1 database');
 
         event.locals.db = {
-            /**
-             * Simulates D1 `prepare(sql).bind(...params).all()`
-             */
             prepare: (sql) => {
                 const stmt = {
                     bind: (...params) => {
-                        const queryContext = { sql, params };
                         return {
-                            /**
-                             * Mock `all()` — returns { results: [...] }
-                             */
                             all: async () => {
-                                console.log('🧪 Mock D1 .all() called:', queryContext);
-
-                                // Mock books query
-                                if (sql.includes('SELECT') && sql.includes('books')) {
+                                // Mock books
+                                if (sql.includes('books')) {
                                     return {
                                         results: [
                                             {
@@ -35,69 +147,52 @@ export async function handle({ event, resolve }) {
                                                 title: 'The Name of the Wind',
                                                 author: 'Patrick Rothfuss',
                                                 cover_image_url: 'https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/f8a136eb-363e-4a24-0f54-70bb4f4bf800/thumbnail',
-                                                description: 'Epic fantasy about Kvothe, a magically gifted young man.',
+                                                description: 'Epic fantasy...',
                                                 published_year: 2007,
                                                 avg_rating: 4.8,
                                                 review_count: 215
-                                            },
-                                            {
-                                                id: 'book-2',
-                                                title: 'Project Hail Mary',
-                                                author: 'Andy Weir',
-                                                cover_image_url: 'https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/f8a136eb-363e-4a24-0f54-70bb4f4bf800/thumbnail',
-                                                description: 'A lone astronaut must save Earth from disaster.',
-                                                published_year: 2021,
-                                                avg_rating: 4.7,
-                                                review_count: 189
-                                            },
-                                            {
-                                                id: 'book-3',
-                                                title: 'Piranesi',
-                                                author: 'Susanna Clarke',
-                                                cover_image_url: 'https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/f8a136eb-363e-4a24-0f54-70bb4f4bf800/thumbnail',
-                                                description: 'A man dwells in a mysterious, infinite house.',
-                                                published_year: 2020,
-                                                avg_rating: 4.3,
-                                                review_count: 94
                                             }
                                         ]
                                     };
                                 }
-
-                                // Default: empty result
+                                // Mock users (for login)
+                                if (sql.includes('users') && (params[0] === 'test@example.com' || params[0] === 'testuser')) {
+                                    return {
+                                        results: [{
+                                            id: 'user-123',
+                                            username: 'testuser',
+                                            email: 'test@example.com',
+                                            hashed_password: '$argon2id$v=19$m=65536,t=3,p=4$...hashed...', // mock hash
+                                            email_verified_at: new Date().toISOString()
+                                        }]
+                                    };
+                                }
+                                // Mock sessions
+                                if (sql.includes('user_session') && params[0] === 'session-mock-123') {
+                                    return {
+                                        results: [{
+                                            id: 'session-mock-123',
+                                            user_id: 'user-123',
+                                            expires_at: Math.floor(Date.now() / 1000) + 3600
+                                        }]
+                                    };
+                                }
                                 return { results: [] };
                             },
-
-                            /**
-                             * Mock `first()` — returns first row or null
-                             */
-                            first: async () => {
-                                const result = await this.all();
-                                return result.results[0] || null;
-                            },
-
-                            /**
-                             * Mock `run()` — for INSERT/UPDATE/DELETE
-                             */
-                            run: async () => {
-                                console.log('🧪 Mock D1 .run() called — would execute:', queryContext);
-                                return { success: true, meta: { duration: 0.001 } };
-                            }
+                            first: async () => null,
+                            run: async () => ({ success: true })
                         };
                     }
                 };
-
-                // 👇 ALSO attach .all(), .first(), .run() directly to stmt for convenience
                 stmt.all = async () => await stmt.bind().all();
                 stmt.first = async () => await stmt.bind().first();
                 stmt.run = async () => await stmt.bind().run();
-
                 return stmt;
             }
         };
     }
 
-    // Get session from cookie
+    // Validate session from cookie
     const sessionId = event.cookies.get('session');
     let session = null;
     let user = null;
@@ -130,10 +225,10 @@ export async function handle({ event, resolve }) {
     event.locals.session = session;
     event.locals.user = user;
 
-    // Continue
+    // Resolve request
     const response = await resolve(event);
 
-    // If session was refreshed, update cookie
+    // Refresh session cookie if needed
     if (session?.fresh) {
         setSessionCookie(response.headers, session.id, session.expiresAt);
     }
