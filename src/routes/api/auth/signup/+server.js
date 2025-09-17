@@ -71,17 +71,13 @@ export async function POST({ request, locals, event }) {
             throw new Error('Failed to create user');
         }
 
-	            const origin = event.url.origin; // ← Use this
+        // ✅ FIXED: Get origin and log correct verification link
+        const origin = event.url.origin;
 
         console.log(`
 📧 SIMULATED EMAIL — Copy this link to verify:
-
-const origin = event.url.origin;
-
-console.log(`
-📧 SIMULATED EMAIL — Copy this link to verify:
 ${origin}/verify?token=${emailVerificationToken}
-`);
+        `);
 
         return new Response(
             JSON.stringify({ success: true }),
