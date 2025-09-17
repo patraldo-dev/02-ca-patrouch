@@ -2,34 +2,40 @@
 <script>
     /** @type {import('./$types').PageData} */
     export let data;
-    const { book } = data;
 </script>
 
 <svelte:head>
-    <title>{book.title} — My Book Reviews</title>
+    <title>{data.book.title} — My Book Reviews</title>
 </svelte:head>
 
 <div class="container">
     <a href="/" class="back-btn">← Back to Books</a>
     <div class="book-header">
-        {#if book.cover_image_url}
-            <img src={book.cover_image_url} alt={book.title} class="cover-large" />
+        {#if data.book.cover_image_url}
+            <img src={data.book.cover_image_url} alt={data.book.title} class="cover-large" />
         {/if}
         <div class="book-meta">
-            <h1>{book.title}</h1>
-            <h2>by {book.author}</h2>
-            {#if book.published_year}
-                <p>Published: {book.published_year}</p>
+            <h1>{data.book.title}</h1>
+            <h2>by {data.book.author}</h2>
+            {#if data.book.published_year}
+                <p>Published: {data.book.published_year}</p>
             {/if}
-            {#if book.description}
-                <p class="description">{book.description}</p>
+            {#if data.book.description}
+                <p class="description">{data.book.description}</p>
             {/if}
         </div>
     </div>
 
+    <!-- Write Review Button -->
+    {#if data.user}
+        <div class="action-bar">
+            <a href="/books/{data.book.id}/review" class="btn-primary">Write a Review</a>
+        </div>
+    {/if}
+
     <div class="reviews-section">
-        <h2>Reviews ({book.reviews.length})</h2>
-        {#each book.reviews as review}
+        <h2>Reviews ({data.book.reviews.length})</h2>
+        {#each data.book.reviews as review}
             <div class="review">
                 <div class="review-header">
                     <strong>{review.author_username}</strong>
@@ -55,91 +61,25 @@
     </div>
 </div>
 
-{#if $page.data.user}
-    <a href="/books/{$page.data.book.id}/review" class="btn-primary">Write a Review</a>
-{/if}
-
 <style>
-    .container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 2rem;
+    /* ... your existing styles ... */
+
+    .action-bar {
+        margin: 2rem 0;
+        text-align: center;
     }
-    .back-btn {
+
+    .btn-primary {
         display: inline-block;
-        margin-bottom: 2rem;
-        color: #3b82f6;
-        text-decoration: none;
-    }
-    .book-header {
-        display: flex;
-        gap: 2rem;
-        margin-bottom: 3rem;
-        align-items: flex-start;
-    }
-    .cover-large {
-        width: 200px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .book-meta h1 {
-        margin: 0 0 0.5rem 0;
-        font-size: 2rem;
-    }
-    .book-meta h2 {
-        margin: 0 0 1rem 0;
-        color: #555;
-    }
-    .description {
-        line-height: 1.6;
-        color: #333;
-    }
-    .reviews-section h2 {
-        border-bottom: 2px solid #eee;
-        padding-bottom: 0.5rem;
-        margin-bottom: 1.5rem;
-    }
-    .review {
-        background: #fafafa;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-        border-left: 4px solid #3b82f6;
-    }
-    .review-header {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-        align-items: center;
-    }
-    .rating {
-        color: #eab308;
-        font-weight: 600;
-    }
-    .date {
-        color: #888;
-        font-size: 0.9rem;
-    }
-    .review-content {
-        margin-bottom: 1rem;
-        line-height: 1.6;
-    }
-    .comments h4 {
-        margin: 1rem 0 0.5rem 0;
-        color: #555;
-    }
-    .comment {
-        background: #fff;
-        padding: 1rem;
+        background: #3b82f6;
+        color: white;
+        padding: 0.75rem 1.5rem;
         border-radius: 6px;
-        margin: 0.5rem 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        text-decoration: none;
+        font-weight: 500;
     }
-    .comment strong {
-        color: #3b82f6;
-    }
-    .comment p {
-        margin: 0.25rem 0 0 0;
+
+    .btn-primary:hover {
+        background: #2563eb;
     }
 </style>
