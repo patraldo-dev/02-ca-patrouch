@@ -228,6 +228,7 @@ export async function handle({ event, resolve }) {
     // Attach to locals
     event.locals.session = session;
     event.locals.user = user;
+    event.locals.platform = event.platform; // ← Critical for Mailgun
 
     // Resolve request
     const response = await resolve(event);
