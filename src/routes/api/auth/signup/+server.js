@@ -73,21 +73,22 @@ export async function POST({ request, locals }) { // ← Remove `event` — not 
         // ✅ FIXED: Use request.url instead of event.url
         const origin = new URL(request.url).origin;
 
-        console.log(`
-📧 SIMULATED EMAIL — Copy this link to verify:
-${origin}/verify?token=${emailVerificationToken}
-        `);
+	    // ... after inserting user into DB ...
 
-        return new Response(
-            JSON.stringify({ success: true }),
-            { status: 200 }
-        );
+// ✅ Get origin for verification link
+const origin = new URL(request.url).origin;
+const verifyUrl = `${origin}/verify?token=${emailVerificationToken}`;
 
-    } catch (error) {
-        console.error('Signup error:', error);
-        return new Response(
-            JSON.stringify({ error: 'Internal server error' }),
-            { status: 500 }
-        );
-    }
+// ✅ Send real email via Mailgun
+try {
+    await sendVerificationEmail(email, verifyUrl, event.platform.env);
+} catch (emailError) {
+    console.error('Failed to send verification email:', emailError);
+    // Don't fail signup — user is created, they can request new email later
+}
+
+return new Response(
+    JSON.stringify({ success: true, message: 'Verification email sent' }),
+    { status: 200 }
+);
 }

@@ -18,6 +18,12 @@
 		"enabled": true
 	},
 
+	"vars": {
+                "MAILGUN_DOMAIN": "patrouch.ca",
+	       	"CONTACT_EMAIL": "contact@patrouch.ca",
+	       	"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca"
+        },
+
         "d1_databases": [
         {
           "binding": "DB-book",
