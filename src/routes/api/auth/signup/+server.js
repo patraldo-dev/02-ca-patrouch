@@ -3,7 +3,7 @@ import { hashPassword } from '$lib/server/password.js';
 import { generateId } from '$lib/server/utils.js';
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request, locals }) {
+export async function POST({ request, locals, event }) {
     try {
         const { email, username, password } = await request.json();
         const db = locals.db;
@@ -71,10 +71,17 @@ export async function POST({ request, locals }) {
             throw new Error('Failed to create user');
         }
 
+	            const origin = event.url.origin; // ← Use this
+
         console.log(`
 📧 SIMULATED EMAIL — Copy this link to verify:
-http://localhost:5173/verify?token=${emailVerificationToken}
-        `);
+
+const origin = event.url.origin;
+
+console.log(`
+📧 SIMULATED EMAIL — Copy this link to verify:
+${origin}/verify?token=${emailVerificationToken}
+`);
 
         return new Response(
             JSON.stringify({ success: true }),
