@@ -17,9 +17,6 @@
 	"observability": {
 		"enabled": true
 	},
-	"vars": {
-    "OSLO_PASSWORD_DISABLE_NATIVE": "1"
-  },
 
         "d1_databases": [
         {
