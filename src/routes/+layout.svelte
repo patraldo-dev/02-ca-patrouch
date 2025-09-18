@@ -179,16 +179,18 @@
     </main>
 
     <!-- Footer -->
-    <footer class="site-footer" role="contentinfo">
-        <div class="container">
-            <p>© {new Date().getFullYear()} ShelfTalk — Honest book reviews & thoughtful commentary.</p>
-            <p>
-                <a href="/privacy" class="footer-link">Privacy Policy</a>
-                <span aria-hidden="true"> • </span>
-                <a href="/terms" class="footer-link">Terms of Service</a>
-            </p>
+<footer class="site-footer" role="contentinfo">
+    <div class="container">
+        <div class="newsletter-section">
+            <svelte:component this={import('$lib/components/NewsletterForm.svelte')} />
         </div>
-    </footer>
+        <p>© {new Date().getFullYear()} ShelfTalk — Honest book reviews & thoughtful commentary.</p>
+        <p>
+            <a href="/privacy">Privacy Policy</a> • 
+            <a href="/terms">Terms of Service</a>
+        </p>
+    </div>
+</footer>
 </div>
 
 <style>
@@ -382,6 +384,11 @@
     .footer-link:hover {
         color: white;
         text-decoration: underline;
+    }
+
+    .newsletter-section {
+	margin-bottom: 2rem;
+	text-align: center;
     }
 
     /* Main Content Spacing */

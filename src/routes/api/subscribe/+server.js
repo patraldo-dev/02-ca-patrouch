@@ -1,32 +1,48 @@
 // src/routes/api/subscribe/+server.js
 import { json } from '@sveltejs/kit';
+import { sendEmail as sendMailgunEmail, getConfirmationEmailContent } from '$lib/email.js';
 
-/** @type {import('./$types').RequestHandler} */
-export async function POST({ request, locals }) {
+export async function POST({ request, platform, url }) {
     try {
-        const { email, type = 'book-updates' } = await request.json();
-        const db = locals.db;
+        if (!platform?.env) {
+            return json({ 
+                success: false, 
+                message: 'Service temporarily unavailable' 
+            }, { status: 500 });
+        }
 
-        // Validate
+        const { email, type = 'newsletter' } = await request.json();
+
+        // Validation
         if (!email) {
-            return json({ success: false, message: 'Email is required' }, { status: 400 });
+            return json({
+                success: false,
+                message: 'Email is required'
+            }, { status: 400 });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return json({ success: false, message: 'Invalid email format' }, { status: 400 });
+            return json({
+                success: false,
+                message: 'Invalid email format'
+            }, { status: 400 });
         }
 
-        if (!['book-updates', 'newsletter'].includes(type)) {
-            return json({ success: false, message: 'Invalid subscription type' }, { status: 400 });
+        if (!['newsletter', 'book-updates'].includes(type)) {
+            return json({
+                success: false,
+                message: 'Invalid subscription type'
+            }, { status: 400 });
         }
 
         // Check if already confirmed
-        const existing = await db.prepare(`
-            SELECT id, confirmed FROM subscribers WHERE email = ? AND type = ?
-        `).bind(email, type).first();
+        const existingSubscriber = await platform.env.DB_book
+            .prepare('SELECT id, confirmed FROM subscribers WHERE email = ? AND type = ?')
+            .bind(email, type)
+            .first();
 
-        if (existing?.confirmed) {
+        if (existingSubscriber?.confirmed) {
             return json({
                 success: false,
                 message: `Email already subscribed to ${type}`
@@ -37,33 +53,41 @@ export async function POST({ request, locals }) {
         const tokenArray = new Uint8Array(32);
         crypto.getRandomValues(tokenArray);
         const confirmationToken = Array.from(tokenArray, byte => byte.toString(16).padStart(2, '0')).join('');
-        const expiresAt = Math.floor(Date.now() / 1000) + 24 * 60 * 60; // 24 hours
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
         // Insert or update
-        if (existing) {
-            await db.prepare(`
-                UPDATE subscribers 
-                SET confirmation_token = ?, token_expires_at = ?
-                WHERE id = ?
-            `).bind(confirmationToken, expiresAt, existing.id).run();
+        if (existingSubscriber) {
+            await platform.env.DB_book
+                .prepare('UPDATE subscribers SET confirmation_token = ?, token_expires_at = ? WHERE id = ?')
+                .bind(confirmationToken, expiresAt.toISOString(), existingSubscriber.id)
+                .run();
         } else {
-            const id = crypto.randomUUID();
-            await db.prepare(`
-                INSERT INTO subscribers (
-                    id, email, type, confirmation_token, token_expires_at, confirmed, created_at
-                ) VALUES (?, ?, ?, ?, ?, 0, strftime('%s', 'now'))
-            `).bind(id, email, type, confirmationToken, expiresAt).run();
+            await platform.env.DB_book
+                .prepare(`
+                    INSERT INTO subscribers (email, type, confirmation_token, token_expires_at, confirmed, created_at) 
+                    VALUES (?, ?, ?, ?, 0, ?)
+                `)
+                .bind(email, type, confirmationToken, expiresAt.toISOString(), new Date().toISOString())
+                .run();
         }
 
-        // Get origin
-        const origin = new URL(request.url).origin;
-        const confirmUrl = `${origin}/confirm?token=${confirmationToken}`;
+        // Create confirmation URL
+        const confirmationUrl = `${url.origin}/api/confirm?token=${confirmationToken}`;
 
-        // Send email (replace with real Mailgun later)
-        console.log(`
-📧 SUBSCRIBE — Send confirmation email to ${email}:
-${confirmUrl}
-        `);
+        // Send confirmation email
+        const emailContent = getConfirmationEmailContent(type, confirmationUrl);
+        const emailSent = await sendMailgunEmail({
+            to: email,
+            ...emailContent
+        }, platform.env);
+
+        if (!emailSent) {
+            console.error('Failed to send confirmation email to:', email);
+            return json({
+                success: false,
+                message: 'Failed to send confirmation email'
+            }, { status: 500 });
+        }
 
         return json({
             success: true,
@@ -71,7 +95,7 @@ ${confirmUrl}
         });
 
     } catch (error) {
-        console.error('Subscribe error:', error);
+        console.error('Subscription error:', error);
         return json({
             success: false,
             message: 'Failed to process subscription'

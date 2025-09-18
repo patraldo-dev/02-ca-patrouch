@@ -1,22 +1,27 @@
 // src/routes/api/confirm/+server.js
 import { redirect } from '@sveltejs/kit';
+import { sendEmail as sendMailgunEmail, getWelcomeEmailContent } from '$lib/email.js';
 
-/** @type {import('./$types').RequestHandler} */
-export async function GET({ url, locals }) {
+export async function GET({ url, platform }) {
     try {
         const token = url.searchParams.get('token');
         if (!token) {
             return new Response('Invalid confirmation link', { status: 400 });
         }
 
-        const db = locals.db;
+        if (!platform?.env) {
+            return new Response('Service temporarily unavailable', { status: 500 });
+        }
 
         // Find subscriber
-        const subscriber = await db.prepare(`
-            SELECT id, email, type, token_expires_at, confirmed
-            FROM subscribers
-            WHERE confirmation_token = ?
-        `).bind(token).first();
+        const subscriber = await platform.env.DB_book
+            .prepare(`
+                SELECT id, email, type, token_expires_at, confirmed 
+                FROM subscribers 
+                WHERE confirmation_token = ?
+            `)
+            .bind(token)
+            .first();
 
         if (!subscriber) {
             return new Response('Invalid or expired confirmation link', { status: 400 });
@@ -27,27 +32,35 @@ export async function GET({ url, locals }) {
         }
 
         // Check expiry
-        const now = Math.floor(Date.now() / 1000);
-        if (now > subscriber.token_expires_at) {
+        const now = new Date();
+        const expiresAt = new Date(subscriber.token_expires_at);
+        if (now > expiresAt) {
             return new Response('Confirmation link has expired', { status: 400 });
         }
 
         // Confirm
-        await db.prepare(`
-            UPDATE subscribers
-            SET confirmed = 1, confirmed_at = strftime('%s', 'now'), confirmation_token = NULL, token_expires_at = NULL
-            WHERE id = ?
-        `).bind(subscriber.id).run();
+        await platform.env.DB_book
+            .prepare(`
+                UPDATE subscribers 
+                SET confirmed = 1, confirmed_at = ?, confirmation_token = NULL, token_expires_at = NULL
+                WHERE id = ?
+            `)
+            .bind(new Date().toISOString(), subscriber.id)
+            .run();
 
-        // Send welcome email (replace with real Mailgun later)
-        console.log(`
-🎉 WELCOME — Send welcome email to ${subscriber.email} for ${subscriber.type}
-        `);
+        // Send welcome email
+        const emailContent = getWelcomeEmailContent(subscriber.type);
+        await sendMailgunEmail({
+            to: subscriber.email,
+            ...emailContent
+        }, platform.env);
 
         throw redirect(302, '/confirmation-success');
 
     } catch (error) {
-        if (error instanceof redirect) throw error;
+        if (error.status === 302) {
+            throw error;
+        }
         console.error('Confirmation error:', error);
         return new Response('Failed to confirm subscription', { status: 500 });
     }
