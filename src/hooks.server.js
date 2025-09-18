@@ -130,7 +130,7 @@ function deleteSessionCookie(headers) {
 export async function handle({ event, resolve }) {
     // Attach DB
     if (event.platform?.env?.DB) {
-        event.locals.db = event.platform.env.DB-book;
+        event.locals.db = event.platform.env.DB_book;
         console.log('✅ Using REAL D1 database');
     } else if (process.env.NODE_ENV === 'development') {
         // Mock D1 for local dev
