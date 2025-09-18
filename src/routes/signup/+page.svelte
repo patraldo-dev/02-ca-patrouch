@@ -42,7 +42,7 @@
 
     {#if success}
         <div class="alert success">
-            ✅ Check your console for a verification link! (Simulated email)
+            ✅ Check your email for a verification link! (check spam, if necessary) 
         </div>
     {:else}
         {#if error}
