@@ -2,6 +2,8 @@
 <script>
     import { page } from '$app/stores';
     import { browser } from '$app/environment';
+    import NewsletterForm from '$lib/components/NewsletterForm.svelte';
+
 
     // Mobile menu state
     let mobileMenuOpen = false;
@@ -179,10 +181,10 @@
     </main>
 
     <!-- Footer -->
-<footer class="site-footer" role="contentinfo">
+<footer class="site-footer">
     <div class="container">
         <div class="newsletter-section">
-            <svelte:component this={import('$lib/components/NewsletterForm.svelte')} />
+            <svelte:component this={NewsletterForm} />
         </div>
         <p>© {new Date().getFullYear()} ShelfTalk — Honest book reviews & thoughtful commentary.</p>
         <p>
@@ -374,16 +376,6 @@
         max-width: 1200px;
         margin: 0 auto;
         text-align: center;
-    }
-
-    .footer-link {
-        color: #9ca3af;
-        text-decoration: none;
-    }
-
-    .footer-link:hover {
-        color: white;
-        text-decoration: underline;
     }
 
     .newsletter-section {
