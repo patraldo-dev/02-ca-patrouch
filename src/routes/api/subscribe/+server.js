@@ -36,6 +36,8 @@ export async function POST({ request, platform, url }) {
             }, { status: 400 });
         }
 
+console.log('DB binding:', platform.env.DB_book ? 'PRESENT' : 'MISSING');
+
         // Check if already confirmed
         const existingSubscriber = await platform.env.DB_book
             .prepare('SELECT id, confirmed FROM subscribers WHERE email = ? AND type = ?')
