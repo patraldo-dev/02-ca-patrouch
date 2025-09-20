@@ -1,5 +1,6 @@
 <!-- src/routes/books/[id]/+page.svelte -->
 <script>
+    import { page } from '$app/stores'; // ← ADD THIS LINE
     /** @type {import('./$types').PageData} */
     export let data;
 
