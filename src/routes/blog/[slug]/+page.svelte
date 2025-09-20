@@ -15,7 +15,9 @@
             <h1>{data.post.title}</h1>
             <p class="meta">Published on {data.post.publishedAt.toLocaleDateString()}</p>
         </header>
-        <div class="content" {@html data.post.content} />
+        <div class="content">
+             {@html data.post.content} 
+        </div>
     </article>
 </div>
 
