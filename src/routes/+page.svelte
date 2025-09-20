@@ -9,7 +9,7 @@
 </svelte:head>
 
 <div class="container">
-    <h1>📚 My Bookshelf</h1>
+    <h1>📚 Mis Libros</h1>
     <div class="books-grid">
         {#each data.books as book}
             <article class="book-card">
