@@ -2,6 +2,34 @@
 import { marked } from 'marked';
 
 /** @type {import('./$types').RequestHandler} */
+export async function GET({ locals }) {
+    if (!locals.user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+
+    try {
+        const { results } = await locals.db.prepare(`
+            SELECT id, title, slug, published_at
+            FROM blog_posts
+            ORDER BY created_at DESC
+        `).all();
+
+        const posts = results.map(row => ({
+            id: row.id,
+            title: row.title,
+            slug: row.slug,
+            published_at: row.published_at ? new Date(row.published_at * 1000).toISOString() : null
+        }));
+
+        return new Response(JSON.stringify(posts), { status: 200 });
+
+    } catch (error) {
+        console.error('Get blog posts error:', error);
+        return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+    }
+}
+
+/** @type {import('./$types').RequestHandler} */
 export async function POST({ request, locals }) {
     if (!locals.user) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
