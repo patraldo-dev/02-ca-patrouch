@@ -23,6 +23,7 @@
 		"wrangler": "^4.37.0"
 	},
 	"dependencies": {
-		"@oslojs/encoding": "^1.1.0"
+		"@oslojs/encoding": "^1.1.0",
+		"marked": "^16.3.0"
 	}
 }
