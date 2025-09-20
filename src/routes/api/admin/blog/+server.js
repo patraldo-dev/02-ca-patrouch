@@ -1,212 +1,52 @@
-<!-- src/routes/admin/blog/write/+page.svelte -->
-<script>
-    import { enhance } from '$app/forms';
+// src/routes/api/admin/blog/+server.js
+import { marked } from 'marked';
 
-    let title = '';
-    let slug = '';
-    let content = '';
-    let isPublished = false;
-    let error = '';
-    let success = false;
+/** @type {import('./$types').RequestHandler} */
+export async function POST({ request, locals }) {
+    if (!locals.user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
 
-    // Auto-generate slug from title
-    $: slug = title
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+    try {
+        const { title, slug, content, published } = await request.json();
+        const db = locals.db;
 
-    const handleSubmit = async (event) => {
-        error = '';
-        success = false;
-
-        if (!title || !content) {
-            error = 'Title and content are required';
-            return;
+        // Validate
+        if (!title || !slug || !content) {
+            return new Response(JSON.stringify({ error: 'Title, slug, and content required' }), { status: 400 });
         }
 
-        if (!slug) {
-            error = 'Slug cannot be empty';
-            return;
+        // Check slug uniqueness
+        const existing = await db.prepare(`
+            SELECT id FROM blog_posts WHERE slug = ?
+        `).bind(slug).first();
+
+        if (existing) {
+            return new Response(JSON.stringify({ error: 'Slug already exists' }), { status: 400 });
         }
 
-        const postData = {
+        // Generate ID
+        const postId = crypto.randomUUID();
+        const now = Math.floor(Date.now() / 1000);
+
+        // Insert post
+        await db.prepare(`
+            INSERT INTO blog_posts (id, title, slug, content, published_at, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            postId,
             title,
             slug,
             content,
-            published: isPublished
-        };
+            published ? now : null,
+            now,
+            now
+        ).run();
 
-        const res = await fetch('/api/admin/blog', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(postData)
-        });
+        return new Response(JSON.stringify({ success: true, postId }), { status: 200 });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-            error = data.error || 'Failed to save post';
-            return;
-        }
-
-        success = true;
-        title = slug = content = '';
-        isPublished = false;
-    };
-</script>
-
-<svelte:head>
-    <title>Write Blog Post — Admin</title>
-</svelte:head>
-
-<div class="container">
-    <h1>Write New Blog Post</h1>
-
-    {#if success}
-        <div class="alert success">
-            ✅ Post saved successfully!
-        </div>
-    {:else}
-        {#if error}
-            <div class="alert error">
-                ❌ {error}
-            </div>
-        {/if}
-
-        <form on:submit|preventDefault={handleSubmit} use:enhance>
-            <div class="form-group">
-                <label for="title">Title *</label>
-                <input
-                    id="title"
-                    bind:value={title}
-                    required
-                    placeholder="My Book Review Journey"
-                />
-            </div>
-            <div class="form-group">
-                <label for="slug">Slug *</label>
-                <input
-                    id="slug"
-                    bind:value={slug}
-                    required
-                    placeholder="my-book-review-journey"
-                />
-                <small class="hint">URL-friendly version of title — auto-generated</small>
-            </div>
-            <div class="form-group">
-                <label for="content">Content *</label>
-                <textarea
-                    id="content"
-                    bind:value={content}
-                    rows="15"
-                    required
-                    placeholder="Write your post in Markdown..."
-                ></textarea>
-                <small class="hint">
-                    Use Markdown: **bold**, *italic*, # Headers, [links](https://example.com), ![images](image.jpg)
-                </small>
-            </div>
-            <div class="form-group checkbox">
-                <label>
-                    <input type="checkbox" bind:checked={isPublished} />
-                    Publish immediately
-                </label>
-                <small class="hint">
-                    {#if isPublished}
-                        Post will be visible at /blog/{slug}
-                    {:else}
-                        Post will be saved as draft
-                    {/if}
-                </small>
-            </div>
-            <button type="submit" class="btn-primary">
-                Save Post
-            </button>
-        </form>
-    {/if}
-
-    <a href="/admin/blog" class="btn-secondary">← Back to Blog Posts</a>
-</div>
-
-<style>
-    .container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    } catch (error) {
+        console.error('Save blog post error:', error);
+        return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
     }
-    h1 {
-        margin-bottom: 2rem;
-        color: #333;
-    }
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #555;
-    }
-    input, textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 1rem;
-    }
-    .hint {
-        display: block;
-        margin-top: 0.5rem;
-        color: #666;
-        font-size: 0.9rem;
-    }
-    .checkbox label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 500;
-        color: #333;
-    }
-    button {
-        width: 100%;
-        padding: 0.75rem;
-        background: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-    }
-    button:hover {
-        background: #2563eb;
-    }
-    .alert {
-        padding: 1rem;
-        border-radius: 6px;
-        margin-bottom: 1.5rem;
-        font-weight: 500;
-    }
-    .success {
-        background: #dcfce7;
-        color: #166534;
-    }
-    .error {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-    .btn-secondary {
-        display: inline-block;
-        margin-top: 1rem;
-        padding: 0.5rem 1rem;
-        background: #e5e7eb;
-        color: #333;
-        text-decoration: none;
-        border-radius: 6px;
-    }
-</style>
+}
