@@ -8,7 +8,7 @@ export async function POST({ request, locals }) {
     }
 
     try {
-        const { title, slug, content, published } = await request.json();
+        const isPublished = published === true; // ← Ensure it's boolean
         const db = locals.db;
 
         // Validate
