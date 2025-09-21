@@ -1,7 +1,6 @@
 // src/hooks.server.js
 /**
- * SvelteKit server hook — implements session management per Lucia v3 migration guide.
- * @see https://lucia-auth.com/lucia-v3/migrate
+ * SvelteKit server hook — real D1 only, no mock, no fallback.
  */
 globalThis.process = globalThis.process || {};
 globalThis.process.env = globalThis.process.env || {};
@@ -9,12 +8,11 @@ globalThis.process.env.OSLO_PASSWORD_DISABLE_NATIVE = "1";
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
-// Session constants (from Lucia guide)
+// Session constants
 const SESSION_EXPIRES_IN_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 /**
- * Generates a cryptographically secure session ID (from Lucia guide)
- * @returns {string}
+ * Generates a cryptographically secure session ID
  */
 function generateSessionId() {
     const bytes = new Uint8Array(25);
@@ -23,10 +21,7 @@ function generateSessionId() {
 }
 
 /**
- * Validates a session (from Lucia guide, adapted for D1)
- * @param {any} db - D1 database instance
- * @param {string} sessionId - Session ID to validate
- * @returns {Promise<{ id: string, userId: string, expiresAt: Date, fresh: boolean } | null>}
+ * Validates a session
  */
 async function validateSession(db, sessionId) {
     const now = Math.floor(Date.now() / 1000);
@@ -55,7 +50,7 @@ async function validateSession(db, sessionId) {
         return null;
     }
 
-    // Auto-refresh if past halfway (Lucia guide pattern)
+    // Auto-refresh if past halfway
     if (now >= row.expires_at - (SESSION_EXPIRES_IN_SECONDS / 2)) {
         const newExpiresAt = now + SESSION_EXPIRES_IN_SECONDS;
         await db.prepare(`
@@ -72,10 +67,7 @@ async function validateSession(db, sessionId) {
 }
 
 /**
- * Invalidates a session (from Lucia guide)
- * @param {any} db - D1 database instance
- * @param {string} sessionId - Session ID to invalidate
- * @returns {Promise<void>}
+ * Invalidates a session
  */
 async function invalidateSession(db, sessionId) {
     await db.prepare(`
@@ -85,10 +77,7 @@ async function invalidateSession(db, sessionId) {
 }
 
 /**
- * Sets session cookie (from Lucia guide)
- * @param {Headers} headers - Response headers
- * @param {string} sessionId - Session ID
- * @param {Date} expiresAt - Expiration date
+ * Sets session cookie
  */
 function setSessionCookie(headers, sessionId, expiresAt) {
     const cookie = [
@@ -107,8 +96,7 @@ function setSessionCookie(headers, sessionId, expiresAt) {
 }
 
 /**
- * Deletes session cookie (from Lucia guide)
- * @param {Headers} headers - Response headers
+ * Deletes session cookie
  */
 function deleteSessionCookie(headers) {
     const cookie = [
@@ -128,75 +116,13 @@ function deleteSessionCookie(headers) {
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-    // Attach DB
-    if (event.platform?.env?.DB_book) {
-        event.locals.db = event.platform.env.DB_book;
-        console.log('✅ Using REAL D1 database');
-    } else if (process.env.NODE_ENV === 'development') {
-        // Mock D1 for local dev
-        console.warn('⚠️ Using MOCK D1 database');
-
-        event.locals.db = {
-            prepare: (sql) => {
-                const stmt = {
-                    bind: (...params) => {
-                        return {
-                            all: async () => {
-                                // Mock books
-                                if (sql.includes('books')) {
-                                    return {
-                                        results: [
-                                            {
-                                                id: 'book-1',
-                                                title: 'The Name of the Wind',
-                                                author: 'Patrick Rothfuss',
-                                                cover_image_url: 'https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/f8a136eb-363e-4a24-0f54-70bb4f4bf800/thumbnail',
-                                                description: 'Epic fantasy...',
-                                                published_year: 2007,
-                                                avg_rating: 4.8,
-                                                review_count: 215
-                                            }
-                                        ]
-                                    };
-                                }
-                                // Mock users (for login)
-                                if (sql.includes('users') && (params[0] === 'test@example.com' || params[0] === 'testuser')) {
-                                    return {
-                                        results: [{
-                                            id: 'user-123',
-                                            username: 'testuser',
-                                            email: 'test@example.com',
-                                            hashed_password: '$argon2id$v=19$m=65536,t=3,p=4$...hashed...', // mock hash
-                                            email_verified_at: new Date().toISOString()
-                                        }]
-                                    };
-                                }
-                                // Mock sessions
-                                if (sql.includes('user_session') && params[0] === 'session-mock-123') {
-                                    return {
-                                        results: [{
-                                            id: 'session-mock-123',
-                                            user_id: 'user-123',
-                                            expires_at: Math.floor(Date.now() / 1000) + 3600
-                                        }]
-                                    };
-                                }
-                                return { results: [] };
-                            },
-                            first: async () => null,
-                            run: async () => ({ success: true })
-                        };
-                    }
-                };
-                stmt.all = async () => await stmt.bind().all();
-                stmt.first = async () => await stmt.bind().first();
-                stmt.run = async () => await stmt.bind().run();
-                return stmt;
-            }
-        };
-    } else {
-        throw new Error('❌ No D1 database available in production');
+    // ⚠️ CRITICAL: Force real D1 — no mock, no fallback
+    if (!event.platform?.env?.DB_book) {
+        throw new Error('❌ D1 database binding "DB_book" not found. Check wrangler.jsonc.');
     }
+
+    event.locals.db = event.platform.env.DB_book;
+    console.log('✅ Using REAL D1 database — no mock allowed');
 
     // Validate session from cookie
     const sessionId = event.cookies.get('session');
@@ -231,7 +157,7 @@ export async function handle({ event, resolve }) {
     event.locals.session = session;
     event.locals.user = user;
     if (event.platform) {
-        event.locals.platform = event.platform; // ← Fixed: only attach if exists
+        event.locals.platform = event.platform;
     }
 
     // Resolve request
