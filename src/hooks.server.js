@@ -230,7 +230,9 @@ export async function handle({ event, resolve }) {
     // Attach to locals
     event.locals.session = session;
     event.locals.user = user;
-    event.locals.platform = event.platform; // ← Critical for Mailgun
+    if (event.platform) {
+        event.locals.platform = event.platform; // ← Fixed: only attach if exists
+    }
 
     // Resolve request
     const response = await resolve(event);

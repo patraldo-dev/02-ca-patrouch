@@ -69,30 +69,36 @@
                 >
                     About
                 </a>
+		<a
+		    href="/blog"
+		    class:active={$page.url.pathname.startsWith('/blog')}
+		    aria-current={$page.url.pathname.startsWith('/blog') ? 'page' : undefined}
+		>
+		    Blog
+		</a>
             </nav>
 
-            <!-- Auth Section -->
-            <div class="auth-actions" aria-label="Account actions">
-                {#if $page.data?.user}
-                    <span class="welcome" aria-label="Logged in as {$page.data.user.username}">
-                        Welcome, <strong>{$page.data.user.username}</strong>
-                    </span>
-                    <button
-                        on:click={logout}
-                        class="btn-secondary"
-                        aria-label="Log out of your account"
-                    >
-                        Log Out
-                    </button>
-                {:else}
-                    <a href="/login" class="btn-secondary" aria-label="Log in to your account">
-                        Log In
-                    </a>
-                    <a href="/signup" class="btn-primary" aria-label="Create a new account">
-                        Sign Up
-                    </a>
-                {/if}
-            </div>
+<!-- Auth Actions -->
+<div class="auth-actions" aria-label="Account actions">
+    {#if $page.data?.user}
+        <span class="welcome" aria-label="Logged in as {$page.data.user.username}">
+            Welcome, <strong>{$page.data.user.username}</strong>
+        </span>
+        <a href="/admin" class="btn-secondary" aria-label="Admin dashboard">
+            Admin
+        </a>
+        <button on:click={logout} class="btn-secondary" aria-label="Log out of your account">
+            Log Out
+        </button>
+    {:else}
+        <a href="/login" class="btn-secondary" aria-label="Log in to your account">
+            Log In
+        </a>
+        <a href="/signup" class="btn-primary" aria-label="Create a new account">
+            Sign Up
+        </a>
+    {/if}
+</div>
 
             <!-- Mobile Menu Toggle -->
             <button
