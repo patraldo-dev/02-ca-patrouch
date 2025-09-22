@@ -3,6 +3,7 @@ import { RpcTarget } from 'capnweb';
 import { AuthenticatedSession } from './AuthenticatedSession.js';
 import { generateSessionToken } from '$lib/utils.js';
 import { hashPassword, verifyPassword } from '$lib/auth-helpers.js';
+import { sendMailgunEmail, getConfirmationEmailContent } from '$lib/email.js';
 
 /**
  * Main authentication service exposed via RPC.
@@ -89,7 +90,6 @@ export class AuthService extends RpcTarget {
      * @param {string} password
      * @returns {Promise<{ session: AuthenticatedSession, setCookie: Object }>}
      */
-
 async signup(username, email, password) {
     // Basic validation
     if (!username || !email || !password) {
@@ -109,17 +109,49 @@ async signup(username, email, password) {
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // ✅ Generate UUID in JavaScript
+    // Generate UUID in JavaScript
     const userId = crypto.randomUUID();
 
-    // ✅ Include id in INSERT
+    // Include id in INSERT
     const newUser = await this.db
         .prepare('INSERT INTO users (id, username, email, hashed_password) VALUES (?, ?, ?, ?) RETURNING id, username, email')
-        .bind(userId, username, email, passwordHash) // ← Bind userId first
+        .bind(userId, username, email, passwordHash)
         .first();
 
     if (!newUser) {
         throw new Error("Signup failed");
+    }
+
+    // Generate email verification token
+    const emailVerificationToken = crypto.randomUUID();
+
+    // Update user with token
+    await this.db
+        .prepare('UPDATE users SET email_verification_token = ? WHERE id = ?')
+        .bind(emailVerificationToken, newUser.id)
+        .run();
+
+    // Build confirmation URL
+    const confirmUrl = `https://patrouch.ca/confirm?token=${encodeURIComponent(emailVerificationToken)}`;
+
+    // Get email content
+    const emailContent = getConfirmationEmailContent('account', confirmUrl);
+
+    // Send email
+    try {
+        await sendMailgunEmail({
+            to: email,
+            subject: emailContent.subject,
+            text: emailContent.text,
+            html: emailContent.html
+        }, {
+            MAILGUN_API_KEY: import.meta.env.MAILGUN_API_KEY,
+            MAILGUN_DOMAIN: import.meta.env.MAILGUN_DOMAIN
+        });
+        console.log('✅ Verification email sent to', email);
+    } catch (err) {
+        console.error('❌ Failed to send verification email:', err);
+        // Don't fail signup — just log it
     }
 
     // Create session — using user_session table

@@ -1,3 +1,4 @@
+/src/routes/api/confirm$ cat ./+server.js 
 // src/routes/api/confirm/+server.js
 import { redirect } from '@sveltejs/kit';
 import { sendMailgunEmail, getWelcomeEmailContent } from '$lib/email.js';
@@ -37,7 +38,7 @@ export async function GET({ url, platform }) {
         if (now > expiresAt) {
             return new Response('Confirmation link has expired', { status: 400 });
         }
-	     console.log('DB binding:', platform.env.DB_book ? 'PRESENT' : 'MISSING');
+             console.log('DB binding:', platform.env.DB_book ? 'PRESENT' : 'MISSING');
 
         // Confirm
         await platform.env.DB_book
