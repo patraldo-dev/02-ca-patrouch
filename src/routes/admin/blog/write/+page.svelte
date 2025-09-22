@@ -10,12 +10,14 @@
     let success = false;
 
     // Auto-generate slug from title
-    $: slug = title
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+$: slug = title
+    .normalize('NFD')                  // Decompose accented characters
+    .replace(/[\u0300-\u036f]/g, '')  // Remove diacritics (accents)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')     // Keep only a-z, 0-9, space, hyphen
+    .replace(/[\s_-]+/g, '-')         // Replace spaces/underscores with hyphen
+    .replace(/^-+|-+$/g, '');         // Trim hyphens from start/end
 
     const handleSubmit = async (event) => {
         error = '';
