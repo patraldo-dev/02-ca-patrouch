@@ -89,66 +89,70 @@ export class AuthService extends RpcTarget {
      * @param {string} password
      * @returns {Promise<{ session: AuthenticatedSession, setCookie: Object }>}
      */
-    async signup(username, email, password) {
-        // Basic validation
-        if (!username || !email || !password) {
-            throw new Error("All fields required");
-        }
 
-        // Check if user exists
-        const existing = await this.db
-            .prepare('SELECT id FROM users WHERE username = ? OR email = ?')
-            .bind(username, email)
-            .first();
-
-        if (existing) {
-            throw new Error("Username or email already taken");
-        }
-
-        // Hash password
-        const passwordHash = await hashPassword(password);
-
-        // Create user — using hashed_password
-        const newUser = await this.db
-            .prepare('INSERT INTO users (username, email, hashed_password) VALUES (?, ?, ?) RETURNING id, username, email')
-            .bind(username, email, passwordHash)
-            .first();
-
-        if (!newUser) {
-            throw new Error("Signup failed");
-        }
-
-        // Create session — using user_session table
-        const sessionId = generateSessionToken();
-        const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
-
-        await this.db
-            .prepare('INSERT INTO user_session (id, user_id, expires_at) VALUES (?, ?, ?)')
-            .bind(sessionId, newUser.id, expiresAt)
-            .run();
-
-        // Create RPC session object
-        const sessionObj = new AuthenticatedSession(
-            this.db,
-            { id: sessionId, userId: newUser.id, expiresAt },
-            { id: newUser.id, username: newUser.username, email: newUser.email }
-        );
-
-        return {
-            session: sessionObj,
-            setCookie: {
-                name: 'session',
-                value: sessionId,
-                attributes: {
-                    path: '/',
-                    httpOnly: true,
-                    secure: true,
-                    sameSite: 'strict',
-                    maxAge: 7 * 24 * 60 * 60
-                }
-            }
-        };
+async signup(username, email, password) {
+    // Basic validation
+    if (!username || !email || !password) {
+        throw new Error("All fields required");
     }
+
+    // Check if user exists
+    const existing = await this.db
+        .prepare('SELECT id FROM users WHERE username = ? OR email = ?')
+        .bind(username, email)
+        .first();
+
+    if (existing) {
+        throw new Error("Username or email already taken");
+    }
+
+    // Hash password
+    const passwordHash = await hashPassword(password);
+
+    // ✅ Generate UUID in JavaScript
+    const userId = crypto.randomUUID();
+
+    // ✅ Include id in INSERT
+    const newUser = await this.db
+        .prepare('INSERT INTO users (id, username, email, hashed_password) VALUES (?, ?, ?, ?) RETURNING id, username, email')
+        .bind(userId, username, email, passwordHash) // ← Bind userId first
+        .first();
+
+    if (!newUser) {
+        throw new Error("Signup failed");
+    }
+
+    // Create session — using user_session table
+    const sessionId = generateSessionToken();
+    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+
+    await this.db
+        .prepare('INSERT INTO user_session (id, user_id, expires_at) VALUES (?, ?, ?)')
+        .bind(sessionId, newUser.id, expiresAt)
+        .run();
+
+    // Create RPC session object
+    const sessionObj = new AuthenticatedSession(
+        this.db,
+        { id: sessionId, userId: newUser.id, expiresAt },
+        { id: newUser.id, username: newUser.username, email: newUser.email }
+    );
+
+    return {
+        session: sessionObj,
+        setCookie: {
+            name: 'session',
+            value: sessionId,
+            attributes: {
+                path: '/',
+                httpOnly: true,
+                secure: true,
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60
+            }
+        }
+    };
+}
 
     /**
      * Log out by invalidating session via token
