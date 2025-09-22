@@ -1,3 +1,4 @@
+// src/routes/api/rpc/+server.js
 import { newWorkersRpcResponse } from 'capnweb';
 import { AuthService } from '$lib/rpc/AuthService.js';
 
@@ -12,7 +13,7 @@ export async function POST({ request, platform }) {
     }
 
     const authService = new AuthService(db);
-    return newWorkersRpcResponse(request, authService);
+    return newWorkersRpcResponse(request, authService); // ← Exposes ALL methods on AuthService
 }
 
 // Optional: Handle WebSocket upgrade

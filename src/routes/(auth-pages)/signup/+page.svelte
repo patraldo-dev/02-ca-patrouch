@@ -1,6 +1,8 @@
 <!-- src/routes/(auth-pages)/signup/+page.svelte -->
 <script>
     import { newWebSocketRpcSession } from 'capnweb';
+    import { browser } from '$app/environment';
+
 
     let username = '';
     let email = '';
