@@ -89,23 +89,27 @@
         <div>
             <label for="password">Password</label>
             <input
-                id="password"
-                bind:value={password}
-                type="password"
-                required
-                placeholder="Create a password"
-                minlength="8"
+id="password"
+    bind:value={password}
+    type="password"
+    placeholder="Create a password"
+    required
+    minlength="8"
+    autocomplete="new-password"  <!-- ✅ ADD THIS -->
+    disabled={isLoading}
             />
         </div>
 
         <div>
             <label for="confirmPassword">Confirm Password</label>
             <input
-                id="confirmPassword"
-                bind:value={confirmPassword}
-                type="password"
-                required
-                placeholder="Repeat your password"
+id="confirmPassword"
+    bind:value={confirmPassword}
+    type="password"
+    placeholder="Repeat your password"
+    required
+    autocomplete="new-password"  <!-- ✅ ADD THIS -->
+    disabled={isLoading}
             />
         </div>
 
