@@ -9,7 +9,7 @@ import { RpcTarget } from 'capnweb';
 export class AuthenticatedSession extends RpcTarget {
     /**
      * @param {import('@cloudflare/workers-types').D1Database} db - Your D1 database instance (DB_book)
-     * @param {Object} session - Session data from your 'sessions' table
+     * @param {Object} session - Session data from your 'user_session' table
      * @param {string} session.id - Session token
      * @param {string} session.userId - Associated user ID
      * @param {number} session.expiresAt - Expiry timestamp (ms)
@@ -73,7 +73,7 @@ export class AuthenticatedSession extends RpcTarget {
      */
     async logout() {
         await this.db
-            .prepare('DELETE FROM sessions WHERE id = ?')
+            .prepare('DELETE FROM user_session WHERE id = ?')
             .bind(this.session.id)
             .run();
         return true;
