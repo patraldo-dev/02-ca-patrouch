@@ -95,7 +95,7 @@ id="password"
     placeholder="Create a password"
     required
     minlength="8"
-    autocomplete="new-password"  <!-- ✅ ADD THIS -->
+    autocomplete="new-password"  
     disabled={isLoading}
             />
         </div>
@@ -108,7 +108,7 @@ id="confirmPassword"
     type="password"
     placeholder="Repeat your password"
     required
-    autocomplete="new-password"  <!-- ✅ ADD THIS -->
+    autocomplete="new-password"  
     disabled={isLoading}
             />
         </div>
