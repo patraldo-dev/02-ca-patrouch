@@ -22,12 +22,10 @@ export async function POST({ request, platform }) {
         const authService = new AuthService(db);
         console.log('✅ AuthService instance created successfully');
 
-        // Log what methods are exposed (optional but helpful)
         const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(authService))
             .filter(prop => typeof authService[prop] === 'function' && prop !== 'constructor');
         console.log('🔌 Exposed RPC methods:', methods);
 
-        console.log('🚀 Returning RPC response to client');
         return newWorkersRpcResponse(request, authService);
 
     } catch (err) {
@@ -47,7 +45,6 @@ export async function POST({ request, platform }) {
     }
 }
 
-// Handle WebSocket upgrade (optional but recommended)
 export async function GET({ request, platform }) {
     console.log('🔄 Incoming RPC GET (WebSocket upgrade) request to /api/rpc');
     return POST({ request, platform });
