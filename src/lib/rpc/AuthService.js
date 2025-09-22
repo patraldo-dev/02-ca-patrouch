@@ -25,22 +25,23 @@ export class AuthService extends RpcTarget {
      */
     async login(identifier, password) {
         // 1. Find user by email OR username
-        const user = await this.db
-            .prepare(`
-                SELECT id, username, email, password_hash 
-                FROM users 
-                WHERE email = ? OR username = ?
-                LIMIT 1
-            `)
-            .bind(identifier, identifier)
-            .first();
+
+const user = await this.db
+    .prepare(`
+        SELECT id, username, email, hashed_password 
+        FROM users 
+        WHERE email = ? OR username = ?
+        LIMIT 1
+    `)
+    .bind(identifier, identifier)
+    .first();
 
         if (!user) {
             throw new Error("Invalid credentials");
         }
 
         // 2. Verify password
-        const valid = await verifyPassword(password, user.password_hash);
+const valid = await verifyPassword(password, user.hashed_password);
         if (!valid) {
             throw new Error("Invalid credentials");
         }
