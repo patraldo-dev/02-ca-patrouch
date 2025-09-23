@@ -144,6 +144,13 @@ export class AuthService extends RpcTarget {
 
         // Send email — using secrets from this.env
         try {
+
+console.log('🔑 MAILGUN_API_KEY:', this.env.MAILGUN_API_KEY); // ← ADD THIS
+    console.log('🌐 MAILGUN_DOMAIN:', this.env.MAILGUN_DOMAIN);
+
+    if (!this.env.MAILGUN_API_KEY) {
+        throw new Error('Mailgun API key missing');
+    }
             await sendMailgunEmail({
                 to: email,
                 subject: emailContent.subject,

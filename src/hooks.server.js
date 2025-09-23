@@ -124,6 +124,13 @@ export async function handle({ event, resolve }) {
     event.locals.db = event.platform.env.DB_book;
     console.log('✅ Using REAL D1 database — no mock allowed');
 
+    // Log Mailgun key for debugging
+    if (event.platform?.env?.MAILGUN_API_KEY) {
+        console.log('🔑 MAILGUN_API_KEY is set (length:', event.platform.env.MAILGUN_API_KEY.length, ')');
+    } else {
+        console.error('❌ MAILGUN_API_KEY is MISSING or undefined');
+    }
+
     // Validate session from cookie
     const sessionId = event.cookies.get('session');
     let session = null;
@@ -153,9 +160,9 @@ export async function handle({ event, resolve }) {
         }
     }
 
-    // Attach to locals
+    // Attach to locals → powers $page.data.user in +layout.svelte
     event.locals.session = session;
-    event.locals.user = user;
+    event.locals.user = user; // ← This is what your layout uses for "Welcome, {username}"
     if (event.platform) {
         event.locals.platform = event.platform;
     }
