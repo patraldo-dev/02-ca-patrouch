@@ -13,13 +13,18 @@ import { sendMailgunEmail, getConfirmationEmailContent } from '$lib/email.js';
 export class AuthService extends RpcTarget {
     /**
      * @param {import('@cloudflare/workers-types').D1Database} db - Your D1 database instance (DB_book)
+     * @param {object} env - Environment variables and secrets (from Worker entry point)
      */
-    constructor(db) {
+    constructor(db, env) {
         super();
         if (!db) {
             throw new Error('DB_book is required');
         }
+        if (!env) {
+            throw new Error('env is required (for Mailgun secrets)');
+        }
         this.db = db;
+        this.env = env;
     }
 
     /**
@@ -90,101 +95,101 @@ export class AuthService extends RpcTarget {
      * @param {string} password
      * @returns {Promise<{ session: AuthenticatedSession, setCookie: Object }>}
      */
-async signup(username, email, password) {
-    // Basic validation
-    if (!username || !email || !password) {
-        throw new Error("All fields required");
-    }
-
-    // Check if user exists
-    const existing = await this.db
-        .prepare('SELECT id FROM users WHERE username = ? OR email = ?')
-        .bind(username, email)
-        .first();
-
-    if (existing) {
-        throw new Error("Username or email already taken");
-    }
-
-    // Hash password
-    const passwordHash = await hashPassword(password);
-
-    // Generate UUID in JavaScript
-    const userId = crypto.randomUUID();
-
-    // Include id in INSERT
-    const newUser = await this.db
-        .prepare('INSERT INTO users (id, username, email, hashed_password, role) VALUES (?, ?, ?, ?, ?) RETURNING id, username, email')
-        .bind(userId, username, email, passwordHash, 'user')
-        .first();
-
-    if (!newUser) {
-        throw new Error("Signup failed");
-    }
-
-    // Generate email verification token
-    const emailVerificationToken = crypto.randomUUID();
-
-    // Update user with token
-    await this.db
-        .prepare('UPDATE users SET email_verification_token = ? WHERE id = ?')
-        .bind(emailVerificationToken, newUser.id)
-        .run();
-
-    // Build confirmation URL
-    const confirmUrl = `https://patrouch.ca/confirm?token=${encodeURIComponent(emailVerificationToken)}`;
-
-    // Get email content
-    const emailContent = getConfirmationEmailContent('account', confirmUrl);
-
-    // Send email
-    try {
-        await sendMailgunEmail({
-            to: email,
-            subject: emailContent.subject,
-            text: emailContent.text,
-            html: emailContent.html
-        }, {
-            MAILGUN_API_KEY: import.meta.env.MAILGUN_API_KEY,
-            MAILGUN_DOMAIN: import.meta.env.MAILGUN_DOMAIN
-        });
-        console.log('✅ Verification email sent to', email);
-    } catch (err) {
-        console.error('❌ Failed to send verification email:', err);
-        // Don't fail signup — just log it
-    }
-
-    // Create session — using user_session table
-    const sessionId = generateSessionToken();
-    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
-
-    await this.db
-        .prepare('INSERT INTO user_session (id, user_id, expires_at) VALUES (?, ?, ?)')
-        .bind(sessionId, newUser.id, expiresAt)
-        .run();
-
-    // Create RPC session object
-    const sessionObj = new AuthenticatedSession(
-        this.db,
-        { id: sessionId, userId: newUser.id, expiresAt },
-        { id: newUser.id, username: newUser.username, email: newUser.email }
-    );
-
-    return {
-        session: sessionObj,
-        setCookie: {
-            name: 'session',
-            value: sessionId,
-            attributes: {
-                path: '/',
-                httpOnly: true,
-                secure: true,
-                sameSite: 'strict',
-                maxAge: 7 * 24 * 60 * 60
-            }
+    async signup(username, email, password) {
+        // Basic validation
+        if (!username || !email || !password) {
+            throw new Error("All fields required");
         }
-    };
-}
+
+        // Check if user exists
+        const existing = await this.db
+            .prepare('SELECT id FROM users WHERE username = ? OR email = ?')
+            .bind(username, email)
+            .first();
+
+        if (existing) {
+            throw new Error("Username or email already taken");
+        }
+
+        // Hash password
+        const passwordHash = await hashPassword(password);
+
+        // Generate UUID in JavaScript for id
+        const userId = crypto.randomUUID();
+
+        // Create user — using hashed_password and role
+        const newUser = await this.db
+            .prepare('INSERT INTO users (id, username, email, hashed_password, role) VALUES (?, ?, ?, ?, ?) RETURNING id, username, email')
+            .bind(userId, username, email, passwordHash, 'user') // ← Set default role
+            .first();
+
+        if (!newUser) {
+            throw new Error("Signup failed");
+        }
+
+        // Generate email verification token
+        const emailVerificationToken = crypto.randomUUID();
+
+        // Update user with token
+        await this.db
+            .prepare('UPDATE users SET email_verification_token = ? WHERE id = ?')
+            .bind(emailVerificationToken, newUser.id)
+            .run();
+
+        // Build confirmation URL
+        const confirmUrl = `https://patrouch.ca/confirm?token=${encodeURIComponent(emailVerificationToken)}`;
+
+        // Get email content
+        const emailContent = getConfirmationEmailContent('account', confirmUrl);
+
+        // Send email — using secrets from this.env
+        try {
+            await sendMailgunEmail({
+                to: email,
+                subject: emailContent.subject,
+                text: emailContent.text,
+                html: emailContent.html
+            }, {
+                MAILGUN_API_KEY: this.env.MAILGUN_API_KEY,  // ← Secret from Worker env
+                MAILGUN_DOMAIN: this.env.MAILGUN_DOMAIN     // ← Env var from wrangler.jsonc
+            });
+            console.log('✅ Verification email sent to', email);
+        } catch (err) {
+            console.error('❌ Failed to send verification email:', err.message);
+            // Don't fail signup — just log it
+        }
+
+        // Create session — using user_session table
+        const sessionId = generateSessionToken();
+        const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+
+        await this.db
+            .prepare('INSERT INTO user_session (id, user_id, expires_at) VALUES (?, ?, ?)')
+            .bind(sessionId, newUser.id, expiresAt)
+            .run();
+
+        // Create RPC session object
+        const sessionObj = new AuthenticatedSession(
+            this.db,
+            { id: sessionId, userId: newUser.id, expiresAt },
+            { id: newUser.id, username: newUser.username, email: newUser.email }
+        );
+
+        return {
+            session: sessionObj,
+            setCookie: {
+                name: 'session',
+                value: sessionId,
+                attributes: {
+                    path: '/',
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'strict',
+                    maxAge: 7 * 24 * 60 * 60
+                }
+            }
+        };
+    }
 
     /**
      * Log out by invalidating session via token

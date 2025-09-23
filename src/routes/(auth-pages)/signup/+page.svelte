@@ -52,6 +52,9 @@
             isLoading = false;
         }
     }
+$: if (password && !confirmPassword) {
+        confirmPassword = password;
+    }
 </script>
 
 <main>
