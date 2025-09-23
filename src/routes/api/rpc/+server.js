@@ -12,13 +12,11 @@ export async function POST({ request, platform }) {
         );
     }
 
-
 // ✅ Pass platform.env to AuthService
     const authService = new AuthService(db, platform.env);
     return newWorkersRpcResponse(request, authService);
 }
 
 export async function GET({ request, platform }) {
-    console.log('🔄 Incoming RPC GET (WebSocket upgrade) request to /api/rpc');
     return POST({ request, platform });
 }

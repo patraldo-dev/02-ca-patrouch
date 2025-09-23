@@ -32,7 +32,7 @@
             cookieParts.push(`samesite=${setCookie.attributes.sameSite}`);
             document.cookie = cookieParts.join('; ');
 
-            window.location.href = '/dashboard';
+            window.location.href = '/';
 
         } catch (err) {
             console.error('Login error:', err);
