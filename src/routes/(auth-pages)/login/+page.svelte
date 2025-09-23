@@ -78,7 +78,7 @@
 	<input
 	    id="identifier"
 	    bind:value={identifier}  
-	    type="email"              
+	    type="text"              
 	    placeholder="you@example.com or yourusername"
 	    required
 	    autocomplete="username"  

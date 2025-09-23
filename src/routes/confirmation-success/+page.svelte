@@ -4,16 +4,16 @@
 </script>
 
 <svelte:head>
-    <title>Confirmation Success — ShelfTalk</title>
+    <title>Email Verified — Your App</title>
 </svelte:head>
 
 <div class="container">
     {#if $page.url.searchParams.get('already') === 'true'}
         <h1>✅ Already Confirmed</h1>
-        <p>You're already subscribed — no need to confirm again!</p>
+        <p>You're already verified — no need to click the link again!</p>
     {:else}
-        <h1>✅ Confirmed!</h1>
-        <p>Thank you for subscribing to ShelfTalk updates!</p>
+        <h1>✅ Email Verified!</h1>
+        <p>Thank you! You can now <a href="/login">log in</a>.</p>
     {/if}
     <a href="/" class="btn-primary">Back to Home</a>
 </div>
