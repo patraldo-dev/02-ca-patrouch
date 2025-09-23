@@ -114,8 +114,8 @@ async signup(username, email, password) {
 
     // Include id in INSERT
     const newUser = await this.db
-        .prepare('INSERT INTO users (id, username, email, hashed_password) VALUES (?, ?, ?, ?) RETURNING id, username, email')
-        .bind(userId, username, email, passwordHash)
+        .prepare('INSERT INTO users (id, username, email, hashed_password, role) VALUES (?, ?, ?, ?, ?) RETURNING id, username, email')
+        .bind(userId, username, email, passwordHash, 'user')
         .first();
 
     if (!newUser) {

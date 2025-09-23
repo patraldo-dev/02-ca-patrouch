@@ -43,7 +43,7 @@
             // 4. Show success message or redirect
             success = 'Account created! Redirecting...';
             setTimeout(() => {
-                window.location.href = '/dashboard'; // or '/profile'
+                window.location.href = '/'; // or '/profile'
             }, 1500);
 
         } catch (err) {
