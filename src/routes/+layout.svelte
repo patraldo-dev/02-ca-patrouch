@@ -3,7 +3,7 @@
     import { page } from '$app/stores';
     import { browser } from '$app/environment';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
-
+    import { newWebSocketRpcSession } from 'capnweb';
 
     // Mobile menu state
     let mobileMenuOpen = false;
@@ -16,22 +16,46 @@
     // Close mobile menu on route change
     $: $page.url.pathname, mobileMenuOpen = false;
 
-    // Logout handler
-    async function logout() {
+    // Check if user is logged in (has session cookie)
+    let isLoggedIn = false;
+    let username = '';
+
+    if (browser) {
+        const sessionToken = document.cookie.split('; ').find(row => row.startsWith('session='))?.split('=')[1];
+        isLoggedIn = !!sessionToken;
+        // You could fetch profile here if needed — but for now, we'll just show "Welcome"
+        // In a real app, you might store username in localStorage after login
+        username = 'User'; // Placeholder — replace with actual username if available
+    }
+
+    // RPC-powered logout
+    async function handleLogout() {
         if (!browser) return;
 
         try {
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-                credentials: 'same-origin'
-            });
+            // 1. Get session token
+            const sessionToken = document.cookie.split('; ').find(row => row.startsWith('session='))?.split('=')[1];
+            if (!sessionToken) {
+                throw new Error('No active session');
+            }
 
-            // Hard refresh to clear all state
-            window.location.href = '/';
-        } catch (error) {
-            console.error('Logout failed:', error);
-            // Still redirect — session is likely dead
-            window.location.href = '/';
+            // 2. Connect to RPC server
+            const api = newWebSocketRpcSession('/api/rpc');
+
+            // 3. Call server-side logout (invalidates session in DB)
+            await api.logout(sessionToken);
+
+            // 4. Clear cookie
+            document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+
+            // 5. Reload to clear state and redirect
+            window.location.reload();
+
+        } catch (err) {
+            console.error('Logout failed:', err);
+            // Fallback: clear cookie and reload
+            document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+            window.location.reload();
         }
     }
 </script>
@@ -69,36 +93,36 @@
                 >
                     About
                 </a>
-		<a
-		    href="/blog"
-		    class:active={$page.url.pathname.startsWith('/blog')}
-		    aria-current={$page.url.pathname.startsWith('/blog') ? 'page' : undefined}
-		>
-		    Blog
-		</a>
+                <a
+                    href="/blog"
+                    class:active={$page.url.pathname.startsWith('/blog')}
+                    aria-current={$page.url.pathname.startsWith('/blog') ? 'page' : undefined}
+                >
+                    Blog
+                </a>
             </nav>
 
-<!-- Auth Actions -->
-<div class="auth-actions" aria-label="Account actions">
-    {#if $page.data?.user}
-        <span class="welcome" aria-label="Logged in as {$page.data.user.username}">
-            Welcome, <strong>{$page.data.user.username}</strong>
-        </span>
-        <a href="/admin" class="btn-secondary" aria-label="Admin dashboard">
-            Admin
-        </a>
-        <button on:click={logout} class="btn-secondary" aria-label="Log out of your account">
-            Log Out
-        </button>
-    {:else}
-        <a href="/login" class="btn-secondary" aria-label="Log in to your account">
-            Log In
-        </a>
-        <a href="/signup" class="btn-primary" aria-label="Create a new account">
-            Sign Up
-        </a>
-    {/if}
-</div>
+            <!-- Auth Actions -->
+            <div class="auth-actions" aria-label="Account actions">
+                {#if isLoggedIn}
+                    <span class="welcome" aria-label="Logged in as {username}">
+                        Welcome, <strong>{username}</strong>
+                    </span>
+                    <a href="/admin" class="btn-secondary" aria-label="Admin dashboard">
+                        Admin
+                    </a>
+                    <button on:click={handleLogout} class="btn-secondary" aria-label="Log out of your account">
+                        Log Out
+                    </button>
+                {:else}
+                    <a href="/login" class="btn-secondary" aria-label="Log in to your account">
+                        Log In
+                    </a>
+                    <a href="/signup" class="btn-primary" aria-label="Create a new account">
+                        Sign Up
+                    </a>
+                {/if}
+            </div>
 
             <!-- Mobile Menu Toggle -->
             <button
@@ -144,14 +168,14 @@
                 </nav>
 
                 <div class="mobile-auth" aria-label="Mobile account actions">
-                    {#if $page.data?.user}
+                    {#if isLoggedIn}
                         <div class="welcome-mobile" aria-live="polite">
-                            Welcome, <strong>{$page.data.user.username}</strong>
+                            Welcome, <strong>{username}</strong>
                         </div>
                         <button
                             on:click={() => {
                                 toggleMobileMenu();
-                                logout();
+                                handleLogout();
                             }}
                             class="btn-secondary block"
                             aria-label="Log out"
@@ -187,18 +211,18 @@
     </main>
 
     <!-- Footer -->
-<footer class="site-footer">
-    <div class="container">
-        <div class="newsletter-section">
-            <svelte:component this={NewsletterForm} />
+    <footer class="site-footer">
+        <div class="container">
+            <div class="newsletter-section">
+                <svelte:component this={NewsletterForm} />
+            </div>
+            <p>© {new Date().getFullYear()} ShelfTalk — Honest book reviews & thoughtful commentary.</p>
+            <p>
+                <a href="/privacy">Privacy Policy</a> • 
+                <a href="/terms">Terms of Service</a>
+            </p>
         </div>
-        <p>© {new Date().getFullYear()} ShelfTalk — Honest book reviews & thoughtful commentary.</p>
-        <p>
-            <a href="/privacy">Privacy Policy</a> • 
-            <a href="/terms">Terms of Service</a>
-        </p>
-    </div>
-</footer>
+    </footer>
 </div>
 
 <style>
@@ -385,8 +409,8 @@
     }
 
     .newsletter-section {
-	margin-bottom: 2rem;
-	text-align: center;
+        margin-bottom: 2rem;
+        text-align: center;
     }
 
     /* Main Content Spacing */
