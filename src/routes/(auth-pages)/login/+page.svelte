@@ -3,14 +3,14 @@
     import { browser } from '$app/environment';
     import { newWebSocketRpcSession } from 'capnweb';
 
-    let email = '';
+    let identifier= '';
     let password = '';
     let error = '';
     let isLoading = false;
 
     async function handleLogin() {
-        if (!email || !password) {
-            error = 'Please enter both email and password';
+        if (!identifier|| !password) {
+            error = 'Please enter both identifier and password';
             return;
         }
 
@@ -19,7 +19,7 @@
 
         try {
             const api = newWebSocketRpcSession('/api/rpc');
-            const { session, setCookie } = await api.login(email, password);
+            const { session, setCookie } = await api.login(identifier, password);
 
             // Set cookie
             const cookieParts = [
@@ -36,7 +36,7 @@
 
         } catch (err) {
             console.error('Login error:', err);
-            error = err.message || 'Invalid email or password. Please try again.';
+            error = err.message || 'Invalid identifier or password. Please try again.';
         } finally {
             isLoading = false;
         }
@@ -74,14 +74,14 @@
 
         <form on:submit|preventDefault={handleLogin} class="login-form">
             <div class="input-group">
-                <label for="email">Email Address</label>
-                <input
-                    id="email"
-                    bind:value={email}
-                    type="email"
-                    placeholder="you@example.com"
-                    required
-                    autocomplete="email"
+	<label for="identifier">Email or Username</label>
+	<input
+	    id="identifier"
+	    bind:value={identifier}  <!-- ← Change variable name -->
+	    type="email"              <!-- ← Change to text or don't, for mobile devices -->
+	    placeholder="you@example.com or yourusername"
+	    required
+	    autocomplete="username"  <!-- ← Use username for broader hint -->
                     disabled={isLoading}
                 />
             </div>
