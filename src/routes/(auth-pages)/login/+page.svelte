@@ -77,11 +77,11 @@
 	<label for="identifier">Email or Username</label>
 	<input
 	    id="identifier"
-	    bind:value={identifier}  <!-- ← Change variable name -->
-	    type="email"              <!-- ← Change to text or don't, for mobile devices -->
+	    bind:value={identifier}  
+	    type="email"              
 	    placeholder="you@example.com or yourusername"
 	    required
-	    autocomplete="username"  <!-- ← Use username for broader hint -->
+	    autocomplete="username"  
                     disabled={isLoading}
                 />
             </div>
