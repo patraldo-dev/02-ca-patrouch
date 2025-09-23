@@ -8,13 +8,31 @@ export async function POST({ request, platform }) {
     if (!db) {
         return new Response(
             JSON.stringify({ error: 'DB_book unavailable' }),
-            { status: 500, headers: { 'Content-Type': 'application/json' } }
+            { status: 500 }
         );
     }
 
-// ✅ Pass platform.env to AuthService
+    // ✅ Create AuthService
     const authService = new AuthService(db, platform.env);
-    return newWorkersRpcResponse(request, authService);
+
+    // ✅ Wrap RPC in timeout
+    const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('RPC timeout')), 10000) // 10s timeout
+    );
+
+    try {
+        // ✅ Race RPC against timeout
+        return await Promise.race([
+            newWorkersRpcResponse(request, authService),
+            timeout
+        ]);
+    } catch (err) {
+        console.error('🔥 RPC failed:', err);
+        return new Response(
+            JSON.stringify({ error: 'Server error: ' + err.message }),
+            { status: 500 }
+        );
+    }
 }
 
 export async function GET({ request, platform }) {
