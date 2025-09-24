@@ -37,6 +37,7 @@
         </article>
     {/each}
 </div>
+</div>
 
 <style>
     .container {
