@@ -1,14 +1,20 @@
-// src/routes/books/[id]/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
-export async function load({ locals, params }) {
-    const { db } = locals;
-    const { id } = params;
+// src/routes/books/[slug]/+page.server.js
+import { error } from '@sveltejs/kit';
 
-    // Fetch book
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ locals, params, platform }) {
+    const db = platform?.env?.DB_book;
+    if (!db) {
+        throw new Error('Database not available');
+    }
+
+    const { slug } = params;
+
+    // Fetch book by slug
     const bookStmt = db.prepare(`
-        SELECT * FROM books WHERE id = ?
+        SELECT * FROM books WHERE slug = ?
     `);
-    const { results: [book] } = await bookStmt.bind(id).all();
+    const { results: [book] } = await bookStmt.bind(slug).all();
     if (!book) {
         throw error(404, 'Book not found');
     }
@@ -27,7 +33,7 @@ export async function load({ locals, params }) {
         WHERE r.book_id = ?
         ORDER BY r.created_at DESC
     `);
-    const { results: reviews } = await reviewsStmt.bind(id).all();
+    const { results: reviews } = await reviewsStmt.bind(book.id).all();
 
     // Fetch comments for each review
     const reviewsWithComments = await Promise.all(reviews.map(async (review) => {

@@ -34,7 +34,7 @@
                     {#if book.avg_rating}
                         <div class="rating">⭐ {parseFloat(book.avg_rating).toFixed(1)} ({book.review_count} reviews)</div>
                     {/if}
-                    <a href="/books/{book.id}" class="btn">Read Reviews</a>
+                    <a href="/books/{book.slug/review}" class="btn">Read Reviews</a>
                 </div>
             </article>
         {/each}
