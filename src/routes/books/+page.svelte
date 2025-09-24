@@ -4,26 +4,34 @@
 </script>
 
 <svelte:head>
-    <title>All Books — ShelfTalk</title>
+    <title>Todo los Libros — ShelfTalk</title>
 </svelte:head>
 
 <div class="container">
-    <h1>📚 All Books</h1>
+    <h1>📚 Mis Libros</h1>
     <div class="books-grid">
         {#each data.books as book}
             <article class="book-card">
-                {#if book.cover_image_url}
-                    <img src={book.cover_image_url} alt={book.title} class="cover" />
+                {#if book.coverImageId}
+                    <a href={`/books/${book.slug}`}>
+                        <img 
+                            src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
+                            alt={`Cover of ${book.title}`}
+                            class="book-cover"
+                        />
+                    </a>
                 {:else}
                     <div class="cover-placeholder">No Cover</div>
                 {/if}
                 <div class="book-info">
-                    <h2>{book.title}</h2>
+                    <a href={`/books/${book.slug}`}>
+                        <h2>{book.title}</h2>
+                    </a>
                     <p class="author">by {book.author}</p>
                     {#if book.avg_rating}
                         <div class="rating">⭐ {parseFloat(book.avg_rating).toFixed(1)} ({book.review_count} reviews)</div>
                     {/if}
-                    <a href="/books/{book.id}" class="btn">Read Reviews</a>
+                    <a href={`/books/${book.slug}`} class="btn">Read Reviews</a>
                 </div>
             </article>
         {/each}

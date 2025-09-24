@@ -11,6 +11,18 @@ import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 // Session constants
 const SESSION_EXPIRES_IN_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
+// Block common WordPress scanner paths
+const wordpressPaths = [
+    '/wp-includes/',
+    '/wp-admin/',
+    '/wp-content/',
+    '/xmlrpc.php',
+    '/wp-login.php',
+    '/wordpress/',
+    '/feed/',
+    '/wlwmanifest.xml'
+];
+
 /**
  * Generates a cryptographically secure session ID
  */
@@ -129,6 +141,12 @@ export async function handle({ event, resolve }) {
         console.log('🔑 MAILGUN_API_KEY is set (length:', event.platform.env.MAILGUN_API_KEY.length, ')');
     } else {
         console.error('❌ MAILGUN_API_KEY is MISSING or undefined');
+    }
+
+    // ✅ BLOCK WORDPRESS SCANNERS — moved inside handle()
+    const url = new URL(event.request.url);
+    if (wordpressPaths.some(path => url.pathname.includes(path))) {
+        return new Response('Not Found', { status: 404 });
     }
 
     // Validate session from cookie

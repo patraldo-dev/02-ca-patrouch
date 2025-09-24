@@ -30,7 +30,11 @@
           "database_name": "patrouch-ca-book-app",
           "database_id": "0c520f9b-425c-4d29-b2a9-4dbd2ba1def6"
         }
-      ]
+      ],
+
+	"images": {
+		"binding": "IMAGES"  // ← This will be available as env.IMAGES in your Worker
+	    }
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -62,3 +66,4 @@
 	 */
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
 }
+

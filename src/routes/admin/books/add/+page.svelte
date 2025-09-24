@@ -10,6 +10,7 @@
     let published_year = '';
     let error = '';
     let success = false;
+    let coverImageFiles = [];
 
     const handleSubmit = async (event) => {
         error = '';
@@ -112,6 +113,17 @@
                     min="1000"
                     max="2100"
                 />
+	<!-- Add this inside your form -->
+	<div class="input-group">
+	    <label for="coverImage">Book Cover</label>
+	    <input
+		id="coverImage"
+		type="file"
+		accept="image/*"
+		bind:files={coverImageFiles}
+		required
+	    />
+</div>
             </div>
             <button type="submit" class="btn-primary">
                 Add Book
