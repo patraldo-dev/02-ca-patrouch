@@ -2,6 +2,37 @@
 import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
+export async function GET({ platform }) {
+    const db = platform?.env?.DB_book;
+    if (!db) {
+        return json({ error: 'DB unavailable' }, { status: 500 });
+    }
+
+    try {
+        const { results: books } = await db
+            .prepare(`
+                SELECT 
+                    id, 
+                    title, 
+                    author, 
+                    isbn, 
+                    coverImageId, 
+                    slug,
+                    (SELECT AVG(rating) FROM reviews WHERE book_id = books.id) as avg_rating,
+                    (SELECT COUNT(*) FROM reviews WHERE book_id = books.id) as review_count
+                FROM books
+                ORDER BY title
+            `)
+            .all();
+
+        return json(books);
+    } catch (err) {
+        console.error('Failed to fetch books:', err);
+        return json({ error: 'Failed to fetch books' }, { status: 500 });
+    }
+}
+
+/** @type {import('./$types').RequestHandler} */
 export async function POST({ request, platform }) {
     const db = platform?.env?.DB_book;
     if (!db) {
@@ -15,10 +46,8 @@ export async function POST({ request, platform }) {
     }
 
     try {
-        // ✅ Generate book ID
         const bookId = crypto.randomUUID();
 
-        // ✅ Insert into DB with coverImageId
         await db
             .prepare('INSERT INTO books (id, title, author, isbn, coverImageId, slug) VALUES (?, ?, ?, ?, ?, ?)')
             .bind(
@@ -27,19 +56,18 @@ export async function POST({ request, platform }) {
                 author,
                 isbn || null,
                 coverImageId || null,
-                slugifyDiacritics(title) // ← You’ll need to import this
+                slugifyDiacritics(title)
             )
             .run();
 
         return json({ success: true, id: bookId });
-
     } catch (err) {
         console.error('Failed to add book:', err);
         return json({ error: 'Failed to add book' }, { status: 500 });
     }
 }
 
-// ✅ Add slugify helper (or import from $lib/utils.js)
+// Helper: slugify with diacritics
 function slugifyDiacritics(str) {
     return str
         .normalize('NFC')
