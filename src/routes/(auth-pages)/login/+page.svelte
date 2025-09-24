@@ -19,19 +19,18 @@
 
         try {
             const api = newWebSocketRpcSession('/api/rpc');
-            const { session, setCookie } = await api.login(identifier, password);
+const { session, setCookie } = await api.login(email, password);
 
-            // Set cookie
-            const cookieParts = [
-                `${setCookie.name}=${setCookie.value}`,
-                `path=${setCookie.attributes.path}`,
-                `max-age=${setCookie.attributes.maxAge}`
-            ];
-            if (setCookie.attributes.secure) cookieParts.push('secure');
-            if (setCookie.attributes.httpOnly) cookieParts.push('httponly');
-            cookieParts.push(`samesite=${setCookie.attributes.sameSite}`);
-            document.cookie = cookieParts.join('; ');
-
+// ✅ Set cookie correctly
+const cookieParts = [
+    `${setCookie.name}=${setCookie.value}`,
+    `Path=${setCookie.attributes.path}`,
+    `Max-Age=${setCookie.attributes.maxAge}`
+];
+if (setCookie.attributes.secure) cookieParts.push('Secure');
+if (setCookie.attributes.httpOnly) cookieParts.push('HttpOnly'); // ← Critical: HttpOnly, not httponly
+cookieParts.push(`SameSite=${setCookie.attributes.sameSite}`);
+document.cookie = cookieParts.join('; ');
             window.location.href = '/';
 
         } catch (err) {
