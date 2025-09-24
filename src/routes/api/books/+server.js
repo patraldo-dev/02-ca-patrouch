@@ -9,18 +9,22 @@ export async function GET({ platform }) {
     }
 
     try {
-        const { results: books } = await db
-            .prepare(`
-                SELECT 
-                    id, 
-                    title, 
-                    author, 
-                    isbn, 
-                    coverImageId, 
-                FROM books
-                ORDER BY title
-            `)
-            .all();
+
+const { results: books } = await db
+    .prepare(`
+        SELECT 
+            b.id, 
+            b.title, 
+            b.author, 
+            b.isbn, 
+            b.coverImageId, 
+            b.slug,
+            (SELECT AVG(rating) FROM reviews WHERE book_id = b.id) as avg_rating,
+            (SELECT COUNT(*) FROM reviews WHERE book_id = b.id) as review_count
+        FROM books b
+        ORDER BY b.title
+    `)
+    .all();
 
         return json(books);
     } catch (err) {
