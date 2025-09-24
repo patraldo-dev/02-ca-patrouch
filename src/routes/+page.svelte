@@ -10,35 +10,32 @@
 
 <div class="container">
     <h1>📚 Mis Libros</h1>
-    <div class="books-grid">
-        {#each data.books as book}
-            <article class="book-card">
-                {#if book.cover_image_url}
-                    <img src={book.cover_image_url} alt={book.title} class="cover" />
-                {:else}
-                    <div class="cover-placeholder">No Cover</div>
-		{#if book.coverImageId}
-		    <img 
-			src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
-			alt={`Cover of ${book.title}`}
-			class="book-cover"
-		    />
-		{:else}
-		    <div>No Cover</div>
+<div class="books-grid">
+    {#each data.books as book}
+        <article class="book-card">
+            {#if book.coverImageId}
+                <a href={`/books/${book.slug}`}>
+                    <img 
+                        src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
+                        alt={`Cover of ${book.title}`}
+                        class="book-cover"
+                    />
+                </a>
+            {:else}
+                <div class="cover-placeholder">No Cover</div>
+            {/if}
+            <div class="book-info">
+                <a href={`/books/${book.slug}`}>
+                    <h2>{book.title}</h2>
+                </a>
+                <p class="author">by {book.author}</p>
+                {#if book.avg_rating}
+                    <div class="rating">⭐ {parseFloat(book.avg_rating).toFixed(1)} ({book.review_count} reviews)</div>
                 {/if}
-                <div class="book-info">
-	<a href={`/books/${book.slug}`}>
-	    <h2>{book.title}</h2>
-	</a>
-                    <p class="author">by {book.author}</p>
-                    {#if book.avg_rating}
-                        <div class="rating">⭐ {parseFloat(book.avg_rating).toFixed(1)} ({book.review_count} reviews)</div>
-                    {/if}
-                    <a href="/books/{book.slug/review}" class="btn">Read Reviews</a>
-                </div>
-            </article>
-        {/each}
-    </div>
+                <a href={`/books/${book.slug}/review`} class="btn">Read Reviews</a>
+            </div>
+        </article>
+    {/each}
 </div>
 
 <style>
