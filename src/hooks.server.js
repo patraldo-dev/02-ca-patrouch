@@ -8,20 +8,8 @@ globalThis.process.env.OSLO_PASSWORD_DISABLE_NATIVE = "1";
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
-// Session constants
-const SESSION_EXPIRES_IN_SECONDS = 60 * 60 * 24 * 30; // 30 days
-
-// Block common WordPress scanner paths
-const wordpressPaths = [
-    '/wp-includes/',
-    '/wp-admin/',
-    '/wp-content/',
-    '/xmlrpc.php',
-    '/wp-login.php',
-    '/wordpress/',
-    '/feed/',
-    '/wlwmanifest.xml'
-];
+// Session constants (in milliseconds)
+const SESSION_EXPIRES_IN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 /**
  * Generates a cryptographically secure session ID
@@ -36,14 +24,7 @@ function generateSessionId() {
  * Validates a session
  */
 async function validateSession(db, sessionId) {
-    const now = Date.now();
-
-if (now >= row.expires_at  - (SESSION_EXPIRES_IN_SECONDS * 1000 / 2)) { // ← compare ms to ms
-    const newExpiresAt = now + SESSION_EXPIRES_IN_SECONDS * 1000;
-
-    await invalidateSession(db, sessionId);
-    return null;
-}
+    const now = Date.now(); // milliseconds
 
     const { results } = await db.prepare(`
         SELECT id, user_id, expires_at
@@ -59,7 +40,7 @@ if (now >= row.expires_at  - (SESSION_EXPIRES_IN_SECONDS * 1000 / 2)) { // ← c
     const session = {
         id: row.id,
         userId: row.user_id,
-        expiresAt: new Date(row.expires_at * 1000),
+        expiresAt: new Date(row.expires_at),
         fresh: false
     };
 
@@ -70,15 +51,15 @@ if (now >= row.expires_at  - (SESSION_EXPIRES_IN_SECONDS * 1000 / 2)) { // ← c
     }
 
     // Auto-refresh if past halfway
-    if (now >= row.expires_at - (SESSION_EXPIRES_IN_SECONDS / 2)) {
-        const newExpiresAt = now + SESSION_EXPIRES_IN_SECONDS;
+    if (now >= row.expires_at - (SESSION_EXPIRES_IN_MS / 2)) {
+        const newExpiresAt = now + SESSION_EXPIRES_IN_MS;
         await db.prepare(`
             UPDATE user_session
             SET expires_at = ?
             WHERE id = ?
         `).bind(newExpiresAt, sessionId).run();
 
-        session.expiresAt = new Date(newExpiresAt * 1000);
+        session.expiresAt = new Date(newExpiresAt);
         session.fresh = true;
     }
 
@@ -150,29 +131,17 @@ export async function handle({ event, resolve }) {
         console.error('❌ MAILGUN_API_KEY is MISSING or undefined');
     }
 
-    // ✅ BLOCK WORDPRESS SCANNERS — moved inside handle()
-    const url = new URL(event.request.url);
-    if (wordpressPaths.some(path => url.pathname.includes(path))) {
-        return new Response('Not Found', { status: 404 });
-    }
-
     // Validate session from cookie
     const sessionId = event.cookies.get('session');
     let session = null;
-/    let user = null;
-
-console.log('🍪 Session cookie:', sessionId);
+    let user = null;
 
     if (sessionId) {
-    console.log('🔍 Validating session...');
-
+        console.log('🍪 Session cookie found:', sessionId);
         session = await validateSession(event.locals.db, sessionId);
-    console.log('✅ Session:', session);
-
         if (session) {
+            console.log('✅ Session validated for user ID:', session.userId);
             // Fetch user
-        console.log('👤 User:', user);
-
             const { results } = await event.locals.db.prepare(`
                 SELECT id, username, email, email_verified_at
                 FROM users
@@ -182,22 +151,25 @@ console.log('🍪 Session cookie:', sessionId);
             if (results[0]) {
                 user = results[0];
                 user.email_verified = user.email_verified_at !== null;
+                console.log('👤 User loaded:', user.username);
             } else {
                 // User deleted — invalidate session
+                console.log('🗑️ User not found — invalidating session');
                 await invalidateSession(event.locals.db, sessionId);
                 session = null;
             }
         } else {
             // Invalid session — clear cookie
+            console.log('❌ Invalid session — clearing cookie');
             deleteSessionCookie(event.cookies);
         }
+    } else {
+        console.log('📭 No session cookie found');
     }
-
-
 
     // Attach to locals → powers $page.data.user in +layout.svelte
     event.locals.session = session;
-    event.locals.user = user; // ← This is what your layout uses for "Welcome, {username}"
+    event.locals.user = user;
     if (event.platform) {
         event.locals.platform = event.platform;
     }
@@ -207,6 +179,7 @@ console.log('🍪 Session cookie:', sessionId);
 
     // Refresh session cookie if needed
     if (session?.fresh) {
+        console.log('🔄 Refreshing session cookie');
         setSessionCookie(response.headers, session.id, session.expiresAt);
     }
 
