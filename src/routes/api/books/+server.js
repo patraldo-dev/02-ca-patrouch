@@ -17,9 +17,6 @@ export async function GET({ platform }) {
                     author, 
                     isbn, 
                     coverImageId, 
-                    slug,
-                    (SELECT AVG(rating) FROM reviews WHERE book_id = books.id) as avg_rating,
-                    (SELECT COUNT(*) FROM reviews WHERE book_id = books.id) as review_count
                 FROM books
                 ORDER BY title
             `)
