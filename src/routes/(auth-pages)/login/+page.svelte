@@ -19,7 +19,9 @@
 
         try {
             const api = newWebSocketRpcSession('/api/rpc');
-const { session, setCookie } = await api.login(email, password);
+const { session, setCookie } = await api.login(identifier, password);
+console.log('🍪 RPC returned setCookie:', setCookie);
+
 
 // ✅ Set cookie correctly
 const cookieParts = [
@@ -30,6 +32,9 @@ const cookieParts = [
 if (setCookie.attributes.secure) cookieParts.push('Secure');
 if (setCookie.attributes.httpOnly) cookieParts.push('HttpOnly'); // ← Critical: HttpOnly, not httponly
 cookieParts.push(`SameSite=${setCookie.attributes.sameSite}`);
+const cookieString = cookieParts.join('; ');
+console.log('🍪 Setting cookie:', cookieString);
+
 document.cookie = cookieParts.join('; ');
             window.location.href = '/';
 
