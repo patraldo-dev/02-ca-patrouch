@@ -36,7 +36,14 @@ function generateSessionId() {
  * Validates a session
  */
 async function validateSession(db, sessionId) {
-    const now = Math.floor(Date.now() / 1000);
+    const now = Date.now();
+
+if (now >= row.expires_at  - (SESSION_EXPIRES_IN_SECONDS * 1000 / 2)) { // ← compare ms to ms
+    const newExpiresAt = now + SESSION_EXPIRES_IN_SECONDS * 1000;
+
+    await invalidateSession(db, sessionId);
+    return null;
+}
 
     const { results } = await db.prepare(`
         SELECT id, user_id, expires_at
@@ -152,12 +159,20 @@ export async function handle({ event, resolve }) {
     // Validate session from cookie
     const sessionId = event.cookies.get('session');
     let session = null;
-    let user = null;
+/    let user = null;
+
+console.log('🍪 Session cookie:', sessionId);
 
     if (sessionId) {
+    console.log('🔍 Validating session...');
+
         session = await validateSession(event.locals.db, sessionId);
+    console.log('✅ Session:', session);
+
         if (session) {
             // Fetch user
+        console.log('👤 User:', user);
+
             const { results } = await event.locals.db.prepare(`
                 SELECT id, username, email, email_verified_at
                 FROM users
@@ -177,6 +192,8 @@ export async function handle({ event, resolve }) {
             deleteSessionCookie(event.cookies);
         }
     }
+
+
 
     // Attach to locals → powers $page.data.user in +layout.svelte
     event.locals.session = session;
