@@ -2,17 +2,14 @@
 <script>
     import { browser } from '$app/environment';
     
-    // Get data from server load function
     export let data;
     
-    // Initialize with server-provided data
     $: redirectTo = data?.redirectTo || '/';
     $: initialError = data?.errorMessage || '';
     
-    // Your existing variables
     let identifier = '';
     let password = '';
-    let error = initialError; // Use server-provided error initially
+    let error = initialError;
     let isLoading = false;
     
     async function handleLogin() {
@@ -30,8 +27,7 @@
             });
             const result = await response.json();
             if (response.ok) {
-                // Cookie is set automatically by server
-                window.location.href = redirectTo; // Use the redirect URL
+                window.location.href = redirectTo;
             } else {
                 error = result.error || 'Invalid credentials';
             }
@@ -40,12 +36,6 @@
             error = 'Network error. Please try again.';
         } finally {
             isLoading = false;
-        }
-    }
-    
-    function handleKeyDown(e) {
-        if (e.key === 'Enter' && !isLoading) {
-            handleLogin();
         }
     }
 </script>
