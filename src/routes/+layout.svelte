@@ -1,8 +1,12 @@
 <!-- src/routes/+layout.svelte -->
 <script>
     import { browser } from '$app/environment';
-    import { page as $page } from '$app/stores';
+    import { beforeNavigate } from '$app/stores';
 
+// Close mobile menu on route change
+beforeNavigate(() => {
+    mobileMenuOpen = false;
+});
     /** @type {import('./$types').LayoutData} */
     export let data;
 
@@ -14,7 +18,10 @@
     }
 
     // Close mobile menu on route change
-    $: $page.url.pathname, mobileMenuOpen = false;
+
+beforeNavigate(() => {
+    mobileMenuOpen = false;
+});
 
     async function handleLogout() {
         if (!browser) return;
