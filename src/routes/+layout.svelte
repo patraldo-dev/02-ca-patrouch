@@ -1,6 +1,7 @@
 <!-- src/routes/+layout.svelte -->
 <script>
     import { browser } from '$app/environment';
+    import { page as $page } from '$app/stores';
 
     /** @type {import('./$types').LayoutData} */
     export let data;
