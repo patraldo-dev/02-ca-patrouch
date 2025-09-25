@@ -3,7 +3,7 @@
     import { browser } from '$app/environment';
     import { beforeNavigate } from '$app/navigation';
     import { page } from '$app/stores';
-    import NewsletterForm from '$lib/components/NewsletterForm.svelte'; // Add this import
+    import NewsletterForm from '$lib/components/NewsletterForm.svelte';
     
     // Close mobile menu on route change
     beforeNavigate(() => {
@@ -11,7 +11,7 @@
     });
     
     /** @type {import('./$types').LayoutData} */
-    export let data = {}; // Add default empty object here
+    export let data = {};
     
     // Mobile menu state
     let mobileMenuOpen = false;
@@ -43,7 +43,7 @@
             <a href="/" class="logo" aria-label="ShelfTalk Home">
                 📚 ShelfTalk
             </a>
-
+            
             <!-- Desktop Navigation -->
             <nav class="desktop-nav" aria-label="Main navigation">
                 <a
@@ -61,11 +61,11 @@
                     Books
                 </a>
                 <a
-                    href="/about"
-                    class:active={$page.url.pathname === '/about'}
-                    aria-current={$page.url.pathname === '/about' ? 'page' : undefined}
+                    href="/admin/reviews"
+                    class:active={$page.url.pathname === '/admin/reviews'}
+                    aria-current={$page.url.pathname === '/admin/reviews' ? 'page' : undefined}
                 >
-                    About
+                    Reviews
                 </a>
                 <a
                     href="/blog"
@@ -75,7 +75,7 @@
                     Blog
                 </a>
             </nav>
-
+            
             <!-- Auth Actions -->
             <div class="auth-actions" aria-label="Account actions">
                 {#if data?.user}
@@ -97,7 +97,7 @@
                     </a>
                 {/if}
             </div>
-
+            
             <!-- Mobile Menu Toggle -->
             <button
                 class="mobile-toggle"
@@ -110,7 +110,7 @@
                 ☰
             </button>
         </div>
-
+        
         <!-- Mobile Menu (Sliding from top) -->
         {#if mobileMenuOpen}
             <div id="mobile-menu" class="mobile-menu" role="dialog" aria-modal="true">
@@ -132,15 +132,22 @@
                         Books
                     </a>
                     <a
-                        href="/about"
+                        href="/admin/reviews"
                         on:click={toggleMobileMenu}
-                        class:active={$page.url.pathname === '/about'}
-                        aria-current={$page.url.pathname === '/about' ? 'page' : undefined}
+                        class:active={$page.url.pathname === '/admin/reviews'}
+                        aria-current={$page.url.pathname === '/admin/reviews' ? 'page' : undefined}
                     >
-                        About
+                        Reviews
+                    </a>
+                    <a
+                        href="/blog"
+                        on:click={toggleMobileMenu}
+                        class:active={$page.url.pathname.startsWith('/blog')}
+                        aria-current={$page.url.pathname.startsWith('/blog') ? 'page' : undefined}
+                    >
+                        Blog
                     </a>
                 </nav>
-
                 <div class="mobile-auth" aria-label="Mobile account actions">
                     {#if data?.user}
                         <div class="welcome-mobile" aria-live="polite">
@@ -178,12 +185,12 @@
             </div>
         {/if}
     </header>
-
+    
     <!-- Main Content -->
     <main class="main-content">
         <slot />
     </main>
-
+    
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
@@ -206,7 +213,7 @@
         min-height: 100vh;
         background-color: #fafafa;
     }
-
+    
     /* Navbar */
     .navbar {
         background: white;
@@ -215,7 +222,7 @@
         top: 0;
         z-index: 100;
     }
-
+    
     .nav-container {
         display: flex;
         justify-content: space-between;
@@ -224,7 +231,7 @@
         max-width: 1200px;
         margin: 0 auto;
     }
-
+    
     .logo {
         font-size: 1.5rem;
         font-weight: 700;
@@ -232,18 +239,18 @@
         color: #3b82f6;
         transition: color 0.2s;
     }
-
+    
     .logo:hover {
         color: #2563eb;
     }
-
+    
     /* Desktop Nav */
     .desktop-nav {
         display: flex;
         gap: 2rem;
         align-items: center;
     }
-
+    
     .desktop-nav a {
         text-decoration: none;
         color: #333;
@@ -252,26 +259,26 @@
         border-bottom: 2px solid transparent;
         transition: border-color 0.2s ease;
     }
-
+    
     .desktop-nav a:hover,
     .desktop-nav a.active {
         border-bottom: 2px solid #3b82f6;
         color: #3b82f6;
     }
-
+    
     /* Auth Buttons */
     .auth-actions {
         display: flex;
         align-items: center;
         gap: 1rem;
     }
-
+    
     .welcome {
         color: #333;
         font-weight: 500;
         white-space: nowrap;
     }
-
+    
     .btn-primary,
     .btn-secondary {
         padding: 0.5rem 1rem;
@@ -283,31 +290,31 @@
         border: none;
         transition: all 0.2s;
     }
-
+    
     .btn-primary {
         background: #3b82f6;
         color: white;
     }
-
+    
     .btn-primary:hover {
         background: #2563eb;
     }
-
+    
     .btn-secondary {
         background: #e5e7eb;
         color: #333;
     }
-
+    
     .btn-secondary:hover {
         background: #d1d5db;
     }
-
+    
     .btn-secondary:focus,
     .btn-primary:focus {
         outline: 2px solid #3b82f6;
         outline-offset: 2px;
     }
-
+    
     /* Mobile Toggle */
     .mobile-toggle {
         display: none;
@@ -317,7 +324,7 @@
         cursor: pointer;
         color: #333;
     }
-
+    
     /* Mobile Menu */
     .mobile-menu {
         background: white;
@@ -325,7 +332,7 @@
         border-bottom: 1px solid #eee;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-
+    
     .mobile-nav {
         display: flex;
         flex-direction: column;
@@ -333,7 +340,7 @@
         padding: 1rem 0;
         border-bottom: 1px solid #eee;
     }
-
+    
     .mobile-nav a {
         text-decoration: none;
         color: #333;
@@ -341,19 +348,19 @@
         padding: 0.5rem 0;
         border-bottom: 2px solid transparent;
     }
-
+    
     .mobile-nav a.active {
         color: #3b82f6;
         border-bottom-color: #3b82f6;
     }
-
+    
     .mobile-auth {
         display: flex;
         flex-direction: column;
         gap: 1rem;
         padding: 1rem 0;
     }
-
+    
     .welcome-mobile {
         padding: 1rem 0;
         text-align: center;
@@ -361,13 +368,13 @@
         color: #333;
         border-bottom: 1px solid #eee;
     }
-
+    
     .block {
         display: block;
         text-align: center;
         width: 100%;
     }
-
+    
     /* Footer */
     .site-footer {
         background: #1f2937;
@@ -375,24 +382,24 @@
         padding: 2rem 0;
         margin-top: auto;
     }
-
+    
     .site-footer .container {
         max-width: 1200px;
         margin: 0 auto;
         text-align: center;
     }
-
+    
     .newsletter-section {
         margin-bottom: 2rem;
         text-align: center;
     }
-
+    
     /* Main Content Spacing */
     .main-content {
         flex: 1;
         padding: 2rem 0;
     }
-
+    
     /* Screen Reader Only */
     .sr-only {
         position: absolute;
@@ -405,26 +412,26 @@
         white-space: nowrap;
         border: 0;
     }
-
+    
     /* Responsive */
     @media (max-width: 768px) {
         .nav-container {
             padding: 1rem;
         }
-
+        
         .desktop-nav,
         .auth-actions {
             display: none;
         }
-
+        
         .mobile-toggle {
             display: block;
         }
-
+        
         .main-content {
             padding: 1.5rem 1rem;
         }
-
+        
         .site-footer .container {
             padding: 0 1rem;
         }
