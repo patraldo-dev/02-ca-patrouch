@@ -1,7 +1,7 @@
 <!-- src/routes/(auth-pages)/+layout.svelte -->
 <script>
     /** @type {import('./$types').LayoutData} */
-    export let data;
+    export const data;
 </script>
 
 <!-- Shared auth page container -->
