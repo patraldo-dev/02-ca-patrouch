@@ -8,6 +8,12 @@
     let error = '';
     let isLoading = false;
 
+function handleKeyDown(e) {
+    if (e.key === 'Enter' && !isLoading) {
+        handleLogin();
+    }
+}
+
 async function handleLogin() {
     if (!identifier || !password) {
         error = 'Please enter your email or username and password';
