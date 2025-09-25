@@ -3,77 +3,41 @@ import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ platform }) {
-    const db = platform?.env?.DB_book;
-    if (!db) {
-        return json({ error: 'DB unavailable' }, { status: 500 });
+    if (!platform?.env?.DB_book) {
+        return json({ error: 'Database not available' }, { status: 500 });
     }
-
+    
+    const db = platform.env.DB_book;
+    
     try {
-
-const { results: books } = await db
-    .prepare(`
-        SELECT 
-            b.id, 
-            b.title, 
-            b.author, 
-            b.isbn, 
-            b.coverImageId, 
-            b.slug,
-            (SELECT AVG(rating) FROM reviews WHERE book_id = b.id) as avg_rating,
-            (SELECT COUNT(*) FROM reviews WHERE book_id = b.id) as review_count
-        FROM books b
-        ORDER BY b.title
-    `)
-    .all();
-
-        return json(books);
-    } catch (err) {
-        console.error('Failed to fetch books:', err);
+        // Only fetch books that have valid titles, authors, and covers
+        const { results } = await db.prepare(`
+            SELECT 
+                b.id, 
+                b.title, 
+                b.author, 
+                b.description, 
+                b.cover_image_url,
+                b.coverImageId,
+                b.slug,
+                b.published_year,
+                AVG(r.rating) as avg_rating,
+                COUNT(r.id) as review_count
+            FROM books b
+            LEFT JOIN reviews r ON b.id = r.book_id
+            WHERE 
+                b.title IS NOT NULL 
+                AND b.title != ''
+                AND b.author IS NOT NULL 
+                AND b.author != ''
+                AND (b.cover_image_url IS NOT NULL OR b.coverImageId IS NOT NULL)
+            GROUP BY b.id
+            ORDER BY b.title ASC
+        `).all();
+        
+        return json(results);
+    } catch (error) {
+        console.error('Error fetching books:', error);
         return json({ error: 'Failed to fetch books' }, { status: 500 });
     }
-}
-
-/** @type {import('./$types').RequestHandler} */
-export async function POST({ request, platform }) {
-    const db = platform?.env?.DB_book;
-    if (!db) {
-        return json({ error: 'DB unavailable' }, { status: 500 });
-    }
-
-    const { title, author, isbn, coverImageId } = await request.json();
-
-    if (!title || !author) {
-        return json({ error: 'Title and author required' }, { status: 400 });
-    }
-
-    try {
-        const bookId = crypto.randomUUID();
-
-        await db
-            .prepare('INSERT INTO books (id, title, author, isbn, coverImageId, slug) VALUES (?, ?, ?, ?, ?, ?)')
-            .bind(
-                bookId,
-                title,
-                author,
-                isbn || null,
-                coverImageId || null,
-                slugifyDiacritics(title)
-            )
-            .run();
-
-        return json({ success: true, id: bookId });
-    } catch (err) {
-        console.error('Failed to add book:', err);
-        return json({ error: 'Failed to add book' }, { status: 500 });
-    }
-}
-
-// Helper: slugify with diacritics
-function slugifyDiacritics(str) {
-    return str
-        .normalize('NFC')
-        .toLowerCase()
-        .replace(/[^\p{L}\p{N}\s-]/gu, '')
-        .trim()
-        .replace(/[-\s]+/g, '-');
 }

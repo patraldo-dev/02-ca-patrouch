@@ -1,42 +1,112 @@
 <!-- src/routes/+page.svelte -->
 <script>
-    /** @type {import('./$types').PageData} */
-    export let data;
+    import { onMount } from 'svelte';
+    
+    let books = [];
+    let loading = true;
+    let error = null;
+    
+    onMount(async () => {
+        try {
+            const response = await fetch('/api/books');
+            if (response.ok) {
+                const allBooks = await response.json();
+                // Filter out books that don't have proper data
+                books = allBooks.filter(book => 
+                    book && 
+                    book.title && 
+                    book.title.trim() !== '' && 
+                    book.author && 
+                    book.author.trim() !== '' &&
+                    (book.coverImageId || book.cover_image_url) // Only show books with covers
+                );
+            } else {
+                error = 'Failed to load books';
+            }
+        } catch (err) {
+            console.error('Error fetching books:', err);
+            error = 'Network error. Please try again.';
+        } finally {
+            loading = false;
+        }
+    });
 </script>
 
 <svelte:head>
-    <title>Libros</title>
+    <title>ShelfTalk — Honest book reviews & thoughtful commentary</title>
 </svelte:head>
 
 <div class="container">
-    <h1>📚 Mis Libros</h1>
-<div class="books-grid">
-    {#each data.books as book}
-        <article class="book-card">
-            {#if book.coverImageId}
-                <a href={`/books/${book.slug}`}>
-                    <img 
-                        src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
-                        alt={`Cover of ${book.title}`}
-                        class="book-cover"
-                    />
-                </a>
-            {:else}
-                <div class="cover-placeholder">No Cover</div>
-            {/if}
-            <div class="book-info">
-                <a href={`/books/${book.slug}`}>
-                    <h2>{book.title}</h2>
-                </a>
-                <p class="author">by {book.author}</p>
-                {#if book.avg_rating}
-                    <div class="rating">⭐ {parseFloat(book.avg_rating).toFixed(1)} ({book.review_count} reviews)</div>
-                {/if}
-                <a href={`/books/${book.slug}/review`} class="btn">Read Reviews</a>
+    <header class="hero">
+        <h1>ShelfTalk</h1>
+        <p>Honest book reviews & thoughtful commentary</p>
+    </header>
+    
+    <section class="featured-books">
+        <h2>Featured Books</h2>
+        
+        {#if loading}
+            <div class="loading">
+                <p>Loading books...</p>
             </div>
-        </article>
-    {/each}
-</div>
+        {:else if error}
+            <div class="error">
+                <p>{error}</p>
+            </div>
+        {:else if books.length === 0}
+            <div class="empty">
+                <p>No books available. Check back soon for new additions!</p>
+            </div>
+        {:else}
+            <div class="books-grid">
+                {#each books as book}
+                    <article class="book-card">
+<a href={`/books/${book.slug}`}>
+    {#if book.coverImageId}
+        <img 
+            src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
+            alt={`Cover of ${book.title}`}
+            class="book-cover"
+            loading="lazy"
+        />
+    {:else if book.cover_image_url}
+        <img 
+            src={book.cover_image_url}
+            alt={`Cover of ${book.title}`}
+            class="book-cover"
+            loading="lazy"
+        />
+    {:else}
+        <div class="book-cover-placeholder">
+            <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#d1d5db"/>
+                <path d="M2 17L12 22L22 17" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+    {/if}
+</a>
+
+                        <div class="book-info">
+                            <a href={`/books/${book.slug}`}>
+                                <h3>{book.title}</h3>
+                            </a>
+                            <p class="author">by {book.author}</p>
+                            {#if book.avg_rating}
+                                <div class="rating">
+                                    ⭐ {parseFloat(book.avg_rating).toFixed(1)}
+                                    {#if book.review_count}
+                                        ({book.review_count} review{book.review_count !== 1 ? 's' : ''})
+                                    {/if}
+                                </div>
+                            {/if}
+                            <a href={`/books/${book.slug}`} class="read-more">Read Review</a>
+                        </div>
+                    </article>
+                {/each}
+            </div>
+        {/if}
+    </section>
 </div>
 
 <style>
@@ -45,64 +115,128 @@
         margin: 0 auto;
         padding: 2rem;
     }
+    
+    .hero {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        color: #1f2937;
+    }
+    
+    .hero p {
+        font-size: 1.25rem;
+        color: #6b7280;
+    }
+    
+    .featured-books h2 {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        color: #1f2937;
+    }
+    
     .books-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 2rem;
     }
+    
     .book-card {
-        background: #fff;
+        background: white;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         overflow: hidden;
-        transition: transform 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+    
     .book-card:hover {
         transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
     }
-    .cover {
-	width: 100%;
-	height: auto;
-	display: block; /* removes inline spacing */
-	border-radius: 8px 8px 0 0;
-	background: #f0f0f0; /* fallback while loading */
-	object-fit: cover; /* still useful if container constrains it */
-    }
-    .cover-placeholder {
+    
+    .book-cover {
         width: 100%;
         aspect-ratio: 2/3;
-        background: #f0f0f0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #888;
+        object-fit: cover;
+        background: #f3f4f6;
     }
+    
     .book-info {
-        padding: 1rem;
+        padding: 1.5rem;
     }
-    .book-info h2 {
+    
+    .book-info h3 {
+        font-size: 1.25rem;
         margin: 0 0 0.5rem 0;
-        font-size: 1.2rem;
+        color: #1f2937;
     }
+    
+    .book-info h3:hover {
+        color: #3b82f6;
+    }
+    
     .author {
-        color: #666;
-        margin: 0 0 0.5rem 0;
+        color: #6b7280;
+        margin: 0 0 1rem 0;
+        font-size: 0.95rem;
     }
+    
     .rating {
-        color: #eab308;
+        color: #f59e0b;
         font-weight: 600;
         margin: 0 0 1rem 0;
+        font-size: 0.9rem;
     }
-    .btn {
+    
+    .read-more {
         display: inline-block;
-        background: #3b82f6;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
+        color: #3b82f6;
         text-decoration: none;
         font-weight: 500;
+        font-size: 0.9rem;
     }
-    .btn:hover {
-        background: #2563eb;
+    
+    .read-more:hover {
+        text-decoration: underline;
+    }
+    
+    .loading, .error, .empty {
+        text-align: center;
+        padding: 3rem;
+        background: #f9fafb;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+    
+    .error {
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+    
+    .empty {
+        background: #f0f9ff;
+        color: #0369a1;
+    }
+    
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+        
+        .books-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .book-info {
+            padding: 1rem;
+        }
+        
+        .book-info h3 {
+            font-size: 1.1rem;
+        }
     }
 </style>
