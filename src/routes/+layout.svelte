@@ -3,6 +3,7 @@
     import { browser } from '$app/environment';
     import { beforeNavigate } from '$app/navigation';
     import { page } from '$app/stores';
+    import NewsletterForm from '$lib/components/NewsletterForm.svelte'; // Add this import
     
     // Close mobile menu on route change
     beforeNavigate(() => {
