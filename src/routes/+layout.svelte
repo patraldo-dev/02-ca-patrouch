@@ -1,6 +1,5 @@
 <!-- src/routes/+layout.svelte -->
 <script>
-    import { page } from '$app/stores';
     import { browser } from '$app/environment';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
     import { newWebSocketRpcSession } from 'capnweb';
