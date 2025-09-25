@@ -1,73 +1,49 @@
 <!-- src/routes/(auth-pages)/login/+page.svelte -->
 <script>
     import { browser } from '$app/environment';
-    import { newWebSocketRpcSession } from 'capnweb';
 
-    let identifier= '';
+    let identifier = '';
     let password = '';
     let error = '';
     let isLoading = false;
 
-function handleKeyDown(e) {
-    if (e.key === 'Enter' && !isLoading) {
-        handleLogin();
-    }
-}
-
-async function handleLogin() {
-    if (!identifier || !password) {
-        error = 'Please enter your email or username and password';
-        return;
-    }
-
-    isLoading = true;
-    error = '';
-
-    try {
-        const api = newWebSocketRpcSession('/api/rpc');
-        const result = await api.login(identifier, password);
-
-        // ✅ Debug: Log the full result
-        console.log('✅ Login RPC result:', result);
-
-        // ✅ Ensure result has setCookie
-        if (!result?.setCookie) {
-            throw new Error('Invalid login response: missing setCookie');
+    async function handleLogin() {
+        if (!identifier || !password) {
+            error = 'Please enter your email or username and password';
+            return;
         }
 
-        const { setCookie } = result;
+        isLoading = true;
+        error = '';
 
-        // ✅ Build cookie string with CORRECT attribute casing
-        const cookieParts = [
-            `${setCookie.name}=${setCookie.value}`,
-            `path=${setCookie.attributes.path}`,        // lowercase 'path'
-            `max-age=${setCookie.attributes.maxAge}`    // lowercase 'max-age'
-        ];
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier, password })
+            });
 
-        // ✅ Add flags with CORRECT casing
-        if (setCookie.attributes.secure) cookieParts.push('Secure');
-        if (setCookie.attributes.httpOnly) cookieParts.push('HttpOnly');
-        cookieParts.push(`samesite=${setCookie.attributes.sameSite}`); // lowercase 'samesite'
+            const result = await response.json();
 
-        const cookieString = cookieParts.join('; ');
-        console.log('🍪 Setting cookie:', cookieString);
-
-        // ✅ Set cookie
-        document.cookie = cookieString;
-
-        // ✅ Redirect after small delay to ensure cookie is set
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 100);
-
-    } catch (err) {
-        console.error('Login error:', err);
-        error = err.message || 'Invalid email/username or password. Please try again.';
-    } finally {
-        isLoading = false;
+            if (response.ok) {
+                // Cookie is set automatically by server
+                window.location.href = '/';
+            } else {
+                error = result.error || 'Invalid credentials';
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            error = 'Network error. Please try again.';
+        } finally {
+            isLoading = false;
+        }
     }
-}
 
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !isLoading) {
+            handleLogin();
+        }
+    }
 </script>
 
 <div class="login-container" on:keydown={handleKeyDown}>
@@ -95,14 +71,14 @@ async function handleLogin() {
 
         <form on:submit|preventDefault={handleLogin} class="login-form">
             <div class="input-group">
-	<label for="identifier">Email or Username</label>
-	<input
-	    id="identifier"
-	    bind:value={identifier}  
-	    type="text"              
-	    placeholder="you@example.com or yourusername"
-	    required
-	    autocomplete="username"  
+                <label for="identifier">Email or Username</label>
+                <input
+                    id="identifier"
+                    bind:value={identifier}
+                    type="text"
+                    placeholder="Enter email or username"
+                    required
+                    autocomplete="username"
                     disabled={isLoading}
                 />
             </div>
@@ -127,9 +103,9 @@ async function handleLogin() {
             </button>
         </form>
 
-        <div class="footer">
-            <p>Don't have an account? <a href="/signup">Sign up</a></p>
-        </div>
+        <p class="footer">
+            Don't have an account? <a href="/signup">Sign up</a>
+        </p>
     </div>
 </div>
 

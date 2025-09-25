@@ -1,8 +1,6 @@
 <!-- src/routes/(auth-pages)/signup/+page.svelte -->
 <script>
-    import { newWebSocketRpcSession } from 'capnweb';
     import { browser } from '$app/environment';
-
 
     let username = '';
     let email = '';
@@ -23,36 +21,28 @@
         success = '';
 
         try {
-            // 1. Connect to RPC server
-            const api = newWebSocketRpcSession('/api/rpc');
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
 
-            // 2. Call signup RPC
-            const { session, setCookie } = await api.signup(username, email, password);
+            const result = await response.json();
 
-            // 3. Set session cookie
-            const cookieParts = [
-                `${setCookie.name}=${setCookie.value}`,
-                `path=${setCookie.attributes.path}`,
-                `max-age=${setCookie.attributes.maxAge}`
-            ];
-            if (setCookie.attributes.secure) cookieParts.push('secure');
-            if (setCookie.attributes.httpOnly) cookieParts.push('httponly');
-            cookieParts.push(`samesite=${setCookie.attributes.sameSite}`);
-            document.cookie = cookieParts.join('; ');
-
-            // 4. Show success message or redirect
-            success = 'Account created! Redirecting...';
-            setTimeout(() => {
-                window.location.href = '/'; // or '/profile'
-            }, 1500);
-
+            if (response.ok) {
+                success = 'Account created! Please check your email to verify your address.';
+            } else {
+                error = result.error || 'Signup failed. Please try again.';
+            }
         } catch (err) {
-            error = err.message || 'Signup failed. Please try again.';
+            console.error('Signup error:', err);
+            error = 'Network error. Please try again.';
         } finally {
             isLoading = false;
         }
     }
-$: if (password && !confirmPassword) {
+
+    $: if (password && !confirmPassword) {
         confirmPassword = password;
     }
 </script>
@@ -61,7 +51,7 @@ $: if (password && !confirmPassword) {
     <h1>Create an Account</h1>
 
     {#if success}
-        <div style="color: green; margin-bottom: 1rem;">{success}</div>
+<div class="success-banner">{success}</div>
     {/if}
 
     <form on:submit|preventDefault={handleSignup}>

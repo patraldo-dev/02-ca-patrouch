@@ -1,97 +1,62 @@
 // src/routes/api/auth/signup/+server.js
-import { hashPassword } from '$lib/server/password.js';
-import { sendVerificationEmail } from '$lib/server/mailgun.js';
+import { json } from '@sveltejs/kit';
+import { hashPassword } from '$lib/auth-helpers.js';
+import { generateSessionToken } from '$lib/utils.js';
+import { sendMailgunEmail, getConfirmationEmailContent } from '$lib/email.js';
 
-/** @type {import('./$types').RequestHandler} */
-export async function POST({ request, locals }) {
-    try {
-        const { email, username, password } = await request.json();
-        const db = locals.db;
+export async function POST({ request, platform }) {
+    const db = platform?.env?.DB_book;
+    if (!db) return json({ error: 'DB unavailable' }, { status: 500 });
 
-        // Validate
-        if (!email || !username || !password) {
-            return new Response(
-                JSON.stringify({ error: 'Missing required fields' }),
-                { status: 400 }
-            );
-        }
-
-        if (password.length < 6) {
-            return new Response(
-                JSON.stringify({ error: 'Password must be at least 6 characters' }),
-                { status: 400 }
-            );
-        }
-
-        // Check duplicates
-        const emailCheck = await db.prepare(`
-            SELECT id FROM users WHERE email = ?
-        `).bind(email).all();
-
-        if (emailCheck.results.length > 0) {
-            return new Response(
-                JSON.stringify({ error: 'Email already in use' }),
-                { status: 400 }
-            );
-        }
-
-        const usernameCheck = await db.prepare(`
-            SELECT id FROM users WHERE username = ?
-        `).bind(username).all();
-
-        if (usernameCheck.results.length > 0) {
-            return new Response(
-                JSON.stringify({ error: 'Username already taken' }),
-                { status: 400 }
-            );
-        }
-
-        // Hash password
-        const { hash, salt } = await hashPassword(password);
-
-        // Generate IDs
-        const userId = crypto.randomUUID();
-        const emailVerificationToken = crypto.randomUUID();
-
-        // Insert user
-        const result = await db.prepare(`
-            INSERT INTO users (
-                id, email, username, hashed_password, password_salt, email_verification_token
-            ) VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(
-            userId,
-            email,
-            username,
-            hash,
-            salt,
-            emailVerificationToken
-        ).run();
-
-        if (!result.success) {
-            throw new Error('Failed to create user');
-        }
-
-        // Send verification email
-        const origin = new URL(request.url).origin;
-        const verifyUrl = `${origin}/verify?token=${emailVerificationToken}`;
-
-        try {
-            await sendVerificationEmail(email, verifyUrl, locals.platform.env);
-        } catch (emailError) {
-            console.error('Failed to send verification email:', emailError);
-            // Don't fail signup — user can request resend later
-        }
-
-        return new Response(
-            JSON.stringify({ success: true, message: 'Verification email sent' }),
-            { status: 200 }
-        );
-
-    } catch (error) {
-        console.error('Signup error:', error);
-        return new Response(
-            JSON.stringify({ error: 'Internal server error' }),
-            { status: 500 }
-        );
+    const { username, email, password } = await request.json();
+    if (!username || !email || !password) {
+        return json({ error: 'All fields required' }, { status: 400 });
     }
+
+    // Check if user exists
+    const existing = await db
+        .prepare('SELECT id FROM users WHERE username = ? OR email = ?')
+        .bind(username, email)
+        .first();
+    if (existing) {
+        return json({ error: 'Username or email already taken' }, { status: 409 });
+    }
+
+    // Hash password and create user
+    const passwordHash = await hashPassword(password);
+    const userId = crypto.randomUUID();
+    const newUser = await db
+        .prepare('INSERT INTO users (id, username, email, hashed_password, role) VALUES (?, ?, ?, ?, ?) RETURNING id, username, email')
+        .bind(userId, username, email, passwordHash, 'user')
+        .first();
+
+    if (!newUser) {
+        return json({ error: 'Signup failed' }, { status: 500 });
+    }
+
+    // Generate verification token
+    const emailVerificationToken = crypto.randomUUID();
+    await db
+        .prepare('UPDATE users SET email_verification_token = ? WHERE id = ?')
+        .bind(emailVerificationToken, newUser.id)
+        .run();
+
+    // Send verification email
+    try {
+        const confirmUrl = `https://patrouch.ca/confirm?token=${encodeURIComponent(emailVerificationToken)}`;
+        const emailContent = getConfirmationEmailContent('account', confirmUrl);
+        await sendMailgunEmail({
+            to: email,
+            subject: emailContent.subject,
+            text: emailContent.text,
+            html: emailContent.html
+        }, {
+            MAILGUN_API_KEY: platform.env.MAILGUN_API_KEY,
+            MAILGUN_DOMAIN: platform.env.MAILGUN_DOMAIN
+        });
+    } catch (err) {
+        console.error('Failed to send verification email:', err);
+    }
+
+    return json({ success: true });
 }
