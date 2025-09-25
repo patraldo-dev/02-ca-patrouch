@@ -1,18 +1,26 @@
 <!-- src/routes/+layout.svelte -->
 <script>
     import { browser } from '$app/environment';
-    import { beforeNavigate } from '$app/navigation'; // Changed from $app/stores
-    import { page } from '$app/stores'; // page stays in $app/stores
-
+    import { beforeNavigate } from '$app/navigation';
+    import { page } from '$app/stores';
+    
     // Close mobile menu on route change
-
-beforeNavigate(() => {
-    mobileMenuOpen = false;
-});
-
+    beforeNavigate(() => {
+        mobileMenuOpen = false;
+    });
+    
+    /** @type {import('./$types').LayoutData} */
+    export let data = {}; // Add default empty object here
+    
+    // Mobile menu state
+    let mobileMenuOpen = false;
+    
+    function toggleMobileMenu() {
+        mobileMenuOpen = !mobileMenuOpen;
+    }
+    
     async function handleLogout() {
         if (!browser) return;
-
         try {
             const response = await fetch('/api/auth/logout', {
                 method: 'POST'

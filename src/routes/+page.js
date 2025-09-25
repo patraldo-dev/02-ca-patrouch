@@ -6,9 +6,9 @@ export async function load({ fetch, data }) {
     
     const booksResponse = await fetch('/api/books');
     const books = booksResponse.ok ? await booksResponse.json() : [];
-
+    
     return {
-        user,
+        user,  // ✅ Keep returning user
         books
     };
 }
