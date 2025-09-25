@@ -30,6 +30,6 @@ export async function load({ request }) {
     }
     
     return {
-        user
+        user: locals.user
     };
 }
