@@ -1,7 +1,7 @@
 <!-- src/routes/+layout.svelte -->
 <script>
     import { browser } from '$app/environment';
-    import { beforeNavigate } from '$app/stores';
+    import { beforeNavigate, page } from '$app/stores';
 
 // Close mobile menu on route change
 beforeNavigate(() => {
