@@ -8,49 +8,60 @@
     let error = '';
     let isLoading = false;
 
-    async function handleLogin() {
-        if (!identifier|| !password) {
-            error = 'Please enter both identifier and password';
-            return;
+async function handleLogin() {
+    if (!identifier || !password) {
+        error = 'Please enter your email or username and password';
+        return;
+    }
+
+    isLoading = true;
+    error = '';
+
+    try {
+        const api = newWebSocketRpcSession('/api/rpc');
+        const result = await api.login(identifier, password);
+
+        // ✅ Debug: Log the full result
+        console.log('✅ Login RPC result:', result);
+
+        // ✅ Ensure result has setCookie
+        if (!result?.setCookie) {
+            throw new Error('Invalid login response: missing setCookie');
         }
 
-        isLoading = true;
-        error = '';
+        const { setCookie } = result;
 
-        try {
-            const api = newWebSocketRpcSession('/api/rpc');
-const { session, setCookie } = await api.login(identifier, password);
-console.log('🍪 RPC returned setCookie:', setCookie);
+        // ✅ Build cookie string with CORRECT attribute casing
+        const cookieParts = [
+            `${setCookie.name}=${setCookie.value}`,
+            `path=${setCookie.attributes.path}`,        // lowercase 'path'
+            `max-age=${setCookie.attributes.maxAge}`    // lowercase 'max-age'
+        ];
 
+        // ✅ Add flags with CORRECT casing
+        if (setCookie.attributes.secure) cookieParts.push('Secure');
+        if (setCookie.attributes.httpOnly) cookieParts.push('HttpOnly');
+        cookieParts.push(`samesite=${setCookie.attributes.sameSite}`); // lowercase 'samesite'
 
-// ✅ Set cookie correctly
-const cookieParts = [
-    `${setCookie.name}=${setCookie.value}`,
-    `Path=${setCookie.attributes.path}`,
-    `Max-Age=${setCookie.attributes.maxAge}`
-];
-if (setCookie.attributes.secure) cookieParts.push('Secure');
-if (setCookie.attributes.httpOnly) cookieParts.push('HttpOnly'); // ← Critical: HttpOnly, not httponly
-cookieParts.push(`SameSite=${setCookie.attributes.sameSite}`);
-const cookieString = cookieParts.join('; ');
-console.log('🍪 Setting cookie:', cookieString);
+        const cookieString = cookieParts.join('; ');
+        console.log('🍪 Setting cookie:', cookieString);
 
-document.cookie = cookieParts.join('; ');
+        // ✅ Set cookie
+        document.cookie = cookieString;
+
+        // ✅ Redirect after small delay to ensure cookie is set
+        setTimeout(() => {
             window.location.href = '/';
+        }, 100);
 
-        } catch (err) {
-            console.error('Login error:', err);
-            error = err.message || 'Invalid identifier or password. Please try again.';
-        } finally {
-            isLoading = false;
-        }
+    } catch (err) {
+        console.error('Login error:', err);
+        error = err.message || 'Invalid email/username or password. Please try again.';
+    } finally {
+        isLoading = false;
     }
+}
 
-    function handleKeyDown(e) {
-        if (e.key === 'Enter' && !isLoading) {
-            handleLogin();
-        }
-    }
 </script>
 
 <div class="login-container" on:keydown={handleKeyDown}>
