@@ -1,18 +1,63 @@
 // src/routes/(auth-pages)/login/+page.server.js
 import { redirect } from '@sveltejs/kit';
-import { parse } from 'cookie';
+
+// Session constants (in milliseconds)
+const SESSION_EXPIRES_IN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+/**
+ * Validates a session and returns the user if valid
+ */
+async function validateSessionAndGetUser(db, sessionId) {
+    const now = Date.now(); // milliseconds
+    const { results } = await db.prepare(`
+        SELECT s.id, s.user_id, s.expires_at, u.id, u.username, u.email, u.email_verified_at
+        FROM user_session s
+        JOIN users u ON s.user_id = u.id
+        WHERE s.id = ? AND s.expires_at > ?
+    `).bind(sessionId, now).all();
+    
+    if (results.length === 0) {
+        return null;
+    }
+    
+    const row = results[0];
+    const user = {
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        email_verified: row.email_verified_at !== null
+    };
+    
+    return user;
+}
+
+/**
+ * Invalidates a session
+ */
+async function invalidateSession(db, sessionId) {
+    await db.prepare(`
+        DELETE FROM user_session
+        WHERE id = ?
+    `).bind(sessionId).run();
+}
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ request, cookies, url }) {
+export async function load({ request, cookies, url, platform }) {
     // Get session cookie
-    const sessionCookie = cookies.get('session');
+    const sessionId = cookies.get('session');
     
     // If user is already logged in, redirect to home page
-    if (sessionCookie) {
+    if (sessionId) {
         try {
-            // Validate the session and get user data
-            // Replace this with your actual session validation logic
-            const user = await validateSessionAndGetUser(sessionCookie);
+            // Access the database
+            if (!platform?.env?.DB_book) {
+                throw new Error('Database not available');
+            }
+            
+            const db = platform.env.DB_book;
+            
+            // Validate session and get user
+            const user = await validateSessionAndGetUser(db, sessionId);
             
             if (user) {
                 // User is already logged in, redirect to home
@@ -29,26 +74,18 @@ export async function load({ request, cookies, url }) {
         }
     }
     
-    // Check for any redirect parameters (e.g., redirected from a protected page)
+    // Get redirect parameter (where to go after login)
     const redirectTo = url.searchParams.get('redirect') || '/';
     
-    // Check for error messages (e.g., from a failed login attempt)
+    // Get error message from query string (if any)
     const errorMessage = url.searchParams.get('error') || null;
     
     // Return data needed for the login page
     return {
         redirectTo,
         errorMessage,
-        // You can add any other data needed for the login page
-        // For example, if you want to show a specific message based on the redirect
         message: errorMessage 
             ? 'Login failed. Please check your credentials and try again.' 
             : 'Please log in to access your account.'
     };
 }
-
-// This is a placeholder function - replace with your actual session validation logic
-async function validateSessionAndGetUser(sessionCookie) {
-    // Here you would:
-    // 1. Validate the session token against your database
-    //
