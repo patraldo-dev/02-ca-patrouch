@@ -16,7 +16,7 @@ export async function GET({ params, platform }) {
     const db = platform.env.DB_book;
     
     const book = await db.prepare(`
-        SELECT id, title, author, description, cover_url, slug
+        SELECT id, title, author, description, coverImageId, slug
         FROM books
         WHERE slug = ?
     `).bind(slug).first();
