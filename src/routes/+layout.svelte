@@ -1,13 +1,13 @@
 <!-- src/routes/+layout.svelte -->
 <script>
     import { browser } from '$app/environment';
-    import NewsletterForm from '$lib/components/NewsletterForm.svelte';
-    import { newWebSocketRpcSession } from 'capnweb';
+
+    /** @type {import('./$types').LayoutData} */
+    export let data;
 
     // Mobile menu state
     let mobileMenuOpen = false;
 
-    // Toggle mobile menu
     function toggleMobileMenu() {
         mobileMenuOpen = !mobileMenuOpen;
     }
@@ -15,51 +15,22 @@
     // Close mobile menu on route change
     $: $page.url.pathname, mobileMenuOpen = false;
 
-    // Check if user is logged in (has session cookie)
-    let isLoggedIn = false;
-    let username = '';
-
-    if (browser) {
-        const sessionToken = document.cookie.split('; ').find(row => row.startsWith('session='))?.split('=')[1];
-        isLoggedIn = !!sessionToken;
-        // You could fetch profile here if needed — but for now, we'll just show "Welcome"
-        // In a real app, you might store username in localStorage after login
-        username = 'User'; // Placeholder — replace with actual username if available
-    }
-
-    // RPC-powered logout
     async function handleLogout() {
         if (!browser) return;
 
         try {
-            // 1. Get session token
-            const sessionToken = document.cookie.split('; ').find(row => row.startsWith('session='))?.split('=')[1];
-            if (!sessionToken) {
-                throw new Error('No active session');
+            const response = await fetch('/api/auth/logout', {
+                method: 'POST'
+            });
+            if (response.ok) {
+                window.location.href = '/';
             }
-
-            // 2. Connect to RPC server
-            const api = newWebSocketRpcSession('/api/rpc');
-
-            // 3. Call server-side logout (invalidates session in DB)
-            await api.logout(sessionToken);
-
-            // 4. Clear cookie
-            document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
-
-            // 5. Reload to clear state and redirect
-            window.location.reload();
-
         } catch (err) {
             console.error('Logout failed:', err);
-            // Fallback: clear cookie and reload
-            document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
-            window.location.reload();
+            window.location.href = '/';
         }
     }
 </script>
-
-<!-- No <svelte:head> here — that belongs in app.html -->
 
 <div class="app-layout">
     <header class="navbar">
@@ -103,9 +74,9 @@
 
             <!-- Auth Actions -->
             <div class="auth-actions" aria-label="Account actions">
-                {#if isLoggedIn}
-                    <span class="welcome" aria-label="Logged in as {username}">
-                        Welcome, <strong>{username}</strong>
+                {#if data?.user}
+                    <span class="welcome" aria-label="Logged in as {data.user.username}">
+                        Welcome, <strong>{data.user.username}</strong>
                     </span>
                     <a href="/admin" class="btn-secondary" aria-label="Admin dashboard">
                         Admin
@@ -167,9 +138,9 @@
                 </nav>
 
                 <div class="mobile-auth" aria-label="Mobile account actions">
-                    {#if isLoggedIn}
+                    {#if data?.user}
                         <div class="welcome-mobile" aria-live="polite">
-                            Welcome, <strong>{username}</strong>
+                            Welcome, <strong>{data.user.username}</strong>
                         </div>
                         <button
                             on:click={() => {
