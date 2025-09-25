@@ -1,21 +1,8 @@
 <!-- src/routes/+layout.svelte -->
 <script>
     import { browser } from '$app/environment';
-    import { beforeNavigate, page } from '$app/stores';
-
-// Close mobile menu on route change
-beforeNavigate(() => {
-    mobileMenuOpen = false;
-});
-    /** @type {import('./$types').LayoutData} */
-    export let data;
-
-    // Mobile menu state
-    let mobileMenuOpen = false;
-
-    function toggleMobileMenu() {
-        mobileMenuOpen = !mobileMenuOpen;
-    }
+    import { beforeNavigate } from '$app/navigation'; // Changed from $app/stores
+    import { page } from '$app/stores'; // page stays in $app/stores
 
     // Close mobile menu on route change
 
