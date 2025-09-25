@@ -1,4 +1,4 @@
-<!-- src/routes/(auth-pages)/login/+page.svelte -->
+<!-- src/routes/(auth-pages)/login/+page.svelte x-->
 <script>
     import { browser } from '$app/environment';
     
