@@ -1,9 +1,14 @@
 // src/routes/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, data }) {
-    // data.user comes from +layout.server.js
+    // ✅ Safely access data.user
+    const user = data?.user || null;
+    
+    const booksResponse = await fetch('/api/books');
+    const books = booksResponse.ok ? await booksResponse.json() : [];
+
     return {
-        user: data.user,
-        books: await (await fetch('/api/books')).json()
+        user,
+        books
     };
 }
