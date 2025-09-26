@@ -1,52 +1,90 @@
 // src/routes/api/admin/reviews/+server.js
+import { json, error } from '@sveltejs/kit';
+
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request, locals }) {
-    if (!locals.user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+export async function GET({ platform }) {
+    if (!platform?.env?.DB_book) {
+        return json({ error: 'Database not available' }, { status: 500 });
     }
-
+    
+    const db = platform.env.DB_book;
+    
     try {
-        const { book_id, user_id, rating, content } = await request.json();
-        const db = locals.db;
+        // Fetch all reviews with book and user information
+        const { results } = await db.prepare(`
+            SELECT 
+                r.id,
+                r.content,
+                r.rating,
+                r.created_at,
+                r.book_id,
+                b.title as book_title,
+                b.slug as book_slug,
+                u.username as reviewer_name
+            FROM reviews r
+            JOIN books b ON r.book_id = b.id
+            JOIN users u ON r.user_id = u.id
+            ORDER BY r.created_at DESC
+        `).all();
+        
+        return json(results);
+    } catch (err) {
+        console.error('Error fetching reviews:', err);
+        return json({ error: 'Failed to fetch reviews' }, { status: 500 });
+    }
+}
 
-        // Validate
-        if (!book_id || !user_id || !rating || !content) {
-            return new Response(JSON.stringify({ error: 'All fields required' }), { status: 400 });
+/** @type {import('./$types').RequestHandler} */
+export async function POST({ request, platform }) {
+    if (!platform?.env?.DB_book) {
+        return json({ error: 'Database not available' }, { status: 500 });
+    }
+    
+    const db = platform.env.DB_book;
+    
+    try {
+        const { content, rating, book_id } = await request.json();
+        
+        if (!content || !rating || !book_id) {
+            return json({ error: 'Missing required fields' }, { status: 400 });
         }
-
-        if (rating < 1 || rating > 5) {
-            return new Response(JSON.stringify({ error: 'Rating must be 1-5' }), { status: 400 });
-        }
-
-        // Check book exists
-        const bookCheck = await db.prepare(`SELECT id FROM books WHERE id = ?`).bind(book_id).first();
-        if (!bookCheck) {
-            return new Response(JSON.stringify({ error: 'Book not found' }), { status: 404 });
-        }
-
-        // Check user exists
-        const userCheck = await db.prepare(`SELECT id FROM users WHERE id = ?`).bind(user_id).first();
-        if (!userCheck) {
-            return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
-        }
-
-        // Insert review
-        const reviewId = crypto.randomUUID();
-        await db.prepare(`
-            INSERT INTO reviews (id, user_id, book_id, rating, content)
+        
+        // Create a new review
+        const result = await db.prepare(`
+            INSERT INTO reviews (content, rating, book_id, user_id, created_at)
             VALUES (?, ?, ?, ?, ?)
         `).bind(
-            reviewId,
-            user_id,
+            content,
+            rating,
             book_id,
-            parseInt(rating),
-            content
+            'user-id-placeholder', // This should be the actual user ID from the session
+            new Date().toISOString()
         ).run();
-
-        return new Response(JSON.stringify({ success: true, reviewId }), { status: 200 });
-
-    } catch (error) {
-        console.error('Add review error:', error);
-        return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+        
+        if (!result.success) {
+            return json({ error: 'Failed to create review' }, { status: 500 });
+        }
+        
+        // Return the newly created review
+        const newReview = await db.prepare(`
+            SELECT 
+                r.id,
+                r.content,
+                r.rating,
+                r.created_at,
+                r.book_id,
+                b.title as book_title,
+                b.slug as book_slug,
+                u.username as reviewer_name
+            FROM reviews r
+            JOIN books b ON r.book_id = b.id
+            JOIN users u ON r.user_id = u.id
+            WHERE r.id = ?
+        `).bind(result.lastInsertRowid).first();
+        
+        return json(newReview, { status: 201 });
+    } catch (err) {
+        console.error('Error creating review:', err);
+        return json({ error: 'Failed to create review' }, { status: 500 });
     }
 }

@@ -1,39 +1,76 @@
 // src/routes/api/admin/books/+server.js
+import { json, error } from '@sveltejs/kit';
+
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request, locals }) {
-    // In future, add role-based auth here
-    if (!locals.user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+export async function GET({ platform }) {
+    if (!platform?.env?.DB_book) {
+        return json({ error: 'Database not available' }, { status: 500 });
     }
-
+    
+    const db = platform.env.DB_book;
+    
     try {
-        const { title, author, isbn, cover_image_url, description, published_year } = await request.json();
-        const db = locals.db;
+        // Fetch all books
+        const { results } = await db.prepare(`
+            SELECT id, title, author, description, cover_image_url, coverImageId, slug, published_year, created_at
+            FROM books
+            ORDER BY title ASC
+        `).all();
+        
+        return json(results);
+    } catch (err) {
+        console.error('Error fetching books:', err);
+        return json({ error: 'Failed to fetch books' }, { status: 500 });
+    }
+}
 
-        // Validate
+/** @type {import('./$types').RequestHandler} */
+export async function POST({ request, platform }) {
+    if (!platform?.env?.DB_book) {
+        return json({ error: 'Database not available' }, { status: 500 });
+    }
+    
+    const db = platform.env.DB_book;
+    
+    try {
+        const { title, author, description, cover_image_url, coverImageId, published_year } = await request.json();
+        
         if (!title || !author) {
-            return new Response(JSON.stringify({ error: 'Title and author required' }), { status: 400 });
+            return json({ error: 'Title and author are required' }, { status: 400 });
         }
-
-        // Insert book
-        const bookId = crypto.randomUUID();
-        await db.prepare(`
-            INSERT INTO books (id, title, author, isbn, cover_image_url, description, published_year)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+        
+        // Generate a slug from the title
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        
+        // Create a new book
+        const result = await db.prepare(`
+            INSERT INTO books (title, author, description, cover_image_url, coverImageId, slug, published_year, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
-            bookId,
             title,
             author,
-            isbn || null,
-            cover_image_url || null,
             description || null,
-            published_year || null
+            cover_image_url || null,
+            coverImageId || null,
+            slug,
+            published_year || null,
+            new Date().toISOString()
         ).run();
-
-        return new Response(JSON.stringify({ success: true, bookId }), { status: 200 });
-
-    } catch (error) {
-        console.error('Add book error:', error);
-        return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+        
+        if (!result.success) {
+            return json({ error: 'Failed to create book' }, { status: 500 });
+        }
+        
+        // Return the newly created book
+        const newBook = await db.prepare(`
+            SELECT id, title, author, description, cover_image_url, coverImageId, slug, published_year
+            FROM books
+            WHERE id = ?
+        `).bind(result.lastInsertRowid).first();
+        
+        return json(newBook, { status: 201 });
+    } catch (err) {
+        console.error('Error creating book:', err);
+        return json({ error: 'Failed to create book' }, { status: 500 });
     }
 }
