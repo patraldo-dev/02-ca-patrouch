@@ -53,36 +53,4 @@
         line-height: 1.8;
         color: #333;
     }
-    .content h2 {
-        margin-top: 2rem;
-        color: #333;
-    }
-    .content p {
-        margin: 1rem 0;
-    }
-    .content a {
-        color: #3b82f6;
-        text-decoration: none;
-    }
-    .content a:hover {
-        text-decoration: underline;
-    }
-    .content img {
-        max-width: 100%;
-        border-radius: 8px;
-        margin: 1rem 0;
-    }
-    .content pre {
-        background: #f8fafc;
-        padding: 1rem;
-        border-radius: 6px;
-        overflow-x: auto;
-        margin: 1rem 0;
-    }
-    .content blockquote {
-        border-left: 4px solid #3b82f6;
-        padding: 0.5rem 1rem;
-        margin: 1rem 0;
-        background: #f8fafc;
-    }
 </style>

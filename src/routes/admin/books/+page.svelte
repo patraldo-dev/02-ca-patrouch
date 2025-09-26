@@ -3,14 +3,23 @@
     import { onMount } from 'svelte';
     
     let books = [];
+    let filteredBooks = [];
     let loading = true;
     let error = null;
+    let searchQuery = '';
+    let sortField = 'title';
+    let sortDirection = 'asc';
+    let showNotification = false;
+    let notificationMessage = '';
+    let notificationType = 'success';
+    let filterPublished = 'all'; // 'all', 'published', 'unpublished'
     
     onMount(async () => {
         try {
             const response = await fetch('/api/admin/books');
             if (response.ok) {
                 books = await response.json();
+                applyFiltersAndSort();
             } else {
                 error = 'Failed to load books';
             }
@@ -21,6 +30,58 @@
             loading = false;
         }
     });
+    
+    function applyFiltersAndSort() {
+        // Apply search filter
+        filteredBooks = books.filter(book => {
+            const matchesSearch = !searchQuery || 
+                book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                book.slug.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            const matchesPublished = filterPublished === 'all' || 
+                (filterPublished === 'published' && book.published) ||
+                (filterPublished === 'unpublished' && !book.published);
+                
+            return matchesSearch && matchesPublished;
+        });
+        
+        // Apply sorting
+        filteredBooks.sort((a, b) => {
+            let aValue = a[sortField] || '';
+            let bValue = b[sortField] || '';
+            
+            // Handle string comparison
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            }
+            
+            if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+    
+    function toggleSort(field) {
+        if (sortField === field) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortField = field;
+            sortDirection = 'asc';
+        }
+        applyFiltersAndSort();
+    }
+    
+    function showNotificationMessage(message, type = 'success') {
+        notificationMessage = message;
+        notificationType = type;
+        showNotification = true;
+        
+        setTimeout(() => {
+            showNotification = false;
+        }, 3000);
+    }
     
     async function deleteBook(bookId) {
         if (!confirm('Are you sure you want to delete this book?')) {
@@ -35,12 +96,14 @@
             if (response.ok) {
                 // Remove the book from the list
                 books = books.filter(b => b.id !== bookId);
+                applyFiltersAndSort();
+                showNotificationMessage('Book deleted successfully');
             } else {
-                alert('Failed to delete book');
+                showNotificationMessage('Failed to delete book', 'error');
             }
         } catch (err) {
             console.error('Error deleting book:', err);
-            alert('Failed to delete book');
+            showNotificationMessage('Failed to delete book', 'error');
         }
     }
     
@@ -53,16 +116,22 @@
             const result = await response.json();
             
             if (response.ok) {
-                alert(result.message);
+                showNotificationMessage(result.message);
                 // Reload the page to see the updated books
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
-                alert('Migration failed: ' + result.error);
+                showNotificationMessage('Migration failed: ' + result.error, 'error');
             }
         } catch (err) {
             console.error('Error running migration:', err);
-            alert('Error running migration');
+            showNotificationMessage('Error running migration', 'error');
         }
+    }
+    
+    $: {
+        applyFiltersAndSort();
     }
 </script>
 
@@ -79,6 +148,32 @@
         </div>
     </div>
     
+    <div class="filters-section">
+        <div class="search-container">
+            <input 
+                type="text" 
+                placeholder="Search books..." 
+                bind:value={searchQuery}
+                class="search-input"
+            />
+        </div>
+        
+        <div class="filter-container">
+            <label for="published-filter">Filter:</label>
+            <select id="published-filter" bind:value={filterPublished} class="filter-select">
+                <option value="all">All Books</option>
+                <option value="published">Published</option>
+                <option value="unpublished">Unpublished</option>
+            </select>
+        </div>
+    </div>
+    
+    {#if showNotification}
+        <div class="notification {notificationType}">
+            {notificationMessage}
+        </div>
+    {/if}
+    
     {#if loading}
         <div class="loading">
             <p>Loading books...</p>
@@ -87,32 +182,52 @@
         <div class="error">
             <p>{error}</p>
         </div>
-    {:else if books.length === 0}
+    {:else if filteredBooks.length === 0}
         <div class="empty">
-            <p>No books found.</p>
-            <a href="/admin/books/add" class="btn-primary">Add Your First Book</a>
+            <p>{books.length === 0 ? 'No books found.' : 'No books match your search criteria.'}</p>
+            {#if books.length === 0}
+                <a href="/admin/books/add" class="btn-primary">Add Your First Book</a>
+            {:else}
+                <button on:click={() => {searchQuery = ''; filterPublished = 'all';}} class="btn-secondary">Clear Filters</button>
+            {/if}
         </div>
     {:else}
         <div class="books-table">
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Slug</th>
-                        <th>Published</th>
+                        <th class="sortable" on:click={() => toggleSort('id')}>
+                            ID {#if sortField === 'id'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
+                        </th>
+                        <th class="sortable" on:click={() => toggleSort('title')}>
+                            Title {#if sortField === 'title'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
+                        </th>
+                        <th class="sortable" on:click={() => toggleSort('author')}>
+                            Author {#if sortField === 'author'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
+                        </th>
+                        <th class="sortable" on:click={() => toggleSort('slug')}>
+                            Slug {#if sortField === 'slug'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
+                        </th>
+                        <th class="sortable" on:click={() => toggleSort('published_year')}>
+                            Published {#if sortField === 'published_year'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
+                        </th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {#each books as book}
+                    {#each filteredBooks as book}
                         <tr>
                             <td>{book.id}</td>
                             <td>{book.title}</td>
                             <td>{book.author}</td>
                             <td><code>{book.slug}</code></td>
                             <td>{book.published_year || 'N/A'}</td>
+                            <td>
+                                <span class="status-badge {book.published ? 'published' : 'unpublished'}">
+                                    {book.published ? 'Published' : 'Draft'}
+                                </span>
+                            </td>
                             <td class="actions">
                                 <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
                                 <a href={`/admin/books/edit/${book.id}`} class="btn-secondary">Edit</a>
@@ -122,6 +237,10 @@
                     {/each}
                 </tbody>
             </table>
+        </div>
+        
+        <div class="results-info">
+            Showing {filteredBooks.length} of {books.length} books
         </div>
     {/if}
 </div>
@@ -149,6 +268,60 @@
     .header-actions {
         display: flex;
         gap: 0.5rem;
+    }
+    
+    .filters-section {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+    }
+    
+    .search-container {
+        flex: 1;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .filter-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .notification {
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .notification.success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .notification.error {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
     .loading, .error, .empty {
@@ -190,6 +363,15 @@
         border-bottom: 1px solid #e5e7eb;
     }
     
+    th.sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    th.sortable:hover {
+        background: #f3f4f6;
+    }
+    
     td {
         padding: 0.75rem 1rem;
         border-bottom: 1px solid #f3f4f6;
@@ -205,6 +387,23 @@
         border-radius: 0.25rem;
         font-size: 0.875rem;
         font-family: monospace;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-badge.published {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-badge.unpublished {
+        background: #fef3c7;
+        color: #92400e;
     }
     
     .actions {
@@ -250,6 +449,13 @@
         background: #dc2626;
     }
     
+    .results-info {
+        margin-top: 1rem;
+        text-align: right;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
     @media (max-width: 768px) {
         .admin-header {
             flex-direction: column;
@@ -260,6 +466,10 @@
         .header-actions {
             flex-direction: column;
             width: 100%;
+        }
+        
+        .filters-section {
+            flex-direction: column;
         }
         
         .books-table {
