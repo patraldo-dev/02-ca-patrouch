@@ -26,6 +26,7 @@
 		"@oslojs/encoding": "^1.1.0",
 		"capnweb": "^0.1.0",
 		"marked": "^16.3.0",
-		"sequelize": "^6.37.7"
+		"sequelize": "^6.37.7",
+		"sqlite3": "^5.1.7"
 	}
 }

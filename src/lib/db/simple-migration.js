@@ -1,6 +1,5 @@
 // src/lib/db/simple-migration.js
 import { sequelize } from './db.js';
-import { DataTypes } from 'sequelize';
 
 export async function addSlugColumn() {
   try {
