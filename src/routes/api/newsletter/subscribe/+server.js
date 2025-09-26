@@ -23,11 +23,11 @@ export async function POST({ request, platform }) {
             return json({ error: 'Invalid email format' }, { status: 400 });
         }
         
-        if (!platform?.env?.DB) {
+        if (!platform?.env?.DB_book) {
             return json({ error: 'Database not available' }, { status: 500 });
         }
         
-        const db = platform.env.DB;
+        const db = platform.env.DB_book;
         
         // Check if email already exists in the 'subscribers' table
         const existing = await db.prepare(`
@@ -54,14 +54,11 @@ export async function POST({ request, platform }) {
             VALUES (?, ?, ?, ?)
         `).bind(email, token, expiresAt, new Date().toISOString()).run();
         
-        // Here you would typically send an email with the confirmation link
-        // The confirmation link should be: https://yourdomain.com/confirm?token={token}
-        
+        // Return success with the confirmation URL
         return json({ 
             success: true, 
             message: 'Subscription initiated. Please check your email to confirm.',
-            // For testing purposes, include the confirmation URL
-            confirmationUrl: `/confirm?token=${token}`
+            confirmationUrl: `/newsletter/confirm?token=${token}`
         });
     } catch (error) {
         console.error('Newsletter subscription error:', error);
