@@ -83,7 +83,6 @@
         }, 3000);
     }
 
-<!-- In src/routes/admin/books/+page.svelte -->
 async function togglePublished(book) {
     try {
         const response = await fetch(`/api/admin/books/${book.slug}`, {
