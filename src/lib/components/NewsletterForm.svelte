@@ -1,104 +1,152 @@
 <!-- src/lib/components/NewsletterForm.svelte -->
 <script>
     let email = '';
+    let isSubmitting = false;
     let message = '';
-    let loading = false;
+    let isSuccess = false;
+    let needsConfirmation = false;
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-        loading = true;
-        message = '';
-
-        const res = await fetch('/api/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, type: 'newsletter' })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-            message = data.message;
-            email = '';
-        } else {
-            message = data.message;
+    async function handleSubmit() {
+        if (!email) {
+            message = 'Please enter your email address';
+            return;
         }
 
-        loading = false;
+        isSubmitting = true;
+        message = '';
+
+        try {
+            const response = await fetch('/api/newsletter/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                isSuccess = true;
+                needsConfirmation = true;
+                message = 'Subscription initiated! Please check your email to confirm.';
+                email = '';
+            } else {
+                isSuccess = false;
+                message = result.error || 'Subscription failed. Please try again.';
+            }
+        } catch (error) {
+            isSuccess = false;
+            message = 'Network error. Please try again.';
+        } finally {
+            isSubmitting = false;
+        }
     }
 </script>
 
-<form on:submit|preventDefault={handleSubmit} class="newsletter-form">
-    <h3>📚 Get Book Updates</h3>
-    <p>Subscribe to get new reviews and reading recommendations.</p>
-    <input
-        type="email"
-        bind:value={email}
-        placeholder="your@email.com"
-        required
-        aria-label="Email address"
-    />
-    <button type="submit" disabled={loading}>
-        {loading ? 'Subscribing...' : 'Subscribe'}
-    </button>
+<div class="newsletter-form">
+    <h3>Subscribe to our Newsletter</h3>
+    <p>Get the latest book reviews and updates delivered to your inbox.</p>
+    
     {#if message}
-        <p class="message">{message}</p>
+        <div class="message" class:success={isSuccess} class:error={!isSuccess}>
+            {message}
+            {#if needsConfirmation}
+                <p class="confirmation-note">Check your email for a confirmation link.</p>
+            {/if}
+        </div>
     {/if}
-</form>
+    
+    <form on:submit|preventDefault={handleSubmit}>
+        <div class="input-group">
+            <input
+                type="email"
+                bind:value={email}
+                placeholder="Your email address"
+                required
+                disabled={isSubmitting}
+            />
+            <button type="submit" disabled={isSubmitting}>
+                {#if isSubmitting}
+                    Subscribing...
+                {:else}
+                    Subscribe
+                {/if}
+            </button>
+        </div>
+    </form>
+</div>
 
 <style>
     .newsletter-form {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        max-width: 400px;
+        max-width: 500px;
         margin: 0 auto;
+        text-align: center;
     }
-    h3 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.2rem;
+    
+    .newsletter-form h3 {
+        margin-bottom: 0.5rem;
         color: #333;
     }
-    p {
-        margin: 0 0 1rem 0;
+    
+    .newsletter-form p {
+        margin-bottom: 1.5rem;
         color: #666;
-        font-size: 0.95rem;
     }
-    input {
-        width: 100%;
+    
+    .input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .input-group input {
+        flex: 1;
         padding: 0.75rem;
-        margin: 0.5rem 0;
         border: 1px solid #ddd;
-        border-radius: 6px;
+        border-radius: 4px;
         font-size: 1rem;
     }
-    button {
-        width: 100%;
-        padding: 0.75rem;
+    
+    .input-group button {
+        padding: 0.75rem 1.5rem;
         background: #3b82f6;
         color: white;
         border: none;
-        border-radius: 6px;
+        border-radius: 4px;
         font-size: 1rem;
-        font-weight: 500;
         cursor: pointer;
         transition: background 0.2s;
     }
-    button:hover:not(:disabled) {
+    
+    .input-group button:hover {
         background: #2563eb;
     }
-    button:disabled {
+    
+    .input-group button:disabled {
         background: #9ca3af;
         cursor: not-allowed;
     }
+    
     .message {
-        margin-top: 1rem;
         padding: 0.75rem;
-        border-radius: 6px;
-        background: #dcfce7;
-        color: #166534;
-        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
         text-align: center;
+    }
+    
+    .message.success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+    
+    .message.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+    
+    .confirmation-note {
+        margin-top: 0.5rem;
+        font-style: italic;
+        font-size: 0.9rem;
     }
 </style>
