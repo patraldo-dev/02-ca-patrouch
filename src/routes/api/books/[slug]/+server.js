@@ -1,33 +1,34 @@
-// src/routes/api/books/[slug]/+server.js
-import { json } from '@sveltejs/kit';
-
-export async function GET({ params, platform }) {
-    try {
-        if (!platform?.env?.DB_book) {
-            return json({ 
-                success: false, 
-                error: 'Database not available' 
-            }, { status: 500 });
+<!-- src/routes/books/[slug]/+page.svelte -->
+<script>
+    import { onMount } from 'svelte';
+    
+    let book = null;
+    let loading = true;
+    let error = null;
+    
+    export let params;
+    
+    onMount(async () => {
+        try {
+            // Make sure params.slug is defined
+            if (!params.slug || params.slug === 'undefined') {
+                error = 'Invalid book slug';
+                loading = false;
+                return;
+            }
+            
+            // Use the plural form /api/books/[slug]
+            const response = await fetch(`/api/books/${params.slug}`);
+            if (response.ok) {
+                book = await response.json();
+            } else {
+                error = 'Failed to load book';
+            }
+        } catch (err) {
+            console.error('Error fetching book:', err);
+            error = 'Network error. Please try again.';
+        } finally {
+            loading = false;
         }
-        
-        const { slug } = params;
-        
-        // Get book by slug
-        const result = await platform.env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
-        
-        if (!result) {
-            return json({ 
-                success: false, 
-                error: 'Book not found' 
-            }, { status: 404 });
-        }
-        
-        return json(result);
-    } catch (error) {
-        console.error('Error fetching book:', error);
-        return json({ 
-            success: false, 
-            error: error.message 
-        }, { status: 500 });
-    }
-}
+    });
+</script>
