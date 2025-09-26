@@ -43,6 +43,27 @@
             alert('Failed to delete book');
         }
     }
+    
+    async function runMigration() {
+        try {
+            const response = await fetch('/api/admin/migrate', {
+                method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert(result.message);
+                // Reload the page to see the updated books
+                window.location.reload();
+            } else {
+                alert('Migration failed: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Error running migration:', err);
+            alert('Error running migration');
+        }
+    }
 </script>
 
 <svelte:head>
@@ -52,7 +73,10 @@
 <div class="container">
     <div class="admin-header">
         <h1>Book Management</h1>
-        <a href="/admin/books/add" class="btn-primary">Add New Book</a>
+        <div class="header-actions">
+            <button on:click={runMigration} class="btn-secondary">Run Migration</button>
+            <a href="/admin/books/add" class="btn-primary">Add New Book</a>
+        </div>
     </div>
     
     {#if loading}
@@ -73,8 +97,10 @@
             <table>
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Title</th>
                         <th>Author</th>
+                        <th>Slug</th>
                         <th>Published</th>
                         <th>Actions</th>
                     </tr>
@@ -82,10 +108,13 @@
                 <tbody>
                     {#each books as book}
                         <tr>
+                            <td>{book.id}</td>
                             <td>{book.title}</td>
                             <td>{book.author}</td>
+                            <td><code>{book.slug}</code></td>
                             <td>{book.published_year || 'N/A'}</td>
                             <td class="actions">
+                                <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
                                 <a href={`/admin/books/edit/${book.id}`} class="btn-secondary">Edit</a>
                                 <button on:click={() => deleteBook(book.id)} class="btn-danger">Delete</button>
                             </td>
@@ -115,6 +144,11 @@
         font-size: 2rem;
         color: #1f2937;
         margin: 0;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
     }
     
     .loading, .error, .empty {
@@ -165,6 +199,14 @@
         border-bottom: none;
     }
     
+    code {
+        background: #f3f4f6;
+        padding: 0.125rem 0.25rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        font-family: monospace;
+    }
+    
     .actions {
         display: flex;
         gap: 0.5rem;
@@ -213,6 +255,11 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 1rem;
+        }
+        
+        .header-actions {
+            flex-direction: column;
+            width: 100%;
         }
         
         .books-table {

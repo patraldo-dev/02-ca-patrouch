@@ -37,7 +37,6 @@
             const response = await fetch('/api/admin/books', {
                 method: 'POST',
                 body: formData
-                // Don't set Content-Type header when using FormData
             });
             
             const result = await response.json();

@@ -67,7 +67,7 @@ export async function POST({ request, platform }) {
         // Parse published_year as integer or null
         const publishedYear = published_year ? parseInt(published_year) : null;
         
-        // Create a new book
+        // Create a new book - note we don't provide the id, it will be auto-generated
         const result = await db.prepare(`
             INSERT INTO books (title, author, description, cover_image_url, coverImageId, slug, published_year, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
