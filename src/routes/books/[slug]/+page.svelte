@@ -1,278 +1,211 @@
 <!-- src/routes/books/[slug]/+page.svelte -->
 <script>
-    import { page } from '$app/stores';
     import { onMount } from 'svelte';
     
-    /** @type {import('./$types').PageData} */
-    export let data;
-    
-    // State for client-side fetching (if needed)
-    let book = data?.book || null;
-    let loading = !data?.book;
+    let book = null;
+    let loading = true;
     let error = null;
     
-    // Function to handle new comment
-    function handleCommentPosted(reviewId, newComment) {
-        const review = book.reviews.find(r => r.id === reviewId);
-        if (review) {
-            review.comments = [...(review.comments || []), newComment];
-        }
-    }
+    export let params;
     
-    // Client-side fetching if book data isn't available
     onMount(async () => {
-        if (!data?.book) {
-            try {
-                // Get the slug from page parameters
-                const slug = $page.params.slug;
-                
-                if (!slug) {
-                    error = 'Book slug is missing';
-                    loading = false;
-                    return;
-                }
-                
-                const response = await fetch(`/api/books/${slug}`);
-                
-                if (response.ok) {
-                    book = await response.json();
-                } else {
-                    error = 'Book not found';
-                }
-            } catch (err) {
-                console.error('Error fetching book:', err);
-                error = 'Failed to load book details';
-            } finally {
+        try {
+            if (!params.slug || params.slug === 'undefined') {
+                error = 'Invalid book slug';
                 loading = false;
+                return;
             }
+            
+            const response = await fetch(`/api/books/${params.slug}`);
+            if (response.ok) {
+                book = await response.json();
+            } else {
+                error = 'Failed to load book';
+            }
+        } catch (err) {
+            console.error('Error fetching book:', err);
+            error = 'Network error. Please try again.';
+        } finally {
+            loading = false;
         }
     });
 </script>
 
 <svelte:head>
-    <title>{book?.title || 'Book Details'} — My Book Reviews</title>
+    <title>{book ? book.title : 'Book Details'}</title>
 </svelte:head>
 
 <div class="container">
-    <a href="/" class="back-btn">← Back to Books</a>
-    
     {#if loading}
         <div class="loading">
-            <p>Loading book details...</p>
+            <p>Loading book...</p>
         </div>
     {:else if error}
         <div class="error">
             <p>{error}</p>
-            <a href="/">← Back to all books</a>
         </div>
     {:else if book}
-        <div class="book-header">
-            {#if book.cover_image_url}
-                <img src={book.cover_image_url} alt={book.title} class="cover-large" />
-            {:else if book.coverImageId}
-                <img 
-                    src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
-                    alt={book.title} 
-                    class="cover-large" 
-                />
-            {:else}
-                <div class="cover-placeholder">No Cover</div>
-            {/if}
-            <div class="book-meta">
+        <div class="book-detail">
+            <div class="book-header">
                 <h1>{book.title}</h1>
-                <h2>by {book.author}</h2>
-                {#if book.published_year}
-                    <p>Published: {book.published_year}</p>
-                {/if}
-                {#if book.description}
-                    <p class="description">{book.description}</p>
-                {/if}
+                <div class="book-actions">
+                    <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
+                </div>
             </div>
-        </div>
-        
-        <div class="reviews-section">
-            <h2>Reviews ({book.reviews ? book.reviews.length : 0})</h2>
             
-            {#if book.reviews && book.reviews.length > 0}
-                {#each book.reviews as review}
-                    <div class="review">
-                        <div class="review-header">
-                            <strong>{review.author_username}</strong>
-                            <span class="rating">⭐ {review.rating}</span>
-                            <span class="date">{new Date(review.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <div class="review-content">
-                            {review.content}
-                        </div>
-                        
-                        <!-- Comment Form (if logged in) -->
-                        {#if $page.data.user}
-                            <svelte:component this={import('$lib/components/CommentForm.svelte')}
-                                reviewId={review.id}
-                                onCommentPosted={(newComment) => handleCommentPosted(review.id, newComment)}
-                            />
-                        {/if}
-                        
-                        <!-- Comments -->
-                        {#if review.comments && review.comments.length > 0}
-                            <div class="comments-section">
-                                <h4>Comments ({review.comments.length})</h4>
-                                {#each review.comments as comment}
-                                    <div class="comment">
-                                        <div class="comment-header">
-                                            <strong>{comment.user.username}</strong>
-                                            <span class="date">{new Date(comment.created_at).toLocaleDateString()}</span>
-                                        </div>
-                                        <div class="comment-content">
-                                            {comment.content}
-                                        </div>
-                                    </div>
-                                {/each}
-                            </div>
-                        {/if}
+            <div class="book-content">
+                {#if book.coverImageId}
+                    <div class="book-cover">
+                        <img src={`/images/${book.coverImageId}`} alt={book.title} />
                     </div>
-                {/each}
-            {:else}
-                <p>No reviews yet. Be the first to review this book!</p>
-            {/if}
+                {/if}
+                
+                <div class="book-info">
+                    <p><strong>Author:</strong> {book.author}</p>
+                    {#if book.published_year}
+                        <p><strong>Published:</strong> {book.published_year}</p>
+                    {/if}
+                    <p><strong>Status:</strong> {book.published ? 'Published' : 'Draft'}</p>
+                    {#if book.description}
+                        <div class="book-description">
+                            <h3>Description</h3>
+                            <p>{book.description}</p>
+                        </div>
+                    {/if}
+                </div>
+            </div>
+            
+            <div class="back-link">
+                <a href="/admin/books" class="btn-secondary">Back to Books</a>
+            </div>
         </div>
     {:else}
         <div class="error">
-            <p>Book details not available</p>
-            <a href="/">← Back to all books</a>
+            <p>Book not found</p>
         </div>
     {/if}
 </div>
 
 <style>
-    .loading, .error {
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
         padding: 2rem;
+    }
+    
+    .loading, .error {
         text-align: center;
-        background: #f8f9fa;
+        padding: 3rem;
+        background: #f9fafb;
         border-radius: 8px;
         margin: 2rem 0;
     }
     
     .error {
-        background: #fff5f5;
-        color: #c53030;
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+    
+    .book-detail {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     
     .book-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .book-header h1 {
+        font-size: 2rem;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .book-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .book-content {
         display: flex;
         gap: 2rem;
         margin-bottom: 2rem;
     }
     
-    .cover-large {
-        max-width: 200px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    .book-cover {
+        flex: 0 0 300px;
     }
     
-    .cover-placeholder {
-        width: 200px;
-        height: 300px;
-        background: #f0f0f0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #888;
+    .book-cover img {
+        width: 100%;
+        height: auto;
         border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
-    .book-meta {
+    .book-info {
         flex: 1;
     }
     
-    .book-meta h1 {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
+    .book-info p {
+        margin: 0.5rem 0;
+        font-size: 1.1rem;
     }
     
-    .book-meta h2 {
-        font-size: 1.2rem;
-        color: #666;
-        margin-bottom: 1rem;
-    }
-    
-    .description {
-        margin-top: 1rem;
-        line-height: 1.6;
-    }
-    
-    .reviews-section {
-        margin-top: 3rem;
-    }
-    
-    .review {
-        background: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    
-    .review-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-    
-    .rating {
-        color: #f59e0b;
-    }
-    
-    .date {
-        color: #6b7280;
-        font-size: 0.9rem;
-    }
-    
-    .review-content {
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
-    
-    .comments-section {
+    .book-description {
         margin-top: 1.5rem;
         padding-top: 1.5rem;
         border-top: 1px solid #e5e7eb;
     }
     
-    .comment {
-        background: #f9fafb;
-        border-radius: 6px;
-        padding: 1rem;
-        margin-bottom: 1rem;
+    .book-description h3 {
+        margin-top: 0;
+        color: #4b5563;
     }
     
-    .comment-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
+    .back-link {
+        margin-top: 2rem;
     }
     
-    .comment-content {
-        line-height: 1.5;
+    .btn-secondary {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #e5e7eb;
+        color: #374151;
+        display: inline-block;
+    }
+    
+    .btn-secondary:hover {
+        background: #d1d5db;
     }
     
     @media (max-width: 768px) {
         .book-header {
             flex-direction: column;
+            gap: 1rem;
         }
         
-        .cover-large {
-            max-width: 150px;
-            align-self: center;
+        .book-content {
+            flex-direction: column;
         }
         
-        .cover-placeholder {
-            width: 150px;
-            height: 225px;
-            align-self: center;
+        .book-cover {
+            flex: none;
+            max-width: 300px;
+            margin: 0 auto;
         }
     }
 </style>
