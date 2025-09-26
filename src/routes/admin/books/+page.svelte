@@ -139,7 +139,7 @@ async function togglePublished(book) {
             showNotificationMessage('Failed to delete book', 'error');
         }
     }
-<!-- In src/routes/admin/books/+page.svelte -->
+
 async function cleanupBooks() {
     try {
         const response = await fetch('/api/admin/cleanup', {
