@@ -1,101 +1,105 @@
 // src/routes/api/admin/books/+server.js
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 
-/** @type {import('./$types').RequestHandler} */
+// Function to create a slug from a title
+function createSlug(title) {
+    return title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+        .trim();
+}
+
 export async function GET({ platform }) {
-    if (!platform?.env?.DB_book) {
-        return json({ error: 'Database not available' }, { status: 500 });
-    }
-    
-    const db = platform.env.DB_book;
-    
     try {
-        // Fetch all books
-        const { results } = await db.prepare(`
-            SELECT id, title, author, description, cover_image_url, coverImageId, slug, published_year, created_at
-            FROM books
-            ORDER BY title ASC
-        `).all();
+        if (!platform?.env?.DB_book) {
+            return json({ 
+                success: false, 
+                error: 'Database not available' 
+            }, { status: 500 });
+        }
         
-        return json(results);
-    } catch (err) {
-        console.error('Error fetching books:', err);
-        return json({ error: 'Failed to fetch books' }, { status: 500 });
+        const result = await platform.env.DB_book.prepare("SELECT * FROM books ORDER BY title").all();
+        
+        return json(result.results);
+    } catch (error) {
+        console.error('Error fetching books:', error);
+        return json({ 
+            success: false, 
+            error: error.message 
+        }, { status: 500 });
     }
 }
 
-/** @type {import('./$types').RequestHandler} */
 export async function POST({ request, platform }) {
-    if (!platform?.env?.DB_book) {
-        return json({ error: 'Database not available' }, { status: 500 });
-    }
-    
-    const db = platform.env.DB_book;
-    
     try {
-        // Parse the form data
+        if (!platform?.env?.DB_book) {
+            return json({ 
+                success: false, 
+                error: 'Database not available' 
+            }, { status: 500 });
+        }
+        
         const formData = await request.formData();
         
-        // Extract fields from form data
+        // Extract form data
         const title = formData.get('title');
         const author = formData.get('author');
-        const description = formData.get('description');
-        const published_year = formData.get('published_year');
+        const description = formData.get('description') || '';
+        const published_year = formData.get('published_year') || null;
+        const published = formData.get('published') === 'true';
         const coverImage = formData.get('coverImage');
         
-        // Validate required fields
-        if (!title || !author) {
-            return json({ error: 'Title and author are required' }, { status: 400 });
-        }
+        // Generate slug from title
+        const slug = createSlug(title);
         
-        // Generate a slug from the title
-        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        
-        // Handle cover image upload if present
-        let cover_image_url = null;
         let coverImageId = null;
         
+        // Handle image upload if provided
         if (coverImage && coverImage.size > 0) {
-            // In a real implementation, you would upload the image to a service like Cloudflare Images or AWS S3
-            // For now, we'll just store the filename
-            cover_image_url = coverImage.name;
-            // If you're using Cloudflare Images, you would do something like:
-            // const imageUpload = await uploadToCloudflareImages(coverImage);
-            // coverImageId = imageUpload.id;
+            // In a real implementation, you would upload the image to a storage service
+            // and get back an ID. For now, we'll simulate this.
+            // This is where you would integrate with your image upload service.
+            // For example, using Cloudflare Images, AWS S3, etc.
+            
+            // For now, we'll just use a placeholder ID
+            coverImageId = 'uploaded-image-' + Date.now();
+            
+            // In a real implementation, you would upload the image:
+            // const imageResponse = await fetch('https://api.example.com/upload', {
+            //     method: 'POST',
+            //     body: formData
+            // });
+            // const imageData = await imageResponse.json();
+            // coverImageId = imageData.id;
         }
         
-        // Parse published_year as integer or null
-        const publishedYear = published_year ? parseInt(published_year) : null;
-        
-        // Create a new book - note we don't provide the id, it will be auto-generated
-        const result = await db.prepare(`
-            INSERT INTO books (title, author, description, cover_image_url, coverImageId, slug, published_year, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        // Insert the new book
+        const result = await platform.env.DB_book.prepare(`
+            INSERT INTO books (title, author, description, published_year, slug, published, coverImageId)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `).bind(
             title,
             author,
-            description || null,
-            cover_image_url,
-            coverImageId,
+            description,
+            published_year,
             slug,
-            publishedYear,
-            new Date().toISOString()
+            published ? 1 : 0,
+            coverImageId
         ).run();
         
-        if (!result.success) {
-            return json({ error: 'Failed to create book' }, { status: 500 });
-        }
-        
-        // Return the newly created book
-        const newBook = await db.prepare(`
-            SELECT id, title, author, description, cover_image_url, coverImageId, slug, published_year
-            FROM books
-            WHERE id = ?
-        `).bind(result.lastInsertRowid).first();
-        
-        return json(newBook, { status: 201 });
-    } catch (err) {
-        console.error('Error creating book:', err);
-        return json({ error: 'Failed to create book: ' + err.message }, { status: 500 });
+        return json({ 
+            success: true, 
+            message: 'Book added successfully',
+            id: result.lastInsertRowid,
+            slug: slug
+        });
+    } catch (error) {
+        console.error('Error adding book:', error);
+        return json({ 
+            success: false, 
+            error: error.message 
+        }, { status: 500 });
     }
 }

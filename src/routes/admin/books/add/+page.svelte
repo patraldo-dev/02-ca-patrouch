@@ -8,6 +8,7 @@
     let isLoading = false;
     let message = '';
     let isSuccess = false;
+    let published = false; // Add published status
     
     async function handleSubmit() {
         if (!title || !author) {
@@ -23,6 +24,7 @@
             formData.append('title', title);
             formData.append('author', author);
             formData.append('description', description);
+            formData.append('published', published); // Add published status
             
             // Only append published_year if it has a value
             if (published_year) {
@@ -50,6 +52,7 @@
                 description = '';
                 published_year = '';
                 coverImage = null;
+                published = false; // Reset published status
                 // Reset file input
                 const fileInput = document.getElementById('coverImage');
                 if (fileInput) {
@@ -140,6 +143,17 @@
             {#if coverImage}
                 <p class="file-info">Selected: {coverImage.name}</p>
             {/if}
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input
+                    type="checkbox"
+                    bind:checked={published}
+                    disabled={isLoading}
+                />
+                Published
+            </label>
         </div>
         
         <button type="submit" disabled={isLoading}>
