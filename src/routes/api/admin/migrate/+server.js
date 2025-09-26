@@ -3,16 +3,24 @@ import { json } from '@sveltejs/kit';
 
 export async function POST({ platform }) {
   try {
+    // Check if platform and DB_book are available
+    if (!platform?.env?.DB_book) {
+      return json({ 
+        success: false, 
+        error: 'Database not available. Check your D1 binding configuration.' 
+      }, { status: 500 });
+    }
+    
     // Check if slug column exists
-    const tableInfo = await platform.env.DB.prepare("PRAGMA table_info(books);").all();
+    const tableInfo = await platform.env.DB_book.prepare("PRAGMA table_info(books);").all();
     const hasSlugColumn = tableInfo.results.some(column => column.name === 'slug');
     
     if (!hasSlugColumn) {
       // Add slug column
-      await platform.env.DB.exec("ALTER TABLE books ADD COLUMN slug TEXT;");
+      await platform.env.DB_book.exec("ALTER TABLE books ADD COLUMN slug TEXT;");
       
       // Update the one book record with a slug
-      await platform.env.DB.exec("UPDATE books SET slug = 'the-only-book' WHERE id = 1;");
+      await platform.env.DB_book.exec("UPDATE books SET slug = 'the-only-book' WHERE id = 1;");
     }
     
     // Check if published column exists
@@ -20,10 +28,10 @@ export async function POST({ platform }) {
     
     if (!hasPublishedColumn) {
       // Add published column
-      await platform.env.DB.exec("ALTER TABLE books ADD COLUMN published INTEGER DEFAULT 0;");
+      await platform.env.DB_book.exec("ALTER TABLE books ADD COLUMN published INTEGER DEFAULT 0;");
       
       // Update the one book record to be published
-      await platform.env.DB.exec("UPDATE books SET published = 1 WHERE id = 1;");
+      await platform.env.DB_book.exec("UPDATE books SET published = 1 WHERE id = 1;");
     }
     
     return json({ success: true, message: 'Migration completed successfully' });
