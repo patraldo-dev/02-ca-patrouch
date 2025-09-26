@@ -61,9 +61,9 @@
                     Books
                 </a>
                 <a
-                    href="/admin/reviews"
-                    class:active={$page.url.pathname === '/admin/reviews'}
-                    aria-current={$page.url.pathname === '/admin/reviews' ? 'page' : undefined}
+                    href="/reviews"
+                    class:active={$page.url.pathname === '/reviews'}
+                    aria-current={$page.url.pathname === '/reviews' ? 'page' : undefined}
                 >
                     Reviews
                 </a>
@@ -132,10 +132,10 @@
                         Books
                     </a>
                     <a
-                        href="/admin/reviews"
+                        href="/reviews"
                         on:click={toggleMobileMenu}
-                        class:active={$page.url.pathname === '/admin/reviews'}
-                        aria-current={$page.url.pathname === '/admin/reviews' ? 'page' : undefined}
+                        class:active={$page.url.pathname === '/reviews'}
+                        aria-current={$page.url.pathname === '/reviews' ? 'page' : undefined}
                     >
                         Reviews
                     </a>
