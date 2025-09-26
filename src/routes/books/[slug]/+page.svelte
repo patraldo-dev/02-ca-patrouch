@@ -1,6 +1,7 @@
 <!-- src/routes/books/[slug]/+page.svelte -->
 <script>
     import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
     
     let book = null;
     let loading = true;
@@ -43,6 +44,7 @@
     {:else if error}
         <div class="error">
             <p>{error}</p>
+            <button on:click={() => goto('/')} class="btn-secondary">Go Home</button>
         </div>
     {:else if book}
         <div class="book-detail">
@@ -76,12 +78,13 @@
             </div>
             
             <div class="back-link">
-                <a href="/admin/books" class="btn-secondary">Back to Books</a>
+                <a href="/" class="btn-secondary">Back to Home</a>
             </div>
         </div>
     {:else}
         <div class="error">
             <p>Book not found</p>
+            <button on:click={() => goto('/')} class="btn-secondary">Go Home</button>
         </div>
     {/if}
 </div>

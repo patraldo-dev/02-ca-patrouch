@@ -11,14 +11,16 @@
         author: '',
         published_year: '',
         slug: '',
-        published: false
+        published: false,
+        coverImageId: null,
+        description: ''
     };
     
-    export let params; // This will contain the slug from the URL
+    export let params;
     
     onMount(async () => {
         try {
-            const response = await fetch(`/api/books/${params.slug}`);
+            const response = await fetch(`/api/admin/books/${params.slug}`);
             if (response.ok) {
                 book = await response.json();
                 
@@ -28,7 +30,9 @@
                     author: book.author,
                     published_year: book.published_year || '',
                     slug: book.slug,
-                    published: book.published || false
+                    published: book.published || false,
+                    coverImageId: book.coverImageId || null,
+                    description: book.description || ''
                 };
             } else {
                 error = 'Failed to load book';
@@ -52,7 +56,6 @@
             });
             
             if (response.ok) {
-                // Redirect to the books list
                 goto('/admin/books');
             } else {
                 const result = await response.json();
@@ -61,6 +64,15 @@
         } catch (err) {
             console.error('Error updating book:', err);
             alert('Failed to update book');
+        }
+    }
+    
+    function handleFileChange(event) {
+        const file = event.target.files[0];
+        if (file) {
+            // In a real implementation, you would upload the file and get back an ID
+            // For now, we'll simulate it
+            form.coverImageId = 'uploaded-image-' + Date.now();
         }
     }
 </script>
@@ -86,13 +98,18 @@
     {:else if book}
         <form class="book-form" on:submit|preventDefault={handleSubmit}>
             <div class="form-group">
-                <label for="title">Title</label>
+                <label for="title">Title *</label>
                 <input type="text" id="title" bind:value={form.title} required>
             </div>
             
             <div class="form-group">
-                <label for="author">Author</label>
+                <label for="author">Author *</label>
                 <input type="text" id="author" bind:value={form.author} required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" bind:value={form.description} rows="4"></textarea>
             </div>
             
             <div class="form-group">
@@ -101,7 +118,7 @@
             </div>
             
             <div class="form-group">
-                <label for="slug">Slug</label>
+                <label for="slug">Slug *</label>
                 <input type="text" id="slug" bind:value={form.slug} required>
             </div>
             
@@ -110,6 +127,20 @@
                     <input type="checkbox" bind:checked={form.published}>
                     Published
                 </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="coverImage">Cover Image</label>
+                {#if form.coverImageId}
+                    <div class="current-cover">
+                        <img src={`/images/${form.coverImageId}`} alt="Current cover" />
+                        <button type="button" class="btn-danger" on:click={() => form.coverImageId = null}>
+                            Remove Cover
+                        </button>
+                    </div>
+                {:else}
+                    <input type="file" id="coverImage" accept="image/*" on:change={handleFileChange}>
+                {/if}
             </div>
             
             <div class="form-actions">
@@ -176,7 +207,8 @@
     }
     
     .form-group input[type="text"],
-    .form-group input[type="number"] {
+    .form-group input[type="number"],
+    .form-group textarea {
         width: 100%;
         padding: 0.75rem;
         border: 1px solid #d1d5db;
@@ -188,13 +220,25 @@
         margin-right: 0.5rem;
     }
     
+    .current-cover {
+        margin-top: 1rem;
+    }
+    
+    .current-cover img {
+        max-width: 200px;
+        max-height: 300px;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
     .form-actions {
         display: flex;
         gap: 1rem;
         margin-top: 2rem;
     }
     
-    .btn-primary, .btn-secondary {
+    .btn-primary, .btn-secondary, .btn-danger {
         padding: 0.75rem 1.5rem;
         border-radius: 4px;
         font-size: 1rem;
@@ -221,6 +265,15 @@
     
     .btn-secondary:hover {
         background: #d1d5db;
+    }
+    
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #dc2626;
     }
     
     @media (max-width: 768px) {

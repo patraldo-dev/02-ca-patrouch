@@ -44,14 +44,15 @@ export async function PUT({ params, request, platform }) {
         const { slug } = params;
         const data = await request.json();
         
-        // Update the book by slug
+        // Update the book
         await platform.env.DB_book.prepare(`
             UPDATE books 
-            SET title = ?, author = ?, published_year = ?, slug = ?, published = ?, coverImageId = ?
+            SET title = ?, author = ?, description = ?, published_year = ?, slug = ?, published = ?, coverImageId = ?
             WHERE slug = ?
         `).bind(
             data.title,
             data.author,
+            data.description || null,
             data.published_year || null,
             data.slug,
             data.published ? 1 : 0,
@@ -80,7 +81,7 @@ export async function DELETE({ params, platform }) {
         
         const { slug } = params;
         
-        // Delete the book by slug
+        // Delete the book
         const result = await platform.env.DB_book.prepare("DELETE FROM books WHERE slug = ?").bind(slug).run();
         
         if (result.changes === 0) {
