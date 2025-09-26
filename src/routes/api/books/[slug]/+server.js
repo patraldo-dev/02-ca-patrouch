@@ -1,29 +1,33 @@
 // src/routes/api/books/[slug]/+server.js
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 
-/** @type {import('./$types').RequestHandler} */
 export async function GET({ params, platform }) {
-    const { slug } = params;
-    
-    if (!slug) {
-        throw error(400, 'Book slug is required');
+    try {
+        if (!platform?.env?.DB_book) {
+            return json({ 
+                success: false, 
+                error: 'Database not available' 
+            }, { status: 500 });
+        }
+        
+        const { slug } = params;
+        
+        // Get book by slug
+        const result = await platform.env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
+        
+        if (!result) {
+            return json({ 
+                success: false, 
+                error: 'Book not found' 
+            }, { status: 404 });
+        }
+        
+        return json(result);
+    } catch (error) {
+        console.error('Error fetching book:', error);
+        return json({ 
+            success: false, 
+            error: error.message 
+        }, { status: 500 });
     }
-    
-    if (!platform?.env?.DB_book) {
-        throw error(500, 'Database not available');
-    }
-    
-    const db = platform.env.DB_book;
-    
-    const book = await db.prepare(`
-        SELECT id, title, author, description, coverImageId, slug
-        FROM books
-        WHERE slug = ?
-    `).bind(slug).first();
-    
-    if (!book) {
-        throw error(404, 'Book not found');
-    }
-    
-    return json(book);
 }

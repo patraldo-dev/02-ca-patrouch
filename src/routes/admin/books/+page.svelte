@@ -218,7 +218,7 @@
                 <tbody>
                     {#each filteredBooks as book}
                         <tr>
-                            <td>{book.id}</td>
+                            <td>{book.slug}</td>
                             <td>{book.title}</td>
                             <td>{book.author}</td>
                             <td><code>{book.slug}</code></td>
@@ -230,8 +230,8 @@
                             </td>
                             <td class="actions">
                                 <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
-                                <a href={`/admin/books/edit/${book.id}`} class="btn-secondary">Edit</a>
-                                <button on:click={() => deleteBook(book.id)} class="btn-danger">Delete</button>
+                                <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
+                                <button on:click={() => deleteBook(book.slug)} class="btn-danger">Delete</button>
                             </td>
                         </tr>
                     {/each}

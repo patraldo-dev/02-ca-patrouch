@@ -1,0 +1,237 @@
+<!-- src/routes/admin/books/edit/[slug]/+page.svelte -->
+<script>
+    import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+    
+    let book = null;
+    let loading = true;
+    let error = null;
+    let form = {
+        title: '',
+        author: '',
+        published_year: '',
+        slug: '',
+        published: false
+    };
+    
+    export let params; // This will contain the slug from the URL
+    
+    onMount(async () => {
+        try {
+            const response = await fetch(`/api/books/${params.slug}`);
+            if (response.ok) {
+                book = await response.json();
+                
+                // Populate the form with the book data
+                form = {
+                    title: book.title,
+                    author: book.author,
+                    published_year: book.published_year || '',
+                    slug: book.slug,
+                    published: book.published || false
+                };
+            } else {
+                error = 'Failed to load book';
+            }
+        } catch (err) {
+            console.error('Error fetching book:', err);
+            error = 'Network error. Please try again.';
+        } finally {
+            loading = false;
+        }
+    });
+    
+    async function handleSubmit() {
+        try {
+            const response = await fetch(`/api/admin/books/${book.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(form)
+            });
+            
+            if (response.ok) {
+                // Redirect to the books list
+                goto('/admin/books');
+            } else {
+                const result = await response.json();
+                alert('Failed to update book: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Error updating book:', err);
+            alert('Failed to update book');
+        }
+    }
+</script>
+
+<svelte:head>
+    <title>Edit Book — Admin</title>
+</svelte:head>
+
+<div class="container">
+    <div class="page-header">
+        <h1>Edit Book</h1>
+        <a href="/admin/books" class="btn-secondary">Back to Books</a>
+    </div>
+    
+    {#if loading}
+        <div class="loading">
+            <p>Loading book...</p>
+        </div>
+    {:else if error}
+        <div class="error">
+            <p>{error}</p>
+        </div>
+    {:else if book}
+        <form class="book-form" on:submit|preventDefault={handleSubmit}>
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" bind:value={form.title} required>
+            </div>
+            
+            <div class="form-group">
+                <label for="author">Author</label>
+                <input type="text" id="author" bind:value={form.author} required>
+            </div>
+            
+            <div class="form-group">
+                <label for="published_year">Published Year</label>
+                <input type="number" id="published_year" bind:value={form.published_year}>
+            </div>
+            
+            <div class="form-group">
+                <label for="slug">Slug</label>
+                <input type="text" id="slug" bind:value={form.slug} required>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" bind:checked={form.published}>
+                    Published
+                </label>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Update Book</button>
+                <a href="/admin/books" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    {:else}
+        <div class="error">
+            <p>Book not found</p>
+        </div>
+    {/if}
+</div>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .loading, .error {
+        text-align: center;
+        padding: 3rem;
+        background: #f9fafb;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+    
+    .error {
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+    
+    .book-form {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="number"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .form-group input[type="checkbox"] {
+        margin-right: 0.5rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .btn-primary, .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+    
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
