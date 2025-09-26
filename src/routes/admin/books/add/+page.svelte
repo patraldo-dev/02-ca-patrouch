@@ -23,8 +23,13 @@
             formData.append('title', title);
             formData.append('author', author);
             formData.append('description', description);
-            formData.append('published_year', published_year);
             
+            // Only append published_year if it has a value
+            if (published_year) {
+                formData.append('published_year', published_year);
+            }
+            
+            // Only append coverImage if a file was selected
             if (coverImage) {
                 formData.append('coverImage', coverImage);
             }
@@ -32,6 +37,7 @@
             const response = await fetch('/api/admin/books', {
                 method: 'POST',
                 body: formData
+                // Don't set Content-Type header when using FormData
             });
             
             const result = await response.json();
@@ -45,6 +51,11 @@
                 description = '';
                 published_year = '';
                 coverImage = null;
+                // Reset file input
+                const fileInput = document.getElementById('coverImage');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
             } else {
                 message = result.error || 'Failed to create book';
             }
@@ -127,6 +138,9 @@
                 on:change={handleFileChange}
                 disabled={isLoading}
             />
+            {#if coverImage}
+                <p class="file-info">Selected: {coverImage.name}</p>
+            {/if}
         </div>
         
         <button type="submit" disabled={isLoading}>
@@ -144,6 +158,13 @@
         max-width: 800px;
         margin: 0 auto;
         padding: 2rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 2rem;
     }
     
     .form-group {
@@ -206,5 +227,11 @@
     .message.error {
         background: #fee2e2;
         color: #b91c1c;
+    }
+    
+    .file-info {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
     }
 </style>
