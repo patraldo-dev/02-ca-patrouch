@@ -82,7 +82,41 @@
             showNotification = false;
         }, 3000);
     }
-    
+
+<!-- In src/routes/admin/books/+page.svelte -->
+async function togglePublished(book) {
+    try {
+        const response = await fetch(`/api/admin/books/${book.slug}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ...book,
+                published: !book.published
+            })
+        });
+        
+        if (response.ok) {
+            // Update the book in the list
+            books = books.map(b => {
+                if (b.slug === book.slug) {
+                    return { ...b, published: !b.published };
+                }
+                return b;
+            });
+            applyFiltersAndSort();
+            showNotificationMessage(`Book ${!book.published ? 'published' : 'unpublished'} successfully`);
+        } else {
+            const result = await response.json();
+            showNotificationMessage('Failed to update book: ' + result.error, 'error');
+        }
+    } catch (err) {
+        console.error('Error updating book:', err);
+        showNotificationMessage('Failed to update book', 'error');
+    }
+}    
+
     async function deleteBook(bookSlug) {
         if (!confirm('Are you sure you want to delete this book?')) {
             return;
@@ -106,7 +140,30 @@
             showNotificationMessage('Failed to delete book', 'error');
         }
     }
-    
+<!-- In src/routes/admin/books/+page.svelte -->
+async function cleanupBooks() {
+    try {
+        const response = await fetch('/api/admin/cleanup', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotificationMessage(result.message);
+            // Reload the page to see the updated books
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotificationMessage('Cleanup failed: ' + result.error, 'error');
+        }
+    } catch (err) {
+        console.error('Error cleaning up books:', err);
+        showNotificationMessage('Error cleaning up books', 'error');
+    }
+}    
+
     async function runMigration() {
         try {
             const response = await fetch('/api/admin/migrate', {
@@ -166,6 +223,7 @@
     <div class="admin-header">
         <h1>Book Management</h1>
         <div class="header-actions">
+            <button on:click={cleanupBooks} class="btn-secondary">Cleanup Books</button>
             <button on:click={updateSlugs} class="btn-secondary">Update Slugs</button>
             <button on:click={runMigration} class="btn-secondary">Run Migration</button>
             <a href="/admin/books/add" class="btn-primary">Add New Book</a>
@@ -252,10 +310,15 @@
                                     {book.published ? 'Published' : 'Draft'}
                                 </span>
                             </td>
-                            <td class="actions">
-                                <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
-                                <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
-                                <button on:click={() => deleteBook(book.id)} class="btn-danger">Delete</button>
+<td class="actions">
+    <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
+    <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
+    <button on:click={() => togglePublished(book)} class="btn-secondary">
+        {book.published ? 'Unpublish' : 'Publish'}
+    </button>
+    <button on:click={() => deleteBook(book.slug)} class="btn-danger">Delete</button>
+
+
                             </td>
                         </tr>
                     {/each}

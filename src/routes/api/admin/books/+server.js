@@ -60,22 +60,10 @@ export async function POST({ request, platform }) {
         if (coverImage && coverImage.size > 0) {
             // In a real implementation, you would upload the image to a storage service
             // and get back an ID. For now, we'll simulate this.
-            // This is where you would integrate with your image upload service.
-            // For example, using Cloudflare Images, AWS S3, etc.
-            
-            // For now, we'll just use a placeholder ID
             coverImageId = 'uploaded-image-' + Date.now();
-            
-            // In a real implementation, you would upload the image:
-            // const imageResponse = await fetch('https://api.example.com/upload', {
-            //     method: 'POST',
-            //     body: formData
-            // });
-            // const imageData = await imageResponse.json();
-            // coverImageId = imageData.id;
         }
         
-        // Insert the new book
+        // Insert the new book - let the database generate the ID
         const result = await platform.env.DB_book.prepare(`
             INSERT INTO books (title, author, description, published_year, slug, published, coverImageId)
             VALUES (?, ?, ?, ?, ?, ?, ?)

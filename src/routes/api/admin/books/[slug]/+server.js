@@ -81,17 +81,24 @@ export async function DELETE({ params, platform }) {
         
         const { slug } = params;
         
-        // Delete the book
-        const result = await platform.env.DB_book.prepare("DELETE FROM books WHERE slug = ?").bind(slug).run();
+        // First, get the book to see if it exists
+        const book = await platform.env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
         
-        if (result.changes === 0) {
+        if (!book) {
             return json({ 
                 success: false, 
                 error: 'Book not found' 
             }, { status: 404 });
         }
         
-        return json({ success: true, message: 'Book deleted successfully' });
+        // Delete the book using both slug and ID to be sure
+        const result = await platform.env.DB_book.prepare("DELETE FROM books WHERE slug = ? OR id = ?").bind(slug, book.id).run();
+        
+        return json({ 
+            success: true, 
+            message: 'Book deleted successfully',
+            deletedRows: result.changes
+        });
     } catch (error) {
         console.error('Error deleting book:', error);
         return json({ 
