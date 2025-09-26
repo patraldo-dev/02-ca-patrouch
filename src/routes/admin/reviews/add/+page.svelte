@@ -145,13 +145,6 @@
         font-weight: 500;
         color: #555;
     }
-    input, select, textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 1rem;
-    }
     button {
         width: 100%;
         padding: 0.75rem;

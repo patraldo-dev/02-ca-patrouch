@@ -1,36 +1,53 @@
-// src/db/migrations/001-add-slug-to-books.js
-export async function up(db) {
-    // Add the slug column
-    await db.exec(`
-        ALTER TABLE books ADD COLUMN slug TEXT
-    `);
-    
-    // Generate slugs for existing books
-    await db.exec(`
-        UPDATE books 
-        SET slug = lower(replace(replace(replace(title, ' ', '-'), '.', ''), '/', '-')) || '-' || hex(randomblob(4))
-        WHERE slug IS NULL OR slug = ''
-    `);
-    
-    // Make the column NOT NULL
-    await db.exec(`
-        ALTER TABLE books ALTER COLUMN slug TEXT NOT NULL
-    `);
-    
-    // Add unique constraint
-    await db.exec(`
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_books_slug ON books(slug)
-    `);
+// src/lib/db/migrations/001-add-slug-column.js
+export async function up(queryInterface, Sequelize) {
+  // Check if books table exists
+  const tableExists = await queryInterface.sequelize.query(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='books';`
+  );
+
+  if (tableExists[0].length === 0) {
+    console.log('Books table does not exist, skipping migration');
+    return;
+  }
+
+  // Get table information
+  const tableInfo = await queryInterface.sequelize.query(`PRAGMA table_info(books);`);
+  
+  // Check if slug column already exists
+  const hasSlugColumn = tableInfo[0].some(column => column.name === 'slug');
+  
+  if (!hasSlugColumn) {
+    // Add slug column
+    await queryInterface.addColumn('books', 'slug', {
+      type: Sequelize.STRING,
+      allowNull: false,
+      unique: true
+    });
+    console.log('Added slug column to books table');
+  } else {
+    console.log('Slug column already exists, skipping');
+  }
 }
 
-export async function down(db) {
-    // Remove the unique constraint
-    await db.exec(`
-        DROP INDEX IF EXISTS idx_books_slug
-    `);
-    
-    // Remove the column
-    await db.exec(`
-        ALTER TABLE books DROP COLUMN slug
-    `);
+export async function down(queryInterface, Sequelize) {
+  // Check if table exists
+  const tableExists = await queryInterface.sequelize.query(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='books';`
+  );
+
+  if (tableExists[0].length === 0) {
+    return;
+  }
+
+  // Get table information
+  const tableInfo = await queryInterface.sequelize.query(`PRAGMA table_info(books);`);
+  
+  // Check if slug column exists
+  const hasSlugColumn = tableInfo[0].some(column => column.name === 'slug');
+  
+  if (hasSlugColumn) {
+    // Remove slug column
+    await queryInterface.removeColumn('books', 'slug');
+    console.log('Removed slug column from books table');
+  }
 }
