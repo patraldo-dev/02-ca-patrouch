@@ -43,7 +43,7 @@
     
     async function handleSubmit() {
         try {
-            const response = await fetch(`/api/admin/books/${book.id}`, {
+            const response = await fetch(`/api/admin/books/${book.slug}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'

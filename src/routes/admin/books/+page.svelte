@@ -83,19 +83,19 @@
         }, 3000);
     }
     
-    async function deleteBook(bookId) {
+    async function deleteBook(bookSlug) {
         if (!confirm('Are you sure you want to delete this book?')) {
             return;
         }
         
         try {
-            const response = await fetch(`/api/admin/books/${bookId}`, {
+            const response = await fetch(`/api/admin/books/${bookSlug}`, {
                 method: 'DELETE'
             });
             
             if (response.ok) {
                 // Remove the book from the list
-                books = books.filter(b => b.id !== bookId);
+                books = books.filter(b => b.slug!== bookSlug);
                 applyFiltersAndSort();
                 showNotificationMessage('Book deleted successfully');
             } else {
@@ -130,6 +130,29 @@
         }
     }
     
+    async function updateSlugs() {
+        try {
+            const response = await fetch('/api/admin/update-slugs', {
+                method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                showNotificationMessage(result.message);
+                // Reload the page to see the updated books
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showNotificationMessage('Failed to update slugs: ' + result.error, 'error');
+            }
+        } catch (err) {
+            console.error('Error updating slugs:', err);
+            showNotificationMessage('Error updating slugs', 'error');
+        }
+    }
+    
     $: {
         applyFiltersAndSort();
     }
@@ -143,6 +166,7 @@
     <div class="admin-header">
         <h1>Book Management</h1>
         <div class="header-actions">
+            <button on:click={updateSlugs} class="btn-secondary">Update Slugs</button>
             <button on:click={runMigration} class="btn-secondary">Run Migration</button>
             <a href="/admin/books/add" class="btn-primary">Add New Book</a>
         </div>
@@ -218,7 +242,7 @@
                 <tbody>
                     {#each filteredBooks as book}
                         <tr>
-                            <td>{book.slug}</td>
+                            <td>{book.id}</td>
                             <td>{book.title}</td>
                             <td>{book.author}</td>
                             <td><code>{book.slug}</code></td>
@@ -231,7 +255,7 @@
                             <td class="actions">
                                 <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
                                 <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
-                                <button on:click={() => deleteBook(book.slug)} class="btn-danger">Delete</button>
+                                <button on:click={() => deleteBook(book.id)} class="btn-danger">Delete</button>
                             </td>
                         </tr>
                     {/each}
