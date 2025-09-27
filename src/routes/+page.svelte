@@ -18,7 +18,7 @@
                     book.title.trim() !== '' && 
                     book.author && 
                     book.author.trim() !== '' &&
-                    (book.coverImageId || book.cover_image_url) // Only show books with covers
+                    (book.coverImageId) 
                 );
             } else {
                 error = 'Failed to load books';
@@ -69,9 +69,9 @@
             class="book-cover"
             loading="lazy"
         />
-    {:else if book.cover_image_url}
+    {:else if book.coverImageId}
         <img 
-            src={book.cover_image_url}
+            src={book.coverImageId}
             alt={`Cover of ${book.title}`}
             class="book-cover"
             loading="lazy"
