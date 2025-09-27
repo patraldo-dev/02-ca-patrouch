@@ -67,14 +67,47 @@
         }
     }
 
-function handleFileChange(event) {
-    const file = event.target.files[0];
-    if (file) {
-        // In a real implementation, you would upload the file and get back an ID
-        // For now, we'll simulate it
-        form.coverImageId = 'uploaded-image-' + Date.now();
+    async function handleFileChange(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        uploading = true;
+        
+        try {
+            // Upload directly to Cloudflare Images
+            const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+            const apiKey = process.env.CLOUDFLARE_API_KEY;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch(
+                `https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                    },
+                    body: formData,
+                }
+            );
+            
+            if (response.ok) {
+                const result = await response.json();
+                form.coverImageId = result.result.id;
+            } else {
+                const errorData = await response.json();
+                alert('Failed to upload image: ' + errorData.errors?.[0]?.message || 'Unknown error');
+            }
+        } catch (err) {
+            console.error('Error uploading image:', err);
+            alert('Failed to upload image');
+        } finally {
+            uploading = false;
+        }
     }
-}    
+
+
 </script>
 
 <svelte:head>
