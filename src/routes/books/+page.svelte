@@ -63,10 +63,10 @@
                                 class="book-cover"
                             />
                         </a>
-                    {:else if book.cover_image_url}
+                    {:else if book.coverImageId}
                         <a href={`/books/${book.slug}`}>
                             <img 
-                                src={book.cover_image_url}
+                                src={book.coverImageId}
                                 alt={`Cover of ${book.title}`}
                                 class="book-cover"
                             />

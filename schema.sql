@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS books (
     title TEXT NOT NULL,
     author TEXT NOT NULL,
     isbn TEXT UNIQUE,
-    cover_image_url TEXT, -- Cloudflare Images URL
+    coverImageId TEXT, -- Cloudflare Images URL
     description TEXT,
     published_year INTEGER,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

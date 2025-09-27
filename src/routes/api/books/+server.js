@@ -17,7 +17,6 @@ export async function GET({ platform }) {
                 b.title, 
                 b.author, 
                 b.description, 
-                b.cover_image_url,
                 b.coverImageId,
                 b.slug,
                 b.published_year,
@@ -30,7 +29,7 @@ export async function GET({ platform }) {
                 AND b.title != ''
                 AND b.author IS NOT NULL 
                 AND b.author != ''
-                AND (b.cover_image_url IS NOT NULL OR b.coverImageId IS NOT NULL)
+                AND (b.coverImageId IS NOT NULL)
             GROUP BY b.id
             ORDER BY b.title ASC
         `).all();

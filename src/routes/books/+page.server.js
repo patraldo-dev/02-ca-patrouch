@@ -14,7 +14,6 @@ export async function load({ platform }) {
             b.title, 
             b.author, 
             b.description, 
-            b.cover_image_url,
             b.coverImageId,
             b.slug,
             b.published_year,
