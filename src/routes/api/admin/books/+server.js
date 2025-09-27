@@ -58,20 +58,41 @@ export async function POST({ request, platform }) {
         
         // Handle image upload if provided
         if (coverImageFile && coverImageFile.size > 0) {
-            // Upload the image to Cloudflare Images
-            const imageFormData = new FormData();
-            imageFormData.append('image', coverImageFile);
+            // Upload the image to Cloudflare Images directly
+            const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+            const apiKey = process.env.CLOUDFLARE_API_KEY;
             
-            const imageResponse = await fetch('/api/upload-image', {
-                method: 'POST',
-                body: imageFormData
-            });
+            if (!accountId || !apiKey) {
+                return json({ 
+                    success: false, 
+                    error: 'Cloudflare credentials not configured' 
+                }, { status: 500 });
+            }
+            
+            const cloudflareFormData = new FormData();
+            cloudflareFormData.append('file', coverImageFile);
+            
+            const imageResponse = await fetch(
+                `https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                    },
+                    body: cloudflareFormData,
+                }
+            );
             
             if (imageResponse.ok) {
                 const imageData = await imageResponse.json();
-                coverImageId = imageData.imageId;
+                coverImageId = imageData.result.id;
             } else {
-                console.error('Failed to upload image');
+                const errorData = await imageResponse.json();
+                console.error('Cloudflare Images error:', errorData);
+                return json({ 
+                    success: false, 
+                    error: `Failed to upload image: ${errorData.errors?.[0]?.message || 'Unknown error'}` 
+                }, { status: 500 });
             }
         }
         
@@ -92,7 +113,7 @@ export async function POST({ request, platform }) {
         return json({ 
             success: true, 
             message: 'Book added successfully',
-            id: result.lastInsertRowid, // Get the auto-generated ID
+            id: result.lastInsertRowid,
             slug: slug
         });
     } catch (error) {
