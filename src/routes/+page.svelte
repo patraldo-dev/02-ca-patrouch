@@ -64,7 +64,7 @@
 <a href={`/books/${book.slug}`}>
     {#if book.coverImageId}
         <img 
-            src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
+            src={`/images/${book.coverImageId}`}
             alt={`Cover of ${book.title}`}
             class="book-cover"
             loading="lazy"

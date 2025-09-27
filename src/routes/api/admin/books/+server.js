@@ -49,7 +49,7 @@ export async function POST({ request, platform }) {
         const description = formData.get('description') || '';
         const published_year = formData.get('published_year') || null;
         const published = formData.get('published') === 'true';
-        const coverImage = formData.get('coverImage');
+        const coverImageFile = formData.get('coverImage');
         
         // Generate slug from title
         const slug = createSlug(title);
@@ -57,13 +57,25 @@ export async function POST({ request, platform }) {
         let coverImageId = null;
         
         // Handle image upload if provided
-        if (coverImage && coverImage.size > 0) {
-            // In a real implementation, you would upload the image to a storage service
-            // and get back an ID. For now, we'll simulate this.
-            coverImageId = 'uploaded-image-' + Date.now();
+        if (coverImageFile && coverImageFile.size > 0) {
+            // Upload the image to Cloudflare Images
+            const imageFormData = new FormData();
+            imageFormData.append('image', coverImageFile);
+            
+            const imageResponse = await fetch('/api/upload-image', {
+                method: 'POST',
+                body: imageFormData
+            });
+            
+            if (imageResponse.ok) {
+                const imageData = await imageResponse.json();
+                coverImageId = imageData.imageId;
+            } else {
+                console.error('Failed to upload image');
+            }
         }
         
-        // Insert the new book - let the database generate the ID
+        // Insert the new book - let SQLite auto-generate the ID
         const result = await platform.env.DB_book.prepare(`
             INSERT INTO books (title, author, description, published_year, slug, published, coverImageId)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -80,7 +92,7 @@ export async function POST({ request, platform }) {
         return json({ 
             success: true, 
             message: 'Book added successfully',
-            id: result.lastInsertRowid,
+            id: result.lastInsertRowid, // Get the auto-generated ID
             slug: slug
         });
     } catch (error) {

@@ -185,7 +185,30 @@ async function cleanupBooks() {
             showNotificationMessage('Error running migration', 'error');
         }
     }
-    
+
+async function fixSchema() {
+    try {
+        const response = await fetch('/api/admin/fix-schema', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotificationMessage(result.message);
+            // Reload the page to see the updated books
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotificationMessage('Schema fix failed: ' + result.error, 'error');
+        }
+    } catch (err) {
+        console.error('Error fixing schema:', err);
+        showNotificationMessage('Error fixing schema', 'error');
+    }
+} 
+
     async function updateSlugs() {
         try {
             const response = await fetch('/api/admin/update-slugs', {
@@ -222,6 +245,7 @@ async function cleanupBooks() {
     <div class="admin-header">
         <h1>Book Management</h1>
         <div class="header-actions">
+            <button on:click={fixSchema} class="btn-secondary">Fix Schema</button>
             <button on:click={cleanupBooks} class="btn-secondary">Cleanup Books</button>
             <button on:click={updateSlugs} class="btn-secondary">Update Slugs</button>
             <button on:click={runMigration} class="btn-secondary">Run Migration</button>

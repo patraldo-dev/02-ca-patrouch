@@ -66,15 +66,15 @@
             alert('Failed to update book');
         }
     }
-    
-    function handleFileChange(event) {
-        const file = event.target.files[0];
-        if (file) {
-            // In a real implementation, you would upload the file and get back an ID
-            // For now, we'll simulate it
-            form.coverImageId = 'uploaded-image-' + Date.now();
-        }
+
+function handleFileChange(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // In a real implementation, you would upload the file and get back an ID
+        // For now, we'll simulate it
+        form.coverImageId = 'uploaded-image-' + Date.now();
     }
+}    
 </script>
 
 <svelte:head>
@@ -139,7 +139,13 @@
                         </button>
                     </div>
                 {:else}
-                    <input type="file" id="coverImage" accept="image/*" on:change={handleFileChange}>
+                    <input id="coverImage" 
+            name="coverImage"  
+            type="file" 
+            accept="image/*" 
+            on:change={handleFileChange}
+        />
+
                 {/if}
             </div>
             
