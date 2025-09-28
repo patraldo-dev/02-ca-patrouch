@@ -1,32 +1,100 @@
-
-<!-- In the form -->
-<div class="form-group">
-    <label for="coverImage">Cover Image</label>
-    {#if form.coverImageId}
-        <div class="current-cover">
-            <!-- Use the correct Cloudflare Images URL -->
-            <img 
-                src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
-                alt="Current cover" 
-            />
-            <button type="button" class="btn-danger" on:click={() => form.coverImageId = null}>
-                Remove Cover
-            </button>
-        </div>
-    {:else}
-        <input 
-            id="coverImage" 
-            name="coverImage"
-            type="file" 
-            accept="image/*" 
-            on:change={handleFileChange}
-            disabled={uploading}
-        />
-        {#if uploading}
-            <p>Uploading image...</p>
-        {/if}
-    {/if}
-</div>
+<!-- src/routes/admin/books/edit/[slug]/+page.svelte -->
+<script>
+    import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+    
+    let loading = true;
+    let error = null;
+    let uploading = false;
+    let form = {
+        title: '',
+        author: '',
+        published_year: '',
+        slug: '',
+        published: false,
+        coverImageId: null,
+        description: ''
+    };
+    
+    export let data;
+    
+    // Initialize form with data from server load function
+    $: {
+        if (data?.book) {
+            form = {
+                title: data.book.title,
+                author: data.book.author,
+                published_year: data.book.published_year || '',
+                slug: data.book.slug,
+                published: data.book.published || false,
+                coverImageId: data.book.coverImageId || null,
+                description: data.book.description || ''
+            };
+        }
+    }
+    
+    onMount(async () => {
+        // No need to fetch data here since it's already loaded by the server
+        loading = false;
+    });
+    
+    async function handleSubmit() {
+        try {
+            const response = await fetch(`/api/admin/books/${form.slug}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(form)
+            });
+            
+            if (response.ok) {
+                goto('/admin/books');
+            } else {
+                const result = await response.json();
+                alert('Failed to update book: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Error updating book:', err);
+            alert('Failed to update book');
+        }
+    }
+    
+    async function handleFileChange(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        uploading = true;
+        
+        try {
+            // Use our own API endpoint instead of direct Cloudflare API
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const response = await fetch('/api/upload-image', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                form = {
+                    ...form,
+                    coverImageId: result.imageId
+                };
+                console.log('Image uploaded successfully:', result.imageId);
+            } else {
+                const errorData = await response.json();
+                alert('Failed to upload image: ' + errorData.error);
+            }
+        } catch (err) {
+            console.error('Error uploading image:', err);
+            alert('Failed to upload image');
+        } finally {
+            uploading = false;
+        }
+    }
+</script>
 
 <svelte:head>
     <title>Edit Book — Admin</title>
@@ -46,9 +114,8 @@
         <div class="error">
             <p>{error}</p>
         </div>
-    {:else if book}
+    {:else if data?.book}
         <form class="book-form" on:submit|preventDefault={handleSubmit}>
-
             <div class="form-group">
                 <label for="title">Title *</label>
                 <input type="text" id="title" bind:value={form.title} required>
@@ -85,19 +152,26 @@
                 <label for="coverImage">Cover Image</label>
                 {#if form.coverImageId}
                     <div class="current-cover">
-                        <img src={`/images/${form.coverImageId}`} alt="Current cover" />
-                        <button type="button" class="btn-danger" on:click={() => form.coverImageId = null}>
+                        <img 
+                            src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
+                            alt="Current cover" 
+                        />
+                        <button type="button" class="btn-danger" on:click={() => form = {...form, coverImageId: null}}>
                             Remove Cover
                         </button>
                     </div>
                 {:else}
-                    <input id="coverImage" 
-            name="coverImage"  
-            type="file" 
-            accept="image/*" 
-            on:change={handleFileChange}
-        />
-
+                    <input 
+                        id="coverImage" 
+                        name="coverImage"
+                        type="file" 
+                        accept="image/*" 
+                        on:change={handleFileChange}
+                        disabled={uploading}
+                    />
+                    {#if uploading}
+                        <p>Uploading image...</p>
+                    {/if}
                 {/if}
             </div>
             
