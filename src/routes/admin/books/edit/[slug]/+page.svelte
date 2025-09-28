@@ -69,7 +69,7 @@
         try {
             // Use our own API endpoint instead of direct Cloudflare API
             const formData = new FormData();
-            formData.append('image', file);
+            formData.append('file', file);
             
             const response = await fetch('/api/upload-image', {
                 method: 'POST',
