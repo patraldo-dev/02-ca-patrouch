@@ -6,9 +6,10 @@
     let published_year = '';
     let coverImage = null;
     let isLoading = false;
+    let uploading = false;
     let message = '';
     let isSuccess = false;
-    let published = false; // Add published status
+    let published = false;
     
     async function handleSubmit() {
         if (!title || !author) {
@@ -24,7 +25,7 @@
             formData.append('title', title);
             formData.append('author', author);
             formData.append('description', description);
-            formData.append('published', published); // Add published status
+            formData.append('published', published);
             
             // Only append published_year if it has a value
             if (published_year) {
@@ -52,7 +53,7 @@
                 description = '';
                 published_year = '';
                 coverImage = null;
-                published = false; // Reset published status
+                published = false;
                 // Reset file input
                 const fileInput = document.getElementById('coverImage');
                 if (fileInput) {
