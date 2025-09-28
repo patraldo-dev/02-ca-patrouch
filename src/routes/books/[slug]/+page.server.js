@@ -5,19 +5,47 @@ import { error } from '@sveltejs/kit';
 export async function load({ locals, params, platform }) {
     const db = platform?.env?.DB_book;
     if (!db) {
-        throw new Error('Database not available');
+        throw error(404, 'Database not available');
     }
 
     const { slug } = params;
+    console.log('Loading book with slug:', slug); // Debug log
+
+    // Check if slug is valid
+    if (!slug || slug === 'undefined') {
+        throw error(400, 'Invalid book slug');
+    }
 
     // Fetch book by slug
     const bookStmt = db.prepare(`
         SELECT * FROM books WHERE slug = ?
     `);
     const { results: [book] } = await bookStmt.bind(slug).all();
+    
     if (!book) {
-        throw error(404, 'Book not found');
+        // Try case-insensitive search as a fallback
+        console.log('Book not found with exact slug, trying case-insensitive search');
+        const allBooksStmt = db.prepare("SELECT * FROM books");
+        const { results: allBooks } = await allBooksStmt.all();
+        const caseInsensitiveMatch = allBooks.find(b => 
+            b.slug && b.slug.toLowerCase() === slug.toLowerCase()
+        );
+        
+        if (!caseInsensitiveMatch) {
+            console.log('Book not found even with case-insensitive search');
+            throw error(404, 'Book not found');
+        }
+        
+        console.log('Found book with case-insensitive match:', caseInsensitiveMatch);
+        return {
+            book: {
+                ...caseInsensitiveMatch,
+                reviews: []
+            }
+        };
     }
+
+    console.log('Book found:', book);
 
     // Fetch reviews for this book
     const reviewsStmt = db.prepare(`

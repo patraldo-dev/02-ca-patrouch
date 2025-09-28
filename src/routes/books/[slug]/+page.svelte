@@ -1,40 +1,15 @@
 <!-- src/routes/books/[slug]/+page.svelte -->
 <script>
-    import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
+    import { page } from '$app/stores';
     
-    let book = null;
-    let loading = true;
-    let error = null;
+    export let data;
     
-    export let params;
+    $: book = data.book;
+    $: error = data.error;
     
-    onMount(async () => {
-        try {
-console.log('Book detail page loaded with slug:', params.slug); // Debug log
-
-            if (!params.slug || params.slug === 'undefined') {
-                error = 'Invalid book slug';
-                loading = false;
-                return;
-            }
-            
-            const response = await fetch(`/api/books/${params.slug}`);
-console.log('API response status:', response.status); // Debug log
-            if (response.ok) {
-                book = await response.json();
-console.log('Book data:', book); // Debug log
-
-            } else {
-                error = 'Failed to load book';
-            }
-        } catch (err) {
-            console.error('Error fetching book:', err);
-            error = 'Network error. Please try again.';
-        } finally {
-            loading = false;
-        }
-    });
+    // Log for debugging
+    $: console.log('Book data from load function:', book);
 </script>
 
 <svelte:head>
@@ -42,13 +17,9 @@ console.log('Book data:', book); // Debug log
 </svelte:head>
 
 <div class="container">
-    {#if loading}
-        <div class="loading">
-            <p>Loading book...</p>
-        </div>
-    {:else if error}
+    {#if error}
         <div class="error">
-            <p>{error}</p>
+            <p>{error.message}</p>
             <button on:click={() => goto('/')} class="btn-secondary">Go Home</button>
         </div>
     {:else if book}
@@ -82,6 +53,45 @@ console.log('Book data:', book); // Debug log
                 </div>
             </div>
             
+            {#if book.reviews && book.reviews.length > 0}
+                <div class="reviews-section">
+                    <h2>Reviews</h2>
+                    {#each book.reviews as review}
+                        <div class="review">
+                            <div class="review-header">
+                                <span class="rating">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+                                <span class="author">by {review.author_username}</span>
+                                <span class="date">{new Date(review.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div class="review-content">
+                                {review.content}
+                            </div>
+                            
+                            {#if review.comments && review.comments.length > 0}
+                                <div class="comments">
+                                    <h4>Comments</h4>
+                                    {#each review.comments as comment}
+                                        <div class="comment">
+                                            <div class="comment-header">
+                                                <span class="author">{comment.user.username}</span>
+                                                <span class="date">{new Date(comment.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <div class="comment-content">
+                                                {comment.content}
+                                            </div>
+                                        </div>
+                                    {/each}
+                                </div>
+                            {/if}
+                        </div>
+                    {/each}
+                </div>
+            {:else}
+                <div class="no-reviews">
+                    <p>No reviews yet. Be the first to review this book!</p>
+                </div>
+            {/if}
+            
             <div class="back-link">
                 <a href="/" class="btn-secondary">Back to Home</a>
             </div>
@@ -95,125 +105,64 @@ console.log('Book data:', book); // Debug log
 </div>
 
 <style>
-    .container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
+    /* Add your existing styles here */
     
-    .loading, .error {
-        text-align: center;
-        padding: 3rem;
-        background: #f9fafb;
-        border-radius: 8px;
-        margin: 2rem 0;
-    }
-    
-    .error {
-        background: #fef2f2;
-        color: #b91c1c;
-    }
-    
-    .book-detail {
-        background: white;
-        border-radius: 8px;
-        padding: 2rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    
-    .book-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .book-header h1 {
-        font-size: 2rem;
-        color: #1f2937;
-        margin: 0;
-    }
-    
-    .book-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .book-content {
-        display: flex;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-    
-    .book-cover {
-        flex: 0 0 300px;
-    }
-    
-    .book-cover img {
-        width: 100%;
-        height: auto;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .book-info {
-        flex: 1;
-    }
-    
-    .book-info p {
-        margin: 0.5rem 0;
-        font-size: 1.1rem;
-    }
-    
-    .book-description {
-        margin-top: 1.5rem;
-        padding-top: 1.5rem;
+    .reviews-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
         border-top: 1px solid #e5e7eb;
     }
     
-    .book-description h3 {
-        margin-top: 0;
+    .review {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+    
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .rating {
+        color: #f59e0b;
+    }
+    
+    .author {
+        font-weight: 600;
         color: #4b5563;
     }
     
-    .back-link {
-        margin-top: 2rem;
-    }
-    
-    .btn-secondary {
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
+    .date {
+        color: #6b7280;
         font-size: 0.875rem;
-        font-weight: 500;
-        text-decoration: none;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: #e5e7eb;
-        color: #374151;
-        display: inline-block;
     }
     
-    .btn-secondary:hover {
-        background: #d1d5db;
+    .comment {
+        margin-left: 2rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 6px;
+        border-left: 3px solid #e5e7eb;
     }
     
-    @media (max-width: 768px) {
-        .book-header {
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .book-content {
-            flex-direction: column;
-        }
-        
-        .book-cover {
-            flex: none;
-            max-width: 300px;
-            margin: 0 auto;
-        }
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .no-reviews {
+        text-align: center;
+        padding: 2rem;
+        background: #f9fafb;
+        border-radius: 8px;
+        color: #6b7280;
     }
 </style>
