@@ -6,6 +6,7 @@
     let book = null;
     let loading = true;
     let error = null;
+    let uploading = false;
     let form = {
         title: '',
         author: '',
@@ -66,7 +67,7 @@
             alert('Failed to update book');
         }
     }
-
+    
     async function handleFileChange(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -95,6 +96,7 @@
             if (response.ok) {
                 const result = await response.json();
                 form.coverImageId = result.result.id;
+                console.log('Image uploaded successfully:', result.result.id);
             } else {
                 const errorData = await response.json();
                 alert('Failed to upload image: ' + errorData.errors?.[0]?.message || 'Unknown error');
@@ -106,9 +108,36 @@
             uploading = false;
         }
     }
-
-
 </script>
+
+<!-- In the form -->
+<div class="form-group">
+    <label for="coverImage">Cover Image</label>
+    {#if form.coverImageId}
+        <div class="current-cover">
+            <!-- Use the correct Cloudflare Images URL -->
+            <img 
+                src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
+                alt="Current cover" 
+            />
+            <button type="button" class="btn-danger" on:click={() => form.coverImageId = null}>
+                Remove Cover
+            </button>
+        </div>
+    {:else}
+        <input 
+            id="coverImage" 
+            name="coverImage"
+            type="file" 
+            accept="image/*" 
+            on:change={handleFileChange}
+            disabled={uploading}
+        />
+        {#if uploading}
+            <p>Uploading image...</p>
+        {/if}
+    {/if}
+</div>
 
 <svelte:head>
     <title>Edit Book — Admin</title>
@@ -130,6 +159,7 @@
         </div>
     {:else if book}
         <form class="book-form" on:submit|preventDefault={handleSubmit}>
+
             <div class="form-group">
                 <label for="title">Title *</label>
                 <input type="text" id="title" bind:value={form.title} required>
@@ -326,4 +356,4 @@
             flex-direction: column;
         }
     }
-</style>
+m/style>
