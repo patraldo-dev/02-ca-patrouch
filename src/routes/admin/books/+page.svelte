@@ -30,7 +30,23 @@
             loading = false;
         }
     });
-    
+
+async function debugBooks() {
+    try {
+        const response = await fetch('/api/debug/books');
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            console.log('Books in database:', result.books);
+            alert(`Found ${result.count} books. Check console for details.`);
+        } else {
+            alert('Failed to debug books: ' + result.error);
+        }
+    } catch (err) {
+        console.error('Error debugging books:', err);
+        alert('Error debugging books');
+    }
+}    
     function applyFiltersAndSort() {
         // Apply search filter
         filteredBooks = books.filter(book => {
@@ -245,6 +261,7 @@ async function fixSchema() {
     <div class="admin-header">
         <h1>Book Management</h1>
         <div class="header-actions">
+            <button on:click={debugBooks} class="btn-secondary">Debug Books</button>
             <button on:click={fixSchema} class="btn-secondary">Fix Schema</button>
             <button on:click={cleanupBooks} class="btn-secondary">Cleanup Books</button>
             <button on:click={updateSlugs} class="btn-secondary">Update Slugs</button>
@@ -297,58 +314,43 @@ async function fixSchema() {
             {/if}
         </div>
     {:else}
-        <div class="books-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="sortable" on:click={() => toggleSort('id')}>
-                            ID {#if sortField === 'id'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
-                        </th>
-                        <th class="sortable" on:click={() => toggleSort('title')}>
-                            Title {#if sortField === 'title'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
-                        </th>
-                        <th class="sortable" on:click={() => toggleSort('author')}>
-                            Author {#if sortField === 'author'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
-                        </th>
-                        <th class="sortable" on:click={() => toggleSort('slug')}>
-                            Slug {#if sortField === 'slug'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
-                        </th>
-                        <th class="sortable" on:click={() => toggleSort('published_year')}>
-                            Published {#if sortField === 'published_year'}{sortDirection === 'asc' ? '↑' : '↓'}{/if}
-                        </th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each filteredBooks as book}
-                        <tr>
-                            <td>{book.id}</td>
-                            <td>{book.title}</td>
-                            <td>{book.author}</td>
-                            <td><code>{book.slug}</code></td>
-                            <td>{book.published_year || 'N/A'}</td>
-                            <td>
-                                <span class="status-badge {book.published ? 'published' : 'unpublished'}">
-                                    {book.published ? 'Published' : 'Draft'}
-                                </span>
-                            </td>
-<td class="actions">
-    <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
-    <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
-    <button on:click={() => togglePublished(book)} class="btn-secondary">
-        {book.published ? 'Unpublish' : 'Publish'}
-    </button>
-    <button on:click={() => deleteBook(book.slug)} class="btn-danger">Delete</button>
-
-
-                            </td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        </div>
-        
+       
+ <div class="books-table">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Slug</th>
+                <th>Published</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {#each filteredBooks as book}
+                <tr>
+                    <td>{book.id}</td>
+                    <td>{book.title}</td>
+                    <td>{book.author}</td>
+                    <td><code>{book.slug}</code></td>
+                    <td>{book.published_year || 'N/A'}</td>
+                    <td>
+                        <span class="status-badge {book.published ? 'published' : 'unpublished'}">
+                            {book.published ? 'Published' : 'Draft'}
+                        </span>
+                    </td>
+                    <td class="actions">
+                        <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
+                        <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
+                        <button on:click={() => deleteBook(book.slug)} class="btn-danger">Delete</button>
+                    </td>
+                </tr>
+            {/each}
+        </tbody>
+    </table>
+</div> 
         <div class="results-info">
             Showing {filteredBooks.length} of {books.length} books
         </div>

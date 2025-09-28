@@ -11,6 +11,8 @@
     
     onMount(async () => {
         try {
+console.log('Book detail page loaded with slug:', params.slug); // Debug log
+
             if (!params.slug || params.slug === 'undefined') {
                 error = 'Invalid book slug';
                 loading = false;
@@ -18,8 +20,11 @@
             }
             
             const response = await fetch(`/api/books/${params.slug}`);
+console.log('API response status:', response.status); // Debug log
             if (response.ok) {
                 book = await response.json();
+console.log('Book data:', book); // Debug log
+
             } else {
                 error = 'Failed to load book';
             }
