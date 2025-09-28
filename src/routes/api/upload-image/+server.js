@@ -15,7 +15,7 @@ export async function POST({ request, platform }) {
 
         // Get Cloudflare credentials from environment variables
         const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-        const apiKey = process.env.CLOUDFLARE_API_KEY;
+        const apiKey = process.env.CLOUDFLARE_API_TOKEN;
         
         if (!accountId || !apiKey) {
             return json({ 
