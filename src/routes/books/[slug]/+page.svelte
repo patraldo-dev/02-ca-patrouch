@@ -26,6 +26,7 @@
         <div class="book-detail">
             <div class="book-header">
                 <h1>{book.title}</h1>
+{#if data?.user?.role === 'admin'}
                 <div class="book-actions">
                     <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
                 </div>
