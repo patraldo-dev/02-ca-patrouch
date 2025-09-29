@@ -59,41 +59,61 @@
             alert('Failed to update book');
         }
     }
+
+async function handleFileChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
     
-    async function handleFileChange(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    uploading = true;
+    
+    try {
+        // Upload the image
+        const formData = new FormData();
+        formData.append('file', file); // Fixed this earlier
         
-        uploading = true;
+        const response = await fetch('/api/upload-image', {
+            method: 'POST',
+            body: formData
+        });
         
-        try {
-            // Use our own API endpoint instead of direct Cloudflare API
-            const formData = new FormData();
-            formData.append('file', file);
+        if (response.ok) {
+            const result = await response.json();
             
-            const response = await fetch('/api/upload-image', {
-                method: 'POST',
-                body: formData
+            // Update the local form state
+            form = {
+                ...form,
+                coverImageId: result.result.id // Make sure this matches your API response structure
+            };
+            
+            // IMMEDIATELY update the database
+            const updateResponse = await fetch(`/api/admin/books/${form.slug}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...form,
+                    coverImageId: result.result.id
+                })
             });
             
-            if (response.ok) {
-                const result = await response.json();
-                form = {
-                    ...form,
-                    coverImageId: result.imageId
-                };
-                console.log('Image uploaded successfully:', result.imageId);
+            if (updateResponse.ok) {
+                console.log('Image uploaded and book updated successfully');
             } else {
-                const errorData = await response.json();
-                alert('Failed to upload image: ' + errorData.error);
+                const updateError = await updateResponse.json();
+                alert('Image uploaded but failed to update book: ' + updateError.error);
             }
-        } catch (err) {
-            console.error('Error uploading image:', err);
-            alert('Failed to upload image');
-        } finally {
-            uploading = false;
+        } else {
+            const errorData = await response.json();
+            alert('Failed to upload image: ' + errorData.error);
         }
+    } catch (err) {
+        console.error('Error uploading image:', err);
+        alert('Failed to upload image');
+    } finally {
+        uploading = false;
     }
+}    
 </script>
 
 <svelte:head>
