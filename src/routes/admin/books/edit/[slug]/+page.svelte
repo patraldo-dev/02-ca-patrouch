@@ -169,8 +169,8 @@ async function handleFileChange(event) {
                     Published
                 </label>
             </div>
-            
-            <div class="form-group">
+
+           <div class="form-group">
     <label for="coverImage">Cover Image</label>
     {#if form.coverImageId}
         <div style="background: yellow; padding: 10px; margin: 10px 0;">
