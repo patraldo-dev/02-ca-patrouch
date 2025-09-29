@@ -181,7 +181,7 @@ async function handleFileChange(event) {
             <img 
                 src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
                 alt="Current cover"
-                onerror="console.log('Image failed to load:', this.src)"
+                on:error="console.log('Image failed to load:', this.src)"
             />
             <button type="button" class="btn-danger" on:click={() => form = {...form, coverImageId: null}}>
                 Remove Cover
