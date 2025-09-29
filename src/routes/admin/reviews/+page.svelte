@@ -3,9 +3,14 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     
+    export let data; // Get data from +page.server.js
+    
     let reviews = [];
     let loading = true;
     let error = null;
+    
+    // Check if user is admin
+    $: isAdmin = data?.user?.role === 'admin' || data?.user?.is_admin;
     
     onMount(async () => {
         try {
@@ -23,10 +28,9 @@
         }
     });
     
-    // Function to delete a review (only for admins)
     async function deleteReview(reviewId) {
-        if (!$page.data.user) {
-            alert('You must be logged in to delete reviews');
+        if (!isAdmin) {
+            alert('You must be an admin to delete reviews');
             return;
         }
         
@@ -40,7 +44,6 @@
             });
             
             if (response.ok) {
-                // Remove the review from the list
                 reviews = reviews.filter(r => r.id !== reviewId);
             } else {
                 alert('Failed to delete review');
@@ -58,8 +61,13 @@
 
 <div class="container">
     <div class="page-header">
-        <h1>Book Reviews</h1>
-        <p>Discover what our community is reading and their thoughts on the latest books</p>
+        <div>
+            <h1>Book Reviews</h1>
+            <p>Discover what our community is reading and their thoughts on the latest books</p>
+        </div>
+        {#if isAdmin}
+            <a href="/admin/reviews/add" class="btn-primary">Add Review</a>
+        {/if}
     </div>
     
     {#if loading}
@@ -84,7 +92,7 @@
                             <h3>{review.book_title}</h3>
                             <div class="rating">⭐ {review.rating}</div>
                         </div>
-                        {#if $page.data.user}
+                        {#if isAdmin}
                             <button 
                                 aria-label="Delete review"
                                 class="delete-btn" 

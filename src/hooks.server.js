@@ -143,7 +143,7 @@ export async function handle({ event, resolve }) {
             console.log('✅ Session validated for user ID:', session.userId);
             // Fetch user
             const { results } = await event.locals.db.prepare(`
-                SELECT id, username, email, email_verified_at
+                SELECT id, username, email, email_verified_at, role
                 FROM users
                 WHERE id = ?
             `).bind(session.userId).all();

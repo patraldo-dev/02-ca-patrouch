@@ -1,12 +1,8 @@
 // src/routes/admin/reviews/+page.server.js
-import { redirect, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ platform }) {
-    // Check if user is logged in
-    // If not, redirect to login page
-    // This is just a placeholder - implement your actual auth logic
-    
+export async function load({ platform, locals }) {
     if (!platform?.env?.DB_book) {
         throw error(500, 'Database not available');
     }
@@ -32,7 +28,8 @@ export async function load({ platform }) {
         `).all();
         
         return {
-            reviews: results
+            reviews: results,
+            user: locals.user || null  // Pass user from locals (set by hooks.server.js)
         };
     } catch (err) {
         console.error('Error fetching reviews:', err);
