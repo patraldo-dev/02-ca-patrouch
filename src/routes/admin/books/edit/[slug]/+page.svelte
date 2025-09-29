@@ -136,6 +136,8 @@ async function handleFileChange(event) {
         </div>
     {:else if data?.book}
         <form class="book-form" on:submit|preventDefault={handleSubmit}>
+
+
             <div class="form-group">
                 <label for="title">Title *</label>
                 <input type="text" id="title" bind:value={form.title} required>
@@ -168,46 +170,37 @@ async function handleFileChange(event) {
                 </label>
             </div>
             
-            <div class="form-group">
-                <label for="coverImage">Cover Image</label>
-                {#if form.coverImageId}
-                    <div class="current-cover">
-
-// In routes/admin/books/edit/[slug]/+page.svelte, add this before the img tag:
-{#if form.coverImageId}
-    <div style="background: yellow; padding: 10px; margin: 10px 0;">
-        DEBUG: coverImageId = "{form.coverImageId}"<br>
-        Full URL = "https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/{form.coverImageId}/cover"
-    </div>
-    <div class="current-cover">
-        <img 
-            src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
-            alt="Current cover"
-            onerror="console.log('Image failed to load:', this.src)"
+<div class="form-group">
+    <label for="coverImage">Cover Image</label>
+    {#if form.coverImageId}
+        <div style="background: yellow; padding: 10px; margin: 10px 0;">
+            DEBUG: coverImageId = "{form.coverImageId}"<br>
+            Full URL = "https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/{form.coverImageId}/cover"
+        </div>
+        <div class="current-cover">
+            <img 
+                src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
+                alt="Current cover"
+                onerror="console.log('Image failed to load:', this.src)"
+            />
+            <button type="button" class="btn-danger" on:click={() => form = {...form, coverImageId: null}}>
+                Remove Cover
+            </button>
+        </div>
+    {:else}
+        <input 
+            id="coverImage" 
+            name="coverImage"
+            type="file" 
+            accept="image/*" 
+            on:change={handleFileChange}
+            disabled={uploading}
         />
-
-                        <img 
-                            src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
-                            alt="Current cover" 
-                        />
-                        <button type="button" class="btn-danger" on:click={() => form = {...form, coverImageId: null}}>
-                            Remove Cover
-                        </button>
-                    </div>
-                {:else}
-                    <input 
-                        id="coverImage" 
-                        name="coverImage"
-                        type="file" 
-                        accept="image/*" 
-                        on:change={handleFileChange}
-                        disabled={uploading}
-                    />
-                    {#if uploading}
-                        <p>Uploading image...</p>
-                    {/if}
-                {/if}
-            </div>
+        {#if uploading}
+            <p>Uploading image...</p>
+        {/if}
+    {/if}
+</div>
             
             <div class="form-actions">
                 <button type="submit" class="btn-primary">Update Book</button>
