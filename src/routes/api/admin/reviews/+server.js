@@ -1,5 +1,5 @@
 // src/routes/api/admin/reviews/+server.js
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ platform }) {
@@ -10,7 +10,6 @@ export async function GET({ platform }) {
     const db = platform.env.DB_book;
     
     try {
-        // Fetch all reviews with book and user information
         const { results } = await db.prepare(`
             SELECT 
                 r.id,
@@ -35,7 +34,7 @@ export async function GET({ platform }) {
 }
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request, platform }) {
+export async function POST({ request, platform, locals }) {
     if (!platform?.env?.DB_book) {
         return json({ error: 'Database not available' }, { status: 500 });
     }
@@ -43,22 +42,25 @@ export async function POST({ request, platform }) {
     const db = platform.env.DB_book;
     
     try {
-        const { content, rating, book_id } = await request.json();
+        const { content, rating, book_id, user_id } = await request.json();
         
-        if (!content || !rating || !book_id) {
+        if (!content || !rating || !book_id || !user_id) {
             return json({ error: 'Missing required fields' }, { status: 400 });
         }
         
+        // Generate a UUID for the review
+        const reviewId = crypto.randomUUID();
+        
         // Create a new review
         const result = await db.prepare(`
-            INSERT INTO reviews (content, rating, book_id, user_id, created_at)
+            INSERT INTO reviews (id, content, rating, book_id, user_id)
             VALUES (?, ?, ?, ?, ?)
         `).bind(
+            reviewId,
             content,
             rating,
             book_id,
-            'user-id-placeholder', // This should be the actual user ID from the session
-            new Date().toISOString()
+            user_id
         ).run();
         
         if (!result.success) {
@@ -80,7 +82,7 @@ export async function POST({ request, platform }) {
             JOIN books b ON r.book_id = b.id
             JOIN users u ON r.user_id = u.id
             WHERE r.id = ?
-        `).bind(result.lastInsertRowid).first();
+        `).bind(reviewId).first();
         
         return json(newReview, { status: 201 });
     } catch (err) {
