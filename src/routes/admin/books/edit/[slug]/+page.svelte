@@ -172,6 +172,20 @@ async function handleFileChange(event) {
                 <label for="coverImage">Cover Image</label>
                 {#if form.coverImageId}
                     <div class="current-cover">
+
+// In routes/admin/books/edit/[slug]/+page.svelte, add this before the img tag:
+{#if form.coverImageId}
+    <div style="background: yellow; padding: 10px; margin: 10px 0;">
+        DEBUG: coverImageId = "{form.coverImageId}"<br>
+        Full URL = "https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/{form.coverImageId}/cover"
+    </div>
+    <div class="current-cover">
+        <img 
+            src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
+            alt="Current cover"
+            onerror="console.log('Image failed to load:', this.src)"
+        />
+
                         <img 
                             src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
                             alt="Current cover" 
