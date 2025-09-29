@@ -170,7 +170,7 @@ async function handleFileChange(event) {
                 </label>
             </div>
             
-<div class="form-group">
+            <div class="form-group">
     <label for="coverImage">Cover Image</label>
     {#if form.coverImageId}
         <div style="background: yellow; padding: 10px; margin: 10px 0;">
@@ -181,7 +181,6 @@ async function handleFileChange(event) {
             <img 
                 src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
                 alt="Current cover"
-                on:error="console.log('Image failed to load:', this.src)"
             />
             <button type="button" class="btn-danger" on:click={() => form = {...form, coverImageId: null}}>
                 Remove Cover
@@ -201,7 +200,6 @@ async function handleFileChange(event) {
         {/if}
     {/if}
 </div>
-            
             <div class="form-actions">
                 <button type="submit" class="btn-primary">Update Book</button>
                 <a href="/admin/books" class="btn-secondary">Cancel</a>
