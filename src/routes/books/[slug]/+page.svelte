@@ -24,14 +24,14 @@
         </div>
     {:else if book}
         <div class="book-detail">
-            <div class="book-header">
-                <h1>{book.title}</h1>
-{#if data?.user?.role === 'admin'}
-                <div class="book-actions">
-                    <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
-                </div>
-            </div>
-            
+           <div class="book-header">
+    <h1>{book.title}</h1>
+    {#if data?.user?.role === 'admin'}
+        <div class="book-actions">
+            <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
+        </div>
+    {/if}
+</div> 
             <div class="book-content">
                 {#if book.coverImageId}
                     <div class="book-cover">
