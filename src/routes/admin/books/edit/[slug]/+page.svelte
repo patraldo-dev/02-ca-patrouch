@@ -179,7 +179,7 @@ async function handleFileChange(event) {
         </div>
         <div class="current-cover">
             <img 
-                src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/cover`} 
+                src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/thumbnail`} 
                 alt="Current cover"
             />
             <button type="button" class="btn-danger" on:click={() => form = {...form, coverImageId: null}}>
