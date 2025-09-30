@@ -35,7 +35,7 @@
             <div class="book-content">
                 {#if book.coverImageId}
                     <div class="book-cover">
-                        <img src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/gallery`} alt={book.title} />
+                        <img src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/thumbnail`} alt={book.title} />
                     </div>
                 {/if}
                 
