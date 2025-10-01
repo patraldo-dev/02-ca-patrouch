@@ -183,7 +183,6 @@
                     </a>
                 </nav>
 
-</nav>
                 
                 <!-- Language Switcher - Mobile -->
                 <div class="lang-switcher-mobile">
