@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "books": "Livres",
+    "reviews": "Critiques",
+    "blog": "Blogue",
+    "admin": "Admin",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "signup": "S'inscrire",
+    "welcome": "Bienvenue"
+  },
+  "footer": {
+    "tagline": "Critiques de livres honnêtes et commentaires réfléchis",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation"
+  }
+}

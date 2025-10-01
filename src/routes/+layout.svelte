@@ -1,6 +1,7 @@
 <!-- src/routes/+layout.svelte -->
 <script>
     import { browser } from '$app/environment';
+    import { t, locale } from '$lib/translations';  // Changed from svelte-i18n
     import { beforeNavigate } from '$app/navigation';
     import { _, locale } from 'svelte-i18n';
     import { page } from '$app/stores';
@@ -20,6 +21,14 @@
     function toggleMobileMenu() {
         mobileMenuOpen = !mobileMenuOpen;
     }
+
+	function switchLanguage(lang) {
+	    locale.set(lang);
+	    if (browser) {
+		localStorage.setItem('preferredLanguage', lang);
+		window.location.reload(); // Reload to apply new translations
+	    }
+	}
     
     async function handleLogout() {
         if (!browser) return;
@@ -49,6 +58,7 @@
             <nav class="desktop-nav" aria-label="Main navigation">
                 <a
                     href="/"
+                    {$t('common.nav.home')}
                     class:active={$page.url.pathname === '/'}
                     aria-current={$page.url.pathname === '/' ? 'page' : undefined}
                 >
@@ -56,6 +66,7 @@
                 </a>
                 <a
                     href="/books"
+{$t('common.nav.home')}
                     class:active={$page.url.pathname.startsWith('/books')}
                     aria-current={$page.url.pathname.startsWith('/books') ? 'page' : undefined}
                 >
@@ -63,6 +74,8 @@
                 </a>
                 <a
                     href="/reviews"
+{$t('common.nav.home')}
+
                     class:active={$page.url.pathname === '/reviews'}
                     aria-current={$page.url.pathname === '/reviews' ? 'page' : undefined}
                 >
@@ -70,6 +83,8 @@
                 </a>
                 <a
                     href="/blog"
+{$t('common.nav.home')}
+
                     class:active={$page.url.pathname.startsWith('/blog')}
                     aria-current={$page.url.pathname.startsWith('/blog') ? 'page' : undefined}
                 >
@@ -118,6 +133,8 @@
                 <nav class="mobile-nav" aria-label="Mobile navigation">
                     <a
                         href="/"
+{$t('common.nav.home')}
+
                         on:click={toggleMobileMenu}
                         class:active={$page.url.pathname === '/'}
                         aria-current={$page.url.pathname === '/' ? 'page' : undefined}
@@ -126,6 +143,8 @@
                     </a>
                     <a
                         href="/books"
+{$t('common.nav.home')}
+
                         on:click={toggleMobileMenu}
                         class:active={$page.url.pathname.startsWith('/books')}
                         aria-current={$page.url.pathname.startsWith('/books') ? 'page' : undefined}
@@ -134,6 +153,8 @@
                     </a>
                     <a
                         href="/reviews"
+{$t('common.nav.home')}
+
                         on:click={toggleMobileMenu}
                         class:active={$page.url.pathname === '/reviews'}
                         aria-current={$page.url.pathname === '/reviews' ? 'page' : undefined}
@@ -142,6 +163,8 @@
                     </a>
                     <a
                         href="/blog"
+{$t('common.nav.home')}
+
                         on:click={toggleMobileMenu}
                         class:active={$page.url.pathname.startsWith('/blog')}
                         aria-current={$page.url.pathname.startsWith('/blog') ? 'page' : undefined}

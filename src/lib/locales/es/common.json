@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "books": "Libros",
+    "reviews": "Reseñas",
+    "blog": "Blog",
+    "admin": "Admin",
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "signup": "Registrarse",
+    "welcome": "Bienvenido"
+  },
+  "footer": {
+    "tagline": "Reseñas honestas de libros y comentarios reflexivos",
+    "privacy": "Política de Privacidad",
+    "terms": "Términos de Servicio"
+  }
+}

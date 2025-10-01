@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "home": "Home",
+    "books": "Books",
+    "reviews": "Reviews",
+    "blog": "Blog",
+    "admin": "Admin",
+    "login": "Log In",
+    "logout": "Log Out",
+    "signup": "Sign Up",
+    "welcome": "Welcome"
+  },
+  "footer": {
+    "tagline": "Honest book reviews & thoughtful commentary",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  }
+}
