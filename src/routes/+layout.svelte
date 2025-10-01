@@ -187,7 +187,7 @@ Sign up
                             class="btn-primary block"
                             aria-label="Sign up"
                         >
-                            Sign Up
+                          {$t('common.nav.signup')}  
                         </a>
                     {/if}
                 </div>
