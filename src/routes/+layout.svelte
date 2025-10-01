@@ -11,9 +11,6 @@
         mobileMenuOpen = false;
     });
     
-    /** @type {import('./$types').LayoutData} */
-    export let data = {};
-    
     // Mobile menu state
     let mobileMenuOpen = false;
     
@@ -87,7 +84,7 @@
             
             <!-- Auth Actions -->
             <div class="auth-actions" aria-label="Account actions">
-                {#if data?.user}
+                {#if $page.data?.user}
                     <span class="welcome" aria-label="Logged in as {data.user.username}">
                         Welcome, <strong>{data.user.username}</strong>
                     </span>
@@ -99,7 +96,7 @@
                     </button>
                 {:else}
                     <a href="/login" class="btn-secondary" aria-label="Log in to your account">
-//{$t('common.nav.login')}
+{$t('common.nav.login')}
 Log in 
                     </a>
                     <a href="/signup" class="btn-primary" aria-label="Create a new account">
@@ -159,7 +156,7 @@ Log in
                     </a>
                 </nav>
                 <div class="mobile-auth" aria-label="Mobile account actions">
-                    {#if data?.user}
+                    {#if $page.data?.user}
                         <div class="welcome-mobile" aria-live="polite">
   {$t('common.nav.welcome')}
                         , <strong>{data.user.username}</strong>
@@ -181,7 +178,7 @@ Log in
                             class="btn-secondary block"
                             aria-label="Log in"
                         >
-//{$t('common.nav.login')}
+{$t('common.nav.login')}
 Log in
                         </a>
                         <a
