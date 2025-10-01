@@ -3,7 +3,6 @@
     import { browser } from '$app/environment';
     import { t, locale } from '$lib/translations';  // Changed from svelte-i18n
     import { beforeNavigate } from '$app/navigation';
-    import { _ } from 'svelte-i18n';
     import { page } from '$app/stores';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
     
