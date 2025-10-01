@@ -97,7 +97,6 @@
                 {:else}
                     <a href="/login" class="btn-secondary" aria-label="Log in to your account">
 {$t('common.nav.login')}
-Log in 
                     </a>
                     <a href="/signup" class="btn-primary" aria-label="Create a new account">
 {$t('common.nav.signup')}
