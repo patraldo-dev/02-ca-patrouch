@@ -2,6 +2,7 @@
 <script>
     import { browser } from '$app/environment';
     import { beforeNavigate } from '$app/navigation';
+    import { _, locale } from 'svelte-i18n';
     import { page } from '$app/stores';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
     
