@@ -99,10 +99,10 @@
                     </button>
                 {:else}
                     <a href="/login" class="btn-secondary" aria-label="Log in to your account">
-                        Log In
+Log in
                     </a>
                     <a href="/signup" class="btn-primary" aria-label="Create a new account">
-                        Sign Up
+Sign up
                     </a>
                 {/if}
             </div>
