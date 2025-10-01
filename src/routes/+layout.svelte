@@ -81,56 +81,56 @@
  {$t('common.nav.blog')}
                 </a>
             </nav>
-            
-<!-- Language Switcher - Desktop -->
+
+<!-- Auth Actions -->
+<div class="auth-actions" aria-label="Account actions">
+    {#if $page.data?.user}
+        <span class="welcome" aria-label="Logged in as {data.user.username}">
+            {$t('common.nav.welcome')}, <strong>{data.user.username}</strong>
+        </span>
+        <a href="/admin" class="btn-secondary" aria-label="Admin dashboard">
+            {$t('common.nav.admin')}
+        </a>
+        <button on:click={handleLogout} class="btn-secondary" aria-label="Log out of your account">
+            {$t('common.nav.logout')}
+        </button>
+    {:else}
+        <a href="/login" class="btn-secondary" aria-label="Log in to your account">
+            {$t('common.nav.login')}
+        </a>
+        <a href="/signup" class="btn-primary" aria-label="Create a new account">
+            {$t('common.nav.signup')}
+        </a>
+    {/if}
+</div>
+
+<!-- Language Switcher - Desktop (After auth) -->
 <div class="lang-switcher-desktop">
     <button 
         on:click={() => switchLanguage('es')} 
         class:active={$locale === 'es'}
         aria-label="Cambiar a español"
+        title="Español (México)"
     >
-        Español
+        🇲🇽
     </button>
     <button 
         on:click={() => switchLanguage('en')} 
         class:active={$locale === 'en'}
         aria-label="Switch to English"
+        title="English (United States)"
     >
-        English
+        🇺🇸
     </button>
     <button 
         on:click={() => switchLanguage('fr')} 
         class:active={$locale === 'fr'}
         aria-label="Passer au français"
+        title="Français (Canada)"
     >
-        Français
+        🇨🇦
     </button>
 </div>
-
-
-
-            <!-- Auth Actions -->
-            <div class="auth-actions" aria-label="Account actions">
-                {#if $page.data?.user}
-                    <span class="welcome" aria-label="Logged in as {data.user.username}">
-{$t('common.nav.welcome')}
-                      , <strong>{data.user.username}</strong>
-                    </span>
-                    <a href="/admin" class="btn-secondary" aria-label="Admin dashboard">
-{$t('common.nav.admin')}
-                    </a>
-                    <button on:click={handleLogout} class="btn-secondary" aria-label="Log out of your account">
-{$t('common.nav.logout')}
-                    </button>
-                {:else}
-                    <a href="/login" class="btn-secondary" aria-label="Log in to your account">
-{$t('common.nav.login')}
-                    </a>
-                    <a href="/signup" class="btn-primary" aria-label="Create a new account">
-{$t('common.nav.signup')}
-                    </a>
-                {/if}
-            </div>
             
             <!-- Mobile Menu Toggle -->
             <button
@@ -472,6 +472,79 @@ Log in
         white-space: nowrap;
         border: 0;
     }
+
+.lang-switcher-desktop {
+    display: inline-flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.lang-switcher-desktop button {
+    width: 44px;
+    height: 44px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lang-switcher-desktop button:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.lang-switcher-desktop button.active {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.lang-switcher-mobile {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    justify-content: center;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.lang-switcher-mobile button {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 2rem;
+    transition: all 0.2s ease;
+}
+
+.lang-switcher-mobile button:hover {
+    border-color: #3b82f6;
+    transform: scale(1.05);
+}
+
+.lang-switcher-mobile button.active {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+@media (max-width: 768px) {
+    .lang-switcher-desktop {
+        display: none;
+    }
+}
+
+@media (min-width: 769px) {
+    .lang-switcher-mobile {
+        display: none;
+    }
+}
     
     /* Responsive */
     @media (max-width: 768px) {
