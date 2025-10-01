@@ -57,37 +57,31 @@
             <nav class="desktop-nav" aria-label="Main navigation">
                 <a
                     href="/"
-                    {$t('common.nav.home')}
                     class:active={$page.url.pathname === '/'}
                     aria-current={$page.url.pathname === '/' ? 'page' : undefined}
                 >
-                    Home
+                    {$t('common.nav.home')}
                 </a>
                 <a
                     href="/books"
-{$t('common.nav.home')}
                     class:active={$page.url.pathname.startsWith('/books')}
                     aria-current={$page.url.pathname.startsWith('/books') ? 'page' : undefined}
                 >
-                    Books
+ {$t('common.nav.books')}
                 </a>
                 <a
                     href="/reviews"
-{$t('common.nav.home')}
-
                     class:active={$page.url.pathname === '/reviews'}
                     aria-current={$page.url.pathname === '/reviews' ? 'page' : undefined}
                 >
-                    Reviews
+ {$t('common.nav.reviews')}
                 </a>
                 <a
                     href="/blog"
-{$t('common.nav.home')}
-
                     class:active={$page.url.pathname.startsWith('/blog')}
                     aria-current={$page.url.pathname.startsWith('/blog') ? 'page' : undefined}
                 >
-                    Blog
+ {$t('common.nav.blog')}
                 </a>
             </nav>
             
@@ -132,43 +126,35 @@
                 <nav class="mobile-nav" aria-label="Mobile navigation">
                     <a
                         href="/"
-{$t('common.nav.home')}
-
                         on:click={toggleMobileMenu}
                         class:active={$page.url.pathname === '/'}
                         aria-current={$page.url.pathname === '/' ? 'page' : undefined}
                     >
-                        Home
+ {$t('common.nav.home')}
                     </a>
                     <a
                         href="/books"
-{$t('common.nav.home')}
-
                         on:click={toggleMobileMenu}
                         class:active={$page.url.pathname.startsWith('/books')}
                         aria-current={$page.url.pathname.startsWith('/books') ? 'page' : undefined}
                     >
-                        Books
+ {$t('common.nav.books')}
                     </a>
                     <a
                         href="/reviews"
-{$t('common.nav.home')}
-
                         on:click={toggleMobileMenu}
                         class:active={$page.url.pathname === '/reviews'}
                         aria-current={$page.url.pathname === '/reviews' ? 'page' : undefined}
                     >
-                        Reviews
+ {$t('common.nav.reviews')}
                     </a>
                     <a
                         href="/blog"
-{$t('common.nav.home')}
-
                         on:click={toggleMobileMenu}
                         class:active={$page.url.pathname.startsWith('/blog')}
                         aria-current={$page.url.pathname.startsWith('/blog') ? 'page' : undefined}
                     >
-                        Blog
+ {$t('common.nav.blog')}
                     </a>
                 </nav>
                 <div class="mobile-auth" aria-label="Mobile account actions">
