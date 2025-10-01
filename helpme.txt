@@ -1,0 +1,347 @@
+commit 0a12e2db4b12194a31ab633b0aef6bd955a6a057
+Author: Chef Tech <cheftech@patraldo.com>
+Date:   Tue Sep 16 23:18:34 2025 -0600
+
+    added all the signup and login code
+
+diff --git a/src/routes/+layout.svelte b/src/routes/+layout.svelte
+index 31e0ad2..fb2f5c8 100644
+--- a/src/routes/+layout.svelte
++++ b/src/routes/+layout.svelte
+@@ -1,83 +1,192 @@
+ <!-- src/routes/+layout.svelte -->
+ <script>
+     import { page } from '$app/stores';
++    import { browser } from '$app/environment';
+ 
+-    // For mobile menu toggle
++    // Mobile menu state
+     let mobileMenuOpen = false;
+ 
++    // Toggle mobile menu
+     function toggleMobileMenu() {
+         mobileMenuOpen = !mobileMenuOpen;
+     }
+ 
+-    // Close mobile menu when route changes
++    // Close mobile menu on route change
+     $: $page.url.pathname, mobileMenuOpen = false;
+-</script>
+ 
+-<svelte:head>
+-    <meta name="viewport" content="width=device-width, initial-scale=1" />
++    // Logout handler
++    async function logout() {
++        if (!browser) return;
++
++        try {
++            await fetch('/api/auth/logout', {
++                method: 'POST',
++                credentials: 'same-origin'
++            });
++
++            // Hard refresh to clear all state
++            window.location.href = '/';
++        } catch (error) {
++            console.error('Logout failed:', error);
++            // Still redirect — session is likely dead
++            window.location.href = '/';
++        }
++    }
++</script>
+ 
+-</svelte:head>
++<!-- No <svelte:head> here — that belongs in app.html -->
+ 
+ <div class="app-layout">
+     <header class="navbar">
+         <div class="container nav-container">
+-            <a href="/" class="logo" aria-label="Home">
++            <!-- Logo -->
++            <a href="/" class="logo" aria-label="ShelfTalk Home">
+                 📚 ShelfTalk
+             </a>
+ 
+-            <!-- Desktop Nav -->
+-            <nav class="desktop-nav">
+-                <a href="/" class:active={$page.url.pathname === '/'}>Home</a>
+-                <a href="/books" class:active={$page.url.pathname.startsWith('/books')}>Books</a>
+-                <!-- Placeholder for future -->
+-                <!-- <a href="/writing" class:active={$page.url.pathname.startsWith('/writing')}>Writing</a> -->
+-                <a href="/about" class:active={$page.url.pathname === '/about'}>About</a>
++            <!-- Desktop Navigation -->
++            <nav class="desktop-nav" aria-label="Main navigation">
++                <a
++                    href="/"
++                    class:active={$page.url.pathname === '/'}
++                    aria-current={$page.url.pathname === '/' ? 'page' : undefined}
++                >
++                    Home
++                </a>
++                <a
++                    href="/books"
++                    class:active={$page.url.pathname.startsWith('/books')}
++                    aria-current={$page.url.pathname.startsWith('/books') ? 'page' : undefined}
++                >
++                    Books
++                </a>
++                <a
++                    href="/about"
++                    class:active={$page.url.pathname === '/about'}
++                    aria-current={$page.url.pathname === '/about' ? 'page' : undefined}
++                >
++                    About
++                </a>
+             </nav>
+ 
+-            <!-- Auth Placeholder (for now) -->
+-            <div class="auth-actions">
+-                <!-- Later: Login / Signup / Profile -->
+-                <a href="/login" class="btn-secondary">Log In</a>
+-                <a href="/signup" class="btn-primary">Sign Up</a>
++            <!-- Auth Section -->
++            <div class="auth-actions" aria-label="Account actions">
++                {#if $page.data?.user}
++                    <span class="welcome" aria-label="Logged in as {$page.data.user.username}">
++                        Welcome, <strong>{$page.data.user.username}</strong>
++                    </span>
++                    <button
++                        on:click={logout}
++                        class="btn-secondary"
++                        aria-label="Log out of your account"
++                    >
++                        Log Out
++                    </button>
++                {:else}
++                    <a href="/login" class="btn-secondary" aria-label="Log in to your account">
++                        Log In
++                    </a>
++                    <a href="/signup" class="btn-primary" aria-label="Create a new account">
++                        Sign Up
++                    </a>
++                {/if}
+             </div>
+ 
+-            <!-- Mobile Toggle -->
++            <!-- Mobile Menu Toggle -->
+             <button
+                 class="mobile-toggle"
+-                aria-label="Toggle menu"
++                aria-label="Toggle navigation menu"
+                 aria-expanded={mobileMenuOpen}
++                aria-controls="mobile-menu"
+                 on:click={toggleMobileMenu}
+             >
++                <span class="sr-only">Toggle menu</span>
+                 ☰
+             </button>
+         </div>
+ 
+         <!-- Mobile Menu (Sliding from top) -->
+         {#if mobileMenuOpen}
+-            <div class="mobile-menu">
+-                <nav class="mobile-nav">
+-                    <a href="/" on:click={toggleMobileMenu} class:active={$page.url.pathname === '/'}>Home</a>
+-                    <a href="/books" on:click={toggleMobileMenu} class:active={$page.url.pathname.startsWith('/books')}>Books</a>
+-                    <!-- <a href="/writing" on:click={toggleMobileMenu} class:active={$page.url.pathname.startsWith('/writing')}>Writing</a> -->
+-                    <a href="/about" on:click={toggleMobileMenu} class:active={$page.url.pathname === '/about'}>About</a>
++            <div id="mobile-menu" class="mobile-menu" role="dialog" aria-modal="true">
++                <nav class="mobile-nav" aria-label="Mobile navigation">
++                    <a
++                        href="/"
++                        on:click={toggleMobileMenu}
++                        class:active={$page.url.pathname === '/'}
++                        aria-current={$page.url.pathname === '/' ? 'page' : undefined}
++                    >
++                        Home
++                    </a>
++                    <a
++                        href="/books"
++                        on:click={toggleMobileMenu}
++                        class:active={$page.url.pathname.startsWith('/books')}
++                        aria-current={$page.url.pathname.startsWith('/books') ? 'page' : undefined}
++                    >
++                        Books
++                    </a>
++                    <a
++                        href="/about"
++                        on:click={toggleMobileMenu}
++                        class:active={$page.url.pathname === '/about'}
++                        aria-current={$page.url.pathname === '/about' ? 'page' : undefined}
++                    >
++                        About
++                    </a>
+                 </nav>
+-                <div class="mobile-auth">
+-                    <a href="/login" on:click={toggleMobileMenu} class="btn-secondary block">Log In</a>
+-                    <a href="/signup" on:click={toggleMobileMenu} class="btn-primary block">Sign Up</a>
++
++                <div class="mobile-auth" aria-label="Mobile account actions">
++                    {#if $page.data?.user}
++                        <div class="welcome-mobile" aria-live="polite">
++                            Welcome, <strong>{$page.data.user.username}</strong>
++                        </div>
++                        <button
++                            on:click={() => {
++                                toggleMobileMenu();
++                                logout();
++                            }}
++                            class="btn-secondary block"
++                            aria-label="Log out"
++                        >
++                            Log Out
++                        </button>
++                    {:else}
++                        <a
++                            href="/login"
++                            on:click={toggleMobileMenu}
++                            class="btn-secondary block"
++                            aria-label="Log in"
++                        >
++                            Log In
++                        </a>
++                        <a
++                            href="/signup"
++                            on:click={toggleMobileMenu}
++                            class="btn-primary block"
++                            aria-label="Sign up"
++                        >
++                            Sign Up
++                        </a>
++                    {/if}
+                 </div>
+             </div>
+         {/if}
+     </header>
+ 
+-    <!-- Page Content -->
++    <!-- Main Content -->
+     <main class="main-content">
+         <slot />
+     </main>
+ 
+-    <footer class="site-footer">
++    <!-- Footer -->
++    <footer class="site-footer" role="contentinfo">
+         <div class="container">
+-            <p>© {new Date().getFullYear()} ShelfTalk — Book reviews & more.</p>
+-            <p><a href="/privacy">Privacy</a> • <a href="/terms">Terms</a></p>
++            <p>© {new Date().getFullYear()} ShelfTalk — Honest book reviews & thoughtful commentary.</p>
++            <p>
++                <a href="/privacy" class="footer-link">Privacy Policy</a>
++                <span aria-hidden="true"> • </span>
++                <a href="/terms" class="footer-link">Terms of Service</a>
++            </p>
+         </div>
+     </footer>
+ </div>
+@@ -87,7 +196,7 @@
+         display: flex;
+         flex-direction: column;
+         min-height: 100vh;
+-        background: #fafafa;
++        background-color: #fafafa;
+     }
+ 
+     /* Navbar */
+@@ -113,6 +222,11 @@
+         font-weight: 700;
+         text-decoration: none;
+         color: #3b82f6;
++        transition: color 0.2s;
++    }
++
++    .logo:hover {
++        color: #2563eb;
+     }
+ 
+     /* Desktop Nav */
+@@ -140,8 +254,14 @@
+     /* Auth Buttons */
+     .auth-actions {
+         display: flex;
+-        gap: 1rem;
+         align-items: center;
++        gap: 1rem;
++    }
++
++    .welcome {
++        color: #333;
++        font-weight: 500;
++        white-space: nowrap;
+     }
+ 
+     .btn-primary,
+@@ -151,6 +271,9 @@
+         text-decoration: none;
+         font-weight: 500;
+         font-size: 0.95rem;
++        cursor: pointer;
++        border: none;
++        transition: all 0.2s;
+     }
+ 
+     .btn-primary {
+@@ -171,6 +294,12 @@
+         background: #d1d5db;
+     }
+ 
++    .btn-secondary:focus,
++    .btn-primary:focus {
++        outline: 2px solid #3b82f6;
++        outline-offset: 2px;
++    }
++
+     /* Mobile Toggle */
+     .mobile-toggle {
+         display: none;
+@@ -217,6 +346,14 @@
+         padding: 1rem 0;
+     }
+ 
++    .welcome-mobile {
++        padding: 1rem 0;
++        text-align: center;
++        font-weight: 500;
++        color: #333;
++        border-bottom: 1px solid #eee;
++    }
++
+     .block {
+         display: block;
+         text-align: center;
+@@ -237,12 +374,12 @@
+         text-align: center;
+     }
+ 
+-    .site-footer a {
++    .footer-link {
+         color: #9ca3af;
+         text-decoration: none;
+     }
+ 
+-    .site-footer a:hover {
++    .footer-link:hover {
+         color: white;
+         text-decoration: underline;
+     }
+@@ -253,6 +390,19 @@
+         padding: 2rem 0;
+     }
+ 
++    /* Screen Reader Only */
++    .sr-only {
++        position: absolute;
++        width: 1px;
++        height: 1px;
++        padding: 0;
++        margin: -1px;
++        overflow: hidden;
++        clip: rect(0, 0, 0, 0);
++        white-space: nowrap;
++        border: 0;
++    }
++
+     /* Responsive */
+     @media (max-width: 768px) {
+         .nav-container {

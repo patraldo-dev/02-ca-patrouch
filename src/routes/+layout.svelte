@@ -160,7 +160,8 @@
                 <div class="mobile-auth" aria-label="Mobile account actions">
                     {#if data?.user}
                         <div class="welcome-mobile" aria-live="polite">
-                            Welcome, <strong>{data.user.username}</strong>
+  {$t('common.nav.welcome')}
+                        , <strong>{data.user.username}</strong>
                         </div>
                         <button
                             on:click={() => {
@@ -170,7 +171,7 @@
                             class="btn-secondary block"
                             aria-label="Log out"
                         >
-                            Log Out
+ {$t('common.nav.logout')}
                         </button>
                     {:else}
                         <a
@@ -179,7 +180,7 @@
                             class="btn-secondary block"
                             aria-label="Log in"
                         >
-                            Log In
+{$t('common.nav.login')}
                         </a>
                         <a
                             href="/signup"
