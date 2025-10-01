@@ -130,6 +130,7 @@
     >
         🇨🇦
     </button>
+
 <button 
     on:click={() => switchLanguage('fr')} 
     class:active={$locale === 'fr'}
@@ -139,19 +140,51 @@
     <svg class="quebec-flag" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
         <!-- Blue background -->
         <rect width="600" height="400" fill="#003399"/>
+        
         <!-- White cross -->
         <path d="M0,150 L600,150 L600,250 L0,250 Z" fill="white"/>
         <path d="M200,0 L200,400 L400,400 L400,0 Z" fill="white"/>
-        <!-- Fleur-de-lis symbols -->
+        
+        <!-- Four fleurs-de-lis -->
         <g fill="white">
-            <path d="M100,100 Q150,50 200,100 T300,100 Q350,50 400,100 T500,100 L500,200 Q450,250 400,200 T300,200 Q250,250 200,200 T100,200 Z" transform="scale(0.4)"/>
-            <path d="M100,100 Q150,50 200,100 T300,100 Q350,50 400,100 T500,100 L500,200 Q450,250 400,200 T300,200 Q250,250 200,200 T100,200 Z" transform="translate(300,0) scale(0.4)"/>
-            <path d="M100,100 Q150,50 200,100 T300,100 Q350,50 400,100 T500,100 L500,200 Q450,250 400,200 T300,200 Q250,250 200,200 T100,200 Z" transform="translate(0,200) scale(0.4)"/>
-            <path d="M100,100 Q150,50 200,100 T300,100 Q350,50 400,100 T500,100 L500,200 Q450,250 400,200 T300,200 Q250,250 200,200 T100,200 Z" transform="translate(300,200) scale(0.4)"/>
+            <!-- Top-left fleur-de-lis -->
+            <path d="M 100,100 
+                     C 150,50 200,100 250,100
+                     C 300,100 350,50 400,100
+                     L 400,200
+                     C 350,250 300,200 250,200
+                     C 200,200 150,250 100,200 Z" 
+                  transform="translate(0,0) scale(0.4)"/>
+            
+            <!-- Top-right fleur-de-lis -->
+            <path d="M 100,100 
+                     C 150,50 200,100 250,100
+                     C 300,100 350,50 400,100
+                     L 400,200
+                     C 350,250 300,200 250,200
+                     C 200,200 150,250 100,200 Z" 
+                  transform="translate(300,0) scale(0.4)"/>
+            
+            <!-- Bottom-left fleur-de-lis -->
+            <path d="M 100,100 
+                     C 150,50 200,100 250,100
+                     C 300,100 350,50 400,100
+                     L 400,200
+                     C 350,250 300,200 250,200
+                     C 200,200 150,250 100,200 Z" 
+                  transform="translate(0,200) scale(0.4)"/>
+            
+            <!-- Bottom-right fleur-de-lis -->
+            <path d="M 100,100 
+                     C 150,50 200,100 250,100
+                     C 300,100 350,50 400,100
+                     L 400,200
+                     C 350,250 300,200 250,200
+                     C 200,200 150,250 100,200 Z" 
+                  transform="translate(300,200) scale(0.4)"/>
         </g>
     </svg>
 </button>
-
 
 </div>
             
@@ -599,7 +632,8 @@ Log in
     width: 24px;
     height: 16px;
     vertical-align: middle;
-    margin-right: 4px;
+    margin-right: 8px;
   }
+
     }
 </style>
