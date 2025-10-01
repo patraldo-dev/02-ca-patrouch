@@ -102,7 +102,7 @@
 Log in
                     </a>
                     <a href="/signup" class="btn-primary" aria-label="Create a new account">
-Sign up
+{$t('common.nav.signup)'}
                     </a>
                 {/if}
             </div>
