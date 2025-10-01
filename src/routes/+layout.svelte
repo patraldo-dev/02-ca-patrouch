@@ -130,58 +130,37 @@
     >
         🇨🇦
     </button>
-
 <button 
     on:click={() => switchLanguage('fr')} 
     class:active={$locale === 'fr'}
     aria-label="Passer au français"
     title="Français (Québec)"
 >
-    <svg class="quebec-flag" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+    <svg class="quebec-flag" viewBox="0 0 9600 6400" xmlns="http://www.w3.org/2000/svg">
         <!-- Blue background -->
-        <rect width="600" height="400" fill="#003399"/>
+        <rect fill="#003da5" width="9600" height="6400"/>
         
         <!-- White cross -->
-        <path d="M0,150 L600,150 L600,250 L0,250 Z" fill="white"/>
-        <path d="M200,0 L200,400 L400,400 L400,0 Z" fill="white"/>
+        <path fill="#fff" d="M0 2400h9600v1600H0z"/>
+        <path fill="#fff" d="M3200 0h3200v6400H3200z"/>
         
         <!-- Four fleurs-de-lis -->
-        <g fill="white">
+        <g fill="#fff">
             <!-- Top-left fleur-de-lis -->
-            <path d="M 100,100 
-                     C 150,50 200,100 250,100
-                     C 300,100 350,50 400,100
-                     L 400,200
-                     C 350,250 300,200 250,200
-                     C 200,200 150,250 100,200 Z" 
-                  transform="translate(0,0) scale(0.4)"/>
+            <path d="M1600 1600c-267 0-533 0-800 0 0-267 0-533 0-800 267 0 533 0 800 0 0 267 0 533 0 800z"/>
+            <path d="M1600 800c-133 0-267 0-400 0 0-133 0-267 0-400 133 0 267 0 400 0 0 133 0 267 0 400z"/>
             
             <!-- Top-right fleur-de-lis -->
-            <path d="M 100,100 
-                     C 150,50 200,100 250,100
-                     C 300,100 350,50 400,100
-                     L 400,200
-                     C 350,250 300,200 250,200
-                     C 200,200 150,250 100,200 Z" 
-                  transform="translate(300,0) scale(0.4)"/>
+            <path d="M8000 1600c-267 0-533 0-800 0 0-267 0-533 0-800 267 0 533 0 800 0 0 267 0 533 0 800z"/>
+            <path d="M8000 800c-133 0-267 0-400 0 0-133 0-267 0-400 133 0 267 0 400 0 0 133 0 267 0 400z"/>
             
             <!-- Bottom-left fleur-de-lis -->
-            <path d="M 100,100 
-                     C 150,50 200,100 250,100
-                     C 300,100 350,50 400,100
-                     L 400,200
-                     C 350,250 300,200 250,200
-                     C 200,200 150,250 100,200 Z" 
-                  transform="translate(0,200) scale(0.4)"/>
+            <path d="M1600 5600c-267 0-533 0-800 0 0-267 0-533 0-800 267 0 533 0 800 0 0 267 0 533 0 800z"/>
+            <path d="M1600 4800c-133 0-267 0-400 0 0-133 0-267 0-400 133 0 267 0 400 0 0 133 0 267 0 400z"/>
             
             <!-- Bottom-right fleur-de-lis -->
-            <path d="M 100,100 
-                     C 150,50 200,100 250,100
-                     C 300,100 350,50 400,100
-                     L 400,200
-                     C 350,250 300,200 250,200
-                     C 200,200 150,250 100,200 Z" 
-                  transform="translate(300,200) scale(0.4)"/>
+            <path d="M8000 5600c-267 0-533 0-800 0 0-267 0-533 0-800 267 0 533 0 800 0 0 267 0 533 0 800z"/>
+            <path d="M8000 4800c-133 0-267 0-400 0 0-133 0-267 0-400 133 0 267 0 400 0 0 133 0 267 0 400z"/>
         </g>
     </svg>
 </button>
