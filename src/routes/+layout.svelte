@@ -307,8 +307,9 @@ Log in
     /* Desktop Nav */
     .desktop-nav {
         display: flex;
-        gap: 2rem;
+        gap: 1.5rem;
         align-items: center;
+        
     }
     
     .desktop-nav a {
@@ -318,6 +319,8 @@ Log in
         padding: 0.5rem 0;
         border-bottom: 2px solid transparent;
         transition: border-color 0.2s ease;
+        margin-right: 2rem;
+
     }
     
     .desktop-nav a:hover,
