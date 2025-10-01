@@ -1,22 +1,16 @@
 // src/routes/+layout.js
 import { loadTranslations } from '$lib/translations';
 
-/** @type {import('./$types').LayoutLoad} */
-export async function load({ url, cookies, locals }) {
-  const { pathname } = url;
+export const load = async ({ url, cookies, locals }) => {
+  // ✅ Get locale from cookie (server-safe)
+  const savedLocale = cookies.get('preferredLanguage') || 'en';
+  const initLocale = ['en', 'es', 'fr'].includes(savedLocale) ? savedLocale : 'en';
 
-  // ✅ 1. Get locale from cookie (server-safe)
-  let initLocale = cookies.get('preferredLanguage') || 'es';
-  if (!['es', 'en', 'fr'].includes(initLocale)) {
-    initLocale = 'es';
-  }
+  await loadTranslations(initLocale, url.pathname);
 
-  // ✅ 2. Load translations
-  await loadTranslations(initLocale, pathname);
-
-  // ✅ 3. Return user data from hooks.server.js
+  // ✅ Return user data from hooks.server.js
   return {
     locale: initLocale,
-    user: locals.user // 👈 this makes $page.data.user available
+    user: locals.user // includes email_verified
   };
-}
+};
