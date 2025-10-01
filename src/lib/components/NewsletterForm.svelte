@@ -1,5 +1,7 @@
 <!-- src/lib/components/NewsletterForm.svelte -->
 <script>
+    import { t } from '$lib/translations';
+    
     let email = '';
     let isSubmitting = false;
     let message = '';
@@ -8,7 +10,7 @@
 
     async function handleSubmit() {
         if (!email) {
-            message = 'Please enter your email address';
+            message = $t('newsletter.error_email_empty');
             return;
         }
 
@@ -27,15 +29,15 @@
             if (response.ok) {
                 isSuccess = true;
                 needsConfirmation = true;
-                message = 'Subscription initiated! Please check your email to confirm.';
+                message = $t('newsletter.success_message');
                 email = '';
             } else {
                 isSuccess = false;
-                message = result.error || 'Subscription failed. Please try again.';
+                message = result.error || $t('newsletter.error_message');
             }
         } catch (error) {
             isSuccess = false;
-            message = 'Network error. Please try again.';
+            message = $t('newsletter.network_error');
         } finally {
             isSubmitting = false;
         }
@@ -43,14 +45,14 @@
 </script>
 
 <div class="newsletter-form">
-    <h3>Subscribe to our Newsletter</h3>
-    <p>Get the latest book reviews and updates delivered to your inbox.</p>
+    <h3>{$t('newsletter.title')}</h3>
+    <p>{$t('newsletter.description')}</p>
     
     {#if message}
         <div class="message" class:success={isSuccess} class:error={!isSuccess}>
             {message}
             {#if needsConfirmation}
-                <p class="confirmation-note">Check your email for a confirmation link.</p>
+                <p class="confirmation-note">{$t('newsletter.confirmation_note')}</p>
             {/if}
         </div>
     {/if}
@@ -60,15 +62,15 @@
             <input
                 type="email"
                 bind:value={email}
-                placeholder="Your email address"
+                placeholder={$t('newsletter.email_placeholder')}
                 required
                 disabled={isSubmitting}
             />
             <button type="submit" disabled={isSubmitting}>
                 {#if isSubmitting}
-                    Subscribing...
+                    {$t('newsletter.subscribing_button')}
                 {:else}
-                    Subscribe
+                    {$t('newsletter.subscribe_button')}
                 {/if}
             </button>
         </div>

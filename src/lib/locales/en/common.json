@@ -14,5 +14,17 @@
     "tagline": "Honest book reviews & thoughtful commentary",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
+  },
+"newsletter": {
+    "title": "Subscribe to our Newsletter",
+    "description": "Get the latest book reviews and updates delivered to your inbox.",
+    "email_placeholder": "Your email address",
+    "subscribe_button": "Subscribe",
+    "subscribing_button": "Subscribing...",
+    "error_email_empty": "Please enter your email address",
+    "success_message": "Subscription initiated! Please check your email to confirm.",
+    "confirmation_note": "Check your email for a confirmation link.",
+    "error_message": "Subscription failed. Please try again.",
+    "network_error": "Network error. Please try again."
   }
 }

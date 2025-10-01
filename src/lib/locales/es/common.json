@@ -14,5 +14,17 @@
     "tagline": "Reseñas honestas de libros y comentarios reflexivos",
     "privacy": "Política de Privacidad",
     "terms": "Términos de Servicio"
-  }
+  },
+  "newsletter": {
+    "title": "Suscríbete a nuestro Boletín",
+    "description": "Recibe las últimas reseñas de libros y actualizaciones en tu bandeja de entrada.",
+    "email_placeholder": "Tu dirección de correo electrónico",
+    "subscribe_button": "Suscribirse",
+    "subscribing_button": "Suscribiendo...",
+    "error_email_empty": "Por favor, introduce tu dirección de correo electrónico",
+    "success_message": "¡Suscripción iniciada! Por favor, revisa tu correo para confirmar.",
+    "confirmation_note": "Revisa tu correo para encontrar un enlace de confirmación.",
+    "error_message": "La suscripción falló. Por favor, inténtalo de nuevo.",
+    "network_error": "Error de red. Por favor, inténtalo de nuevo."
+}
 }

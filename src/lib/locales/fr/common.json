@@ -14,5 +14,17 @@
     "tagline": "Critiques de livres honnêtes et commentaires réfléchis",
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation"
+  },
+  "newsletter": {
+    "title": "Abonnez-vous à notre Bulletin",
+    "description": "Recevez les dernières critiques de livres et mises à jour dans votre boîte de réception.",
+    "email_placeholder": "Votre adresse e-mail",
+    "subscribe_button": "S'abonner",
+    "subscribing_button": "Abonnement en cours...",
+    "error_email_empty": "Veuillez saisir votre adresse e-mail",
+    "success_message": "Abonnement initié ! Veuillez vérifier votre e-mail pour confirmer.",
+    "confirmation_note": "Vérifiez votre e-mail pour trouver un lien de confirmation.",
+    "error_message": "L'abonnement a échoué. Veuillez réessayer.",
+    "network_error": "Erreur réseau. Veuillez réessayer."
   }
 }
