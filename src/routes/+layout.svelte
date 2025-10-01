@@ -82,17 +82,45 @@
                 </a>
             </nav>
             
+<!-- Language Switcher - Desktop -->
+<div class="lang-switcher-desktop">
+    <button 
+        on:click={() => switchLanguage('es')} 
+        class:active={$locale === 'es'}
+        aria-label="Cambiar a español"
+    >
+        Español
+    </button>
+    <button 
+        on:click={() => switchLanguage('en')} 
+        class:active={$locale === 'en'}
+        aria-label="Switch to English"
+    >
+        English
+    </button>
+    <button 
+        on:click={() => switchLanguage('fr')} 
+        class:active={$locale === 'fr'}
+        aria-label="Passer au français"
+    >
+        Français
+    </button>
+</div>
+
+
+
             <!-- Auth Actions -->
             <div class="auth-actions" aria-label="Account actions">
                 {#if $page.data?.user}
                     <span class="welcome" aria-label="Logged in as {data.user.username}">
-                        Welcome, <strong>{data.user.username}</strong>
+{$t('common.nav.welcome')}
+                      , <strong>{data.user.username}</strong>
                     </span>
                     <a href="/admin" class="btn-secondary" aria-label="Admin dashboard">
-                        Admin
+{$t('common.nav.admin')}
                     </a>
                     <button on:click={handleLogout} class="btn-secondary" aria-label="Log out of your account">
-                        Log Out
+{$t('common.nav.logout')}
                     </button>
                 {:else}
                     <a href="/login" class="btn-secondary" aria-label="Log in to your account">
@@ -154,6 +182,31 @@
  {$t('common.nav.blog')}
                     </a>
                 </nav>
+
+</nav>
+                
+                <!-- Language Switcher - Mobile -->
+                <div class="lang-switcher-mobile">
+                    <button 
+                        on:click={() => switchLanguage('es')} 
+                        class:active={$locale === 'es'}
+                    >
+                        ES
+                    </button>
+                    <button 
+                        on:click={() => switchLanguage('en')} 
+                        class:active={$locale === 'en'}
+                    >
+                        EN
+                    </button>
+                    <button 
+                        on:click={() => switchLanguage('fr')} 
+                        class:active={$locale === 'fr'}
+                    >
+                        FR
+                    </button>
+                </div>
+                
                 <div class="mobile-auth" aria-label="Mobile account actions">
                     {#if $page.data?.user}
                         <div class="welcome-mobile" aria-live="polite">
