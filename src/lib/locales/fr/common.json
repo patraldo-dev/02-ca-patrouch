@@ -38,4 +38,26 @@
       "failedToPost": "Échec de la publication du commentaire"
     }
   }
+,
+  "subscribeForm": {
+    "title": "📚 Recevez des mises à jour de livres",
+    "placeholder": "votre@email.com",
+    "aria": {
+      "email": "Adresse e-mail",
+      "type": "Type d'abonnement"
+    },
+    "options": {
+      "bookUpdates": "Nouvelles critiques de livres",
+      "newsletter": "Bulletin mensuel"
+    },
+    "button": {
+      "subscribe": "S'abonner",
+      "subscribing": "Abonnement en cours..."
+    },
+    "message": {
+      "success": "Abonné avec succès !",
+      "error": "Échec de l'abonnement. Veuillez réessayer."
+    }
+  }
+}
 }

@@ -37,5 +37,25 @@
     "error": {
       "failedToPost": "Error al publicar el comentario"
     }
+  },
+"subscribeForm": {
+    "title": "📚 Recibe actualizaciones de libros",
+    "placeholder": "tu@email.com",
+    "aria": {
+      "email": "Dirección de correo electrónico",
+      "type": "Tipo de suscripción"
+    },
+    "options": {
+      "bookUpdates": "Nuevas reseñas de libros",
+      "newsletter": "Boletín mensual"
+    },
+    "button": {
+      "subscribe": "Suscribirse",
+      "subscribing": "Suscrito..."
+    },
+    "message": {
+      "success": "¡Suscrito exitosamente!",
+      "error": "Error al suscribirse. Por favor, inténtalo de nuevo."
+    }
   }
 }

@@ -37,10 +37,27 @@
     "error": {
       "failedToPost": "Failed to post comment"
     }
-  }
-
+  },
+"subscribeForm": {
+    "title": "📚 Get Book Updates",
+    "placeholder": "your@email.com",
+    "aria": {
+      "email": "Email address",
+      "type": "Subscription type"
+    },
+    "options": {
+      "bookUpdates": "New Book Reviews",
+      "newsletter": "Monthly Newsletter"
+    },
+    "button": {
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing..."
+    },
+    "message": {
+      "success": "Successfully subscribed!",
+      "error"
 }
-
-
+}
+}
 
 

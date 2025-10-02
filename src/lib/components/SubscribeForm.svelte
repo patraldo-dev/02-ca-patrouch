@@ -1,5 +1,7 @@
 <!-- src/lib/components/SubscribeForm.svelte -->
 <script>
+    import { t } from '$lib/translations';
+
     let email = '';
     let type = 'book-updates';
     let message = '';
@@ -19,10 +21,10 @@
         const data = await res.json();
 
         if (data.success) {
-            message = data.message;
+            message = data.message || $t('common.subscribeForm.message.success');
             email = '';
         } else {
-            message = data.message;
+            message = data.message || $t('common.subscribeForm.message.error');
         }
 
         loading = false;
@@ -30,26 +32,25 @@
 </script>
 
 <form on:submit|preventDefault={handleSubmit} class="subscribe-form">
-    <h3>📚 Get Book Updates</h3>
+    <h3>{$t('common.subscribeForm.title')}</h3>
     <input
         type="email"
         bind:value={email}
-        placeholder="your@email.com"
+        placeholder={$t('common.subscribeForm.placeholder')}
         required
-        aria-label="Email address"
+        aria-label={$t('common.subscribeForm.aria.email')}
     />
-    <select bind:value={type} aria-label="Subscription type">
-        <option value="book-updates">New Book Reviews</option>
-        <option value="newsletter">Monthly Newsletter</option>
+    <select bind:value={type} aria-label={$t('common.subscribeForm.aria.type')}>
+        <option value="book-updates">{$t('common.subscribeForm.options.bookUpdates')}</option>
+        <option value="newsletter">{$t('common.subscribeForm.options.newsletter')}</option>
     </select>
     <button type="submit" disabled={loading}>
-        {loading ? 'Subscribing...' : 'Subscribe'}
+        {loading ? $t('common.subscribeForm.button.subscribing') : $t('common.subscribeForm.button.subscribe')}
     </button>
     {#if message}
         <p class="message">{message}</p>
     {/if}
 </form>
-
 <style>
     .subscribe-form {
         background: white;
