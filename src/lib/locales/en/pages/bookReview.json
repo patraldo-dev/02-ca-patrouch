@@ -1,0 +1,26 @@
+{
+  "title": "Book Details",
+  "error": {
+    "message": "An error occurred while loading the book.",
+    "notFound": "Book not found"
+  },
+  "goHome": "Go Home",
+  "backToHome": "Back to Home",
+  "edit": "Edit",
+  "book": {
+    "author": "Author",
+    "published": "Published",
+    "status": "Status",
+    "description": "Description"
+  },
+  "status": {
+    "published": "Published",
+    "draft": "Draft"
+  },
+  "reviews": {
+    "heading": "Reviews",
+    "noReviews": "No reviews yet. Be the first to review this book!",
+    "by": "by",
+    "comments": "Comments"
+  }
+}

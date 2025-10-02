@@ -1,12 +1,44 @@
-"newsletter": {
-  "title": "Suscríbete al Boletín",
-  "description": "Recibe reseñas de libros y recomendaciones directamente en tu correo.",
-  "email_placeholder": "Tu correo electrónico",
-  "subscribe_button": "Suscribirse",
-  "subscribing_button": "Suscribiendo...",
-  "error_email_empty": "Por favor ingresa un correo electrónico",
-  "success_message": "¡Gracias! Por favor revisa tu correo para confirmar tu suscripción.",
-  "confirmation_note": "Revisa tu bandeja de entrada y haz clic en el enlace de confirmación.",
-  "error_message": "Error al suscribirse. Por favor intenta de nuevo.",
-  "network_error": "Error de conexión. Por favor intenta de nuevo."
-}
+import i18n from 'sveltekit-i18n';
+
+/** @type {import('sveltekit-i18n').Config} */
+const config = {
+  loaders: [
+    // Spanish
+    {
+      locale: 'es',
+      key: 'common',
+      loader: async () => (await import('./locales/es/common.json')).default,
+    },
+    {
+      locale: 'es',
+      key: 'pages.bookReview',
+      loader: async () => (await import('./locales/es/pages/bookReview.json')).default,
+    },
+
+    // English
+    {
+      locale: 'en',
+      key: 'common',
+      loader: async () => (await import('./locales/en/common.json')).default,
+    },
+    {
+      locale: 'en',
+      key: 'pages.bookReview',
+      loader: async () => (await import('./locales/en/pages/bookReview.json')).default,
+    },
+
+    // French (Canadian)
+    {
+      locale: 'fr',
+      key: 'common',
+      loader: async () => (await import('./locales/fr/common.json')).default,
+    },
+    {
+      locale: 'fr',
+      key: 'pages.bookReview',
+      loader: async () => (await import('./locales/fr/pages/bookReview.json')).default,
+    },
+  ],
+};
+
+export const { t, locale, locales, loading, loadTranslations } = new i18n(config);

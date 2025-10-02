@@ -1,0 +1,26 @@
+{
+  "title": "Detalles del libro",
+  "error": {
+    "message": "Ocurrió un error al cargar el libro.",
+    "notFound": "Libro no encontrado"
+  },
+  "goHome": "Ir al inicio",
+  "backToHome": "Volver al inicio",
+  "edit": "Editar",
+  "book": {
+    "author": "Autor",
+    "published": "Publicado",
+    "status": "Estado",
+    "description": "Descripción"
+  },
+  "status": {
+    "published": "Publicado",
+    "draft": "Borrador"
+  },
+  "reviews": {
+    "heading": "Reseñas",
+    "noReviews": "Aún no hay reseñas. ¡Sé el primero en reseñar este libro!",
+    "by": "por",
+    "comments": "Comentarios"
+  }
+}

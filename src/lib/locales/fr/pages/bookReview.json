@@ -1,0 +1,26 @@
+{
+  "title": "Détails du livre",
+  "error": {
+    "message": "Une erreur s'est produite lors du chargement du livre.",
+    "notFound": "Livre introuvable"
+  },
+  "goHome": "Accueil",
+  "backToHome": "Retour à l'accueil",
+  "edit": "Modifier",
+  "book": {
+    "author": "Auteur",
+    "published": "Publié",
+    "status": "Statut",
+    "description": "Description"
+  },
+  "status": {
+    "published": "Publié",
+    "draft": "Brouillon"
+  },
+  "reviews": {
+    "heading": "Avis",
+    "noReviews": "Aucun avis pour le moment. Soyez le premier à évaluer ce livre !",
+    "by": "par",
+    "comments": "Commentaires"
+  }
+}
