@@ -1,12 +1,7 @@
 <!-- src/lib/components/NewsletterForm.svelte -->
 <script>
     import { t } from '$lib/translations';
-    import { get } from 'svelte/store';
-
-// Debug - remove after testing
-    $: console.log('Translation loading:', $loading);
-    $: console.log('Sample translation:', $t('newsletter.title'));   
-
+    
     let email = '';
     let isSubmitting = false;
     let message = '';
@@ -15,7 +10,7 @@
 
     async function handleSubmit() {
         if (!email) {
-            message = get(t)('newsletter.error_email_empty');
+            message = $t('newsletter.error_email_empty');
             return;
         }
 
@@ -34,11 +29,11 @@
             if (response.ok) {
                 isSuccess = true;
                 needsConfirmation = true;
-                message = get(t)('newsletter.success_message');
+                message = $t('newsletter.success_message');
                 email = '';
             } else {
                 isSuccess = false;
-                message = result.error || get(t)('newsletter.error_message');
+                message = result.error || $t('newsletter.error_message');
             }
         } catch (error) {
             isSuccess = false;
@@ -48,10 +43,6 @@
         }
     }
 </script>
-
-<div>
-    Debug: loading={$loading}, title={$t('newsletter.title')}
-</div>
 
 <div class="newsletter-form">
     <h3>{$t('newsletter.title')}</h3>
