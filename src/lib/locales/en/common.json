@@ -55,9 +55,7 @@
     },
     "message": {
       "success": "Successfully subscribed!",
-      "error"
+      "error": "Failed to subscribe. Please try again."
 }
 }
 }
-
-
