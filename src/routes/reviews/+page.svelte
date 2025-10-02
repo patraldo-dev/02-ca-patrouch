@@ -1,7 +1,7 @@
-<!-- src/routes/reviews/+page.svelte -->
 <script>
     import { onMount } from 'svelte';
-    
+    import { t } from '$lib/translations';
+
     let reviews = [];
     let loading = true;
     let error = null;
@@ -12,11 +12,11 @@
             if (response.ok) {
                 reviews = await response.json();
             } else {
-                error = 'Failed to load reviews';
+                error = $t('pages.reviews.error'); // Use generic error
             }
         } catch (err) {
             console.error('Error fetching reviews:', err);
-            error = 'Network error. Please try again.';
+            error = $t('pages.reviews.networkError');
         } finally {
             loading = false;
         }
@@ -24,18 +24,18 @@
 </script>
 
 <svelte:head>
-    <title>Book Reviews — ShelfTalk</title>
+    <title>{$t('pages.reviews.title')}</title>
 </svelte:head>
 
 <div class="container">
     <div class="page-header">
-        <h1>Book Reviews</h1>
-        <p>Discover what our community is reading and their thoughts on the latest books</p>
+        <h1>{$t('pages.reviews.heading')}</h1>
+        <p>{$t('pages.reviews.subtitle')}</p>
     </div>
     
     {#if loading}
         <div class="loading">
-            <p>Loading reviews...</p>
+            <p>{$t('pages.reviews.loading')}</p>
         </div>
     {:else if error}
         <div class="error">
@@ -43,8 +43,8 @@
         </div>
     {:else if reviews.length === 0}
         <div class="empty">
-            <p>No reviews available yet. Be the first to share your thoughts!</p>
-            <a href="/books" class="btn">Browse Books</a>
+            <p>{$t('pages.reviews.empty.message')}</p>
+            <a href="/books" class="btn">{$t('pages.reviews.empty.browseBooks')}</a>
         </div>
     {:else}
         <div class="reviews-grid">
@@ -56,7 +56,7 @@
                             <div class="rating">⭐ {review.rating}</div>
                         </div>
                         <div class="review-meta">
-                            <span class="reviewer">By {review.reviewer_name}</span>
+                            <span class="reviewer">{$t('pages.reviews.review.by')} {review.reviewer_name}</span>
                             <span class="date">{new Date(review.created_at).toLocaleDateString()}</span>
                         </div>
                     </div>
@@ -67,7 +67,7 @@
                     
                     <div class="review-actions">
                         <a href={`/books/${review.book_slug}`} class="view-book-btn">
-                            View Book Details →
+                            {$t('pages.reviews.review.viewBook')}
                         </a>
                     </div>
                 </article>
@@ -75,7 +75,6 @@
         </div>
     {/if}
 </div>
-
 <style>
     .container {
         max-width: 1200px;

@@ -1,0 +1,17 @@
+{
+  "title": "Avis sur les livres — ShelfTalk",
+  "heading": "Avis sur les livres",
+  "subtitle": "Découvrez ce que notre communauté lit et ses avis sur les derniers livres",
+  "loading": "Chargement des avis...",
+  "error": "Échec du chargement des avis",
+  "networkError": "Erreur réseau. Veuillez réessayer.",
+  "empty": {
+    "message": "Aucun avis disponible pour le moment. Soyez le premier à partager votre opinion !",
+    "browseBooks": "Parcourir les livres"
+  },
+  "review": {
+    "rating": "⭐ {rating}",
+    "by": "Par",
+    "viewBook": "Voir les détails du livre →"
+  }
+}

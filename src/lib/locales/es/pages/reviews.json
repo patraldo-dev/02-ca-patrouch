@@ -1,0 +1,17 @@
+{
+  "title": "Reseñas de libros — ShelfTalk",
+  "heading": "Reseñas de libros",
+  "subtitle": "Descubre qué está leyendo nuestra comunidad y sus opiniones sobre los últimos libros",
+  "loading": "Cargando reseñas...",
+  "error": "Error al cargar las reseñas",
+  "networkError": "Error de red. Por favor, inténtalo de nuevo.",
+  "empty": {
+    "message": "Aún no hay reseñas disponibles. ¡Sé el primero en compartir tus opiniones!",
+    "browseBooks": "Explorar libros"
+  },
+  "review": {
+    "rating": "⭐ {rating}",
+    "by": "Por",
+    "viewBook": "Ver detalles del libro →"
+  }
+}

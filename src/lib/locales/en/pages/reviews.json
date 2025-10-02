@@ -1,0 +1,17 @@
+{
+  "title": "Book Reviews — ShelfTalk",
+  "heading": "Book Reviews",
+  "subtitle": "Discover what our community is reading and their thoughts on the latest books",
+  "loading": "Loading reviews...",
+  "error": "Failed to load reviews",
+  "networkError": "Network error. Please try again.",
+  "empty": {
+    "message": "No reviews available yet. Be the first to share your thoughts!",
+    "browseBooks": "Browse Books"
+  },
+  "review": {
+    "rating": "⭐ {rating}",
+    "by": "By",
+    "viewBook": "View Book Details →"
+  }
+}

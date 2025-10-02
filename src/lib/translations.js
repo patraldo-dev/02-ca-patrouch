@@ -9,6 +9,11 @@ const config = {
       key: 'common',
       loader: async () => (await import('./locales/es/common.json')).default,
     },
+{
+  locale: 'es',
+  key: 'pages.reviews',
+  loader: async () => (await import('./locales/es/pages/reviews.json')).default,
+},
     {
       locale: 'es',
       key: 'pages.bookReview',
@@ -22,6 +27,11 @@ const config = {
       loader: async () => (await import('./locales/en/common.json')).default,
     },
     {
+  locale: 'en',
+  key: 'pages.reviews',
+  loader: async () => (await import('./locales/en/pages/reviews.json')).default,
+},
+{
       locale: 'en',
       key: 'pages.bookReview',
       loader: async () => (await import('./locales/en/pages/bookReview.json')).default,
@@ -33,6 +43,11 @@ const config = {
       key: 'common',
       loader: async () => (await import('./locales/fr/common.json')).default,
     },
+{
+  locale: 'fr',
+  key: 'pages.reviews',
+  loader: async () => (await import('./locales/fr/pages/reviews.json')).default,
+},
     {
       locale: 'fr',
       key: 'pages.bookReview',
