@@ -2,7 +2,11 @@
 <script>
     import { t } from '$lib/translations';
     import { get } from 'svelte/store';
-   
+
+// Debug - remove after testing
+    $: console.log('Translation loading:', $loading);
+    $: console.log('Sample translation:', $t('newsletter.title'));   
+
     let email = '';
     let isSubmitting = false;
     let message = '';
@@ -44,6 +48,10 @@
         }
     }
 </script>
+
+<div>
+    Debug: loading={$loading}, title={$t('newsletter.title')}
+</div>
 
 <div class="newsletter-form">
     <h3>{$t('newsletter.title')}</h3>
