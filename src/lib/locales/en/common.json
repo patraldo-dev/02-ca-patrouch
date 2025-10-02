@@ -26,5 +26,21 @@
     "confirmation_note": "Check your email for a confirmation link.",
     "error_message": "Subscription failed. Please try again.",
     "network_error": "Network error. Please try again."
+  },
+"commentForm": {
+    "title": "Add a Comment",
+    "placeholder": "Share your thoughts...",
+    "button": {
+      "post": "Post Comment",
+      "posting": "Posting..."
+    },
+    "error": {
+      "failedToPost": "Failed to post comment"
+    }
   }
+
 }
+
+
+
+

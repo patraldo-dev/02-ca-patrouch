@@ -26,5 +26,16 @@
     "confirmation_note": "Vérifiez votre e-mail pour trouver un lien de confirmation.",
     "error_message": "L'abonnement a échoué. Veuillez réessayer.",
     "network_error": "Erreur réseau. Veuillez réessayer."
+  },
+  "commentForm": {
+    "title": "Ajouter un commentaire",
+    "placeholder": "Partagez vos pensées...",
+    "button": {
+      "post": "Publier le commentaire",
+      "posting": "Publication en cours..."
+    },
+    "error": {
+      "failedToPost": "Échec de la publication du commentaire"
+    }
   }
 }

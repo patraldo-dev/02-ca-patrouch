@@ -26,5 +26,16 @@
     "confirmation_note": "Revisa tu correo para encontrar un enlace de confirmación.",
     "error_message": "La suscripción falló. Por favor, inténtalo de nuevo.",
     "network_error": "Error de red. Por favor, inténtalo de nuevo."
-}
+},
+  "commentForm": {
+    "title": "Añadir un comentario",
+    "placeholder": "Comparte tus pensamientos...",
+    "button": {
+      "post": "Publicar comentario",
+      "posting": "Publicando..."
+    },
+    "error": {
+      "failedToPost": "Error al publicar el comentario"
+    }
+  }
 }
