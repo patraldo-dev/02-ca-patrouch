@@ -1,7 +1,8 @@
 <!-- src/lib/components/NewsletterForm.svelte -->
 <script>
     import { t } from '$lib/translations';
-    
+    import { get } from 'svelte/store';
+   
     let email = '';
     let isSubmitting = false;
     let message = '';
@@ -10,7 +11,7 @@
 
     async function handleSubmit() {
         if (!email) {
-            message = $t('newsletter.error_email_empty');
+            message = get(t)('newsletter.error_email_empty');
             return;
         }
 
@@ -29,11 +30,11 @@
             if (response.ok) {
                 isSuccess = true;
                 needsConfirmation = true;
-                message = $t('newsletter.success_message');
+                message = get(t)('newsletter.success_message');
                 email = '';
             } else {
                 isSuccess = false;
-                message = result.error || $t('newsletter.error_message');
+                message = result.error || get(t)('newsletter.error_message');
             }
         } catch (error) {
             isSuccess = false;
