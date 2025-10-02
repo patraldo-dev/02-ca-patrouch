@@ -1,6 +1,7 @@
 <!-- src/lib/components/CommentForm.svelte -->
 <script>
     import { enhance } from '$app/forms';
+    import { t } from '$lib/i18n'; // Adjust this import path based on your i18n setup
 
     export let reviewId;
     export let onCommentPosted;
@@ -28,7 +29,7 @@
         const data = await res.json();
 
         if (!res.ok) {
-            error = data.error || 'Failed to post comment';
+            error = data.error || $t('common.commentForm.error.failedToPost');
             loading = false;
             return;
         }
@@ -45,20 +46,20 @@
 </script>
 
 <div class="comment-form">
-    <h3>Add a Comment</h3>
+    <h3>{$t('common.commentForm.title')}</h3>
     {#if error}
         <div class="alert error">{error}</div>
     {/if}
     <form on:submit|preventDefault={handleSubmit} use:enhance>
         <textarea
             bind:value={content}
-            placeholder="Share your thoughts..."
+            placeholder={$t('common.commentForm.placeholder')}
             rows="3"
             required
             maxlength="1000"
         ></textarea>
         <button type="submit" disabled={loading || !content.trim()}>
-            {loading ? 'Posting...' : 'Post Comment'}
+            {loading ? $t('common.commentForm.button.posting') : $t('common.commentForm.button.post')}
         </button>
     </form>
 </div>

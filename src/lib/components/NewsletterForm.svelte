@@ -1,5 +1,4 @@
 <!-- src/lib/components/NewsletterForm.svelte -->
-//trigger a deploy
 <script>
     import { t } from '$lib/translations';
     
