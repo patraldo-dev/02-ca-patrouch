@@ -10,7 +10,7 @@
 
     async function handleSubmit() {
         if (!email) {
-            message = $t('common.error_email_empty');
+            message = $t('common.newsletter.error_email_empty');
             return;
         }
 
@@ -29,15 +29,15 @@
             if (response.ok) {
                 isSuccess = true;
                 needsConfirmation = true;
-                message = $t('common.success_message');
+                message = $t('common.newsletter.success_message');
                 email = '';
             } else {
                 isSuccess = false;
-                message = result.error || $t('common.error_message');
+                message = result.error || $t('common.newsletter.error_message');
             }
         } catch (error) {
             isSuccess = false;
-            message = $t('common.network_error');
+            message = $t('common.newsletter.network_error');
         } finally {
             isSubmitting = false;
         }
@@ -45,14 +45,14 @@
 </script>
 
 <div class="newsletter-form">
-    <h3>{$t('common.title')}</h3>
-    <p>{$t('common.description')}</p>
+    <h3>{$t('common.newsletter.title')}</h3>
+    <p>{$t('common.newsletter.description')}</p>
     
     {#if message}
         <div class="message" class:success={isSuccess} class:error={!isSuccess}>
             {message}
             {#if needsConfirmation}
-                <p class="confirmation-note">{$t('common.confirmation_note')}</p>
+                <p class="confirmation-note">{$t('common.newsletter.confirmation_note')}</p>
             {/if}
         </div>
     {/if}
@@ -62,15 +62,15 @@
             <input
                 type="email"
                 bind:value={email}
-                placeholder={$t('common.email_placeholder')}
+                placeholder={$t('common.newsletter.email_placeholder')}
                 required
                 disabled={isSubmitting}
             />
             <button type="submit" disabled={isSubmitting}>
                 {#if isSubmitting}
-                    {$t('common.subscribing_button')}
+                    {$t('common.newsletter.subscribing_button')}
                 {:else}
-                    {$t('common.subscribe_button')}
+                    {$t('common.newsletter.subscribe_button')}
                 {/if}
             </button>
         </div>
