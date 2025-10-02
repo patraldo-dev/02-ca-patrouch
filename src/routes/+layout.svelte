@@ -286,19 +286,21 @@ Log in
         <slot />
     </main>
     
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container">
+<!-- In your footer section -->
+<footer class="site-footer">
+    <div class="container">
+        {#if $locale}
             <div class="newsletter-section">
                 <svelte:component this={NewsletterForm} />
             </div>
-            <p>© {new Date().getFullYear()} ShelfTalk — Honest book reviews & thoughtful commentary.</p>
-            <p>
-                <a href="/privacy">Privacy Policy</a> • 
-                <a href="/terms">Terms of Service</a>
-            </p>
-        </div>
-    </footer>
+        {/if}
+        <p>© {new Date().getFullYear()} ShelfTalk — {$t('common.footer.tagline')}</p>
+        <p>
+            <a href="/privacy">{$t('common.footer.privacy')}</a> • 
+            <a href="/terms">{$t('common.footer.terms')}</a>
+        </p>
+    </div>
+</footer>
 </div>
 
 <style>
