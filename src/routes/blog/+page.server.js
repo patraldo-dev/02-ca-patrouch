@@ -11,7 +11,7 @@ export async function load({ locals }) {
     return {
         posts: posts.map(post => ({
             ...post,
-            publishedAt: new Date(post.published_at * 1000)
+            publishedAt: new Date(post.published_at * 1000).toISOString() // ✅ serializable string
         }))
     };
 }

@@ -1,22 +1,17 @@
-// In your config.loaders array...
+// src/routes/blog/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ locals }) {
+    const { results: posts } = await locals.db.prepare(`
+        SELECT id, title, slug, published_at
+        FROM blog_posts
+        WHERE published_at IS NOT NULL
+        ORDER BY published_at DESC
+    `).all();
 
-// Spanish
-{
-  locale: 'es',
-  key: 'pages.blog',
-  loader: async () => (await import('./locales/es/pages/blog.json')).default,
-},
-
-// English
-{
-  locale: 'en',
-  key: 'pages.blog',
-  loader: async () => (await import('./locales/en/pages/blog.json')).default,
-},
-
-// French
-{
-  locale: 'fr',
-  key: 'pages.blog',
-  loader: async () => (await import('./locales/fr/pages/blog.json')).default,
-},
+    return {
+        posts: posts.map(post => ({
+            ...post,
+            publishedAt: new Date(post.published_at * 1000).toISOString() // ✅ serializable string
+        }))
+    };
+}

@@ -1,27 +1,15 @@
 <!-- src/routes/blog/+page.svelte -->
 <script>
-    import { onMount } from 'svelte';
     import { t } from '$lib/translations';
 
-    let posts = [];
-    let loading = true;
-    let error = null;
+    // ✅ Get data from +page.server.js — no fetch needed!
+    export let data;
 
-    onMount(async () => {
-        try {
-            const response = await fetch('/api/blog');
-            if (response.ok) {
-                posts = await response.json();
-            } else {
-                error = $t('pages.blog.error');
-            }
-        } catch (err) {
-            console.error('Error fetching blog posts:', err);
-            error = $t('pages.blog.networkError');
-        } finally {
-            loading = false;
-        }
-    });
+    // Since data is preloaded, we simulate "loading = false" immediately
+    // But we keep your UI structure for consistency
+    let loading = false;
+    let error = null;
+    $: posts = data?.posts || [];
 </script>
 
 <svelte:head>
@@ -35,10 +23,12 @@
     </div>
 
     {#if loading}
+        <!-- This won't show, but kept for structure -->
         <div class="loading">
             <p>{$t('pages.blog.loading')}</p>
         </div>
     {:else if error}
+        <!-- Errors should be handled in +page.server.js, but kept for safety -->
         <div class="error">
             <p>{error}</p>
         </div>
@@ -52,12 +42,16 @@
             {#each posts as post}
                 <article class="blog-post">
                     <h2>{post.title}</h2>
-                    {#if post.excerpt}
-                        <p class="excerpt">{post.excerpt}</p>
-                    {/if}
+                    <!-- ❌ Removed excerpt (not in your DB) -->
                     <div class="post-meta">
-                        <span>{$t('pages.blog.post.by')} {post.author}</span>
-                        <span class="date">{new Date(post.published_at).toLocaleDateString()}</span>
+                        <!-- ❌ Removed author (not in your DB) -->
+                        <span class="date">
+                            {#if post.publishedAt}
+                                {new Date(post.publishedAt).toLocaleDateString()}
+                            {:else if post.published_at}
+                                {new Date(post.published_at * 1000).toLocaleDateString()}
+                            {/if}
+                        </span>
                     </div>
                     <a href={`/blog/${post.slug}`} class="read-more">
                         {$t('pages.blog.post.readMore')}
@@ -71,6 +65,7 @@
         <a href="/" class="btn-secondary">{$t('pages.blog.backToHome')}</a>
     </div>
 </div>
+
 <style>
     .container {
         max-width: 1200px;
