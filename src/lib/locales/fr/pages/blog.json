@@ -1,0 +1,17 @@
+{
+  "title": "Blog — ShelfTalk",
+  "heading": "Derniers articles",
+  "subtitle": "Réflexions, mises à jour et histoires de la communauté ShelfTalk",
+  "loading": "Chargement des articles...",
+  "error": "Échec du chargement des articles",
+  "networkError": "Erreur réseau. Veuillez réessayer.",
+  "empty": {
+    "message": "Aucun article publié pour le moment. Revenez bientôt !",
+    "browseBooks": "Parcourir les livres"
+  },
+  "post": {
+    "by": "Par",
+    "readMore": "Lire la suite →"
+  },
+  "backToHome": "Retour à l'accueil"
+}

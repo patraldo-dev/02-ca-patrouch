@@ -1,31 +1,76 @@
 <!-- src/routes/blog/+page.svelte -->
 <script>
-    /** @type {import('./$types').PageData} */
-    export let data;
+    import { onMount } from 'svelte';
+    import { t } from '$lib/translations';
+
+    let posts = [];
+    let loading = true;
+    let error = null;
+
+    onMount(async () => {
+        try {
+            const response = await fetch('/api/blog');
+            if (response.ok) {
+                posts = await response.json();
+            } else {
+                error = $t('pages.blog.error');
+            }
+        } catch (err) {
+            console.error('Error fetching blog posts:', err);
+            error = $t('pages.blog.networkError');
+        } finally {
+            loading = false;
+        }
+    });
 </script>
 
 <svelte:head>
-    <title>Blog — ShelfTalk</title>
+    <title>{$t('pages.blog.title')}</title>
 </svelte:head>
 
 <div class="container">
-    <h1>📚 Blog</h1>
-    <p>Thoughts on books, reading, and writing.</p>
+    <div class="page-header">
+        <h1>{$t('pages.blog.heading')}</h1>
+        <p>{$t('pages.blog.subtitle')}</p>
+    </div>
 
-    {#if data.posts.length === 0}
-        <p>No posts published yet.</p>
+    {#if loading}
+        <div class="loading">
+            <p>{$t('pages.blog.loading')}</p>
+        </div>
+    {:else if error}
+        <div class="error">
+            <p>{error}</p>
+        </div>
+    {:else if posts.length === 0}
+        <div class="empty">
+            <p>{$t('pages.blog.empty.message')}</p>
+            <a href="/books" class="btn">{$t('pages.blog.empty.browseBooks')}</a>
+        </div>
     {:else}
-        <div class="posts-grid">
-            {#each data.posts as post}
-                <article class="post-card">
-                    <h2><a href="/blog/{post.slug}">{post.title}</a></h2>
-                    <p class="meta">Published on {post.publishedAt.toLocaleDateString()}</p>
+        <div class="blog-grid">
+            {#each posts as post}
+                <article class="blog-post">
+                    <h2>{post.title}</h2>
+                    {#if post.excerpt}
+                        <p class="excerpt">{post.excerpt}</p>
+                    {/if}
+                    <div class="post-meta">
+                        <span>{$t('pages.blog.post.by')} {post.author}</span>
+                        <span class="date">{new Date(post.published_at).toLocaleDateString()}</span>
+                    </div>
+                    <a href={`/blog/${post.slug}`} class="read-more">
+                        {$t('pages.blog.post.readMore')}
+                    </a>
                 </article>
             {/each}
         </div>
     {/if}
-</div>
 
+    <div class="back-link">
+        <a href="/" class="btn-secondary">{$t('pages.blog.backToHome')}</a>
+    </div>
+</div>
 <style>
     .container {
         max-width: 1200px;

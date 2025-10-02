@@ -1,0 +1,17 @@
+{
+  "title": "Blog — ShelfTalk",
+  "heading": "Últimos artículos",
+  "subtitle": "Reflexiones, actualizaciones e historias de la comunidad ShelfTalk",
+  "loading": "Cargando artículos...",
+  "error": "Error al cargar los artículos",
+  "networkError": "Error de red. Por favor, inténtalo de nuevo.",
+  "empty": {
+    "message": "Aún no hay artículos publicados. ¡Vuelve pronto!",
+    "browseBooks": "Explorar libros"
+  },
+  "post": {
+    "by": "Por",
+    "readMore": "Leer más →"
+  },
+  "backToHome": "Volver al inicio"
+}

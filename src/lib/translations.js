@@ -11,6 +11,11 @@ const config = {
     },
 {
   locale: 'es',
+  key: 'pages.blog',
+  loader: async () => (await import('./locales/es/pages/blog.json')).default,
+},
+{
+  locale: 'es',
   key: 'pages.reviews',
   loader: async () => (await import('./locales/es/pages/reviews.json')).default,
 },
@@ -26,6 +31,11 @@ const config = {
       key: 'common',
       loader: async () => (await import('./locales/en/common.json')).default,
     },
+{
+  locale: 'en',
+  key: 'pages.blog',
+  loader: async () => (await import('./locales/en/pages/blog.json')).default,
+},
     {
   locale: 'en',
   key: 'pages.reviews',
@@ -43,6 +53,11 @@ const config = {
       key: 'common',
       loader: async () => (await import('./locales/fr/common.json')).default,
     },
+{
+  locale: 'fr',
+  key: 'pages.blog',
+  loader: async () => (await import('./locales/fr/pages/blog.json')).default,
+},
 {
   locale: 'fr',
   key: 'pages.reviews',

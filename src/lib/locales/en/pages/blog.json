@@ -1,0 +1,17 @@
+{
+  "title": "Blog — ShelfTalk",
+  "heading": "Latest Articles",
+  "subtitle": "Insights, updates, and stories from the ShelfTalk community",
+  "loading": "Loading articles...",
+  "error": "Failed to load articles",
+  "networkError": "Network error. Please try again.",
+  "empty": {
+    "message": "No articles published yet. Check back soon!",
+    "browseBooks": "Browse Books"
+  },
+  "post": {
+    "by": "By",
+    "readMore": "Read more →"
+  },
+  "backToHome": "Back to Home"
+}
