@@ -3,7 +3,7 @@ import { loadTranslations } from '$lib/translations';
 import { browser } from '$app/environment';
 
 /** @type {import('./$types').LayoutLoad} */
-export async function load({ url }) {
+export async function load({ url, data }) {  // Add 'data' parameter
   const { pathname } = url;
   
   // Get locale from localStorage (client) or default to Spanish
@@ -18,5 +18,7 @@ export async function load({ url }) {
   
   await loadTranslations(initLocale, pathname);
   
-  return {};
+  return {
+    ...data  // Pass through the server data (including user)
+  };
 }
