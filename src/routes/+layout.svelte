@@ -6,6 +6,9 @@
     import { page } from '$app/stores';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
     
+/** @type {import('./$types').LayoutData} */
+    export let data;  // This line is critical
+
     // Close mobile menu on route change
     beforeNavigate(() => {
         mobileMenuOpen = false;
