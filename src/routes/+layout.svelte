@@ -42,6 +42,12 @@
     }
 </script>
 
+<!-- Temporary debug - remove after checking -->
+<div style="position: fixed; top: 0; right: 0; background: yellow; padding: 10px; z-index: 9999;">
+    <pre>data.user: {JSON.stringify(data?.user, null, 2)}</pre>
+    <pre>$page.data.user: {JSON.stringify($page.data?.user, null, 2)}</pre>
+</div>
+
 <div class="app-layout">
     <header class="navbar">
         <div class="container nav-container">
