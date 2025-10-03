@@ -93,7 +93,7 @@
 
 <!-- Auth Actions -->
 <div class="auth-actions" aria-label="Account actions">
-    {#if $page.data?.user}
+    {#if data?.user}
         <span class="welcome" aria-label="Logged in as {data.user.username}">
             {$t('common.nav.welcome')}, <strong>{data.user.username}</strong>
         </span>
@@ -251,7 +251,7 @@
                 </div>
                 
                 <div class="mobile-auth" aria-label="Mobile account actions">
-                    {#if $page.data?.user}
+                    {#if data?.user}
                         <div class="welcome-mobile" aria-live="polite">
   {$t('common.nav.welcome')}
                         , <strong>{data.user.username}</strong>
