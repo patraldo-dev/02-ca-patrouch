@@ -1,7 +1,7 @@
 <!-- src/routes/+page.svelte -->
 <script>
     import { onMount } from 'svelte';
-    import { t } from '$lib/translations';
+    import { t, locale } from '$lib/translations';
     
     let books = [];
     let loading = true;
@@ -30,12 +30,12 @@
             loading = false;
         }
     });
-
+    
     // Helper function for pluralization
     function getPluralSuffix(count, lang) {
         if (lang === 'en') return count === 1 ? '' : 's';
         if (lang === 'es') return count === 1 ? '' : 's';
-        if (lang === 'fr') return count === 1 ? '' : 's'; // French uses same plural for "avis"
+        if (lang === 'fr') return count === 1 ? '' : 's';
         return count === 1 ? '' : 's';
     }
 </script>
@@ -68,6 +68,7 @@
         {:else}
             <div class="books-grid">
                 {#each books as book}
+                    {@const currentLocale = $locale}
                     <article class="book-card">
                         <a href={`/books/${book.slug}`}>
                             {#if book.coverImageId}
@@ -87,7 +88,6 @@
                                 </div>
                             {/if}
                         </a>
-
                         <div class="book-info">
                             <a href={`/books/${book.slug}`}>
                                 <h3>{book.title}</h3>
@@ -99,7 +99,7 @@
                                     {#if book.review_count}
                                         {$t('pages.home.featured.book.reviewCount', { 
                                             count: book.review_count,
-                                            plural: getPluralSuffix(book.review_count, $locale)
+                                            plural: getPluralSuffix(book.review_count, currentLocale)
                                         })}
                                     {/if}
                                 </div>
@@ -112,6 +112,7 @@
         {/if}
     </section>
 </div>
+
 <style>
     .container {
         max-width: 1200px;
