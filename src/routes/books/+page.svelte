@@ -1,8 +1,9 @@
 <!-- src/routes/books/+page.svelte -->
 <script>
+    import { t } from '$lib/translations';
+
     export let data;
     
-    // State for loading and errors
     let loading = false;
     let error = null;
     let books = data?.books || [];
@@ -19,11 +20,11 @@
             if (response.ok) {
                 books = await response.json();
             } else {
-                error = 'Failed to load books';
+                error = $t('pages.books.error');
             }
         } catch (err) {
             console.error('Error fetching books:', err);
-            error = 'Network error. Please try again.';
+            error = $t('pages.books.networkError');
         } finally {
             loading = false;
         }
@@ -31,25 +32,25 @@
 </script>
 
 <svelte:head>
-    <title>Todos los Libros — ShelfTalk</title>
+    <title>{$t('pages.books.title')}</title>
 </svelte:head>
 
 <div class="container">
-    <h1>📚 Mis Libros</h1>
+    <h1>{$t('pages.books.heading')}</h1>
     
     {#if loading}
         <div class="loading-state">
-            <p>Loading books...</p>
+            <p>{$t('pages.books.loading')}</p>
         </div>
     {:else if error}
         <div class="error-state">
             <p>{error}</p>
-            <button on:click={fetchBooks} class="retry-btn">Try Again</button>
+            <button on:click={fetchBooks} class="retry-btn">{$t('pages.books.retry')}</button>
         </div>
     {:else if books.length === 0}
         <div class="empty-state">
-            <p>No books found. Check back later for new additions!</p>
-            <a href="/" class="btn">← Back to Home</a>
+            <p>{$t('pages.books.empty.message')}</p>
+            <a href="/" class="btn">{$t('pages.books.empty.backToHome')}</a>
         </div>
     {:else}
         <div class="books-grid">
@@ -59,15 +60,7 @@
                         <a href={`/books/${book.slug}`}>
                             <img 
                                 src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
-                                alt={`Cover of ${book.title}`}
-                                class="book-cover"
-                            />
-                        </a>
-                    {:else if book.coverImageId}
-                        <a href={`/books/${book.slug}`}>
-                            <img 
-                                src={book.coverImageId}
-                                alt={`Cover of ${book.title}`}
+                                alt={$t('pages.books.book.coverAlt', { title: book.title })}
                                 class="book-cover"
                             />
                         </a>
@@ -78,11 +71,16 @@
                         <a href={`/books/${book.slug}`}>
                             <h2>{book.title}</h2>
                         </a>
-                        <p class="author">by {book.author}</p>
+                        <p class="author">{$t('pages.books.book.by')} {book.author}</p>
                         {#if book.avg_rating}
-                            <div class="rating">⭐ {parseFloat(book.avg_rating).toFixed(1)} ({book.review_count || 0} reviews)</div>
+                            <div class="rating">
+                                {$t('pages.books.book.rating', {
+                                    rating: parseFloat(book.avg_rating).toFixed(1),
+                                    count: book.review_count || 0
+                                })}
+                            </div>
                         {/if}
-                        <a href={`/books/${book.slug}`} class="btn">Read Reviews</a>
+                        <a href={`/books/${book.slug}`} class="btn">{$t('pages.books.book.readReviews')}</a>
                     </div>
                 </article>
             {/each}
@@ -91,7 +89,7 @@
 </div>
 
 <style>
-    /* Existing styles */
+    /* Your existing styles — no changes needed */
     .container {
         max-width: 1200px;
         margin: 0 auto;
@@ -166,7 +164,6 @@
         background: #2563eb;
     }
     
-    /* New styles for loading, error, and empty states */
     .loading-state, .error-state, .empty-state {
         text-align: center;
         padding: 3rem 1rem;
