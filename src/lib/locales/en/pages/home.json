@@ -1,0 +1,21 @@
+{
+  "title": "ShelfTalk — Honest book reviews & thoughtful commentary",
+  "hero": {
+    "heading": "ShelfTalk",
+    "subtitle": "Honest book reviews & thoughtful commentary"
+  },
+  "featured": {
+    "heading": "Featured Books",
+    "loading": "Loading books...",
+    "error": "Failed to load books",
+    "networkError": "Network error. Please try again.",
+    "empty": "No books available. Check back soon for new additions!",
+    "book": {
+      "coverAlt": "Cover of {title}",
+      "by": "by",
+      "rating": "⭐ {rating}",
+      "reviewCount": "({count} review{plural})",
+      "readMore": "Read Review"
+    }
+  }
+}

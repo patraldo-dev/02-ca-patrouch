@@ -1,0 +1,21 @@
+{
+  "title": "ShelfTalk — Avis honnêtes sur les livres et commentaires réfléchis",
+  "hero": {
+    "heading": "ShelfTalk",
+    "subtitle": "Avis honnêtes sur les livres et commentaires réfléchis"
+  },
+  "featured": {
+    "heading": "Livres en vedette",
+    "loading": "Chargement des livres...",
+    "error": "Échec du chargement des livres",
+    "networkError": "Erreur réseau. Veuillez réessayer.",
+    "empty": "Aucun livre disponible. Revenez bientôt pour de nouvelles additions !",
+    "book": {
+      "coverAlt": "Couverture de {title}",
+      "by": "par",
+      "rating": "⭐ {rating}",
+      "reviewCount": "({count} avis{plural})",
+      "readMore": "Lire l'avis"
+    }
+  }
+}

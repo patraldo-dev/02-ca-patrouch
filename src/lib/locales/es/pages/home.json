@@ -1,0 +1,21 @@
+{
+  "title": "ShelfTalk — Reseñas honestas de libros y comentarios reflexivos",
+  "hero": {
+    "heading": "ShelfTalk",
+    "subtitle": "Reseñas honestas de libros y comentarios reflexivos"
+  },
+  "featured": {
+    "heading": "Libros destacados",
+    "loading": "Cargando libros...",
+    "error": "Error al cargar los libros",
+    "networkError": "Error de red. Por favor, inténtalo de nuevo.",
+    "empty": "No hay libros disponibles. ¡Vuelve pronto para ver nuevas adiciones!",
+    "book": {
+      "coverAlt": "Portada de {title}",
+      "by": "por",
+      "rating": "⭐ {rating}",
+      "reviewCount": "({count} reseña{plural})",
+      "readMore": "Leer reseña"
+    }
+  }
+}
