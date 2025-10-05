@@ -25,7 +25,6 @@
 	    locale.set(lang);
 	    if (browser) {
 		localStorage.setItem('preferredLanguage', lang);
-		window.location.reload(); // Reload to apply new translations
 	    }
 	}
     
