@@ -6,6 +6,12 @@ const config = {
     // Spanish
 {
   locale: 'es',
+  key: 'pages.privacy',
+  loader: async () => (await import('./locales/es/pages/privacy.json')).default,
+},
+
+{
+  locale: 'es',
   key: 'pages.books',
   loader: async () => (await import('./locales/es/pages/books.json')).default,
 },
@@ -36,6 +42,11 @@ const config = {
     },
 
     // English
+{
+  locale: 'en',
+  key: 'pages.privacy',
+  loader: async () => (await import('./locales/en/pages/privacy.json')).default,
+},
 {
   locale: 'en',
   key: 'pages.books',
@@ -69,6 +80,11 @@ const config = {
     },
 
     // French (Canadian)
+{
+  locale: 'fr',
+  key: 'pages.privacy',
+  loader: async () => (await import('./locales/fr/pages/privacy.json')).default,
+},
 {
   locale: 'fr',
   key: 'pages.books',

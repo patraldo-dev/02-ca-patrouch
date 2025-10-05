@@ -1,0 +1,73 @@
+{
+  "title": "Privacy Policy — ShelfTalk",
+  "heading": "Privacy Policy",
+  "lastUpdated": "Last updated: {date}",
+  "sections": {
+    "responsable": {
+      "title": "1. Identity and Address of the Data Controller",
+      "addressLabel": "Address",
+      "address": "Mexico City",
+      "emailLabel": "Email"
+    },
+    "dataCollection": {
+      "title": "2. Personal Data We Collect",
+      "intro": "ShelfTalk collects the following personal data:",
+      "items": {
+        "username": "Username",
+        "email": "Email address",
+        "password": "Password (stored encrypted)",
+        "reviews": "Reviews and comments you post",
+        "navigation": "Browsing information and cookies"
+      }
+    },
+    "purposes": {
+      "title": "3. Purposes of Processing",
+      "intro": "Your personal data will be used for:",
+      "items": {
+        "account": "Creating and managing your user account",
+        "reviews": "Publishing your book reviews and comments",
+        "notifications": "Sending you account notifications (if authorized)",
+        "improvement": "Improving our services",
+        "legal": "Complying with legal obligations"
+      }
+    },
+    "transfers": {
+      "title": "4. Data Transfers",
+      "intro": "Your data may be transferred to and processed by:",
+      "cloudflare": "Cloudflare, Inc. (United States) - Hosting and security",
+      "mailgun": "Mailgun (United States) - Email delivery",
+      "conclusion": "These transfers are necessary for service provision."
+    },
+    "arcoRights": {
+      "title": "5. ARCO Rights",
+      "intro": "As a data subject, you have the right to:",
+      "access": "Access: Know what data we have about you",
+      "rectification": "Rectification: Correct incorrect data",
+      "cancellation": "Cancellation: Request deletion of your data",
+      "opposition": "Opposition: Object to the processing of your data",
+      "contact": "To exercise your ARCO rights, send an email to:"
+    },
+    "consent": {
+      "title": "6. Consent Withdrawal",
+      "text": "You can withdraw your consent for data processing at any time by contacting us at:"
+    },
+    "cookies": {
+      "title": "7. Cookies and Tracking Technologies",
+      "text": "We use cookies to keep your session active and improve user experience. You can configure your browser to reject cookies, although this may affect site functionality."
+    },
+    "security": {
+      "title": "8. Security Measures",
+      "text": "We implement administrative, technical, and physical security measures to protect your personal data, including password encryption and secure HTTPS connections."
+    },
+    "changes": {
+      "title": "9. Changes to Privacy Policy",
+      "text": "We reserve the right to modify this Privacy Policy. Changes will be published on this page and the update date will be modified."
+    },
+    "contact": {
+      "title": "10. Contact",
+      "text": "For any questions about this Privacy Policy, contact us at:"
+    }
+  },
+  "contactEmail": "cheftech@patrouch.ca",
+  "backToHome": "Back to Home"
+}

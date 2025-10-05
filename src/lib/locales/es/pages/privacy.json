@@ -1,0 +1,73 @@
+{
+  "title": "Aviso de Privacidad — ShelfTalk",
+  "heading": "Aviso de Privacidad",
+  "lastUpdated": "Última actualización: {date}",
+  "sections": {
+    "responsable": {
+      "title": "1. Identidad y Domicilio del Responsable",
+      "addressLabel": "Domicilio",
+      "address": "Ciudad de México",
+      "emailLabel": "Correo electrónico"
+    },
+    "dataCollection": {
+      "title": "2. Datos Personales que Recabamos",
+      "intro": "ShelfTalk recaba los siguientes datos personales:",
+      "items": {
+        "username": "Nombre de usuario",
+        "email": "Dirección de correo electrónico",
+        "password": "Contraseña (almacenada de forma encriptada)",
+        "reviews": "Reseñas y comentarios que publiques",
+        "navigation": "Información de navegación y cookies"
+      }
+    },
+    "purposes": {
+      "title": "3. Finalidades del Tratamiento",
+      "intro": "Tus datos personales serán utilizados para:",
+      "items": {
+        "account": "Crear y administrar tu cuenta de usuario",
+        "reviews": "Publicar tus reseñas y comentarios de libros",
+        "notifications": "Enviarte notificaciones sobre tu cuenta (si autorizas)",
+        "improvement": "Mejorar nuestros servicios",
+        "legal": "Cumplir con obligaciones legales"
+      }
+    },
+    "transfers": {
+      "title": "4. Transferencias de Datos",
+      "intro": "Tus datos pueden ser transferidos y procesados por:",
+      "cloudflare": "Cloudflare, Inc. (Estados Unidos) - Hospedaje y seguridad",
+      "mailgun": "Mailgun (Estados Unidos) - Envío de correos electrónicos",
+      "conclusion": "Estas transferencias son necesarias para la prestación del servicio."
+    },
+    "arcoRights": {
+      "title": "5. Derechos ARCO",
+      "intro": "Como titular de datos personales, tienes derecho a:",
+      "access": "Acceso: Conocer qué datos tenemos sobre ti",
+      "rectification": "Rectificación: Corregir datos incorrectos",
+      "cancellation": "Cancelación: Solicitar la eliminación de tus datos",
+      "opposition": "Oposición: Oponerte al tratamiento de tus datos",
+      "contact": "Para ejercer tus derechos ARCO, envía un correo a:"
+    },
+    "consent": {
+      "title": "6. Revocación del Consentimiento",
+      "text": "Puedes revocar tu consentimiento para el tratamiento de tus datos en cualquier momento contactándonos a:"
+    },
+    "cookies": {
+      "title": "7. Cookies y Tecnologías de Rastreo",
+      "text": "Utilizamos cookies para mantener tu sesión activa y mejorar la experiencia de usuario. Puedes configurar tu navegador para rechazar cookies, aunque esto puede afectar la funcionalidad del sitio."
+    },
+    "security": {
+      "title": "8. Medidas de Seguridad",
+      "text": "Implementamos medidas de seguridad administrativas, técnicas y físicas para proteger tus datos personales, incluyendo encriptación de contraseñas y conexiones seguras HTTPS."
+    },
+    "changes": {
+      "title": "9. Cambios al Aviso de Privacidad",
+      "text": "Nos reservamos el derecho de modificar este Aviso de Privacidad. Los cambios se publicarán en esta página y la fecha de actualización se modificará."
+    },
+    "contact": {
+      "title": "10. Contacto",
+      "text": "Para cualquier duda sobre este Aviso de Privacidad, contáctanos en:"
+    }
+  },
+  "contactEmail": "cheftech@patrouch.ca",
+  "backToHome": "Volver al Inicio"
+}
