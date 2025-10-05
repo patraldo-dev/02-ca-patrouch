@@ -4,6 +4,11 @@ import i18n from 'sveltekit-i18n';
 const config = {
   loaders: [
     // Spanish
+{
+  locale: 'es',
+  key: 'pages.books',
+  loader: async () => (await import('./locales/es/pages/books.json')).default,
+},
     {
       locale: 'es',
       key: 'common',
@@ -31,6 +36,12 @@ const config = {
     },
 
     // English
+{
+  locale: 'en',
+  key: 'pages.books',
+  loader: async () => (await import('./locales/en/pages/books.json')).default,
+},
+
     {
       locale: 'en',
       key: 'common',
@@ -58,6 +69,11 @@ const config = {
     },
 
     // French (Canadian)
+{
+  locale: 'fr',
+  key: 'pages.books',
+  loader: async () => (await import('./locales/fr/pages/books.json')).default,
+},
     {
       locale: 'fr',
       key: 'common',
@@ -86,4 +102,4 @@ const config = {
   ],
 };
 
-export const { t, locale, locales, loading, loadTranslations } = new i18n(config);
+iexport const { t, locale, locales, loading, loadTranslations } = new i18n(config);

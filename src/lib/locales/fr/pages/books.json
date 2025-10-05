@@ -1,0 +1,18 @@
+{
+  "title": "Tous les livres — ShelfTalk",
+  "heading": "📚 Mes livres",
+  "loading": "Chargement des livres...",
+  "error": "Échec du chargement des livres",
+  "networkError": "Erreur réseau. Veuillez réessayer.",
+  "empty": {
+    "message": "Aucun livre trouvé. Revenez plus tard pour de nouvelles additions !",
+    "backToHome": "← Retour à l'accueil"
+  },
+  "book": {
+    "coverAlt": "Couverture de {title}",
+    "by": "par",
+    "rating": "⭐ {rating} ({count} avis)",
+    "readReviews": "Lire les avis"
+  },
+  "retry": "Réessayer"
+}

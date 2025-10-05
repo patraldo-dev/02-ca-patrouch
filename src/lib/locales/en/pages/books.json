@@ -1,0 +1,18 @@
+{
+  "title": "All Books — ShelfTalk",
+  "heading": "📚 My Books",
+  "loading": "Loading books...",
+  "error": "Failed to load books",
+  "networkError": "Network error. Please try again.",
+  "empty": {
+    "message": "No books found. Check back later for new additions!",
+    "backToHome": "← Back to Home"
+  },
+  "book": {
+    "coverAlt": "Cover of {title}",
+    "by": "by",
+    "rating": "⭐ {rating} ({count} reviews)",
+    "readReviews": "Read Reviews"
+  },
+  "retry": "Try Again"
+}

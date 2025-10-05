@@ -1,0 +1,20 @@
+// In your config.loaders array...
+
+// English
+{
+  locale: 'en',
+  key: 'pages.books',
+  loader: async () => (await import('./locales/en/pages/books.json')).default,
+},
+// Spanish
+{
+  locale: 'es',
+  key: 'pages.books',
+  loader: async () => (await import('./locales/es/pages/books.json')).default,
+},
+// French
+{
+  locale: 'fr',
+  key: 'pages.books',
+  loader: async () => (await import('./locales/fr/pages/books.json')).default,
+},
