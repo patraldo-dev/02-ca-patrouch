@@ -6,10 +6,7 @@
     $: books = data?.books || [];
     $: user = data?.user || null;
     
-    function getPluralSuffix(count, lang) {
-        if (lang === 'en') return count === 1 ? '' : 's';
-        if (lang === 'es') return count === 1 ? '' : 's';
-        if (lang === 'fr') return count === 1 ? '' : 's';
+    function getPluralSuffix(count) {
         return count === 1 ? '' : 's';
     }
 </script>
@@ -85,8 +82,8 @@
                                             <span class="rating-count">
                                                 {$t('pages.home.featured.book.reviewCount', { 
                                                     count: book.review_count,
-                                                    plural: getPluralSuffix(book.review_count, $locale)
-                                                })}
+						    plural: book.review_count === 1 ? '' : 's'
+        					})}
                                             </span>
                                         {/if}
                                     </div>
