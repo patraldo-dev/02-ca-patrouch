@@ -1,13 +1,14 @@
-// src/routes/admin/+page.server.js
-import { redirect } from '@sveltejs/kit';
+// src/routes/admin/users/+page.server.js
+import { loadTranslations } from '$lib/translations';
 
 export async function load({ locals }) {
-  // Ensure user is authenticated and is admin
-  if (!locals.user || locals.user.role !== 'admin') {
-    throw redirect(302, '/login');
-  }
+  await loadTranslations('en'); // ← Add this line
+  
+  const { results } = await locals.db.prepare(`
+    SELECT id, username, email, role
+    FROM users
+    ORDER BY created_at DESC
+  `).all();
 
-  return {
-    user: locals.user
-  };
+  return { users: results };
 }
