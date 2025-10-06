@@ -29,6 +29,7 @@
     "users": {
       "title": "Gestion des utilisateurs — Admin",
       "heading": "Gestion des utilisateurs",
+      "manage": "Gérer les utilisateurs",
       "subtitle": "Gérez les comptes utilisateurs et les rôles sur l'ensemble de votre plateforme.",
       "empty": "Aucun utilisateur trouvé dans le système.",
       "table": {

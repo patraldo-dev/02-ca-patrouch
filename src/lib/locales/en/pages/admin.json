@@ -29,6 +29,7 @@
     "users": {
       "title": "Manage Users — Admin",
       "heading": "User Management",
+      "manage": "Manage Users",
       "subtitle": "Manage user accounts and roles across your platform.",
       "empty": "No users found in the system.",
       "table": {
