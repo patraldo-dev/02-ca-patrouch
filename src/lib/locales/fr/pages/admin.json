@@ -4,7 +4,8 @@
     "dashboard": "Tableau de bord",
     "books": "Livres",
     "reviews": "Avis",
-    "blog": "Articles de blog"
+    "blog": "Articles de blog",
+    "users": "Utilisateurs"
   },
   "title": "Tableau de bord admin — ShelfTalk",
   "heading": "Tableau de bord admin",

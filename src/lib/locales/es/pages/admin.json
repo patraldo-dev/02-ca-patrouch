@@ -4,7 +4,8 @@
     "dashboard": "Panel de control",
     "books": "Libros",
     "reviews": "Reseñas",
-    "blog": "Entradas del blog"
+    "blog": "Entradas del blog",
+    "users": "Usuarios"
   },
   "title": "Panel de Administración — ShelfTalk",
   "heading": "Panel de Administración",

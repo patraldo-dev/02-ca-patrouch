@@ -10,7 +10,7 @@ export async function load({ locals }) {
         throw redirect(302, '/'); // or show a 403 page
     }
 
-if (locals.user.role !== 'user') {
+if (locals.user.role !== 'admin') {
   throw error(403, 'Admin access required');
 }
 

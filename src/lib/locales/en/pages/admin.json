@@ -4,7 +4,8 @@
     "dashboard": "Dashboard",
     "books": "Books",
     "reviews": "Reviews",
-    "blog": "Blog Posts"
+    "blog": "Blog Posts",
+    "users": "Users" 
   },
   "title": "Admin Dashboard — ShelfTalk",
   "heading": "Admin Dashboard",
