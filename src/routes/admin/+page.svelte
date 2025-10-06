@@ -47,7 +47,7 @@ export let data;
     <section class="admin-card">
       <h2>{$t('pages.admin.sections.users.title')}</h2>
       <div class="admin-actions">
-        <a href="/api/admin/users" class="btn-primary">{$t('pages.admin.sections.users.manage')}</a>
+        <a href="/admin/users" class="btn-primary">{$t('pages.admin.sections.users.manage')}</a>
       </div>
     </section>
   </div>
