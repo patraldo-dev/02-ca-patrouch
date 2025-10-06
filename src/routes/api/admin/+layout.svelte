@@ -13,6 +13,8 @@
         <a href="/admin/books" class:active={$page.url.pathname.startsWith('/admin/books')}>Books</a>
         <a href="/admin/reviews" class:active={$page.url.pathname.startsWith('/admin/reviews')}>Reviews</a>
         <a href="/admin/blog" class:active={$page.url.pathname.startsWith('/admin/blog')}>Blog Posts</a>
+	<a href="/admin/users" class:active={$page.url.pathname.startsWith('/admin/users')}>User Management</a>
+
     </nav>
 
     <main class="admin-content">
