@@ -226,6 +226,16 @@ aria-current={$page.url.pathname.startsWith('/about') ? 'page' : undefined}
                     >
  {$t('common.nav.blog')}
                     </a>
+
+  <a 
+href="/about"
+on:click={toggleMobileMenu}
+class:active={$page.url.pathname.startsWith('/about')}
+aria-current={$page.url.pathname.startsWith('/about') ? 'page' : undefined}
+>
+{$t('common.nav.about')}
+</a>
+
                 </nav>
 
                 
