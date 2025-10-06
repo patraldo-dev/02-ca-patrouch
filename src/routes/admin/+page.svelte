@@ -1,6 +1,8 @@
 <!-- src/routes/admin/+page.svelte -->
 <script>
   import { t } from '$lib/translations';
+export let data;
+  $: user = data.user;
 </script>
 
 <svelte:head>

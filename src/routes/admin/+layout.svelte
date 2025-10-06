@@ -1,16 +1,7 @@
 <!-- src/routes/admin/+layout.svelte -->
 <script>
     import { page } from '$app/stores';
-    import { t, loadTranslations } from '$lib/translations';
-    import { onMount } from 'svelte';
-
-    // Load translations on component mount
-    onMount(async () => {
-        // Detect locale — for now, hardcode to 'en'
-        // In a real app, you might get this from user settings, URL, or cookie
-        const locale = 'en';
-        await loadTranslations(locale);
-    });
+    import { t } from '$lib/translations'; // ✅ Only import t, no onMount needed
 </script>
 
 <svelte:head>
