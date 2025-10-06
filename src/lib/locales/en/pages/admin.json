@@ -26,10 +26,17 @@
       "view": "View All Posts",
       "write": "Write New Post"
     },
-    "users": {
-      "title": "Users",
-      "manage": "Manage Users"
-    }
+"users": {
+  "title": "Manage Users — Admin",
+  "heading": "User Management",
+  "empty": "No users found.",
+  "table": {
+    "username": "Username",
+    "email": "Email",
+    "role": "Role",
+    "actions": "Actions"
+  },
+  "delete": "Delete"
   },
   "backToHome": "Back to Home"
 }
