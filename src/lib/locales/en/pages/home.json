@@ -2,7 +2,9 @@
   "title": "ShelfTalk — Honest book reviews & thoughtful commentary",
   "hero": {
     "heading": "ShelfTalk",
-    "subtitle": "Honest book reviews & thoughtful commentary"
+    "subtitle": "Honest book reviews & thoughtful commentary",
+    "exploreBooks": "Explore Books",
+    "learnMore": "Learn More"
   },
   "featured": {
     "heading": "Featured Books",

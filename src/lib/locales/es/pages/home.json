@@ -2,7 +2,9 @@
   "title": "ShelfTalk — Reseñas honestas de libros y comentarios reflexivos",
   "hero": {
     "heading": "ShelfTalk",
-    "subtitle": "Reseñas honestas de libros y comentarios reflexivos"
+    "subtitle": "Reseñas honestas de libros y comentarios reflexivos",
+    "exploreBooks": "Explorar libros",
+    "learnMore": "Más información"
   },
   "featured": {
     "heading": "Libros destacados",

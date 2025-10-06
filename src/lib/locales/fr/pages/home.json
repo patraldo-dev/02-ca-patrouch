@@ -2,7 +2,9 @@
   "title": "ShelfTalk — Avis honnêtes sur les livres et commentaires réfléchis",
   "hero": {
     "heading": "ShelfTalk",
-    "subtitle": "Avis honnêtes sur les livres et commentaires réfléchis"
+    "subtitle": "Avis honnêtes sur les livres et commentaires réfléchis",
+    "exploreBooks": "Explorer les livres",
+    "learnMore": "En savoir plus"
   },
   "featured": {
     "heading": "Livres en vedette",
