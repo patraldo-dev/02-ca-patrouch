@@ -10,7 +10,6 @@ export async function load({ platform, locals }) {
     
     const db = platform.env.DB_book;
     
-    // ✅ Fixed query: JOIN with reviews to calculate avg_rating
     const { results } = await db.prepare(`
         SELECT 
             b.id, 
@@ -25,7 +24,7 @@ export async function load({ platform, locals }) {
         WHERE b.published = 1 
         AND b.coverImageId IS NOT NULL
         GROUP BY b.id, b.title, b.slug, b.author, b.coverImageId
-        ORDER BY b.created_at DESC
+        ORDER BY b.published_year DESC NULLS LAST
         LIMIT 12
     `).all();
 
