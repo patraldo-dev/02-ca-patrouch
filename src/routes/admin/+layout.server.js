@@ -1,19 +1,18 @@
 // src/routes/admin/+layout.server.js
 import { redirect } from '@sveltejs/kit';
-import { loadTranslations } from '$lib/translations';
 
-/** @type {import('./$types').LayoutServerLoad} */
 export async function load({ locals }) {
-    // Admin auth check
     if (!locals.user) {
         throw redirect(302, '/login');
     }
+    
+    if (locals.user.role !== 'admin') {
+        throw redirect(302, '/'); // or show a 403 page
+    }
 
-    // Load translations server-side
-    const locale = 'en'; // or get from locals.user.locale
-    await loadTranslations(locale);
+if (locals.user.role !== 'user') {
+  throw error(403, 'Admin access required');
+}
 
-    return {
-        user: locals.user
-    };
+    return { user: locals.user };
 }
