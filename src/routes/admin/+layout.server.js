@@ -1,5 +1,5 @@
 // src/routes/admin/+layout.server.js
-import { redirect } from '@sveltejs/kit';
+import { redirect, error } from '@sveltejs/kit'; // ✅ Import error
 
 export async function load({ locals }) {
     if (!locals.user) {
@@ -7,12 +7,8 @@ export async function load({ locals }) {
     }
     
     if (locals.user.role !== 'admin') {
-        throw redirect(302, '/'); // or show a 403 page
+        throw error(403, 'Admin access required');
     }
-
-if (locals.user.role !== 'admin') {
-  throw error(403, 'Admin access required');
-}
 
     return { user: locals.user };
 }
