@@ -1,18 +1,28 @@
 <!-- src/routes/admin/+layout.svelte -->
 <script>
     import { page } from '$app/stores';
+    import { t, loadTranslations } from '$lib/translations';
+    import { onMount } from 'svelte';
+
+    // Load translations on component mount
+    onMount(async () => {
+        // Detect locale — for now, hardcode to 'en'
+        // In a real app, you might get this from user settings, URL, or cookie
+        const locale = 'en';
+        await loadTranslations(locale);
+    });
 </script>
 
 <svelte:head>
-    <title>Admin — ShelfTalk</title>
+    <title>{$t('pages.admin.layout.title')}</title>
 </svelte:head>
 
 <div class="admin-layout">
     <nav class="admin-nav">
-        <a href="/admin" class:active={$page.url.pathname === '/admin'}>Dashboard</a>
-        <a href="/admin/books" class:active={$page.url.pathname.startsWith('/admin/books')}>Books</a>
-        <a href="/admin/reviews" class:active={$page.url.pathname.startsWith('/admin/reviews')}>Reviews</a>
-        <a href="/admin/blog" class:active={$page.url.pathname.startsWith('/admin/blog')}>Blog Posts</a>
+        <a href="/admin" class:active={$page.url.pathname === '/admin'}>{$t('pages.admin.layout.dashboard')}</a>
+        <a href="/admin/books" class:active={$page.url.pathname.startsWith('/admin/books')}>{$t('pages.admin.layout.books')}</a>
+        <a href="/admin/reviews" class:active={$page.url.pathname.startsWith('/admin/reviews')}>{$t('pages.admin.layout.reviews')}</a>
+        <a href="/admin/blog" class:active={$page.url.pathname.startsWith('/admin/blog')}>{$t('pages.admin.layout.blog')}</a>
     </nav>
 
     <main class="admin-content">

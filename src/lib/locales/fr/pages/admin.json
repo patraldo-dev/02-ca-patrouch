@@ -1,8 +1,34 @@
 {
+  "layout": {
+    "title": "Tableau de bord admin — ShelfTalk",
+    "dashboard": "Tableau de bord",
+    "books": "Livres",
+    "reviews": "Avis",
+    "blog": "Articles de blog"
+  },
   "title": "Tableau de bord admin — ShelfTalk",
   "heading": "Tableau de bord admin",
-  "welcome": "Bienvenue dans le panneau d'administration. Utilisez le menu de navigation pour gérer le contenu.",
-  "manageBooks": "Gérer les livres",
-  "manageReviews": "Gérer les avis",
-  "manageBlogPosts": "Gérer les articles de blog"
+  "welcome": "Bienvenue dans le panneau d'administration de ShelfTalk. Utilisez les liens ci-dessous pour gérer votre contenu.",
+  "sections": {
+    "books": {
+      "title": "Livres",
+      "view": "Voir tous les livres",
+      "add": "Ajouter un nouveau livre"
+    },
+    "reviews": {
+      "title": "Avis",
+      "view": "Voir tous les avis",
+      "add": "Ajouter un nouvel avis"
+    },
+    "blog": {
+      "title": "Blog",
+      "view": "Voir tous les articles",
+      "write": "Écrire un nouvel article"
+    },
+    "users": {
+      "title": "Utilisateurs",
+      "manage": "Gérer les utilisateurs"
+    }
+  },
+  "backToHome": "Retour à l'accueil"
 }

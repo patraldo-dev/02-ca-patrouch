@@ -1,8 +1,34 @@
 {
+  "layout": {
+    "title": "Admin — ShelfTalk",
+    "dashboard": "Dashboard",
+    "books": "Books",
+    "reviews": "Reviews",
+    "blog": "Blog Posts"
+  },
   "title": "Admin Dashboard — ShelfTalk",
   "heading": "Admin Dashboard",
-  "welcome": "Welcome to the admin panel. Use the navigation menu to manage content.",
-  "manageBooks": "Manage Books",
-  "manageReviews": "Manage Reviews",
-  "manageBlogPosts": "Manage Blog Posts"
+  "welcome": "Welcome to the ShelfTalk admin panel. Use the links below to manage your content.",
+  "sections": {
+    "books": {
+      "title": "Books",
+      "view": "View All Books",
+      "add": "Add New Book"
+    },
+    "reviews": {
+      "title": "Reviews",
+      "view": "View All Reviews",
+      "add": "Add New Review"
+    },
+    "blog": {
+      "title": "Blog",
+      "view": "View All Posts",
+      "write": "Write New Post"
+    },
+    "users": {
+      "title": "Users",
+      "manage": "Manage Users"
+    }
+  },
+  "backToHome": "Back to Home"
 }

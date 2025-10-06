@@ -1,8 +1,34 @@
 {
+  "layout": {
+    "title": "Panel de Administración — ShelfTalk",
+    "dashboard": "Panel de control",
+    "books": "Libros",
+    "reviews": "Reseñas",
+    "blog": "Entradas del blog"
+  },
   "title": "Panel de Administración — ShelfTalk",
   "heading": "Panel de Administración",
-  "welcome": "Bienvenido al panel de administración. Usa el menú de navegación para gestionar contenido.",
-  "manageBooks": "Gestionar libros",
-  "manageReviews": "Gestionar reseñas",
-  "manageBlogPosts": "Gestionar entradas del blog"
+  "welcome": "Bienvenido al panel de administración de ShelfTalk. Usa los enlaces a continuación para gestionar tu contenido.",
+  "sections": {
+    "books": {
+      "title": "Libros",
+      "view": "Ver todos los libros",
+      "add": "Agregar nuevo libro"
+    },
+    "reviews": {
+      "title": "Reseñas",
+      "view": "Ver todas las reseñas",
+      "add": "Agregar nueva reseña"
+    },
+    "blog": {
+      "title": "Blog",
+      "view": "Ver todas las entradas",
+      "write": "Escribir nueva entrada"
+    },
+    "users": {
+      "title": "Usuarios",
+      "manage": "Gestionar usuarios"
+    }
+  },
+  "backToHome": "Volver al inicio"
 }
