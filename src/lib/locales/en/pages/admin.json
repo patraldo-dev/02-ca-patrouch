@@ -5,7 +5,7 @@
     "books": "Books",
     "reviews": "Reviews",
     "blog": "Blog Posts",
-    "users": "Users" 
+    "users": "Users"
   },
   "title": "Admin Dashboard — ShelfTalk",
   "heading": "Admin Dashboard",
@@ -26,17 +26,23 @@
       "view": "View All Posts",
       "write": "Write New Post"
     },
-"users": {
-  "title": "Manage Users — Admin",
-  "heading": "User Management",
-  "empty": "No users found.",
-  "table": {
-    "username": "Username",
-    "email": "Email",
-    "role": "Role",
-    "actions": "Actions"
-  },
-  "delete": "Delete"
+    "users": {
+      "title": "Manage Users — Admin",
+      "heading": "User Management",
+      "subtitle": "Manage user accounts and roles across your platform.",
+      "empty": "No users found in the system.",
+      "table": {
+        "username": "Username",
+        "email": "Email Address",
+        "role": "Role",
+        "actions": "Actions"
+      },
+      "roles": {
+        "admin": "Admin",
+        "user": "User"
+      },
+      "delete": "Delete user"
+    }
   },
   "backToHome": "Back to Home"
 }

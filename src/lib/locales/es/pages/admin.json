@@ -27,8 +27,21 @@
       "write": "Escribir nueva entrada"
     },
     "users": {
-      "title": "Usuarios",
-      "manage": "Gestionar usuarios"
+      "title": "Gestión de usuarios — Admin",
+      "heading": "Gestión de usuarios",
+      "subtitle": "Administra cuentas de usuario y roles en toda tu plataforma.",
+      "empty": "No se encontraron usuarios en el sistema.",
+      "table": {
+        "username": "Nombre de usuario",
+        "email": "Dirección de correo electrónico",
+        "role": "Rol",
+        "actions": "Acciones"
+      },
+      "roles": {
+        "admin": "Administrador",
+        "user": "Usuario"
+      },
+      "delete": "Eliminar usuario"
     }
   },
   "backToHome": "Volver al inicio"
