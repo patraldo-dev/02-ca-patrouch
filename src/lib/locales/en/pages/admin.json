@@ -1,0 +1,8 @@
+{
+  "title": "Admin Dashboard — ShelfTalk",
+  "heading": "Admin Dashboard",
+  "welcome": "Welcome to the admin panel. Use the navigation menu to manage content.",
+  "manageBooks": "Manage Books",
+  "manageReviews": "Manage Reviews",
+  "manageBlogPosts": "Manage Blog Posts"
+}
