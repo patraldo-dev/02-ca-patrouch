@@ -6,13 +6,13 @@
 </script>
 
 <svelte:head>
-  <title>{$t('pages.admin.users.title')}</title>
+  <title>{$t('admin.sections.users.title')}</title>
 </svelte:head>
 
 <div class="admin-users-container">
   <header class="page-header">
-    <h1>{$t('pages.admin.users.heading')}</h1>
-    <p class="subtitle">{$t('pages.admin.users.subtitle')}</p>
+    <h1>{$t('admin.sections.users.heading')}</h1>
+    <p class="subtitle">{$t('admin.sections.users.subtitle')}</p>
   </header>
 
   {#if users.length === 0}
@@ -23,17 +23,17 @@
           <path d="M12 14C7.5 14 4 16.5 4 19.5V21H20V19.5C20 16.5 16.5 14 12 14Z" stroke="currentColor" stroke-width="2"/>
         </svg>
       </div>
-      <p>{$t('pages.admin.users.empty')}</p>
+      <p>{$t('admin.sections.users.empty')}</p>
     </div>
   {:else}
     <div class="users-table-wrapper">
       <table class="users-table">
         <thead>
           <tr>
-            <th>{$t('pages.admin.users.table.username')}</th>
-            <th>{$t('pages.admin.users.table.email')}</th>
-            <th>{$t('pages.admin.users.table.role')}</th>
-            <th class="actions-column">{$t('pages.admin.users.table.actions')}</th>
+            <th>{$t('admin.sections.users.table.username')}</th>
+            <th>{$t('admin.sections.users.table.email')}</th>
+            <th>{$t('admin.sections.users.table.role')}</th>
+            <th class="actions-column">{$t('admin.sections.users.table.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -50,14 +50,14 @@
               <td class="email-cell">{user.email}</td>
               <td class="role-cell">
                 <span class="role-badge role-{user.role}">
-                  {user.role === 'admin' ? $t('pages.admin.users.roles.admin') : $t('pages.admin.users.roles.user')}
+                  {user.role === 'admin' ? $t('admin.sections.users.roles.admin') : $t('admin.sections.users.roles.user')}
                 </span>
               </td>
               <td class="actions-cell">
                 <button 
                   class="action-btn delete-btn"
                   on:click={() => alert('Delete functionality not implemented yet')}
-                  title={$t('pages.admin.users.delete')}
+                  title={$t('admin.sections.users.delete')}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 7L18.1327 19.1425C18.056 20.2163 17.1536 21 16.0759 21H7.92412C6.84642 21 5.94403 20.2163 5.86728 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
