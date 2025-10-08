@@ -27,13 +27,6 @@
     <section class="featured-books">
         <div class="section-header">
             <h2>{$t('pages.home.featured.heading')}</h2>
-<!-- Temporary debug -->
-<div style="background: yellow; padding: 10px; margin: 10px;">
-    <p>Loading: {loading}</p>
-    <p>Error: {error || 'none'}</p>
-    <p>Books count: {books.length}</p>
-    <p>Raw books: {JSON.stringify(books)}</p>
-</div>
             <div class="section-divider"></div>
         </div>
         
