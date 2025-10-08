@@ -100,8 +100,9 @@
     <div class="section-header">
         <h2>{$t('pages.home.colorReference.heading')}</h2>
         <p class="section-subtitle">{$t('pages.home.colorReference.subtitle')}</p>
-<ColorGuide />
     </div>
+<ColorGuide />
+
     <div class="color-guide">
         <h2>{$t('pages.home.colorGuide.title')}</h2>
         
