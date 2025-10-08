@@ -1,5 +1,6 @@
 <!-- src/routes/+layout.svelte -->
 <script>
+    import '../app.css'; // Import global styles
     import { browser } from '$app/environment';
     import { t, locale } from '$lib/translations';  // Changed from svelte-i18n
     import { beforeNavigate } from '$app/navigation';
