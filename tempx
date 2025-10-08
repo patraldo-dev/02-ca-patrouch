@@ -1,72 +1,216 @@
-/* Color Reference Section */
-.color-reference {
-    margin-top: 4rem;
-    padding: 2rem 0;
-    border-top: 1px solid var(--primary-light);
-}
+<script>
+    import { t } from '$lib/translations';
+    import ColorGuide from '$lib/components/ColorGuide.svelte';
+    
+    export let data;
+    $: books = data?.books || [];
+    $: user = data?.user || null;
+</script>
 
-.section-subtitle {
-    color: var(--text-secondary);
-    max-width: 600px;
-    margin: 0 auto 2rem;
-    text-align: center;
-    font-size: 1.1rem;
-    line-height: 1.6;
-}
+<svelte:head>
+    <title>{$t('pages.home.title')}</title>
+</svelte:head>
 
-/* Color Guide Component */
-.color-guide {
-    background: var(--bg-card);
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
-    border: 1px solid var(--primary-light);
-    max-width: 500px; /* This centers it */
-    margin: 0 auto;   /* This centers it */
-}
+<div class="container">
+    <header class="hero">
+        <div class="hero-content">
+            <h1>{$t('pages.home.hero.heading')}</h1>
+            <p class="hero-subtitle">{$t('pages.home.hero.subtitle')}</p>
+            <div class="hero-cta">
+                <a href="/books" class="btn-primary">{$t('pages.home.hero.exploreBooks')}</a>
+                <a href="/about" class="btn-secondary">{$t('pages.home.hero.learnMore')}</a>
+            </div>
+        </div>
+        <div class="hero-decoration"></div>
+    </header>
+    
+    <section class="featured-books">
+        <div class="section-header">
+            <h2>{$t('pages.home.featured.heading')}</h2>
+            <div class="section-divider"></div>
+        </div>
+        
+        {#if books.length === 0}
+            <div class="empty-state">
+                <div class="empty-content">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <p>{$t('pages.home.featured.empty')}</p>
+                </div>
+            </div>
+        {:else}
+            <div class="books-grid">
+                {#each books as book}
+                    <article class="book-card">
+                        <a href={`/books/${book.slug}`} class="book-cover-link">
+                            {#if book.coverImageId}
+                                <div class="book-cover-wrapper">
+                                    <img 
+                                        src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${book.coverImageId}/cover`}
+                                        alt={$t('pages.home.featured.book.coverAlt', { title: book.title })}
+                                        class="book-cover"
+                                        loading="lazy"
+                                    />
+                                    <div class="book-overlay"></div>
+                                </div>
+                            {:else}
+                                <div class="book-cover-placeholder">
+                                    <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#e5e7eb"/>
+                                        <path d="M2 17L12 22L22 17" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M2 12L12 17L22 12" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            {/if}
+                        </a>
+                        
+                        <div class="book-info">
+                            <h3>{book.title}</h3>
+                            <p class="book-author">{$t('pages.home.featured.book.by')} {book.author}</p>
+                            {#if book.avg_rating}
+                                <div class="book-rating">
+                                    <span class="rating-stars">⭐ {parseFloat(book.avg_rating).toFixed(1)}</span>
+                                    {#if book.review_count}
+                                        <span class="rating-count">
+                                            {$t('pages.home.featured.book.reviewCount', { 
+                                                count: book.review_count,
+                                                plural: book.review_count === 1 ? '' : 's'
+                                            })}
+                                        </span>
+                                    {/if}
+                                </div>
+                            {/if}
+                            <a href={`/books/${book.slug}`} class="read-more-btn">
+                                {$t('pages.home.featured.book.readMore')}
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </article>
+                {/each}
+            </div>
+        {/if}
+    </section>
+    
+    <section class="color-reference">
+        <div class="section-header">
+            <h2>{$t('pages.home.colorReference.heading')}</h2>
+            <p class="section-subtitle">{$t('pages.home.colorReference.subtitle')}</p>
+        </div>
+        <ColorGuide />
+    </section>
+</div>  <!-- This closes the container div -->
 
-.color-guide h2 {
-    color: var(--text-primary);
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 1.75rem;
-}
+<style>
+    /* All your existing CSS styles... */
+    
+    /* Book-themed color palette with accessibility compliance */
+    :root {
+        /* Primary colors - old book paper theme */
+        --primary-color: #D2B48C;  /* Tan */
+        --primary-dark: #A0826D;   /* Dusty tan */
+        --primary-light: #F5F5DC;  /* Beige */
+        --accent-color: #8B4513;   /* Saddle brown */
+        
+        /* Text colors with proper contrast ratios */
+        --text-primary: #2C1810;   /* Dark brown (WCAG AAA on light backgrounds) */
+        --text-secondary: #5D4037; /* Medium brown */
+        --text-muted: #795548;     /* Light brown */
+        
+        /* Background colors */
+        --bg-primary: #FFFEF7;     /* Off-white (cream) */
+        --bg-secondary: #F5F5DC;   /* Beige */
+        --bg-card: #FFFFFF;        /* White */
+    }
 
-.color-swatch {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border-radius: 12px;
-}
+    /* Color Reference Section */
+    .color-reference {
+        margin-top: 4rem;
+        padding: 2rem 0;
+        border-top: 1px solid var(--primary-light);
+    }
 
-.color-box {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    margin-right: 1.5rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    flex-shrink: 0; /* Prevents shrinking */
-}
+    .section-subtitle {
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto 2rem;
+        text-align: center;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
 
-.color-swatch div {
-    flex: 1;
-}
+    /* Color Guide Component */
+    .color-guide {
+        background: var(--bg-card);
+        padding: 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
+        border: 1px solid var(--primary-light);
+        max-width: 100%;
+        margin: 0;
+    }
 
-.color-swatch strong {
-    display: block;
-    color: var(--text-primary);
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
-}
+    .color-guide h2 {
+        color: var(--text-primary);
+        text-align: left;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
 
-.color-swatch br {
-    display: block;
-    margin: 0.25rem 0;
-}
+    .color-swatch {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+    }
 
-.color-swatch div > :last-child {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-}
+    .color-box {
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        margin-right: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+    }
+
+    .primary { background-color: var(--primary-color); }
+    .primary-dark { background-color: var(--primary-dark); }
+    .primary-light { background-color: var(--primary-light); }
+
+    .color-swatch div {
+        flex: 1;
+    }
+
+    .color-swatch strong {
+        display: block;
+        color: var(--text-primary);
+        font-size: 1rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .color-swatch br {
+        display: block;
+        margin: 0.2rem 0;
+    }
+
+    .color-swatch div > :last-child {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    /* Modern, sleek typography and spacing */
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        background-color: var(--bg-primary);
+    }
+
+    /* ... rest of your existing CSS ... */
+</style>/
