@@ -11,19 +11,6 @@
     <title>{$t('pages.home.title')}</title>
 </svelte:head>
 
-<!-- Add this temporarily to test -->
-<div style="margin: 20px 0;">
-    <h3>Test Color Boxes</h3>
-    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-        <div style="width: 60px; height: 60px; background-color: #D2B48C; margin-right: 15px; border: 1px solid #ccc;"></div>
-        <span>This should be a tan box</span>
-    </div>
-    <div style="display: flex; align-items: center;">
-        <div style="width: 60px; height: 60px; background-color: #A0826D; margin-right: 15px; border: 1px solid #ccc;"></div>
-        <span>This should be a dark tan box</span>
-    </div>
-</div>
-
 <div class="container">
     <header class="hero">
         <div class="hero-content">
@@ -116,6 +103,7 @@
         </div>
         <ColorGuide />
     </section>
+</div> 
 
 <div style="margin: 20px 0;">
     <h3>Minimal Test</h3>
@@ -129,8 +117,8 @@
     </div>
 </div>
 
-
 <style>
+    /* Book-themed color palette with accessibility compliance */
     :root {
         /* Primary colors - old book paper theme */
         --primary-color: #D2B48C;  /* Tan */
@@ -207,18 +195,10 @@
     flex-shrink: 0;
 }
 
+/* THESE ARE THE MISSING CLASSES */
 .primary { background-color: var(--primary-color); }
 .primary-dark { background-color: var(--primary-dark); }
 .primary-light { background-color: var(--primary-light); }
-
-.color-swatch {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: #F5F5DC;
-    border-radius: 12px;
-}
 
 .color-swatch div {
     flex: 1;
