@@ -40,7 +40,7 @@
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
         border: 1px solid var(--primary-light);
-        max-width: 500px; /* More compact width */
+        max-width: 400px;
         margin: 0 auto;
     }
 
@@ -53,45 +53,48 @@
 
     .color-swatch {
         display: flex;
-        align-items: center;
+        align-items: stretch; /* This makes both items same height */
         margin-bottom: 1rem;
         padding: 0.75rem;
         background: var(--bg-secondary);
         border-radius: 12px;
+        gap: 1rem;
     }
 
     .color-box {
-        width: 40px; /* Smaller square */
-        height: 40px; /* Matches height of 3 lines of text */
-        border-radius: 6px;
-        margin-right: 1rem;
+        width: 60px; /* Fixed width */
+        height: auto; /* Height will be determined by content */
+        aspect-ratio: 1 / 1; /* Makes it square (width = height) */
+        border-radius: 8px;
         border: 1px solid rgba(0, 0, 0, 0.1);
-        flex-shrink: 0;
+        flex-shrink: 0; /* Prevents shrinking */
     }
 
     .primary { background-color: var(--primary-color); }
     .primary-dark { background-color: var(--primary-dark); }
     .primary-light { background-color: var(--primary-light); }
 
-    .color-swatch div {
+    .color-info {
         flex: 1;
-        font-size: 0.9rem; /* Slightly smaller text */
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Vertically centers text */
+        font-size: 0.9rem;
         line-height: 1.4;
     }
 
-    .color-swatch strong {
-        display: block;
+    .color-info strong {
         color: var(--text-primary);
         font-size: 1rem;
         margin-bottom: 0.2rem;
     }
 
-    .color-swatch br {
+    .color-info br {
         display: block;
         margin: 0.2rem 0;
     }
 
-    .color-swatch div > :last-child {
+    .color-info > :last-child {
         color: var(--text-secondary);
         font-size: 0.85rem;
     }
