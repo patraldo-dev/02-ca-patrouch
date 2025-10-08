@@ -116,10 +116,22 @@
         </div>
         <ColorGuide />
     </section>
+
+<!-- Add this right after your existing color reference section -->
+<div style="margin: 20px 0;">
+    <h3>Test CSS Classes</h3>
+    <div class="color-swatch">
+        <div class="color-box primary"></div>
+        <span>This should be a tan box using CSS class</span>
+    </div>
+    <div class="color-swatch">
+        <div class="color-box primary-dark"></div>
+        <span>This should be a dark tan box using CSS class</span>
+    </div>
+</div>
 </div> 
 
 <style>
-    /* Book-themed color palette with accessibility compliance */
     :root {
         /* Primary colors - old book paper theme */
         --primary-color: #D2B48C;  /* Tan */
@@ -196,10 +208,18 @@
     flex-shrink: 0;
 }
 
-/* THESE ARE THE MISSING CLASSES */
 .primary { background-color: var(--primary-color); }
 .primary-dark { background-color: var(--primary-dark); }
 .primary-light { background-color: var(--primary-light); }
+
+.color-swatch {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #F5F5DC;
+    border-radius: 12px;
+}
 
 .color-swatch div {
     flex: 1;
