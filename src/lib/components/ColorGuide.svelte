@@ -40,6 +40,8 @@
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
         border: 1px solid var(--primary-light);
+        max-width: 800px;
+        margin: 0 auto;
     }
 
     .color-guide h2 {
@@ -56,6 +58,8 @@
         padding: 1rem;
         background: var(--bg-secondary);
         border-radius: 12px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .color-box {
@@ -64,6 +68,7 @@
         border-radius: 8px;
         margin-right: 1.5rem;
         border: 1px solid rgba(0, 0, 0, 0.1);
+        flex-shrink: 0; /* Prevents the box from shrinking */
     }
 
     .primary { background-color: var(--primary-color); }
@@ -72,6 +77,7 @@
 
     .color-swatch div {
         flex: 1;
+        min-width: 0; /* Allows text to wrap properly */
     }
 
     .color-swatch strong {
@@ -79,5 +85,15 @@
         color: var(--text-primary);
         font-size: 1.1rem;
         margin-bottom: 0.25rem;
+    }
+
+    .color-swatch br {
+        display: block;
+        margin: 0.25rem 0;
+    }
+
+    .color-swatch div > :last-child {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
 }
 </style>
