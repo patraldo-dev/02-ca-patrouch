@@ -1,50 +1,42 @@
 {
-  "pages": {
-    "home": {
-      "title": "ShelfTalk — Honest book reviews and thoughtful commentary",
-      "hero": {
-        "heading": "ShelfTalk",
-        "subtitle": "Honest book reviews and thoughtful commentary",
-        "exploreBooks": "Explore Books",
-        "learnMore": "Learn More"
+  "title": "ShelfTalk — Honest book reviews",
+  "hero": {
+    "heading": "Discover Your Next Favorite Book",
+    "subtitle": "Honest book reviews and thoughtful commentary",
+    "exploreBooks": "Explore Books",
+    "learnMore": "Learn More"
+  },
+  "featured": {
+    "heading": "Featured Books",
+    "empty": "No books available yet. Check back soon!",
+    "book": {
+      "by": "by",
+      "coverAlt": "Cover of {title}",
+      "readMore": "Read Review",
+      "reviewCount": "({count} review{plural})"
+    }
+  },
+  "colorReference": {
+    "heading": "Color Reference",
+    "subtitle": "Our brand color palette"
+  },
+  "colorGuide": {
+    "title": "Brand Colors",
+    "colors": {
+      "primary": {
+        "name": "Primary Tan",
+        "shade": "Tan",
+        "usage": "Main brand color, buttons, headers"
       },
-      "featured": {
-        "heading": "Featured Books",
-        "loading": "Loading books...",
-        "error": "Error loading books",
-        "networkError": "Network error. Please try again.",
-        "empty": "No books available. Check back soon for new additions!",
-        "book": {
-          "coverAlt": "Cover of {title}",
-          "by": "by",
-          "rating": "⭐ {rating}",
-          "reviewCount": "({count} review{plural})",
-          "readMore": "Read Review"
-        }
+      "primaryDark": {
+        "name": "Dark Tan",
+        "shade": "Darker Tan",
+        "usage": "Hover states, emphasis"
       },
-      "colorReference": {
-        "heading": "Our Design Colors",
-        "subtitle": "The palette that brings our books to life"
-      },
-      "colorGuide": {
-        "title": "Our Color Palette",
-        "colors": {
-          "primary": {
-            "name": "Primary",
-            "shade": "Tan",
-            "usage": "Use for accents and buttons"
-          },
-          "primaryDark": {
-            "name": "Primary Dark",
-            "shade": "Dusty Tan",
-            "usage": "Use for headings and hover states"
-          },
-          "primaryLight": {
-            "name": "Primary Light",
-            "shade": "Beige",
-            "usage": "Use for subtle backgrounds"
-          }
-        }
+      "primaryLight": {
+        "name": "Light Beige",
+        "shade": "Beige",
+        "usage": "Backgrounds, subtle elements"
       }
     }
   }

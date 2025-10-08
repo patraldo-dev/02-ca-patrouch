@@ -1,50 +1,42 @@
 {
-  "pages": {
-    "home": {
-      "title": "ShelfTalk — Reseñas honestas de libros y comentarios reflexivos",
-      "hero": {
-        "heading": "ShelfTalk",
-        "subtitle": "Reseñas honestas de libros y comentarios reflexivos",
-        "exploreBooks": "Explorar libros",
-        "learnMore": "Más información"
+  "title": "ShelfTalk — Reseñas honestas de libros",
+  "hero": {
+    "heading": "Descubre Tu Próximo Libro Favorito",
+    "subtitle": "Reseñas honestas de libros y comentarios reflexivos",
+    "exploreBooks": "Explorar Libros",
+    "learnMore": "Conocer Más"
+  },
+  "featured": {
+    "heading": "Libros Destacados",
+    "empty": "Aún no hay libros disponibles. ¡Vuelve pronto!",
+    "book": {
+      "by": "por",
+      "coverAlt": "Portada de {title}",
+      "readMore": "Leer Reseña",
+      "reviewCount": "({count} reseña{plural})"
+    }
+  },
+  "colorReference": {
+    "heading": "Referencia de Colores",
+    "subtitle": "Nuestra paleta de colores de marca"
+  },
+  "colorGuide": {
+    "title": "Colores de Marca",
+    "colors": {
+      "primary": {
+        "name": "Canela Principal",
+        "shade": "Canela",
+        "usage": "Color principal de marca, botones, encabezados"
       },
-      "featured": {
-        "heading": "Libros destacados",
-        "loading": "Cargando libros...",
-        "error": "Error al cargar los libros",
-        "networkError": "Error de red. Por favor, inténtalo de nuevo.",
-        "empty": "No hay libros disponibles. ¡Vuelve pronto para ver nuevas adiciones!",
-        "book": {
-          "coverAlt": "Portada de {title}",
-          "by": "por",
-          "rating": "⭐ {rating}",
-          "reviewCount": "({count} reseña{plural})",
-          "readMore": "Leer reseña"
-        }
+      "primaryDark": {
+        "name": "Canela Oscuro",
+        "shade": "Canela Oscuro",
+        "usage": "Estados hover, énfasis"
       },
-      "colorReference": {
-        "heading": "Nuestros colores de diseño",
-        "subtitle": "La paleta que da vida a nuestros libros"
-      },
-      "colorGuide": {
-        "title": "Nuestra paleta de colores",
-        "colors": {
-          "primary": {
-            "name": "Primario",
-            "shade": "Canela",
-            "usage": "Usar para acentos y botones"
-          },
-          "primaryDark": {
-            "name": "Primario oscuro",
-            "shade": "Canela oscuro",
-            "usage": "Usar para encabezados y estados hover"
-          },
-          "primaryLight": {
-            "name": "Primario claro",
-            "shade": "Beige",
-            "usage": "Usar para fondos sutiles"
-          }
-        }
+      "primaryLight": {
+        "name": "Beige Claro",
+        "shade": "Beige",
+        "usage": "Fondos, elementos sutiles"
       }
     }
   }
