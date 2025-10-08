@@ -96,14 +96,43 @@
         {/if}
     </section>
     
-    <section class="color-reference">
-        <div class="section-header">
-            <h2>{$t('pages.home.colorReference.heading')}</h2>
-            <p class="section-subtitle">{$t('pages.home.colorReference.subtitle')}</p>
+<section class="color-reference">
+    <div class="section-header">
+        <h2>{$t('pages.home.colorReference.heading')}</h2>
+        <p class="section-subtitle">{$t('pages.home.colorReference.subtitle')}</p>
+<ColorGuide />
+    </div>
+    <div class="color-guide">
+        <h2>{$t('pages.home.colorGuide.title')}</h2>
+        
+        <div class="color-swatch">
+            <div class="color-box primary"></div>
+            <div>
+                <strong>{$t('pages.home.colorGuide.colors.primary.name')}</strong><br>
+                #D2B48C ({$t('pages.home.colorGuide.colors.primary.shade')})<br>
+                {$t('pages.home.colorGuide.colors.primary.usage')}
+            </div>
         </div>
-        <ColorGuide />
-    </section>
-</div>
+        
+        <div class="color-swatch">
+            <div class="color-box primary-dark"></div>
+            <div>
+                <strong>{$t('pages.home.colorGuide.colors.primaryDark.name')}</strong><br>
+                #A0826D ({$t('pages.home.colorGuide.colors.primaryDark.shade')})<br>
+                {$t('pages.home.colorGuide.colors.primaryDark.usage')}
+            </div>
+        </div>
+        
+        <div class="color-swatch">
+            <div class="color-box primary-light"></div>
+            <div>
+                <strong>{$t('pages.home.colorGuide.colors.primaryLight.name')}</strong><br>
+                #F5F5DC ({$t('pages.home.colorGuide.colors.primaryLight.shade')})<br>
+                {$t('pages.home.colorGuide.colors.primaryLight.usage')}
+            </div>
+        </div>
+    </div>
+</section>
 
 <style>
     /* Book-themed color palette with accessibility compliance */
@@ -154,14 +183,13 @@
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
     border: 1px solid var(--primary-light);
-    /* Left-aligned, not centered */
     max-width: 100%;
     margin: 0;
 }
 
 .color-guide h2 {
     color: var(--text-primary);
-    text-align: left; /* Changed from center to left */
+    text-align: left;
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
 }
@@ -176,15 +204,15 @@
 }
 
 .color-box {
-    width: 30px; /* Smaller square */
-    height: 30px; /* Same as width */
+    width: 30px;
+    height: 30px;
     border-radius: 4px;
     margin-right: 1rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
-/* Add these missing color classes */
+/* THESE ARE THE MISSING CLASSES */
 .primary { background-color: var(--primary-color); }
 .primary-dark { background-color: var(--primary-dark); }
 .primary-light { background-color: var(--primary-light); }
