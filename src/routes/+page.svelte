@@ -117,19 +117,18 @@
         <ColorGuide />
     </section>
 
-<!-- Add this right after your existing color reference section -->
 <div style="margin: 20px 0;">
-    <h3>Test CSS Classes</h3>
-    <div class="color-swatch">
-        <div class="color-box primary"></div>
-        <span>This should be a tan box using CSS class</span>
+    <h3>Minimal Test</h3>
+    <div style="display: flex; align-items: center;">
+        <div style="width: 60px; height: 60px; background-color: #D2B48C; margin-right: 15px; border: 1px solid #ccc; flex-shrink: 0;"></div>
+        <span>Box with inline styles</span>
     </div>
-    <div class="color-swatch">
-        <div class="color-box primary-dark"></div>
-        <span>This should be a dark tan box using CSS class</span>
+    <div class="color-swatch" style="margin-top: 10px;">
+        <div class="color-box primary"></div>
+        <span>Box with CSS classes</span>
     </div>
 </div>
-</div> 
+
 
 <style>
     :root {
