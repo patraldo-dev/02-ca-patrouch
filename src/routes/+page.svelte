@@ -11,6 +11,19 @@
     <title>{$t('pages.home.title')}</title>
 </svelte:head>
 
+<!-- Add this temporarily to test -->
+<div style="margin: 20px 0;">
+    <h3>Test Color Boxes</h3>
+    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+        <div style="width: 60px; height: 60px; background-color: #D2B48C; margin-right: 15px; border: 1px solid #ccc;"></div>
+        <span>This should be a tan box</span>
+    </div>
+    <div style="display: flex; align-items: center;">
+        <div style="width: 60px; height: 60px; background-color: #A0826D; margin-right: 15px; border: 1px solid #ccc;"></div>
+        <span>This should be a dark tan box</span>
+    </div>
+</div>
+
 <div class="container">
     <header class="hero">
         <div class="hero-content">
