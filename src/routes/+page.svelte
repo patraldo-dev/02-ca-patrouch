@@ -1,6 +1,6 @@
 <script>
-    import ColorGuide from '$lib/components/ColorGuide.svelte';
     import { t } from '$lib/translations';
+    import ColorGuide from '$lib/components/ColorGuide.svelte';
     
     export let data;
     $: books = data?.books || [];
@@ -27,6 +27,13 @@
     <section class="featured-books">
         <div class="section-header">
             <h2>{$t('pages.home.featured.heading')}</h2>
+<!-- Temporary debug -->
+<div style="background: yellow; padding: 10px; margin: 10px;">
+    <p>Loading: {loading}</p>
+    <p>Error: {error || 'none'}</p>
+    <p>Books count: {books.length}</p>
+    <p>Raw books: {JSON.stringify(books)}</p>
+</div>
             <div class="section-divider"></div>
         </div>
         
@@ -95,11 +102,11 @@
             </div>
         {/if}
     </section>
-
- <section class="color-reference">
+    
+    <section class="color-reference">
         <div class="section-header">
-            <h2>Our Design Colors</h2>
-            <p class="section-subtitle">The palette that brings our books to life</p>
+            <h2>{$t('pages.home.colorReference.heading')}</h2>
+            <p class="section-subtitle">{$t('pages.home.colorReference.subtitle')}</p>
         </div>
         <ColorGuide />
     </section>
@@ -131,7 +138,7 @@
         */
     }
 
-/* Add to your existing styles */
+/* Color Reference Section */
 .color-reference {
     margin-top: 4rem;
     padding: 2rem 0;
@@ -143,8 +150,63 @@
     max-width: 600px;
     margin: 0 auto 2rem;
     text-align: center;
+    font-size: 1.1rem;
+    line-height: 1.6;
 }
 
+/* Color Guide Component */
+.color-guide {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
+    border: 1px solid var(--primary-light);
+}
+
+.color-guide h2 {
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.75rem;
+}
+
+.color-swatch {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+}
+
+.color-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    margin-right: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.color-swatch div {
+    flex: 1;
+}
+
+.color-swatch strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.color-swatch br {
+    display: block;
+    margin: 0.25rem 0;
+}
+
+.color-swatch div > :last-child {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
     /* Modern, sleek typography and spacing */
     .container {
         max-width: 1400px;

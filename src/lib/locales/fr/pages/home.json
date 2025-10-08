@@ -1,23 +1,51 @@
 {
-  "title": "ShelfTalk — Avis honnêtes sur les livres et commentaires réfléchis",
-  "hero": {
-    "heading": "ShelfTalk",
-    "subtitle": "Avis honnêtes sur les livres et commentaires réfléchis",
-    "exploreBooks": "Explorer les livres",
-    "learnMore": "En savoir plus"
-  },
-  "featured": {
-    "heading": "Livres en vedette",
-    "loading": "Chargement des livres...",
-    "error": "Échec du chargement des livres",
-    "networkError": "Erreur réseau. Veuillez réessayer.",
-    "empty": "Aucun livre disponible. Revenez bientôt pour de nouvelles additions !",
-    "book": {
-      "coverAlt": "Couverture de {title}",
-      "by": "par",
-      "rating": "⭐ {rating}",
-      "reviewCount": "({count} avis{plural})",
-      "readMore": "Lire l'avis"
+  "pages": {
+    "home": {
+      "title": "ShelfTalk — Critiques de livres honnêtes et commentaires réfléchis",
+      "hero": {
+        "heading": "ShelfTalk",
+        "subtitle": "Critiques de livres honnêtes et commentaires réfléchis",
+        "exploreBooks": "Explorer les livres",
+        "learnMore": "En savoir plus"
+      },
+      "featured": {
+        "heading": "Livres en vedette",
+        "loading": "Chargement des livres...",
+        "error": "Erreur lors du chargement des livres",
+        "networkError": "Erreur réseau. Veuillez réessayer.",
+        "empty": "Aucun livre disponible. Revenez bientôt pour voir de nouvelles additions!",
+        "book": {
+          "coverAlt": "Couverture de {title}",
+          "by": "par",
+          "rating": "⭐ {rating}",
+          "reviewCount": "({count} critique{plural})",
+          "readMore": "Lire la critique"
+        }
+      },
+      "colorReference": {
+        "heading": "Nos couleurs de design",
+        "subtitle": "La palette qui donne vie à nos livres"
+      },
+      "colorGuide": {
+        "title": "Notre palette de couleurs",
+        "colors": {
+          "primary": {
+            "name": "Primaire",
+            "shade": "Brun",
+            "usage": "Utiliser pour les accents et les boutons"
+          },
+          "primaryDark": {
+            "name": "Primaire foncé",
+            "shade": "Brun poussiéreux",
+            "usage": "Utiliser pour les titres et les états de survol"
+          },
+          "primaryLight": {
+            "name": "Primaire clair",
+            "shade": "Beige",
+            "usage": "Utiliser pour les arrière-plans subtils"
+          }
+        }
+      }
     }
   }
 }

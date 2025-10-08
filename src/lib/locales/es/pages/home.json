@@ -1,23 +1,51 @@
 {
-  "title": "ShelfTalk — Reseñas honestas de libros y comentarios reflexivos",
-  "hero": {
-    "heading": "ShelfTalk",
-    "subtitle": "Reseñas honestas de libros y comentarios reflexivos",
-    "exploreBooks": "Explorar libros",
-    "learnMore": "Más información"
-  },
-  "featured": {
-    "heading": "Libros destacados",
-    "loading": "Cargando libros...",
-    "error": "Error al cargar los libros",
-    "networkError": "Error de red. Por favor, inténtalo de nuevo.",
-    "empty": "No hay libros disponibles. ¡Vuelve pronto para ver nuevas adiciones!",
-    "book": {
-      "coverAlt": "Portada de {title}",
-      "by": "por",
-      "rating": "⭐ {rating}",
-      "reviewCount": "({count} reseña{plural})",
-      "readMore": "Leer reseña"
+  "pages": {
+    "home": {
+      "title": "ShelfTalk — Reseñas honestas de libros y comentarios reflexivos",
+      "hero": {
+        "heading": "ShelfTalk",
+        "subtitle": "Reseñas honestas de libros y comentarios reflexivos",
+        "exploreBooks": "Explorar libros",
+        "learnMore": "Más información"
+      },
+      "featured": {
+        "heading": "Libros destacados",
+        "loading": "Cargando libros...",
+        "error": "Error al cargar los libros",
+        "networkError": "Error de red. Por favor, inténtalo de nuevo.",
+        "empty": "No hay libros disponibles. ¡Vuelve pronto para ver nuevas adiciones!",
+        "book": {
+          "coverAlt": "Portada de {title}",
+          "by": "por",
+          "rating": "⭐ {rating}",
+          "reviewCount": "({count} reseña{plural})",
+          "readMore": "Leer reseña"
+        }
+      },
+      "colorReference": {
+        "heading": "Nuestros colores de diseño",
+        "subtitle": "La paleta que da vida a nuestros libros"
+      },
+      "colorGuide": {
+        "title": "Nuestra paleta de colores",
+        "colors": {
+          "primary": {
+            "name": "Primario",
+            "shade": "Canela",
+            "usage": "Usar para acentos y botones"
+          },
+          "primaryDark": {
+            "name": "Primario oscuro",
+            "shade": "Canela oscuro",
+            "usage": "Usar para encabezados y estados hover"
+          },
+          "primaryLight": {
+            "name": "Primario claro",
+            "shade": "Beige",
+            "usage": "Usar para fondos sutiles"
+          }
+        }
+      }
     }
   }
 }
