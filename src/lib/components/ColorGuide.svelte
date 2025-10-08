@@ -36,39 +36,37 @@
 <style>
     .color-guide {
         background: var(--bg-card);
-        padding: 2rem;
+        padding: 1.5rem;
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
         border: 1px solid var(--primary-light);
-        max-width: 800px;
+        max-width: 500px; /* More compact width */
         margin: 0 auto;
     }
 
     .color-guide h2 {
         color: var(--text-primary);
         text-align: center;
-        margin-bottom: 2rem;
-        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
     }
 
     .color-swatch {
         display: flex;
         align-items: center;
-        margin-bottom: 1.5rem;
-        padding: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
         background: var(--bg-secondary);
         border-radius: 12px;
-        width: 100%;
-        box-sizing: border-box;
     }
 
     .color-box {
-        width: 60px;
-        height: 60px;
-        border-radius: 8px;
-        margin-right: 1.5rem;
+        width: 40px; /* Smaller square */
+        height: 40px; /* Matches height of 3 lines of text */
+        border-radius: 6px;
+        margin-right: 1rem;
         border: 1px solid rgba(0, 0, 0, 0.1);
-        flex-shrink: 0; /* Prevents the box from shrinking */
+        flex-shrink: 0;
     }
 
     .primary { background-color: var(--primary-color); }
@@ -77,23 +75,24 @@
 
     .color-swatch div {
         flex: 1;
-        min-width: 0; /* Allows text to wrap properly */
+        font-size: 0.9rem; /* Slightly smaller text */
+        line-height: 1.4;
     }
 
     .color-swatch strong {
         display: block;
         color: var(--text-primary);
-        font-size: 1.1rem;
-        margin-bottom: 0.25rem;
+        font-size: 1rem;
+        margin-bottom: 0.2rem;
     }
 
     .color-swatch br {
         display: block;
-        margin: 0.25rem 0;
+        margin: 0.2rem 0;
     }
 
     .color-swatch div > :last-child {
         color: var(--text-secondary);
-        font-size: 0.95rem;
-}
+        font-size: 0.85rem;
+    }
 </style>
