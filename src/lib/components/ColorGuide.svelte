@@ -32,3 +32,52 @@
         </div>
     </div>
 </div>
+
+<style>
+    .color-guide {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
+        border: 1px solid var(--primary-light);
+    }
+
+    .color-guide h2 {
+        color: var(--text-primary);
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.75rem;
+    }
+
+    .color-swatch {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+    }
+
+    .color-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        margin-right: 1.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .primary { background-color: var(--primary-color); }
+    .primary-dark { background-color: var(--primary-dark); }
+    .primary-light { background-color: var(--primary-light); }
+
+    .color-swatch div {
+        flex: 1;
+    }
+
+    .color-swatch strong {
+        display: block;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+}
+</style>

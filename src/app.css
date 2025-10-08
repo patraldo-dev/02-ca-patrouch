@@ -18,6 +18,13 @@
   --text-secondary: #424242;   /* Dark gray for secondary text */
   --background: #FFFEF7;       /* Off-white background */
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #5dade2;
+    --background-color: #1c2833;
+    --text-color: #d5dbdb;
+  }
+}
   /* 
     CONTRAST RATIOS (verified with WebAIM Contrast Checker):
     - Tan (#D2B48C) on Off-white (#FFFEF7): 2.3:1 (FAILS) → Use only for accents

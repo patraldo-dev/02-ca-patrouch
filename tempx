@@ -1,40 +1,5 @@
-<script>
- import ColorGuide from '$lib/components/ColorGuide.svelte';
-    import { t } from '$lib/translations';
-    
-    export let data;
-    $: books = data?.books || [];
-    $: user = data?.user || null;
-   
-    // List all keys to verify
-    const keys = [
-        'pages.home.title',
-        'pages.home.hero.heading',
-        'pages.home.hero.subtitle',
-        'pages.home.hero.exploreBooks',
-        'pages.home.hero.learnMore',
-        'pages.home.featured.heading',
-        'pages.home.featured.empty',
-        'pages.home.featured.book.coverAlt',
-        'pages.home.featured.book.by',
-        'pages.home.featured.book.reviewCount',
-        'pages.home.featured.book.readMore',
-        // New keys
-        'pages.home.colorReference.heading',
-        'pages.home.colorReference.subtitle',
-        'pages.home.colorGuide.title'
-    ];
-    
-    // Check each key (only in development)
-    if (import.meta.env.DEV) {
-        keys.forEach(key => {
-            const value = t(key);
-            if (value === key) {
-                console.warn(`Missing translation for: ${key}`);
-            }
-        });
-    }
-
-    </script>
-
-
+:root {
+    --primary-color: #D2B48C;  /* Tan */
+    --primary-dark: #A0826D;   /* Dusty tan */
+    --primary-light: #F5F5DC;  /* Beige */
+}
