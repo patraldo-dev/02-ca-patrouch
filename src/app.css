@@ -31,3 +31,60 @@
   */
 }
 
+/* Color Guide Styling */
+.color-guide {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.color-guide h2 {
+    grid-column: 1 / -1;
+    margin-bottom: 1rem;
+}
+
+/* Color Box Styling */
+.color-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    margin-right: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+/* Color Definitions */
+.color-box.primary { 
+    background-color: var(--primary-color); 
+}
+
+.color-box.primary-dark { 
+    background-color: var(--primary-dark); 
+}
+
+.color-box.primary-light { 
+    background-color: var(--primary-light); 
+}
+
+/* Swatch Container */
+.color-swatch {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.color-swatch div {
+    flex: 1;
+}
+
+.color-swatch strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
