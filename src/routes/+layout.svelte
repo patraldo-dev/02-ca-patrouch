@@ -29,17 +29,6 @@
 	    }
 	}
 
-  // Toggle between themes
-  function setTheme(theme) {
-    if (theme === 'dark') {
-      document.documentElement.style.setProperty('--primary-color', '#5dade2');
-      document.documentElement.style.setProperty('--background-color', '#1c2833');
-    } else {
-      // Reset to defaults
-      document.documentElement.style.removeProperty('--primary-color');
-      document.documentElement.style.removeProperty('--background-color');
-    }
-  }
 
     async function handleLogout() {
         if (!browser) return;
@@ -57,8 +46,6 @@
     }
 </script>
 
-<button on:click={() => setTheme('dark')}>Dark Mode</button>
-<button on:click={() => setTheme('light')}>Light Mode</button>
    
 
 <div class="app-layout">
