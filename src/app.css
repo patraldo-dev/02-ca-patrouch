@@ -48,8 +48,8 @@
 .color-box {
     width: 30px;
     height: 30px;
-    min-width: 30px;  
-    min-height: 30px; 
+    max-width: 30px;  
+    max-height: 30px; 
     border-radius: 8px;
     margin-right: 1.5rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
