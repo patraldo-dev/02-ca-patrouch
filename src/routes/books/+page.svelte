@@ -1,6 +1,8 @@
 <!-- src/routes/books/+page.svelte -->
 <script>
     import { t } from '$lib/translations';
+    import ExLibrisIcon from '$lib/components/ExLibrisIcon.svelte';
+
 
     export let data;
     
@@ -65,7 +67,9 @@
                             />
                         </a>
                     {:else}
-                        <div class="cover-placeholder">No Cover</div>
+                        <div class="book-cover-placeholder">
+			  <ExLibrisIcon />
+			</div>
                     {/if}
                     <div class="book-info">
                         <a href={`/books/${book.slug}`}>
@@ -120,14 +124,15 @@
         object-fit: cover;
     }
     
-    .cover-placeholder {
+    .book-cover-placeholder {
         width: 100%;
         aspect-ratio: 2/3;
         background: #f0f0f0;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #888;
+        color: var(--primary-light);
+
     }
     
     .book-info {

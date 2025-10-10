@@ -1,6 +1,7 @@
 <script>
     import { t } from '$lib/translations';
     import ColorGuide from '$lib/components/ColorGuide.svelte';
+    import ExLibrisIcon from '$lib/components/ExLibrisIcon.svelte';
     
     export let data;
     $: books = data?.books || [];
@@ -58,11 +59,7 @@
                                 </div>
                             {:else}
                                 <div class="book-cover-placeholder">
-                                    <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#e5e7eb"/>
-                                        <path d="M2 17L12 22L22 17" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M2 12L12 17L22 12" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
+				  <ExLibrisIcon />
                                 </div>
                             {/if}
                         </a>
@@ -615,4 +612,18 @@
             padding: 1.25rem;
         }
     }
+
+.book-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-light); /* #F5F5DC */
+  background: var(--bg-secondary); /* #F5F5DC */
+}
+
+.book-cover-placeholder svg {
+  width: 40%;
+  height: auto;
+  opacity: 0.6;
+}
 </style>
