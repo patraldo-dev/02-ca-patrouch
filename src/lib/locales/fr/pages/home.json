@@ -13,7 +13,7 @@
       "by": "par",
       "coverAlt": "Couverture de {title}",
       "readMore": "Lire la Critique",
-      "reviewCount": "({count} avis)"
+      "reviewCount": "({count} avis{count, plural, one{} other{s}})"
     }
   },
   "colorReference": {
@@ -21,7 +21,7 @@
     "subtitle": "Notre palette de couleurs de marque"
   },
   "colorGuide": {
-    "title": "Couleurs de Marque",
+    "title": "Couleurs de Marca",
     "colors": {
       "primary": {
         "name": "Tan Principal",

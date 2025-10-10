@@ -1,0 +1,7 @@
+npm run replace-colors
+npm run check-book-cards
+npm run check-translations
+node cbp_scripts/fix-review-count-translation.js
+node cbp_scripts/check-translation-key.js
+node cbp_scripts/show-translations.js
+node cbp_scripts/check-home-translations.js

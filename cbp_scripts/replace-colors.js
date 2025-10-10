@@ -9,6 +9,9 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Get project root directory (parent of the scripts directory)
+const projectRoot = path.join(__dirname, '..');
+
 // Define color mappings
 const colorMappings = {
   '#3b82f6': 'var(--primary-color)',
@@ -16,10 +19,14 @@ const colorMappings = {
   'blue': 'var(--primary-color)'
 };
 
-// Get all relevant files
-const files = execSync('find src -name "*.svelte" -o -name "*.js" -o -name "*.ts" -o -name "*.css"', { encoding: 'utf8' })
+// Get all relevant files using absolute paths
+const files = execSync('find src -name "*.svelte" -o -name "*.js" -o -name "*.ts" -o -name "*.css"', { 
+  encoding: 'utf8',
+  cwd: projectRoot  // Run find from the project root
+})
   .split('\n')
-  .filter(Boolean);
+  .filter(Boolean)
+  .map(file => path.join(projectRoot, file));  // Convert to absolute paths
 
 // Process each file
 files.forEach(file => {
@@ -30,7 +37,7 @@ files.forEach(file => {
     
     if (ext === '.css') {
       // Skip app.css since it contains the variable definitions
-      if (file.endsWith('src/app.css')) {
+      if (file.endsWith(path.join(projectRoot, 'src/app.css'))) {
         return;
       }
       
@@ -95,9 +102,13 @@ files.forEach(file => {
 });
 
 // Handle SVG files separately
-const svgFiles = execSync('find src -name "*.svg"', { encoding: 'utf8' })
+const svgFiles = execSync('find src -name "*.svg"', { 
+  encoding: 'utf8',
+  cwd: projectRoot  // Run find from the project root
+})
   .split('\n')
-  .filter(Boolean);
+  .filter(Boolean)
+  .map(file => path.join(projectRoot, file));  // Convert to absolute paths
 
 svgFiles.forEach(file => {
   try {

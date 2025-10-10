@@ -10,7 +10,11 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
-		"deploy": "npm run build && wrangler deploy"
+		"deploy": "npm run build && wrangler deploy",
+                "check-translations": "node cbp_scripts/check-translations.js",
+                "check-book-cards": "node cbp_scripts/check-book-cards.js",
+	        "replace-colors": "node cbp_scripts/replace-colors.js"
+
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare": "^7.2.3",
