@@ -11,7 +11,8 @@
   "book": {
     "coverAlt": "Cover of {title}",
     "by": "by",
-    "rating": "⭐ {rating} ({count} reviews)",
+    "ratingSingular": "⭐ {rating} ({count} review)",
+    "ratingPlural": "⭐ {rating} ({count} reviews)",
     "readReviews": "Read Reviews"
   },
   "retry": "Try Again"

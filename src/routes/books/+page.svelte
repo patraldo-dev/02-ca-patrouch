@@ -74,10 +74,10 @@
                         <p class="author">{$t('pages.books.book.by')} {book.author}</p>
                         {#if book.avg_rating}
                             <div class="rating">
-                                {$t('pages.books.book.rating', {
-                                    rating: parseFloat(book.avg_rating).toFixed(1),
-                                    count: book.review_count || 0
-                                })}
+                                {$t('pages.books.book.rating' + (book.review_count === 1 ? 'Singular' : 'Plural'), { 
+      rating: parseFloat(book.avg_rating), 
+      count: book.review_count 
+    })}
                             </div>
                         {/if}
                         <a href={`/books/${book.slug}`} class="btn">{$t('pages.books.book.readReviews')}</a>
