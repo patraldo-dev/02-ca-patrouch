@@ -1,6 +1,6 @@
 <svelte:head>
-    <title>Terms of Service — ShelfTalk</title>
-    <title>Términos y Condiciones — ShelfTalk</title>
+    <title>Terms of Service — Ex Libris</title>
+    <title>Términos y Condiciones — Ex Libris</title>
 </svelte:head>
 
 <div class="container">
@@ -11,12 +11,12 @@
 
     <section>
         <h2>1. Aceptación de los Términos</h2>
-        <p>Al acceder y utilizar ShelfTalk, aceptas estar sujeto a estos Términos y Condiciones. Si no estás de acuerdo con alguno de estos términos, no debes usar este sitio.</p>
+        <p>Al acceder y utilizar Ex Libris, aceptas estar sujeto a estos Términos y Condiciones. Si no estás de acuerdo con alguno de estos términos, no debes usar este sitio.</p>
     </section>
 
     <section>
         <h2>2. Descripción del Servicio</h2>
-        <p>ShelfTalk es una plataforma que permite a los usuarios:</p>
+        <p>Ex Libris es una plataforma que permite a los usuarios:</p>
         <ul>
             <li>Leer y publicar reseñas de libros</li>
             <li>Comentar sobre reseñas de otros usuarios</li>
@@ -37,7 +37,7 @@
 
     <section>
         <h2>4. Contenido del Usuario</h2>
-        <p>Al publicar contenido en ShelfTalk (reseñas, comentarios, etc.), garantizas que:</p>
+        <p>Al publicar contenido en Ex Libris (reseñas, comentarios, etc.), garantizas que:</p>
         <ul>
             <li>Tienes derecho a publicar dicho contenido</li>
             <li>El contenido no infringe derechos de terceros</li>
@@ -48,8 +48,8 @@
 
     <section>
         <h2>5. Propiedad Intelectual</h2>
-        <p>El contenido del sitio (diseño, código, textos, gráficos) es propiedad de ShelfTalk o sus licenciantes y está protegido por las leyes de propiedad intelectual de México.</p>
-        <p>Al publicar contenido, otorgas a ShelfTalk una licencia no exclusiva, mundial, libre de regalías para usar, reproducir y mostrar tu contenido en el sitio.</p>
+        <p>El contenido del sitio (diseño, código, textos, gráficos) es propiedad de Ex Libris o sus licenciantes y está protegido por las leyes de propiedad intelectual de México.</p>
+        <p>Al publicar contenido, otorgas a Ex Libris una licencia no exclusiva, mundial, libre de regalías para usar, reproducir y mostrar tu contenido en el sitio.</p>
     </section>
 
     <section>
@@ -72,7 +72,7 @@
 
     <section>
         <h2>8. Limitación de Responsabilidad</h2>
-        <p>ShelfTalk se proporciona "tal cual" sin garantías de ningún tipo. No nos hacemos responsables de:</p>
+        <p>Ex Libris se proporciona "tal cual" sin garantías de ningún tipo. No nos hacemos responsables de:</p>
        <ul>
             <li>Errores u omisiones en el contenido</li>
             <li>Pérdida de datos o interrupciones del servicio</li>
@@ -82,7 +82,7 @@
 
     <section>
         <h2>9. Indemnización</h2>
-        <p>Aceptas indemnizar y mantener indemne a ShelfTalk de cualquier reclamación derivada de tu uso del sitio o violación de estos términos.</p>
+        <p>Aceptas indemnizar y mantener indemne a Ex Libris de cualquier reclamación derivada de tu uso del sitio o violación de estos términos.</p>
     </section>
 
     <section>
@@ -112,12 +112,12 @@
     
     <section>
         <h2>1. Acceptance of Terms</h2>
-        <p>By accessing and using ShelfTalk, you accept and agree to be bound by the terms and provision of this agreement.</p>
+        <p>By accessing and using Ex Libris, you accept and agree to be bound by the terms and provision of this agreement.</p>
     </section>
     
     <section>
         <h2>2. Use License</h2>
-        <p>Permission is granted to temporarily access the materials on ShelfTalk for personal, non-commercial transitory viewing only.</p>
+        <p>Permission is granted to temporarily access the materials on Ex Libris for personal, non-commercial transitory viewing only.</p>
     </section>
     
     <section>
@@ -132,7 +132,7 @@
     
     <section>
         <h2>5. Modifications</h2>
-        <p>ShelfTalk reserves the right to revise these terms at any time without notice. By using this site you are agreeing to be bound by the current version of these terms.</p>
+        <p>Ex Libris reserves the right to revise these terms at any time without notice. By using this site you are agreeing to be bound by the current version of these terms.</p>
     </section>
     
     <div class="back-link">

@@ -1,15 +1,15 @@
 {
   "layout": {
-    "title": "Admin — ShelfTalk",
+    "title": "Admin — Ex Libris",
     "dashboard": "Dashboard",
     "books": "Books",
     "reviews": "Reviews",
     "blog": "Blog Posts",
     "users": "Users"
   },
-  "title": "Admin Dashboard — ShelfTalk",
+  "title": "Admin Dashboard — Ex Libris",
   "heading": "Admin Dashboard",
-  "welcome": "Welcome to the ShelfTalk admin panel. Use the links below to manage your content.",
+  "welcome": "Welcome to the Ex Libris admin panel. Use the links below to manage your content.",
   "sections": {
     "books": {
       "title": "Books",

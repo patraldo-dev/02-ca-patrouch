@@ -1,7 +1,7 @@
 {
-  "title": "Blog — ShelfTalk",
+  "title": "Blog — Ex Libris",
   "heading": "Latest Articles",
-  "subtitle": "Insights, updates, and stories from the ShelfTalk community",
+  "subtitle": "Insights, updates, and stories from the Ex Libris community",
   "loading": "Loading articles...",
   "error": "Failed to load articles",
   "networkError": "Network error. Please try again.",

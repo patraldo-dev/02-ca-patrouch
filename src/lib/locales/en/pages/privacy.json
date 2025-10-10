@@ -1,5 +1,5 @@
 {
-  "title": "Privacy Policy — ShelfTalk",
+  "title": "Privacy Policy — Ex Libris",
   "heading": "Privacy Policy",
   "lastUpdated": "Last updated: {date}",
   "sections": {
@@ -11,7 +11,7 @@
     },
     "dataCollection": {
       "title": "2. Personal Data We Collect",
-      "intro": "ShelfTalk collects the following personal data:",
+      "intro": "Ex Libris collects the following personal data:",
       "items": {
         "username": "Username",
         "email": "Email address",

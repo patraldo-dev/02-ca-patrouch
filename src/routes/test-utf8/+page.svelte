@@ -17,7 +17,7 @@
 </script>
 
 <svelte:head>
-    <title>UTF-8 Test — ShelfTalk</title>
+    <title>UTF-8 Test — Ex Libris</title>
     <meta charset="utf-8" />
 </svelte:head>
 

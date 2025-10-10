@@ -52,7 +52,7 @@
                     </svg>
                 </div>
                 <h1>Welcome Back</h1>
-                <p>Sign in to continue to ShelfTalk</p>
+                <p>Sign in to continue to Ex Libris</p>
             </div>
             
             {#if error}
@@ -121,7 +121,7 @@
                 <h2>Discover Your Next Favorite Book</h2>
                 <p>Join our community of book lovers and share your thoughts on the latest reads.</p>
                 <div class="testimonial">
-                    <blockquote>"ShelfTalk has transformed how I discover and discuss books. The reviews are thoughtful and the community is welcoming."</blockquote>
+                    <blockquote>"Ex Libris has transformed how I discover and discuss books. The reviews are thoughtful and the community is welcoming."</blockquote>
                     <cite>- A Happy Reader</cite>
                 </div>
             </div>

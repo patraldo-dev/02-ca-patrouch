@@ -40,7 +40,7 @@
 </script>
 
 <svelte:head>
-    <title>Review: {book.title} — ShelfTalk</title>
+    <title>Review: {book.title} — Ex Libris</title>
 </svelte:head>
 
 <div class="container">

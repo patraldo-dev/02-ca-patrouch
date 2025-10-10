@@ -52,8 +52,8 @@
     <header class="navbar">
         <div class="container nav-container">
             <!-- Logo -->
-            <a href="/" class="logo" aria-label="ShelfTalk Home">
-                📚 ShelfTalk
+            <a href="/" class="logo" aria-label="Ex Libris Home">
+                📚 Ex Libris
             </a>
             
             <!-- Desktop Navigation -->
@@ -317,7 +317,7 @@ Log in
                 <svelte:component this={NewsletterForm} />
             </div>
         {/if}
-        <p>© {new Date().getFullYear()} ShelfTalk — {$t('common.footer.tagline')}</p>
+        <p>© {new Date().getFullYear()} Ex Libris — {$t('common.footer.tagline')}</p>
         <p>
             <a href="/privacy">{$t('common.footer.privacy')}</a> • 
             <a href="/terms">{$t('common.footer.terms')}</a>

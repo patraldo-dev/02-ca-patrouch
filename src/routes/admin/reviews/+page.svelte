@@ -56,7 +56,7 @@
 </script>
 
 <svelte:head>
-    <title>Reviews — ShelfTalk</title>
+    <title>Reviews — Ex Libris</title>
 </svelte:head>
 
 <div class="container">

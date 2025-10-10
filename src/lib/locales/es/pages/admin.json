@@ -1,15 +1,15 @@
 {
   "layout": {
-    "title": "Panel de Administración — ShelfTalk",
+    "title": "Panel de Administración — Ex Libris",
     "dashboard": "Panel de control",
     "books": "Libros",
     "reviews": "Reseñas",
     "blog": "Entradas del blog",
     "users": "Usuarios"
   },
-  "title": "Panel de Administración — ShelfTalk",
+  "title": "Panel de Administración — Ex Libris",
   "heading": "Panel de Administración",
-  "welcome": "Bienvenido al panel de administración de ShelfTalk. Usa los enlaces a continuación para gestionar tu contenido.",
+  "welcome": "Bienvenido al panel de administración de Ex Libris. Usa los enlaces a continuación para gestionar tu contenido.",
   "sections": {
     "books": {
       "title": "Libros",

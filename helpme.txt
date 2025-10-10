@@ -58,8 +58,8 @@ index 31e0ad2..fb2f5c8 100644
          <div class="container nav-container">
 -            <a href="/" class="logo" aria-label="Home">
 +            <!-- Logo -->
-+            <a href="/" class="logo" aria-label="ShelfTalk Home">
-                 📚 ShelfTalk
++            <a href="/" class="logo" aria-label="Ex Libris Home">
+                 📚 Ex Libris
              </a>
  
 -            <!-- Desktop Nav -->
@@ -224,9 +224,9 @@ index 31e0ad2..fb2f5c8 100644
 +    <!-- Footer -->
 +    <footer class="site-footer" role="contentinfo">
          <div class="container">
--            <p>© {new Date().getFullYear()} ShelfTalk — Book reviews & more.</p>
+-            <p>© {new Date().getFullYear()} Ex Libris — Book reviews & more.</p>
 -            <p><a href="/privacy">Privacy</a> • <a href="/terms">Terms</a></p>
-+            <p>© {new Date().getFullYear()} ShelfTalk — Honest book reviews & thoughtful commentary.</p>
++            <p>© {new Date().getFullYear()} Ex Libris — Honest book reviews & thoughtful commentary.</p>
 +            <p>
 +                <a href="/privacy" class="footer-link">Privacy Policy</a>
 +                <span aria-hidden="true"> • </span>

@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-    <title>Admin — ShelfTalk</title>
+    <title>Admin — Ex Libris</title>
 </svelte:head>
 
 <div class="admin-layout">

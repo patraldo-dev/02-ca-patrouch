@@ -1,7 +1,7 @@
 <!-- src/routes/privacy/+page.svelte -->
 
 <svelte:head>
-    <title>Aviso de Privacidad — ShelfTalk</title>
+    <title>Aviso de Privacidad — Ex Libris</title>
 </svelte:head>
 
 <div class="container">
@@ -19,7 +19,7 @@
 
     <section>
         <h2>2. Datos Personales que Recabamos</h2>
-        <p>ShelfTalk recaba los siguientes datos personales:</p>
+        <p>Ex Libris recaba los siguientes datos personales:</p>
         <ul>
             <li>Nombre de usuario</li>
             <li>Dirección de correo electrónico</li>

@@ -1,5 +1,5 @@
 {
-  "title": "Aviso de Privacidad — ShelfTalk",
+  "title": "Aviso de Privacidad — Ex Libris",
   "heading": "Aviso de Privacidad",
   "lastUpdated": "Última actualización: {date}",
   "sections": {
@@ -11,7 +11,7 @@
     },
     "dataCollection": {
       "title": "2. Datos Personales que Recabamos",
-      "intro": "ShelfTalk recaba los siguientes datos personales:",
+      "intro": "Ex Libris recaba los siguientes datos personales:",
       "items": {
         "username": "Nombre de usuario",
         "email": "Dirección de correo electrónico",

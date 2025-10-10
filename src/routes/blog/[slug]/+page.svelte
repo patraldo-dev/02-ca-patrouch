@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-    <title>{data.post.title} — ShelfTalk Blog</title>
+    <title>{data.post.title} — Ex Libris Blog</title>
 </svelte:head>
 
 <div class="container">
