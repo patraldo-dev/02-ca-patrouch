@@ -5,3 +5,5 @@ node cbp_scripts/fix-review-count-translation.js
 node cbp_scripts/check-translation-key.js
 node cbp_scripts/show-translations.js
 node cbp_scripts/check-home-translations.js
+node cbp_scripts/debug-translation.js
+node cbp_scripts/fix-translation-simple.js

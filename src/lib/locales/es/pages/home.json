@@ -13,7 +13,8 @@
       "by": "por",
       "coverAlt": "Portada de {title}",
       "readMore": "Leer Reseña",
-      "reviewCount": "({count} reseña{count, plural, one{} other{s}})"
+      "reviewCountSingular": "({count} reseña)",
+      "reviewCountPlural": "({count} reseñas)"
     }
   },
   "colorReference": {
