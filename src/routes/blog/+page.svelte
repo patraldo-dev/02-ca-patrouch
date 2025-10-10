@@ -110,11 +110,14 @@
     }
 
 .read-more {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
+  display: block;              /* Full width block on mobile */
+  width: 100%;                /* Fill container on small */
+  max-width: 300px;           /* Limit width on mobiles */
+  margin: 1rem 0 1.25rem 0;   /* Vertical spacing around */
+  padding: 0.75rem 1rem;
   background-color: var(--primary-color);
   color: var(--text-on-primary);
+  text-align: center;
   text-decoration: none;
   font-weight: 600;
   border-radius: 6px;
@@ -125,6 +128,16 @@
 .read-more:hover {
   background-color: var(--primary-dark);
   box-shadow: 0 4px 12px rgba(160, 130, 109, 0.5);
+}
+
+/* For wider screens, revert to inline-block for compact layout */
+@media (min-width: 600px) {
+  .read-more {
+    display: inline-block;
+    width: auto;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+  }
 }
 
 </style>
