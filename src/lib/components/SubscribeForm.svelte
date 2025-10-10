@@ -73,7 +73,7 @@
     button {
         width: 100%;
         padding: 0.75rem;
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         border: none;
         border-radius: 4px;

@@ -89,7 +89,7 @@
     font-weight: 700;
     color: #1e293b;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -167,7 +167,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
     color: white;
     display: flex;
     align-items: center;

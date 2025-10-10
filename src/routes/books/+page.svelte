@@ -152,7 +152,7 @@
     
     .btn {
         display: inline-block;
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         padding: 0.5rem 1rem;
         border-radius: 6px;
@@ -161,7 +161,7 @@
     }
     
     .btn:hover {
-        background: #2563eb;
+        background: var(--primary-dark);
     }
     
     .loading-state, .error-state, .empty-state {
@@ -178,7 +178,7 @@
     }
     
     .retry-btn {
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         border: none;
         padding: 0.5rem 1rem;
@@ -189,7 +189,7 @@
     }
     
     .retry-btn:hover {
-        background: #2563eb;
+        background: var(--primary-dark);
     }
     
     .empty-state {

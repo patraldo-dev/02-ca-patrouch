@@ -202,13 +202,13 @@
     
     input:focus, textarea:focus {
         outline: none;
-        border-color: #3b82f6;
+        border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
     
     button {
         padding: 0.75rem 1.5rem;
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         border: none;
         border-radius: 0.375rem;
@@ -219,7 +219,7 @@
     }
     
     button:hover {
-        background: #2563eb;
+        background: var(--primary-dark);
     }
     
     button:disabled {

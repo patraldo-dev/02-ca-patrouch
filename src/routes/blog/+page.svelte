@@ -97,7 +97,7 @@
         font-size: 1.3rem;
     }
     .post-card h2 a {
-        color: #3b82f6;
+        color: var(--primary-color);
         text-decoration: none;
     }
     .post-card h2 a:hover {

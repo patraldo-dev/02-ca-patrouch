@@ -30,7 +30,7 @@
     .back-btn {
         display: inline-block;
         margin-bottom: 2rem;
-        color: #3b82f6;
+        color: var(--primary-color);
         text-decoration: none;
         font-weight: 500;
     }

@@ -61,7 +61,7 @@
     .btn-primary {
         display: inline-block;
         padding: 0.75rem 1.5rem;
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         text-decoration: none;
         border-radius: 6px;
@@ -83,7 +83,7 @@
         color: #333;
     }
     .post-card h3 a {
-        color: #3b82f6;
+        color: var(--primary-color);
         text-decoration: none;
     }
     .post-card h3 a:hover {

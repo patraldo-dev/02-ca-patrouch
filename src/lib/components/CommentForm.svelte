@@ -88,7 +88,7 @@
     button {
         margin-top: 1rem;
         padding: 0.75rem 1.5rem;
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         border: none;
         border-radius: 6px;

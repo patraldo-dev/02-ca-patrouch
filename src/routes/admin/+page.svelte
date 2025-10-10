@@ -120,12 +120,12 @@ export let data;
   }
 
   .btn-primary {
-    background: #3b82f6;
+    background: var(--primary-color);
     color: white;
   }
 
   .btn-primary:hover {
-    background: #2563eb;
+    background: var(--primary-dark);
     transform: translateY(-1px);
   }
 

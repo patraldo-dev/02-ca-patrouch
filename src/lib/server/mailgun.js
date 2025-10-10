@@ -15,7 +15,7 @@ export async function sendVerificationEmail(to, verifyUrl, env) {
     formData.append('html', `
         <h2>Welcome to ShelfTalk!</h2>
         <p>Click the button below to verify your email address:</p>
-        <a href="${verifyUrl}" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
+        <a href="${verifyUrl}" style="display: inline-block; padding: 10px 20px; background: var(--primary-color); color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
         <p>Or copy and paste this link: <br><code>${verifyUrl}</code></p>
     `);
 

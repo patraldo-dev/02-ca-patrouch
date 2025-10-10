@@ -37,7 +37,7 @@ export function getConfirmationEmailContent(type, confirmationUrl) {
         html: `
             <h2>Confirm your ${type} subscription</h2>
             <p>Click the button below to confirm:</p>
-            <a href="${confirmationUrl}" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 5px;">Confirm Subscription</a>
+            <a href="${confirmationUrl}" style="display: inline-block; padding: 10px 20px; background: var(--primary-color); color: white; text-decoration: none; border-radius: 5px;">Confirm Subscription</a>
             <p>Or copy and paste this link: <br><code>${confirmationUrl}</code></p>
         `
     };

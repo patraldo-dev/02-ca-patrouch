@@ -65,7 +65,7 @@
     .btn {
         display: inline-block;
         padding: 0.75rem 1.5rem;
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         text-decoration: none;
         border-radius: 6px;
@@ -74,6 +74,6 @@
     }
     
     .btn:hover {
-        background: #2563eb;
+        background: var(--primary-dark);
     }
 </style>

@@ -356,12 +356,12 @@ Log in
         font-size: 1.5rem;
         font-weight: 700;
         text-decoration: none;
-        color: #3b82f6;
+        color: var(--primary-color);
         transition: color 0.2s;
     }
     
     .logo:hover {
-        color: #2563eb;
+        color: var(--primary-dark);
     }
     
     /* Desktop Nav */
@@ -385,8 +385,8 @@ Log in
     
     .desktop-nav a:hover,
     .desktop-nav a.active {
-        border-bottom: 2px solid #3b82f6;
-        color: #3b82f6;
+        border-bottom: 2px solid var(--primary-color);
+        color: var(--primary-color);
     }
     
     /* Auth Buttons */
@@ -415,12 +415,12 @@ Log in
     }
     
     .btn-primary {
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
     }
     
     .btn-primary:hover {
-        background: #2563eb;
+        background: var(--primary-dark);
     }
     
     .btn-secondary {
@@ -434,7 +434,7 @@ Log in
     
     .btn-secondary:focus,
     .btn-primary:focus {
-        outline: 2px solid #3b82f6;
+        outline: 2px solid var(--primary-color);
         outline-offset: 2px;
     }
     
@@ -473,8 +473,8 @@ Log in
     }
     
     .mobile-nav a.active {
-        color: #3b82f6;
-        border-bottom-color: #3b82f6;
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
     }
     
     .mobile-auth {
@@ -557,13 +557,13 @@ Log in
 }
 
 .lang-switcher-desktop button:hover {
-    border-color: #3b82f6;
+    border-color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 .lang-switcher-desktop button.active {
-    border-color: #3b82f6;
+    border-color: var(--primary-color);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
@@ -588,12 +588,12 @@ Log in
 }
 
 .lang-switcher-mobile button:hover {
-    border-color: #3b82f6;
+    border-color: var(--primary-color);
     transform: scale(1.05);
 }
 
 .lang-switcher-mobile button.active {
-    border-color: #3b82f6;
+    border-color: var(--primary-color);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 

@@ -110,7 +110,7 @@
     .back-btn {
         display: inline-block;
         margin-bottom: 2rem;
-        color: #3b82f6;
+        color: var(--primary-color);
         text-decoration: none;
         font-weight: 500;
     }
@@ -165,7 +165,7 @@
     button {
         width: 100%;
         padding: 0.75rem;
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         border: none;
         border-radius: 6px;
@@ -174,7 +174,7 @@
         cursor: pointer;
     }
     button:hover {
-        background: #2563eb;
+        background: var(--primary-dark);
     }
     .alert {
         padding: 1rem;

@@ -121,7 +121,7 @@
         display: inline-block;
         margin-top: 1rem;
         padding: 0.5rem 1rem;
-        background: #3b82f6;
+        background: var(--primary-color);
         color: white;
         text-decoration: none;
         border-radius: 6px;
@@ -129,7 +129,7 @@
     }
     
     .empty .btn:hover {
-        background: #2563eb;
+        background: var(--primary-dark);
     }
     
     .reviews-grid {
@@ -194,7 +194,7 @@
     }
     
     .view-book-btn {
-        color: #3b82f6;
+        color: var(--primary-color);
         text-decoration: none;
         font-weight: 500;
         font-size: 0.875rem;
@@ -202,7 +202,7 @@
     }
     
     .view-book-btn:hover {
-        color: #2563eb;
+        color: var(--primary-dark);
         text-decoration: underline;
     }
     
