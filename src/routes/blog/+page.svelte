@@ -108,4 +108,23 @@
         font-size: 0.9rem;
         margin: 0;
     }
+
+.read-more {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(160, 130, 109, 0.3);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.read-more:hover {
+  background-color: var(--primary-dark);
+  box-shadow: 0 4px 12px rgba(160, 130, 109, 0.5);
+}
+
 </style>
