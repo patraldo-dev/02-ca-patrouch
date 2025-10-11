@@ -2,7 +2,9 @@
 <script>
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
-    
+
+    $: ratingText = review.rating ? $t('pages.reviews.rating', { rating: review.rating }) : '';    
+
     export let data; // Get data from +page.server.js
     
     let reviews = [];
@@ -90,9 +92,7 @@
                     <div class="review-header">
                         <div class="book-info">
                             <h3>{review.book_title}</h3>
-<div class="rating">
-  {$t('pages.reviews.rating', { rating: review.rating })}
-</div>
+<div class="rating">{ratingText}</div>
                         {#if isAdmin}
                             <button 
                                 aria-label="Delete review"
