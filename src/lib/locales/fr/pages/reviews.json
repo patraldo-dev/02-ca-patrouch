@@ -13,5 +13,7 @@
     "rating": "⭐ {rating}",
     "by": "Par",
     "viewBook": "Voir les détails du livre →"
-  }
+  },
+  "rating": "⭐ {rating} ({count} avis)"
+
 }
