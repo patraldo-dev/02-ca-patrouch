@@ -13,8 +13,7 @@
       "by": "by",
       "coverAlt": "Cover of {title}",
       "readMore": "Read Review",
-      "reviewCountSingular": "({count} review)",
-      "reviewCountPlural": "({count} reviews)"
+      "reviewCount": "({count} review{plural})"
     }
   },
   "colorReference": {
