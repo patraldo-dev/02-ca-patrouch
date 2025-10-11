@@ -55,7 +55,6 @@
                             <h3>{review.book_title}</h3>
                             <div class="rating">
  				  {$t('pages.reviews.rating', { rating: review.rating })}
-                        </div>
 			</div>
                         <div class="review-meta">
                             <span class="reviewer">{$t('pages.reviews.review.by')} {review.reviewer_name}</span>

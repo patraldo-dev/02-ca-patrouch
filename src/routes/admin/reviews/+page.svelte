@@ -92,7 +92,6 @@
                             <h3>{review.book_title}</h3>
                             <div class="rating">
   {$t('pages.reviews.rating', { rating: review.rating })}
-                        </div>
 			</div>
                         {#if isAdmin}
                             <button 
