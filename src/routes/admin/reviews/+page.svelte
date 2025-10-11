@@ -86,22 +86,22 @@
         </div>
     {:else}
         <div class="reviews-grid">
-            {#each reviews as review}
-                <article class="review-card">
-                    <div class="review-header">
-                        <div class="book-info">
-                            <h3>{review.book_title}</h3>
-                            {@const ratingText = $t('pages.reviews.rating', { rating: review.rating })}
-                            <div class="rating">
-                                {ratingText}
-                            </div>
-                        </div>
-                        {#if isAdmin}
-                            <button 
-                                aria-label="Delete review"
-                                class="delete-btn" 
-                                on:click={() => deleteReview(review.id)}
-                            >
+{#each reviews as review}
+    {@const ratingText = $t('pages.reviews.rating', { rating: review.rating })}
+    <article class="review-card">
+        <div class="review-header">
+            <div class="book-info">
+                <h3>{review.book_title}</h3>
+                <div class="rating">
+                    {ratingText}
+                </div>
+            </div>
+            {#if isAdmin}
+                <button 
+                    aria-label="Delete review"
+                    class="delete-btn" 
+                    on:click={() => deleteReview(review.id)}
+                >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M8 6V4C8 3.44772 8.44772 3 9 3H15C15.5523 3 16 3.44772 16 4V6M19 6V20C19 20.5523 18.5523 21 18 21H6C5.44772 21 5 20.5523 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
