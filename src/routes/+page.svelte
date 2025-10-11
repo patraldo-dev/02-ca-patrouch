@@ -82,7 +82,6 @@
     </span>
   {/if}
 </div>
-                                </div>
                             {/if}
                             <a href={`/books/${book.slug}`} class="read-more-btn">
                                 {$t('pages.home.featured.book.readMore')}
