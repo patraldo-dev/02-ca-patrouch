@@ -94,7 +94,6 @@
                 <div class="rating">
                     {ratingText}
                 </div>
-            </div>
                             <button 
                                 aria-label="Delete review"
                                 class="delete-btn" 

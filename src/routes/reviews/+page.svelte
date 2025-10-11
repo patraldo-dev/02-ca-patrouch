@@ -57,7 +57,6 @@
                 <div class="rating">
                     {ratingText}
                 </div>
-            </div>
 
                         <div class="review-meta">
                             <span class="reviewer">{$t('pages.reviews.review.by')} {review.reviewer_name}</span>
