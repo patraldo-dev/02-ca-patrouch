@@ -70,12 +70,12 @@
                             {#if book.avg_rating}
                                 <div class="book-rating">
                                     <span class="rating-stars">⭐ {parseFloat(book.avg_rating).toFixed(1)}</span>
-                                    {#if book.review_count}
-                                        <span class="rating-count">
-                                            {book.review_count === 1 
-  ? $t('pages.home.featured.book.reviewCount', { count: book.review_count }) 
-                                        </span>
-                                    {/if}
+
+{#if book.review_count}
+  <span class="rating-count">
+    {$t('pages.home.featured.book.reviewCount', { count: book.review_count })}
+  </span>
+{/if}
                                 </div>
                             {/if}
                             <a href={`/books/${book.slug}`} class="read-more-btn">
