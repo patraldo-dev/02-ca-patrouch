@@ -68,14 +68,20 @@
                             <h3>{book.title}</h3>
                             <p class="book-author">{$t('pages.home.featured.book.by')} {book.author}</p>
                             {#if book.avg_rating}
-                                <div class="book-rating">
-                                    <span class="rating-stars">⭐ {parseFloat(book.avg_rating).toFixed(1)}</span>
 
-{#if book.review_count}
-  <span class="rating-count">
-    {$t('pages.home.featured.book.reviewCount', { count: book.review_count,   plural: book.review_count === 1 ? '' : 's' })}
-  </span>
-{/if}
+<div class="book-rating">
+  <span class="rating-stars">⭐ {parseFloat(book.avg_rating).toFixed(1)}</span>
+  {#if book.review_count}
+  {@const pluralSuffix = book.review_count === 1 ? '' : 's'}
+  {@const ratingCountText = $t('pages.home.featured.book.reviewCount', { 
+    count: book.review_count,
+    plural: pluralSuffix
+  })}
+    <span class="rating-count">
+      {ratingCountText}
+    </span>
+  {/if}
+</div>
                                 </div>
                             {/if}
                             <a href={`/books/${book.slug}`} class="read-more-btn">
