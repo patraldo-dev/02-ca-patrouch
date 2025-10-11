@@ -73,8 +73,7 @@
                                     {#if book.review_count}
                                         <span class="rating-count">
                                             {book.review_count === 1 
-  ? $t('pages.home.featured.book.reviewCountSingular', { count: book.review_count }) 
-  : $t('pages.home.featured.book.reviewCountPlural', { count: book.review_count })}
+  ? $t('pages.home.featured.book.reviewCount', { count: book.review_count }) 
                                         </span>
                                     {/if}
                                 </div>
