@@ -20,7 +20,7 @@ export async function GET({ platform }) {
                 r.book_id,
                 b.title as book_title,
                 b.slug as book_slug,
-                u.username as reviewer_name
+                u.username as reviewer_name,
         (SELECT COUNT(*) FROM reviews WHERE book_id = r.book_id) as review_count
             FROM reviews r
             JOIN books b ON r.book_id = b.id
