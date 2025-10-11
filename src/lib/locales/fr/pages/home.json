@@ -13,7 +13,7 @@
       "by": "par",
       "coverAlt": "Couverture de {title}",
       "readMore": "Lire la Critique",
-      "reviewCount": "({count} avis{plural})",
+      "reviewCount": "({count} avis{plural})"
     }
   },
   "colorReference": {
