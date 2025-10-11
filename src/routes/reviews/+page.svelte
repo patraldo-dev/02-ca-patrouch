@@ -50,11 +50,15 @@
         <div class="reviews-grid">
 {#each reviews as review}
 
+  <pre>{JSON.stringify({rating: review.rating, count: review.review_count})}</pre>
+
 {@const ratingText = $t('pages.reviews.rating', { 
   rating: review.rating, 
   count: review.review_count,
   plural: review.review_count === 1 ? '' : 's'
 })}
+  <p>{ratingText}</p>
+
                 <article class="review-card">
                     <div class="review-header">
                         <div class="book-info">
