@@ -53,9 +53,9 @@
                     <div class="review-header">
                         <div class="book-info">
                             <h3>{review.book_title}</h3>
-                            <div class="rating">
- 				  {$t('pages.reviews.rating', { rating: review.rating })}
-			</div>
+<div class="rating">
+  {$t('pages.reviews.rating', { rating: review.rating })}
+</div>
                         <div class="review-meta">
                             <span class="reviewer">{$t('pages.reviews.review.by')} {review.reviewer_name}</span>
                             <span class="date">{new Date(review.created_at).toLocaleDateString()}</span>

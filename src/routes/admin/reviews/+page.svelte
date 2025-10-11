@@ -90,9 +90,9 @@
                     <div class="review-header">
                         <div class="book-info">
                             <h3>{review.book_title}</h3>
-                            <div class="rating">
+<div class="rating">
   {$t('pages.reviews.rating', { rating: review.rating })}
-			</div>
+</div>
                         {#if isAdmin}
                             <button 
                                 aria-label="Delete review"
