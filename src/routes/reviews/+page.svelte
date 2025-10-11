@@ -49,7 +49,7 @@
     {:else}
         <div class="reviews-grid">
 {#each reviews as review}
-{@const ratingText = $t('pages.reviews.rating', { rating: review.rating })}
+{@const ratingText = $t('pages.reviews.rating', { rating: review.rating, count: review.review_count })}
                 <article class="review-card">
                     <div class="review-header">
                         <div class="book-info">
