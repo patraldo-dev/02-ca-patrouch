@@ -14,5 +14,5 @@
     "by": "Por",
     "viewBook": "Ver detalles del libro →"
   },
-  "rating": "⭐ {rating} ({count} reseña{plural})"
+  "rating": "⭐ {rating} ({count} reseñas)"
 }
