@@ -122,7 +122,6 @@ export async function handle({ event, resolve }) {
     }
 
     event.locals.db = event.platform.env.DB_book;
-    console.log('✅ Using REAL D1 database — no mock allowed');
 
     // Log Mailgun key for debugging
     if (event.platform?.env?.MAILGUN_API_KEY) {

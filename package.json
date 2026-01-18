@@ -11,10 +11,9 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
 		"deploy": "npm run build && wrangler deploy",
-                "check-translations": "node cbp_scripts/check-translations.js",
-                "check-book-cards": "node cbp_scripts/check-book-cards.js",
-	        "replace-colors": "node cbp_scripts/replace-colors.js"
-
+		"check-translations": "node cbp_scripts/check-translations.js",
+		"check-book-cards": "node cbp_scripts/check-book-cards.js",
+		"replace-colors": "node cbp_scripts/replace-colors.js"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare": "^7.2.3",
@@ -24,7 +23,7 @@
 		"svelte-check": "^4.0.0",
 		"typescript": "^5.0.0",
 		"vite": "^7.0.4",
-		"wrangler": "^4.41.0"
+		"wrangler": "^4.46.0"
 	},
 	"dependencies": {
 		"@oslojs/encoding": "^1.1.0",
