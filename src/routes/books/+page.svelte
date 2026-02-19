@@ -1,6 +1,6 @@
 <!-- src/routes/books/+page.svelte -->
 <script>
-    import { t } from '$lib/translations';
+    import { t } from '$lib/i18n';
     import ExLibrisIcon from '$lib/components/ExLibrisIcon.svelte';
 
 

@@ -3,7 +3,7 @@
     import ExLibrisIcon from '$lib/components/ExLibrisIcon.svelte';
     import '../app.css'; // Import global styles
     import { browser } from '$app/environment';
-    import { t, locale } from '$lib/translations';  // Changed from svelte-i18n
+    import { t, locale, setLocale } from '$lib/i18n';
     import { beforeNavigate } from '$app/navigation';
     import { page } from '$app/stores';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
@@ -24,7 +24,7 @@
     }
 
 	function switchLanguage(lang) {
-	    locale.set(lang);
+	    setLocale(lang);
 	    if (browser) {
 		localStorage.setItem('preferredLanguage', lang);
 	    }

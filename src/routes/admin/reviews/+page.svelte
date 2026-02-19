@@ -2,7 +2,7 @@
 <script>
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
-    import { t } from '$lib/translations';
+    import { t } from '$lib/i18n';
     
     export let data; // Get data from +page.server.js
     

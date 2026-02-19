@@ -1,5 +1,5 @@
 <script>
-    import { t } from '$lib/translations';
+    import { t } from '$lib/i18n';
 </script>
 
 <div class="color-guide">

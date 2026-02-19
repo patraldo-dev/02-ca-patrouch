@@ -1,5 +1,5 @@
 <script>
-    import { t } from '$lib/translations';
+    import { t } from '$lib/i18n';
     import ColorGuide from '$lib/components/ColorGuide.svelte';
     import ExLibrisIcon from '$lib/components/ExLibrisIcon.svelte';
     

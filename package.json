@@ -28,7 +28,6 @@
 	"dependencies": {
 		"@oslojs/encoding": "^1.1.0",
 		"capnweb": "^0.1.0",
-		"marked": "^16.3.0",
-		"sveltekit-i18n": "^2.4.2"
+		"marked": "^16.3.0"
 	}
 }

@@ -1,6 +1,6 @@
 <script>
     import { goto } from '$app/navigation';
-    import { t } from '$lib/translations'; // ← import t as in NewsletterForm
+    import { t } from '$lib/i18n';
     import { page } from '$app/stores';
 
     export let data;

@@ -1,6 +1,6 @@
 <!-- src/routes/about/+page.svelte -->
 <script>
-  import { t } from '$lib/translations';
+  import { t } from '$lib/i18n';
 </script>
 
 <svelte:head>

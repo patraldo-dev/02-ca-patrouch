@@ -1,7 +1,7 @@
 <!-- src/lib/components/CommentForm.svelte -->
 <script>
     import { enhance } from '$app/forms';
-    import { t } from '$lib/translations'; 
+    import { t } from '$lib/i18n'; 
 
     export let reviewId;
     export let onCommentPosted;

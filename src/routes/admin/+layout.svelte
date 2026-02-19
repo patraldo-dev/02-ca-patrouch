@@ -1,7 +1,7 @@
 <!-- src/routes/admin/+layout.svelte -->
 <script>
     import { page } from '$app/stores';
-    import { t } from '$lib/translations'; // ✅ Only import t, no onMount needed
+    import { t } from '$lib/i18n';
 </script>
 
 <svelte:head>

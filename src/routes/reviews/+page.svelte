@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { t } from '$lib/translations';
+    import { t } from '$lib/i18n';
 
     let reviews = [];
     let loading = true;

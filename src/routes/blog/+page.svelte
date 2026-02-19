@@ -1,6 +1,6 @@
 <!-- src/routes/blog/+page.svelte -->
 <script>
-    import { t } from '$lib/translations';
+    import { t } from '$lib/i18n';
 
     // ✅ Get data from +page.server.js — no fetch needed!
     export let data;

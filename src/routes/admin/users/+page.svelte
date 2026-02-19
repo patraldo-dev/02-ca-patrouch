@@ -1,6 +1,6 @@
 <!-- src/routes/admin/users/+page.svelte -->
 <script>
-  import { t } from '$lib/translations';
+  import { t } from '$lib/i18n';
   export let data;
   $: users = data.users || [];
 </script>
