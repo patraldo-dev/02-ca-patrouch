@@ -5,11 +5,11 @@
 </script>
 
 <svelte:head>
-    <title>{data.post.title} — Ex Libris Blog</title>
+    <title>{data.post.title} — 4thPrompt</title>
 </svelte:head>
 
 <div class="container">
-    <a href="/blog" class="back-btn">← Back to Blog</a>
+    <a href="/blog" class="back-btn">← Back to 4thPrompt</a>
     <article class="blog-post">
         <header>
             <h1>{data.post.title}</h1>
