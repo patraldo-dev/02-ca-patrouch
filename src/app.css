@@ -8,21 +8,21 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --primary-color: #c94c35;
-  --primary-dark: #a83926;
+  --primary-color: #eb0036;
+  --primary-dark: #860038;
   --primary-light: #f5e6e3;
-  --text-primary: #2d3a36;
-  --text-secondary: #5f6e68;
+  --text-primary: #ffffff;
+  --text-secondary: #cecfd1;
   --text-on-primary: #ffffff;
   --text-on-light: #2d3a36;
-  --background: #f9f6f0;
-  --bg-card: #ffffff;
-  --bg-secondary: #f0ebe5;
-  --black-color: #2d3a36;
-  --dark-color: #1f2937;
-  --grey-color: #f9f6f0;
+  --background: #161616;
+  --bg-card: #221f1f;
+  --bg-secondary: #1a1a1a;
+  --black-color: #221f1f;
+  --dark-color: #161616;
+  --grey-color: #f5f5f1;
   --white-color: #ffffff;
-  --secondary-color: #8da399;
+  --secondary-color: #cecfd1;
   --body-font: 'Roboto', sans-serif;
   --title-font: 'Jost', sans-serif;
   --spacing-xs: 0.25rem;
@@ -460,21 +460,21 @@ select:focus {
 
 @media (min-width: 768px) {
   :root {
-  --primary-color: #c94c35;
-  --primary-dark: #a83926;
+  --primary-color: #eb0036;
+  --primary-dark: #860038;
   --primary-light: #f5e6e3;
-  --text-primary: #2d3a36;
-  --text-secondary: #5f6e68;
+  --text-primary: #ffffff;
+  --text-secondary: #cecfd1;
   --text-on-primary: #ffffff;
   --text-on-light: #2d3a36;
-  --background: #f9f6f0;
-  --bg-card: #ffffff;
-  --bg-secondary: #f0ebe5;
-  --black-color: #2d3a36;
-  --dark-color: #1f2937;
-  --grey-color: #f9f6f0;
+  --background: #161616;
+  --bg-card: #221f1f;
+  --bg-secondary: #1a1a1a;
+  --black-color: #221f1f;
+  --dark-color: #161616;
+  --grey-color: #f5f5f1;
   --white-color: #ffffff;
-  --secondary-color: #8da399;
+  --secondary-color: #cecfd1;
   --body-font: 'Roboto', sans-serif;
   --title-font: 'Jost', sans-serif;
   --spacing-xs: 0.25rem;

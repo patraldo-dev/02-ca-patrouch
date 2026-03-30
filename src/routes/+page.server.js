@@ -14,7 +14,6 @@ export async function load({ platform }) {
                 b.author, 
                 b.description, 
                 b.coverImageId,
-                b.slug,
                 b.published_year,
                 AVG(r.rating) as avg_rating,
                 COUNT(r.id) as review_count
