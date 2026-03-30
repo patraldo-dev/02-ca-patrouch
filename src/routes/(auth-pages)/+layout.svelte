@@ -13,8 +13,9 @@
         max-width: 400px;
         margin: 2rem auto;
         padding: 2rem;
-        border: 1px solid #eee;
+        border: 1px solid #27272a;
         border-radius: 8px;
-        background: white;
+        background: #141417;
+        color: #e4e4e7;
     }
 </style>

@@ -52,7 +52,7 @@
                     </svg>
                 </div>
                 <h1>Welcome Back</h1>
-                <p>Sign in to continue to Ex Libris</p>
+                <p>Sign in to continue to C. R Patraldo</p>
             </div>
             
             {#if error}
@@ -121,7 +121,7 @@
                 <h2>Discover Your Next Favorite Book</h2>
                 <p>Join our community of book lovers and share your thoughts on the latest reads.</p>
                 <div class="testimonial">
-                    <blockquote>"Ex Libris has transformed how I discover and discuss books. The reviews are thoughtful and the community is welcoming."</blockquote>
+                    <blockquote>"C. R Patraldo has transformed how I discover and discuss books. The reviews are thoughtful and the community is welcoming."</blockquote>
                     <cite>- A Happy Reader</cite>
                 </div>
             </div>
@@ -135,7 +135,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+        background: #09090b;
         padding: 20px;
     }
     
@@ -145,8 +145,9 @@
         max-width: 1000px;
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        background: white;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        background: #141417;
+        border: 1px solid #27272a;
     }
     
     .login-card {
@@ -170,12 +171,12 @@
     .login-header h1 {
         font-size: 28px;
         font-weight: 700;
-        color: #1f2937;
+        color: #e4e4e7;
         margin: 0 0 8px 0;
     }
     
     .login-header p {
-        color: #6b7280;
+        color: #71717a;
         margin: 0;
         font-size: 16px;
     }
@@ -184,12 +185,13 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        background: #fef2f2;
-        color: #b91c1c;
+        background: #1c1012;
+        color: #fca5a5;
         padding: 12px 16px;
         border-radius: 8px;
         margin-bottom: 24px;
         font-size: 14px;
+        border: 1px solid #3b1116;
     }
     
     .login-form {
@@ -204,30 +206,30 @@
         display: block;
         font-size: 14px;
         font-weight: 600;
-        color: #374151;
+        color: #a1a1aa;
         margin-bottom: 8px;
     }
     
     .form-group input {
         width: 100%;
         padding: 12px 16px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #27272a;
         border-radius: 8px;
         font-size: 16px;
         transition: border-color 0.2s, box-shadow 0.2s;
-        background: #f9fafb;
+        background: #1c1c21;
+        color: #e4e4e7;
     }
     
     .form-group input:focus {
         outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        background: white;
+        border-color: #c9a87c;
+        box-shadow: 0 0 0 3px rgba(201, 168, 124, 0.15);
     }
     
     .form-group input:disabled {
-        background-color: #f3f4f6;
-        color: #9ca3af;
+        background-color: #18181b;
+        color: #71717a;
         cursor: not-allowed;
     }
     
@@ -243,7 +245,7 @@
         align-items: center;
         cursor: pointer;
         font-size: 14px;
-        color: #4b5563;
+        color: #a1a1aa;
     }
     
     .checkbox-container input {
@@ -253,7 +255,7 @@
     .checkbox-container .checkmark {
         width: 18px;
         height: 18px;
-        border: 1px solid #d1d5db;
+        border: 1px solid #27272a;
         border-radius: 4px;
         margin-right: 8px;
         position: relative;
@@ -261,8 +263,8 @@
     }
     
     .checkbox-container input:checked + .checkmark {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
+        background-color: #c9a87c;
+        border-color: #c9a87c;
     }
     
     .checkbox-container input:checked + .checkmark:after {
@@ -272,13 +274,13 @@
         top: 2px;
         width: 5px;
         height: 10px;
-        border: solid white;
+        border: solid #09090b;
         border-width: 0 2px 2px 0;
         transform: rotate(45deg);
     }
     
     .forgot-link {
-        color: var(--primary-color);
+        color: #c9a87c;
         text-decoration: none;
         font-size: 14px;
         font-weight: 500;
@@ -286,15 +288,15 @@
     }
     
     .forgot-link:hover {
-        color: var(--primary-dark);
+        color: #b8976b;
         text-decoration: underline;
     }
     
     .login-button {
         width: 100%;
         padding: 14px;
-        background: var(--primary-color);
-        color: white;
+        background: #c9a87c;
+        color: #09090b;
         border: none;
         border-radius: 8px;
         font-size: 16px;
@@ -308,23 +310,24 @@
     }
     
     .login-button:hover {
-        background: var(--primary-dark);
+        background: #b8976b;
     }
     
     .login-button:disabled {
-        background: #9ca3af;
+        background: #3f3f46;
+        color: #71717a;
         cursor: not-allowed;
     }
     
     .login-footer {
         margin-top: auto;
         text-align: center;
-        color: #6b7280;
+        color: #71717a;
         font-size: 14px;
     }
     
     .login-footer a {
-        color: var(--primary-color);
+        color: #c9a87c;
         text-decoration: none;
         font-weight: 600;
     }
@@ -335,32 +338,35 @@
     
     .login-illustration {
         flex: 1;
-        background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
-        color: white;
+        background: linear-gradient(135deg, #18181b 0%, #1c1c21 100%);
+        color: #e4e4e7;
         padding: 60px 40px;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        border-left: 1px solid #27272a;
     }
     
     .illustration-content h2 {
         font-size: 32px;
         font-weight: 700;
         margin: 0 0 20px 0;
+        color: #c9a87c;
     }
     
     .illustration-content p {
         font-size: 16px;
         line-height: 1.6;
         margin-bottom: 40px;
-        opacity: 0.9;
+        color: #a1a1aa;
     }
     
     .testimonial {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
         border-radius: 12px;
         padding: 20px;
         position: relative;
+        border: 1px solid #27272a;
     }
     
     .testimonial:before {
@@ -371,6 +377,7 @@
         font-size: 60px;
         line-height: 1;
         opacity: 0.2;
+        color: #c9a87c;
         font-family: Georgia, serif;
     }
     
@@ -381,12 +388,13 @@
         line-height: 1.6;
         position: relative;
         z-index: 1;
+        color: #a1a1aa;
     }
     
     .testimonial cite {
         font-style: normal;
         font-size: 14px;
-        opacity: 0.8;
+        color: #71717a;
     }
     
     @media (max-width: 768px) {

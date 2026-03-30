@@ -125,9 +125,10 @@ id="confirmPassword"
         max-width: 400px;
         margin: 2rem auto;
         padding: 2rem;
-        border: 1px solid #eee;
+        border: 1px solid #27272a;
         border-radius: 8px;
-        background: white;
+        background: #141417;
+        color: #e4e4e7;
     }
 
     form {
@@ -140,23 +141,38 @@ id="confirmPassword"
         font-weight: bold;
         display: block;
         margin-bottom: 0.25rem;
+        color: #a1a1aa;
     }
 
     input {
         padding: 0.5rem;
         font-size: 1rem;
-        border: 1px solid #ccc;
+        border: 1px solid #27272a;
         border-radius: 4px;
+        background: #1c1c21;
+        color: #e4e4e7;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: #c9a87c;
+        box-shadow: 0 0 0 2px rgba(201, 168, 124, 0.15);
     }
 
     button {
         padding: 0.75rem;
         font-size: 1rem;
-        background: #007bff;
-        color: white;
+        background: #c9a87c;
+        color: #09090b;
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+
+    button:hover {
+        background: #b8976b;
     }
 
     button:disabled {
@@ -165,11 +181,20 @@ id="confirmPassword"
     }
 
     a {
-        color: #007bff;
+        color: #c9a87c;
         text-decoration: none;
     }
 
     a:hover {
         text-decoration: underline;
+    }
+
+    .success-banner {
+        background: #14532d;
+        color: #86efac;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
     }
 </style>

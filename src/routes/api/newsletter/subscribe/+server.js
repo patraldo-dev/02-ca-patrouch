@@ -31,8 +31,8 @@ export async function POST({ request, platform }) {
         
         // Check if email already exists in the 'subscribers' table
         const existing = await db.prepare(`
-            SELECT id, confirmed FROM subscribers WHERE email = ?
-        `).bind(email).first();
+            SELECT id, confirmed FROM subscribers WHERE email = ? AND type = ?
+        `).bind(email, 'newsletter').first();
         
         if (existing) {
             if (existing.confirmed) {
@@ -50,9 +50,9 @@ export async function POST({ request, platform }) {
         
         // Add new subscriber with confirmation token to the 'subscribers' table
         await db.prepare(`
-            INSERT INTO subscribers (email, confirmation_token, expires_at, created_at)
-            VALUES (?, ?, ?, ?)
-        `).bind(email, token, expiresAt, new Date().toISOString()).run();
+            INSERT INTO subscribers (email, type, confirmation_token, token_expires_at, confirmed, created_at)
+            VALUES (?, ?, ?, ?, 0, ?)
+        `).bind(email, 'newsletter', token, expiresAt, new Date().toISOString()).run();
         
         // Return success with the confirmation URL
         return json({ 
