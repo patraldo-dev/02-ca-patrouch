@@ -1,11 +1,8 @@
-<!-- src/routes/privacy/+page.svelte -->
-
 <svelte:head>
-    <title>Aviso de Privacidad — Ex Libris</title>
+    <title>Aviso de Privacidad — Christophe R Patraldo</title>
 </svelte:head>
 
 <div class="container">
-
     <h1>Aviso de Privacidad</h1>
     
     <p class="last-updated">Última actualización: [FECHA]</p>
@@ -13,13 +10,13 @@
     <section>
         <h2>1. Identidad y Domicilio del Responsable</h2>
         <p><strong>patrouch.ca</strong></p>
-        <p><strong>Domicilio:</strong>Ciudad de México</p>
-        <p><strong>Correo electrónico:</strong>cheftech@patrouch.ca </p>
+        <p><strong>Domicilio:</strong> Ciudad de México</p>
+        <p><strong>Correo electrónico:</strong> cheftech@patrouch.ca</p>
     </section>
 
     <section>
         <h2>2. Datos Personales que Recabamos</h2>
-        <p>Ex Libris recaba los siguientes datos personales:</p>
+        <p>Christophe R Patraldo recaba los siguientes datos personales:</p>
         <ul>
             <li>Nombre de usuario</li>
             <li>Dirección de correo electrónico</li>
@@ -45,8 +42,8 @@
         <h2>4. Transferencias de Datos</h2>
         <p>Tus datos pueden ser transferidos y procesados por:</p>
         <ul>
-            <li><strong>Cloudflare, Inc.</strong> (Estados Unidos) - Hospedaje y seguridad</li>
-            <li><strong>Mailgun</strong> (Estados Unidos) - Envío de correos electrónicos</li>
+            <li><strong>Cloudflare, Inc.</strong> (Estados Unidos) — Hospedaje y seguridad</li>
+            <li><strong>Mailgun</strong> (Estados Unidos) — Envío de correos electrónicos</li>
         </ul>
         <p>Estas transferencias son necesarias para la prestación del servicio.</p>
     </section>
@@ -100,23 +97,8 @@
         padding: 2rem;
     }
     
-    .legal-notice {
-        background: #fef3c7;
-        border: 2px solid #f59e0b;
-        padding: 1rem;
-        margin-bottom: 2rem;
-        border-radius: 8px;
-        font-weight: bold;
-        text-align: center;
-        color: #92400e;
-    }
-    
-    h1 {
-        margin-bottom: 1rem;
-    }
-    
     .last-updated {
-        color: #6b7280;
+        color: var(--text-muted);
         font-style: italic;
         margin-bottom: 2rem;
     }
@@ -125,15 +107,15 @@
         margin-bottom: 2rem;
     }
     
-    h2 {
-        color: #1f2937;
-        margin-bottom: 1rem;
-        margin-top: 2rem;
+    section p {
+        color: var(--text-dim);
+        line-height: 1.7;
     }
-    
-    ul {
+
+    section ul {
         margin-left: 1.5rem;
         line-height: 1.8;
+        color: var(--text-dim);
     }
     
     .back-link {

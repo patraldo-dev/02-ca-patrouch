@@ -348,7 +348,7 @@
         inset: 0;
         top: 60px;
         background: var(--bg);
-        z-index: 99;
+        z-index: calc(var(--z-nav) - 1);
         display: flex;
         flex-direction: column;
         padding: 2rem 1.5rem;

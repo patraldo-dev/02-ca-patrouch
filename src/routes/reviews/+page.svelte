@@ -1,10 +1,20 @@
 <script>
     import { onMount } from 'svelte';
-    import { t } from '$lib/i18n';
+    import { t, getLocale } from '$lib/i18n';
 
     let reviews = [];
     let loading = true;
     let error = null;
+
+    function ratingText(review) {
+        const loc = getLocale();
+        const templates = {
+            en: (r, c) => c === 1 ? `⭐ ${r} (${c} review)` : `⭐ ${r} (${c} reviews)`,
+            es: (r, c) => c === 1 ? `⭐ ${r} (${c} reseña)` : `⭐ ${r} (${c} reseñas)`,
+            fr: (r, c) => `⭐ ${r} (${c} avis)`
+        };
+        return (templates[loc] || templates.en)(review.rating, review.review_count);
+    }
     
     onMount(async () => {
         try {
@@ -12,7 +22,7 @@
             if (response.ok) {
                 reviews = await response.json();
             } else {
-                error = $t('pages.reviews.error'); // Use generic error
+                error = $t('pages.reviews.error');
             }
         } catch (err) {
             console.error('Error fetching reviews:', err);
@@ -30,53 +40,37 @@
 <div class="container">
     <div class="page-header">
         <h1>{$t('pages.reviews.heading')}</h1>
-        <p>{$t('pages.reviews.subtitle')}</p>
+        <p class="subtitle">{$t('pages.reviews.subtitle')}</p>
     </div>
     
     {#if loading}
-        <div class="loading">
+        <div class="state-box">
             <p>{$t('pages.reviews.loading')}</p>
         </div>
     {:else if error}
-        <div class="error">
+        <div class="state-box error">
             <p>{error}</p>
         </div>
     {:else if reviews.length === 0}
-        <div class="empty">
+        <div class="state-box empty">
             <p>{$t('pages.reviews.empty.message')}</p>
-            <a href="/books" class="btn">{$t('pages.reviews.empty.browseBooks')}</a>
+            <a href="/books" class="btn-accent">{$t('pages.reviews.empty.browseBooks')}</a>
         </div>
     {:else}
         <div class="reviews-grid">
-{#each reviews as review}
-
-  <pre>{JSON.stringify({rating: review.rating, count: review.review_count})}</pre>
-
-{@const ratingText = $t('pages.reviews.rating', { 
-  rating: review.rating, 
-  count: review.review_count,
-  plural: review.review_count === 1 ? '' : 's'
-})}
-  <p>{ratingText}</p>
-
+            {#each reviews as review}
                 <article class="review-card">
                     <div class="review-header">
-                        <div class="book-info">
-                            <h3>{review.book_title}</h3>
-                            <div class="rating">
-                                {ratingText}
-                            </div>
-
-                        <div class="review-meta">
-                            <span class="reviewer">{$t('pages.reviews.review.by')} {review.reviewer_name}</span>
-                            <span class="date">{new Date(review.created_at).toLocaleDateString()}</span>
-                        </div>
+                        <h3>{review.book_title}</h3>
+                        <div class="rating">{ratingText(review)}</div>
                     </div>
-                    
+                    <div class="review-meta">
+                        <span class="reviewer">{$t('pages.reviews.review.by')} {review.reviewer_name}</span>
+                        <span class="date">{new Date(review.created_at).toLocaleDateString()}</span>
+                    </div>
                     <div class="review-content">
                         {review.content}
                     </div>
-                    
                     <div class="review-actions">
                         <a href={`/books/${review.book_slug}`} class="view-book-btn">
                             {$t('pages.reviews.review.viewBook')}
@@ -87,6 +81,7 @@
         </div>
     {/if}
 </div>
+
 <style>
     .container {
         max-width: 1200px;
@@ -100,50 +95,47 @@
     }
     
     .page-header h1 {
-        font-size: 2.5rem;
-        color: #1f2937;
         margin: 0 0 0.5rem 0;
     }
     
-    .page-header p {
+    .subtitle {
+        color: var(--text-dim);
         font-size: 1.125rem;
-        color: #6b7280;
-        margin: 0;
     }
     
-    .loading, .error, .empty {
+    .state-box {
         text-align: center;
         padding: 3rem;
-        background: #f9fafb;
-        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
         margin: 2rem 0;
+        color: var(--text-dim);
     }
-    
-    .error {
-        background: #fef2f2;
-        color: #b91c1c;
+
+    .state-box.error {
+        background: rgba(185, 28, 28, 0.1);
+        border-color: rgba(185, 28, 28, 0.3);
+        color: #fca5a5;
     }
-    
-    .empty {
-        background: #f0f9ff;
-        color: #0369a1;
+
+    .state-box.empty {
+        background: rgba(3, 105, 161, 0.1);
+        border-color: rgba(3, 105, 161, 0.3);
+        color: var(--text-dim);
     }
-    
-    .empty .btn {
+
+    .state-box .btn-accent {
         display: inline-block;
         margin-top: 1rem;
-        padding: 0.5rem 1rem;
-        background: var(--primary-color);
-        color: white;
+        padding: 0.5rem 1.5rem;
+        background: var(--accent);
+        color: var(--bg);
         text-decoration: none;
-        border-radius: 6px;
-        font-weight: 500;
+        border-radius: var(--radius);
+        font-weight: 600;
     }
-    
-    .empty .btn:hover {
-        background: var(--primary-dark);
-    }
-    
+
     .reviews-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -151,17 +143,16 @@
     }
     
     .review-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
         padding: 1.5rem;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        position: relative;
+        transition: transform 0.2s ease, border-color 0.3s ease;
     }
     
     .review-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        border-color: rgba(201, 168, 124, 0.3);
     }
     
     .review-header {
@@ -171,32 +162,33 @@
         margin-bottom: 1rem;
     }
     
-    .book-info h3 {
+    .review-header h3 {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #1f2937;
-        margin: 0 0 0.5rem 0;
+        color: var(--text);
+        margin: 0;
     }
     
     .rating {
         color: #f59e0b;
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 0.95rem;
+        white-space: nowrap;
     }
     
     .review-meta {
         display: flex;
         gap: 1rem;
-        color: #6b7280;
+        color: var(--text-muted);
         font-size: 0.875rem;
         margin-bottom: 1rem;
         padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border);
     }
     
     .review-content {
         line-height: 1.6;
-        color: #374151;
+        color: var(--text-dim);
         margin-bottom: 1.5rem;
     }
     
@@ -206,7 +198,7 @@
     }
     
     .view-book-btn {
-        color: var(--primary-color);
+        color: var(--accent);
         text-decoration: none;
         font-weight: 500;
         font-size: 0.875rem;
@@ -214,26 +206,13 @@
     }
     
     .view-book-btn:hover {
-        color: var(--primary-dark);
+        color: var(--accent-hover);
         text-decoration: underline;
     }
     
     @media (max-width: 768px) {
-        .container {
-            padding: 1rem;
-        }
-        
-        .page-header h1 {
-            font-size: 2rem;
-        }
-        
-        .reviews-grid {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-        
-        .review-header {
-            align-items: center;
-        }
+        .container { padding: 1rem; }
+        .reviews-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+        .review-header { flex-direction: column; gap: 0.5rem; }
     }
 </style>

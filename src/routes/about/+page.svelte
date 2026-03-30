@@ -8,9 +8,14 @@
 </svelte:head>
 
 <div class="container">
-  <h1>{$t('pages.about.heading')}</h1>
-  <p>{$t('pages.about.paragraph1')}</p>
-  <p>{$t('pages.about.paragraph2')}</p>
+  <div class="about-header">
+    <div class="section-label fade-in">{$t('pages.about.heading')}</div>
+    <h1 class="fade-in">Christophe R Patraldo</h1>
+  </div>
+  <div class="about-content fade-in">
+    <p>{$t('pages.about.paragraph1')}</p>
+    <p>{$t('pages.about.paragraph2')}</p>
+  </div>
 </div>
 
 <style>
@@ -18,14 +23,20 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
-    line-height: 1.6;
   }
-  h1 {
-    color: #333;
-    margin-bottom: 1rem;
+
+  .about-header {
+    margin-bottom: 2rem;
   }
-  p {
-    margin-bottom: 1rem;
-    color: #555;
+
+  .about-header h1 {
+    margin-bottom: 0;
+  }
+
+  .about-content p {
+    color: var(--text-dim);
+    font-size: 1.05rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
   }
 </style>
