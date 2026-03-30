@@ -85,13 +85,17 @@
     }
     
     .newsletter-form h3 {
+        font-family: var(--font-heading);
+        font-weight: 300;
+        font-size: 1.35rem;
         margin-bottom: 0.5rem;
-        color: #333;
+        color: var(--text);
     }
     
     .newsletter-form p {
         margin-bottom: 1.5rem;
-        color: #666;
+        color: var(--text-muted);
+        font-size: 0.95rem;
     }
     
     .input-group {
@@ -101,54 +105,78 @@
     
     .input-group input {
         flex: 1;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
+        padding: 0.75rem 1rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        transition: border-color 0.2s;
+    }
+
+    .input-group input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .input-group input::placeholder {
+        color: var(--text-muted);
     }
     
     .input-group button {
         padding: 0.75rem 1.5rem;
-        background: var(--primary-color);
-        color: white;
+        background: var(--accent);
+        color: var(--bg);
         border: none;
-        border-radius: 4px;
-        font-size: 1rem;
+        border-radius: var(--radius);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        font-weight: 600;
         cursor: pointer;
         transition: background 0.2s;
+        white-space: nowrap;
     }
     
     .input-group button:hover {
-        background: var(--primary-dark);
+        background: var(--accent-hover);
     }
     
     .input-group button:disabled {
-        background: #9ca3af;
+        opacity: 0.5;
         cursor: not-allowed;
     }
     
     .message {
-        padding: 0.75rem;
+        padding: 0.75rem 1rem;
         margin-bottom: 1rem;
-        border-radius: 4px;
+        border-radius: var(--radius);
         text-align: center;
+        font-size: 0.9rem;
     }
     
     .message.success {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
+        background: rgba(34, 197, 94, 0.1);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.2);
     }
     
     .message.error {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.2);
     }
     
     .confirmation-note {
         margin-top: 0.5rem;
         font-style: italic;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+
+    @media (max-width: 480px) {
+        .input-group {
+            flex-direction: column;
+        }
     }
 </style>

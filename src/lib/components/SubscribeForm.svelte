@@ -51,45 +51,61 @@
         <p class="message">{message}</p>
     {/if}
 </form>
+
 <style>
     .subscribe-form {
-        background: white;
+        background: var(--surface);
+        border: 1px solid var(--border);
         padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: var(--radius-lg);
     }
     h3 {
         margin: 0 0 1rem 0;
         font-size: 1.1rem;
+        font-family: var(--font-heading);
+        font-weight: 300;
+        color: var(--text);
     }
     input, select {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.75rem 1rem;
         margin: 0.5rem 0;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+    }
+    input:focus, select:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    input::placeholder {
+        color: var(--text-muted);
     }
     button {
         width: 100%;
         padding: 0.75rem;
-        background: var(--primary-color);
-        color: white;
+        margin-top: 0.5rem;
+        background: var(--accent);
+        color: var(--bg);
         border: none;
-        border-radius: 4px;
-        font-size: 1rem;
-        font-weight: 500;
+        border-radius: var(--radius);
+        font-size: 0.95rem;
+        font-weight: 600;
         cursor: pointer;
+        transition: background 0.2s;
     }
-    button:disabled {
-        background: #9ca3af;
-    }
+    button:hover { background: var(--accent-hover); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     .message {
         margin-top: 1rem;
-        padding: 0.75rem;
-        border-radius: 4px;
-        background: #dcfce7;
-        color: #166534;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius);
+        background: rgba(34, 197, 94, 0.1);
+        color: #4ade80;
         font-size: 0.9rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
     }
 </style>

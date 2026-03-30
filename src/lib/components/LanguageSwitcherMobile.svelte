@@ -1,205 +1,68 @@
 <!-- src/lib/components/LanguageSwitcherMobile.svelte -->
 <script>
-  import { locale, locales } from '$lib/i18n';
+  import { locale } from '$lib/i18n';
   import { fade, fly } from 'svelte/transition';
-  
+
   const languages = [
-    { code: 'en-US', name: 'English', region: 'US' },
-    { code: 'es-MX', name: 'Español', region: 'MX' },
-    { code: 'fr-CA', name: 'Français', region: 'CA' }
+    { code: 'en', label: 'EN' },
+    { code: 'es', label: 'ES' },
+    { code: 'fr', label: 'FR' }
   ];
-  
+
   let isOpen = false;
-  
+
   function switchLanguage(lang) {
     locale.set(lang);
     isOpen = false;
   }
-  
-  function getLanguageName(code) {
-    const lang = languages.find(l => l.code === code);
-    return lang ? `${lang.region}` : code;
-  }
+
+  $: current = languages.find(l => l.code === $locale);
 </script>
 
-<div class="language-switcher-mobile">
-  <button 
-    class="language-button" 
-    on:click={() => isOpen = true}
-    aria-label="Change language"
-  >
-    <span class="globe-icon">🌎</span>
-    <span class="current-language">{getLanguageName($locale)}</span>
-  </button>
-  
-  {#if isOpen}
-    <div class="modal-backdrop" transition:fade on:click={() => isOpen = false}>
-      <div 
-        class="language-modal" 
-        transition:fly={{ y: 100, duration: 300 }}
-        on:click|stopPropagation
-      >
-        <div class="modal-header">
-          <h3>Select Language</h3>
-          <button class="close-button" on:click={() => isOpen = false}>✕</button>
-        </div>
-        
-        <div class="language-options">
-          {#each languages as lang}
-            <button 
-              class="language-option" 
-              class:selected={$locale === lang.code}
-              on:click={() => switchLanguage(lang.code)}
-            >
-              <span class="language-name">{lang.name}</span>
-              <span class="language-region">{lang.region}</span>
-              {#if $locale === lang.code}
-                <span class="selected-icon">✓</span>
-              {/if}
-            </button>
-          {/each}
-        </div>
-      </div>
-    </div>
-  {/if}
+<div class="lang-switcher">
+  {#each languages as lang}
+    <button
+      class="lang-pill"
+      class:active={$locale === lang.code}
+      on:click={() => switchLanguage(lang.code)}
+      aria-label="Switch to {lang.label}"
+    >
+      {lang.label}
+    </button>
+  {/each}
 </div>
 
 <style>
-  .language-switcher-mobile {
-    position: relative;
-  }
-  
-  .language-button {
+  .lang-switcher {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 30px;
-    padding: 8px 16px;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 14px;
-    font-weight: 500;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 24px;
+    padding: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
-  
-  .language-button:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-  
-  .globe-icon {
-    font-size: 18px;
-  }
-  
-  .current-language {
+
+  .lang-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
     font-weight: 600;
-  }
-  
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-  }
-  
-  .language-modal {
-    background: white;
-    border-radius: 20px 20px 0 0;
-    width: 100%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .modal-header h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #333;
-  }
-  
-  .close-button {
-    background: none;
-    border: none;
-    font-size: 20px;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    color: #666;
-    padding: 5px;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: all 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
   }
-  
-  .close-button:hover {
-    background: #f0f0f0;
+
+  .lang-pill:active:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
   }
-  
-  .language-options {
-    padding: 10px;
-    overflow-y: auto;
-  }
-  
-  .language-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 16px;
-    background: none;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #333;
-    border-radius: 12px;
-    margin-bottom: 5px;
-  }
-  
-  .language-option:hover {
-    background: #f5f5f5;
-  }
-  
-  .language-option.selected {
-    background: #f0f7ff;
-    border: 1px solid #d0e3ff;
-  }
-  
-  .language-name {
-    font-weight: 500;
-    font-size: 16px;
-  }
-  
-  .language-region {
-    font-size: 14px;
-    color: #666;
-    background: #f0f0f0;
-    padding: 4px 8px;
-    border-radius: 10px;
-  }
-  
-  .selected-icon {
-    color: #4285f4;
-    font-size: 18px;
-    font-weight: bold;
+
+  .lang-pill.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 </style>
