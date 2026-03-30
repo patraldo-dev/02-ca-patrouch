@@ -86,7 +86,7 @@
     <header class="navbar" class:scrolled>
         <div class="container nav-container">
             <a href="/" class="logo" aria-label="Home">
-                <span class="logo-initials">C.R.</span>
+                <span class="logo-initials">CR</span>
                 <span class="logo-name">Patraldo</span>
             </a>
 
