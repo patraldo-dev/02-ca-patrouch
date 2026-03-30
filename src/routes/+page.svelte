@@ -12,20 +12,21 @@
     <title>{$t('pages.home.title')}</title>
 </svelte:head>
 
-<div class="container">
-    <header class="hero">
-        <div class="hero-content">
-            <h1>{$t('pages.home.hero.heading')}</h1>
-            <p class="hero-subtitle">{$t('pages.home.hero.subtitle')}</p>
-            <div class="hero-cta">
-                <a href="/books" class="btn-primary">{$t('pages.home.hero.exploreBooks')}</a>
-                <a href="/about" class="btn-secondary">{$t('pages.home.hero.learnMore')}</a>
+<div class="glass-page">
+    <div class="container">
+        <header class="glass-hero">
+            <div class="hero-content">
+                <h1>{$t('pages.home.hero.heading')}</h1>
+                <p class="hero-subtitle">{$t('pages.home.hero.subtitle')}</p>
+                <div class="hero-cta">
+                    <a href="/books" class="btn-primary">{$t('pages.home.hero.exploreBooks')}</a>
+                    <a href="/about" class="btn-secondary">{$t('pages.home.hero.learnMore')}</a>
+                </div>
             </div>
-        </div>
-        <div class="hero-decoration"></div>
-    </header>
+            <div class="hero-decoration"></div>
+        </header>
     
-    <section class="featured-books">
+    <section class="glass-section featured-books">
         <div class="section-header">
             <h2>{$t('pages.home.featured.heading')}</h2>
             <div class="section-divider"></div>
@@ -91,16 +92,34 @@
         {/if}
     </section>
     
-    <section class="color-reference">
+    <section class="glass-section color-reference">
         <div class="section-header">
             <h2>{$t('pages.home.colorReference.heading')}</h2>
             <p class="section-subtitle">{$t('pages.home.colorReference.subtitle')}</p>
         </div>
         <ColorGuide />
     </section>
-</div> 
+</div> <!-- /container -->
+</div> <!-- /glass-page --> 
 
 <style>
+    /* Glassmorphism base */
+    .glass-page {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #533483 100%);
+        padding: 1.5rem;
+    }
+
+    .glass-hero,
+    .glass-section {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
     /* Book-themed color palette with accessibility compliance */
     :root {
         /* Primary colors - old book paper theme */
@@ -130,11 +149,11 @@
 .color-reference {
     margin-top: 4rem;
     padding: 2rem 0;
-    border-top: 1px solid var(--primary-light);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .section-subtitle {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.6);
     max-width: 600px;
     margin: 0 auto 2rem;
     text-align: center;
@@ -144,17 +163,19 @@
 
 /* Color Guide Component */
 .color-guide {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 1.5rem;
     border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
-    border: 1px solid var(--primary-light);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     max-width: 100%;
     margin: 0;
 }
 
 .color-guide h2 {
-    color: var(--text-primary);
+    color: #ffffff;
     text-align: left;
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
@@ -165,7 +186,7 @@
     align-items: center;
     margin-bottom: 1rem;
     padding: 0.75rem;
-    background: var(--bg-secondary);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
 }
 
@@ -189,7 +210,7 @@
 
 .color-swatch strong {
     display: block;
-    color: var(--text-primary);
+    color: #ffffff;
     font-size: 1rem;
     margin-bottom: 0.2rem;
 }
@@ -200,7 +221,7 @@
 }
 
 .color-swatch div > :last-child {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 0.9rem;
 }
 
@@ -209,19 +230,21 @@
         max-width: 1400px;
         margin: 0 auto;
         padding: 0 1.5rem;
-        background-color: var(--bg-primary);
     }
 
-    /* Hero Section - Book-themed warmth */
-    .hero {
+    /* Hero Section - Glassmorphism */
+    .glass-hero {
         position: relative;
         padding: 4rem 0 3rem;
         text-align: center;
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         border-radius: 24px;
         margin: 2rem 0 4rem;
         overflow: hidden;
-        border: 1px solid var(--primary-light);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .hero-content {
@@ -235,7 +258,7 @@
     .hero h1 {
         font-size: 3.5rem;
         font-weight: 800;
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--text-primary) 100%);
+        background: linear-gradient(135deg, #e2d1c3 0%, #ffffff 100%);
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -245,7 +268,7 @@
 
     .hero-subtitle {
         font-size: 1.25rem;
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.7);
         margin-bottom: 2rem;
         font-weight: 500;
         line-height: 1.6;
@@ -264,8 +287,7 @@
         right: -50px;
         width: 200px;
         height: 200px;
-        background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%);
-        opacity: 0.1;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
         border-radius: 50%;
         z-index: 1;
     }
@@ -280,7 +302,7 @@
     .section-header h2 {
         font-size: 2.25rem;
         font-weight: 700;
-        color: var(--text-primary);
+        color: #ffffff;
         margin-bottom: 1.5rem;
         position: relative;
         display: inline-block;
@@ -306,22 +328,26 @@
         padding: 0 0.5rem;
     }
 
-    /* Book Card - Modern card design */
+    /* Book Card - Glassmorphism */
     .book-card {
-        background: var(--bg-card);
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 10px 25px -5px rgba(139, 69, 19, 0.15), 0 8px 10px -6px rgba(139, 69, 19, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         height: 100%;
         display: flex;
         flex-direction: column;
-        border: 1px solid var(--primary-light);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .book-card:hover {
         transform: translateY(-8px);
-        box-shadow: 0 20px 25px -5px rgba(139, 69, 19, 0.2), 0 10px 10px -6px rgba(139, 69, 19, 0.15);
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.2);
     }
 
     .book-link {
@@ -366,11 +392,11 @@
     .book-cover-placeholder {
         width: 100%;
         aspect-ratio: 2/3;
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-light) 100%);
+        background: rgba(255, 255, 255, 0.05);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--text-muted);
+        color: rgba(255, 255, 255, 0.2);
     }
 
     .book-info {
@@ -388,18 +414,18 @@
     .book-info h3 {
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--text-primary);
+        color: #ffffff;
         margin: 0 0 0.75rem 0;
         line-height: 1.3;
         transition: color 0.2s ease;
     }
 
     .book-card:hover .book-info h3 {
-        color: var(--accent-color);
+        color: #e2d1c3;
     }
 
     .book-author {
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.6);
         margin: 0 0 1rem 0;
         font-weight: 500;
         font-size: 0.95rem;
@@ -420,7 +446,7 @@
     }
 
     .rating-count {
-        color: var(--text-muted);
+        color: rgba(255, 255, 255, 0.4);
         font-size: 0.9rem;
         font-weight: 500;
     }
@@ -429,8 +455,10 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #ffffff;
         padding: 0.75rem 1.25rem;
         border-radius: 12px;
         text-decoration: none;
@@ -439,13 +467,13 @@
         transition: all 0.2s ease;
         margin-top: auto;
         width: fit-content;
-        border: 1px solid var(--primary-dark);
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
     .read-more-btn:hover {
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--accent-color) 100%);
+        background: rgba(255, 255, 255, 0.2);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     }
 
     .read-more-btn svg {
@@ -470,17 +498,19 @@
     }
 
     .skeleton-card {
-        background: var(--bg-card);
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1);
-        border: 1px solid var(--primary-light);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .skeleton-cover {
         width: 100%;
         aspect-ratio: 2/3;
-        background: linear-gradient(90deg, var(--bg-secondary) 0%, var(--primary-light) 50%, var(--bg-secondary) 100%);
+        background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
     }
@@ -490,7 +520,7 @@
     }
 
     .skeleton-title, .skeleton-author {
-        background: linear-gradient(90deg, var(--bg-secondary) 0%, var(--primary-light) 50%, var(--bg-secondary) 100%);
+        background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
         border-radius: 4px;
@@ -519,12 +549,12 @@
     }
 
     .error-content svg, .empty-content svg {
-        color: var(--primary-dark);
+        color: rgba(255, 255, 255, 0.4);
         margin-bottom: 1.5rem;
     }
 
     .error-content p, .empty-content p {
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.6);
         font-size: 1.1rem;
         margin-bottom: 1.5rem;
         line-height: 1.6;
@@ -532,39 +562,41 @@
 
     /* Buttons */
     .btn-primary {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: #ffffff;
         padding: 0.875rem 2rem;
         border-radius: 14px;
         text-decoration: none;
         font-weight: 600;
         font-size: 1.1rem;
         transition: all 0.2s ease;
-        border: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
         cursor: pointer;
-        border: 1px solid var(--primary-dark);
     }
 
     .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 25px -5px rgba(139, 69, 19, 0.4);
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
 
     .btn-secondary {
         background: transparent;
-        color: var(--primary-dark);
+        color: rgba(255, 255, 255, 0.8);
         padding: 0.875rem 2rem;
         border-radius: 14px;
         text-decoration: none;
         font-weight: 600;
         font-size: 1.1rem;
         transition: all 0.2s ease;
-        border: 2px solid var(--primary-dark);
+        border: 2px solid rgba(255, 255, 255, 0.3);
         cursor: pointer;
     }
 
     .btn-secondary:hover {
-        background: rgba(160, 130, 109, 0.1);
+        background: rgba(255, 255, 255, 0.1);
         transform: translateY(-2px);
     }
 
@@ -616,8 +648,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary-light); /* #F5F5DC */
-  background: var(--bg-secondary); /* #F5F5DC */
+  color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .book-cover-placeholder svg {
