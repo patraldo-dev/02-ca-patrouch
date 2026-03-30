@@ -126,32 +126,34 @@
             </button>
         </div>
 
-        <!-- Mobile Menu -->
-        {#if mobileMenuOpen}
-            <div class="mobile-menu">
-                <nav class="mobile-nav">
-                    <a href="/" on:click={toggleMobileMenu}>{$t('common.nav.home')}</a>
-                    <a href="/books" on:click={toggleMobileMenu}>{$t('common.nav.works')}</a>
-                    <a href="/about" on:click={toggleMobileMenu}>{$t('common.nav.about')}</a>
-                    <a href="/blog" on:click={toggleMobileMenu}>{$t('common.nav.blog')}</a>
-                    <a href="/reviews" on:click={toggleMobileMenu}>{$t('common.nav.reviews')}</a>
-                </nav>
-                <div class="mobile-lang">
-                    <LanguageSwitcherMobile />
-                </div>
-                <div class="mobile-auth">
-                    {#if data?.user}
-                        <p class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></p>
-                        <a href="/admin" on:click={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
-                        <button on:click={() => { toggleMobileMenu(); handleLogout(); }} class="btn-glass block">{$t('common.nav.logout')}</button>
-                    {:else}
-                        <a href="/login" on:click={toggleMobileMenu} class="btn-glass block">{$t('common.nav.login')}</a>
-                        <a href="/signup" on:click={toggleMobileMenu} class="btn-accent block">{$t('common.nav.signup')}</a>
-                    {/if}
-                </div>
-            </div>
-        {/if}
+        </div>
     </header>
+
+    <!-- Mobile Menu (outside header to avoid z-index/blur conflicts) -->
+    {#if mobileMenuOpen}
+        <div class="mobile-menu" role="dialog" aria-modal="true">
+            <nav class="mobile-nav">
+                <a href="/" on:click={toggleMobileMenu}>{$t('common.nav.home')}</a>
+                <a href="/books" on:click={toggleMobileMenu}>{$t('common.nav.works')}</a>
+                <a href="/about" on:click={toggleMobileMenu}>{$t('common.nav.about')}</a>
+                <a href="/blog" on:click={toggleMobileMenu}>{$t('common.nav.blog')}</a>
+                <a href="/reviews" on:click={toggleMobileMenu}>{$t('common.nav.reviews')}</a>
+            </nav>
+            <div class="mobile-lang">
+                <LanguageSwitcherMobile />
+            </div>
+            <div class="mobile-auth">
+                {#if data?.user}
+                    <p class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></p>
+                    <a href="/admin" on:click={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
+                    <button on:click={() => { toggleMobileMenu(); handleLogout(); }} class="btn-glass block">{$t('common.nav.logout')}</button>
+                {:else}
+                    <a href="/login" on:click={toggleMobileMenu} class="btn-glass block">{$t('common.nav.login')}</a>
+                    <a href="/signup" on:click={toggleMobileMenu} class="btn-accent block">{$t('common.nav.signup')}</a>
+                {/if}
+            </div>
+        </div>
+    {/if}
 
     <!-- MAIN -->
     <main class="main-content">
@@ -346,9 +348,8 @@
     .mobile-menu {
         position: fixed;
         inset: 0;
-        top: 60px;
         background: var(--bg);
-        z-index: calc(var(--z-nav) - 1);
+        z-index: var(--z-nav);
         display: flex;
         flex-direction: column;
         padding: 2rem 1.5rem;
