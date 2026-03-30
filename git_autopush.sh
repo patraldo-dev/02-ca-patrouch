@@ -16,6 +16,6 @@
 
     # Push the changes to the remote repository (assuming 'origin' and 'main' or 'master' branch)
     # You might need to adjust 'main' to 'master' depending on your repository's default branch
-    git push origin main
+    git push origin HEAD
 
     echo "Changes added, committed, and pushed successfully!"
