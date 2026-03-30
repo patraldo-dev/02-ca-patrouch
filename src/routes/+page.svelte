@@ -12,8 +12,6 @@
     <title>{$t('pages.home.title')}</title>
 </svelte:head>
 
-<h1>OpenClaw test pushed from telegram</h1>
-
 <div class="container">
     <header class="hero">
         <div class="hero-content">
