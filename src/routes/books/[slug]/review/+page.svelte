@@ -110,7 +110,7 @@
     .back-btn {
         display: inline-block;
         margin-bottom: 2rem;
-        color: var(--primary-color);
+        color: var(--accent, #c9a87c);
         text-decoration: none;
         font-weight: 500;
     }
@@ -124,22 +124,24 @@
         width: 200px;
         height: auto;
         border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     .book-meta h2 {
         margin: 0 0 0.5rem 0;
         font-size: 1.8rem;
+        color: var(--text, #e4e4e7);
     }
     .book-meta h3 {
         margin: 0 0 1rem 0;
-        color: #555;
+        color: var(--muted, #71717a);
         font-size: 1.2rem;
     }
     .review-form {
-        background: white;
+        background: var(--surface, #141417);
         padding: 2rem;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        border: 1px solid var(--border, #27272a);
     }
     .form-group {
         margin-bottom: 1.5rem;
@@ -148,15 +150,17 @@
         display: block;
         margin-bottom: 0.5rem;
         font-weight: 500;
-        color: #333;
+        color: var(--text, #e4e4e7);
     }
     select, textarea {
         width: 100%;
         padding: 0.75rem;
-        border: 1px solid #ddd;
+        border: 1px solid var(--border, #27272a);
         border-radius: 6px;
         font-size: 1rem;
         font-family: inherit;
+        background: var(--surface-2, #1c1c21);
+        color: var(--text, #e4e4e7);
     }
     textarea {
         resize: vertical;
@@ -165,8 +169,8 @@
     button {
         width: 100%;
         padding: 0.75rem;
-        background: var(--primary-color);
-        color: white;
+        background: var(--accent, #c9a87c);
+        color: var(--bg, #09090b);
         border: none;
         border-radius: 6px;
         font-size: 1rem;
@@ -174,7 +178,7 @@
         cursor: pointer;
     }
     button:hover {
-        background: var(--primary-dark);
+        background: var(--accent-hover, #d4b88e);
     }
     .alert {
         padding: 1rem;
@@ -184,13 +188,13 @@
         font-weight: 500;
     }
     .success {
-        background: #dcfce7;
-        color: #166534;
-        border: 1px solid #bbf7d0;
+        background: #052e16;
+        color: #4ade80;
+        border: 1px solid #166534;
     }
     .error {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
+        background: #450a0a;
+        color: #fca5a5;
+        border: 1px solid #991b1b;
     }
 </style>

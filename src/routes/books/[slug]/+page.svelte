@@ -114,14 +114,15 @@
     .reviews-section {
         margin-top: 3rem;
         padding-top: 2rem;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid var(--border, #27272a);
     }
     
     .review {
         margin-bottom: 2rem;
         padding: 1.5rem;
-        background: #f9fafb;
+        background: var(--surface, #141417);
         border-radius: 8px;
+        border: 1px solid var(--border, #27272a);
     }
     
     .review-header {
@@ -138,21 +139,26 @@
     
     .author {
         font-weight: 600;
-        color: #4b5563;
+        color: var(--dim, #a1a1aa);
     }
     
     .date {
-        color: #6b7280;
+        color: var(--muted, #71717a);
         font-size: 0.875rem;
+    }
+    
+    .review-content {
+        color: var(--text, #e4e4e7);
+        line-height: 1.6;
     }
     
     .comment {
         margin-left: 2rem;
         margin-bottom: 1rem;
         padding: 1rem;
-        background: white;
+        background: var(--surface-2, #1c1c21);
         border-radius: 6px;
-        border-left: 3px solid #e5e7eb;
+        border-left: 3px solid var(--border, #27272a);
     }
     
     .comment-header {
@@ -162,11 +168,15 @@
         font-size: 0.875rem;
     }
     
+    .comment-content {
+        color: var(--text, #e4e4e7);
+    }
+    
     .no-reviews {
         text-align: center;
         padding: 2rem;
-        background: #f9fafb;
+        background: var(--surface, #141417);
         border-radius: 8px;
-        color: #6b7280;
+        color: var(--muted, #71717a);
     }
 </style>
