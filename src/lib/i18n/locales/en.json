@@ -300,5 +300,7 @@
   "agora.pagination.prev": "← Previous",
   "agora.pagination.next": "Next →",
   "agora.pagination.page": "Page {current} of {total}",
-  "agora.read_more": "Read more →"
+  "agora.read_more": "Read more →",
+  "pages.home.prompt.start_writing": "Start Writing",
+  "pages.home.prompt.sign_in": "Sign In to Write"
 }

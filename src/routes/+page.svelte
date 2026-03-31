@@ -1,10 +1,8 @@
 <script>
     import { t } from '$lib/i18n';
-    import { onMount } from 'svelte';
 
-    export let data;
+    let { data } = $props();
 
-    // Categories data
     const categories = [
         { key: 'featureFilms', icon: '🎬' },
         { key: 'shortFilms', icon: '🎞️' },
@@ -33,6 +31,23 @@
         </a>
     </div>
 </section>
+
+<!-- TODAY'S PROMPT TEASER -->
+{#if data.communityPrompt}
+<section class="prompt-teaser">
+    <div class="container">
+        <span class="teaser-label">{$t('write.dashboard.community_prompt')}</span>
+        <blockquote class="teaser-quote">
+            <p>{data.communityPrompt.prompt_text}</p>
+        </blockquote>
+        {#if data.user}
+            <a href="/write" class="teaser-cta">{$t('pages.home.prompt.start_writing')}</a>
+        {:else}
+            <a href="/login" class="teaser-cta">{$t('pages.home.prompt.sign_in')}</a>
+        {/if}
+    </div>
+</section>
+{/if}
 
 <!-- WORKS -->
 <section id="portfolio" class="section works-section">
@@ -211,6 +226,57 @@
     @keyframes scrollPulse {
         0%, 100% { opacity: 0.3; transform: scaleY(1); }
         50% { opacity: 1; transform: scaleY(1.2); }
+    }
+
+    /* ── Prompt Teaser ── */
+    .prompt-teaser {
+        padding: 4rem 0;
+        text-align: center;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+    }
+
+    .teaser-label {
+        display: inline-block;
+        font-family: var(--font-body);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 2rem;
+    }
+
+    .teaser-quote {
+        max-width: 600px;
+        margin: 0 auto 2rem;
+    }
+
+    .teaser-quote p {
+        font-family: var(--font-heading);
+        font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+        font-weight: 300;
+        font-style: italic;
+        color: var(--text);
+        line-height: 1.6;
+    }
+
+    .teaser-cta {
+        display: inline-block;
+        padding: 0.75rem 2.5rem;
+        background: var(--accent);
+        color: var(--bg);
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: 0.05em;
+        border-radius: var(--radius);
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+
+    .teaser-cta:hover {
+        background: var(--accent-hover);
     }
 
     /* ── Sections ── */
