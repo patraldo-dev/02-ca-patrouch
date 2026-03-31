@@ -1,6 +1,7 @@
 <script>
     let { data } = $props();
     import { enhance } from '$app/forms';
+    import { t } from '$lib/i18n';
 
     let title = $state('');
     let content = $state('');
@@ -10,22 +11,21 @@
     let wordCount = $derived(content.trim() ? content.trim().split(/\s+/).length : 0);
     let saving = $state(false);
 
-    const categoryLabels = {
-        fiction: 'Fiction', poetry: 'Poetry', memoir: 'Memoir', 'sci-fi': 'Sci-Fi',
-        mystery: 'Mystery', romance: 'Romance', fantasy: 'Fantasy', 'creative non-fiction': 'Creative Non-Fiction'
-    };
+    function catLabel(key) {
+        return $t('write.category.' + key) || key;
+    }
 </script>
 
 <div class="editor-page">
-    <a href="/write" class="back-link">← Back to Dashboard</a>
+    <a href="/write" class="back-link">{$t('write.editor.back')}</a>
 
-    <h1 class="editor-heading">New Writing</h1>
+    <h1 class="editor-heading">{$t('write.editor.heading')}</h1>
 
     {#if data.prompt}
         <div class="prompt-context">
-            <span class="prompt-tag">Writing from prompt</span>
+            <span class="prompt-tag">{$t('write.editor.from_prompt')}</span>
             <p class="prompt-text">{data.prompt.prompt_text}</p>
-            <span class="prompt-cat">{categoryLabels[data.prompt.category] || data.prompt.category}</span>
+            <span class="prompt-cat">{catLabel(data.prompt.category)}</span>
         </div>
     {/if}
 
@@ -33,36 +33,36 @@
         <input type="hidden" name="promptId" value={data.prompt?.id || ''} />
 
         <div class="editor-field">
-            <label for="title">Title</label>
-            <input id="title" name="title" type="text" bind:value={title} placeholder="Give your piece a title…" required />
+            <label for="title">{$t('write.editor.title')}</label>
+            <input id="title" name="title" type="text" bind:value={title} placeholder={$t('write.editor.title_placeholder')} required />
         </div>
 
         <div class="editor-field full">
-            <label for="content">Content <span class="word-count">{wordCount} words</span></label>
-            <textarea id="content" name="content" bind:value={content} placeholder="Start writing…" rows="16" required></textarea>
+            <label for="content">{$t('write.editor.content')} <span class="word-count">{wordCount} {$t('write.editor.words')}</span></label>
+            <textarea id="content" name="content" bind:value={content} placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
         </div>
 
         <div class="editor-options">
             <div class="option-group">
-                <label>Visibility</label>
+                <label>{$t('write.editor.visibility')}</label>
                 <select name="visibility" bind:value={visibility}>
-                    <option value="private">Private</option>
-                    <option value="public">Public</option>
+                    <option value="private">{$t('write.editor.private')}</option>
+                    <option value="public">{$t('write.editor.public')}</option>
                 </select>
             </div>
 
             <label class="toggle-label">
                 <input type="checkbox" name="aiAssisted" bind:checked={aiAssisted} />
-                <span>AI Assisted</span>
+                <span>{$t('write.editor.ai_assisted')}</span>
             </label>
         </div>
 
         <div class="editor-actions">
             <button type="submit" formaction="/write/new?/draft" class="btn-glass" disabled={saving}>
-                Save Draft
+                {$t('write.editor.save_draft')}
             </button>
             <button type="submit" formaction="/write/new?/publish" class="btn-accent" disabled={saving}>
-                Publish
+                {$t('write.editor.publish')}
             </button>
         </div>
     </form>

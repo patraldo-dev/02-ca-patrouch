@@ -1,5 +1,6 @@
 <script>
     import { page } from '$app/stores';
+    import { t } from '$lib/i18n';
 
     let { data } = $props();
 
@@ -12,10 +13,9 @@
     let stats = $state(data.stats || null);
     let error = $state(null);
 
-    const categoryLabels = {
-        fiction: 'Fiction', poetry: 'Poetry', memoir: 'Memoir', 'sci-fi': 'Sci-Fi',
-        mystery: 'Mystery', romance: 'Romance', fantasy: 'Fantasy', 'creative non-fiction': 'Creative Non-Fiction'
-    };
+    function catLabel(key) {
+        return $t('write.category.' + key) || key;
+    }
 
     async function handleAction(action) {
         try {
@@ -41,7 +41,7 @@
                 }
             }
         } catch (e) {
-            error = 'Something went wrong';
+            error = $t('write.dashboard.error_generic');
         }
     }
 
@@ -62,39 +62,39 @@
 <div class="write-page">
     {#if !data.user}
         <div class="write-cta">
-            <h1>Daily Writing Prompts</h1>
-            <p class="cta-subtitle">A fresh creative prompt every day. Accept the challenge or pass for something new.</p>
-            <a href="/login" class="btn-accent">Sign in to start writing</a>
+            <h1>{$t('write.dashboard.title')}</h1>
+            <p class="cta-subtitle">{$t('write.dashboard.cta_subtitle')}</p>
+            <a href="/login" class="btn-accent">{$t('write.dashboard.sign_in')}</a>
         </div>
     {:else}
         <div class="write-layout">
             <!-- Main Content -->
             <div class="write-main">
-                <h1 class="write-heading">Today's Prompt</h1>
+                <h1 class="write-heading">{$t('write.dashboard.today_prompt')}</h1>
 
                 {#if error}
                     <div class="prompt-card error">{error}</div>
                 {:else if prompt}
                     <div class="prompt-card">
-                        <span class="prompt-category">{categoryLabels[prompt.category] || prompt.category}</span>
+                        <span class="prompt-category">{catLabel(prompt.category)}</span>
                         <p class="prompt-text">{prompt.prompt_text}</p>
 
                         {#if !acceptedToday}
                             <div class="prompt-actions">
-                                <button class="btn-accept" onclick={() => handleAction('accepted')}>Accept This Prompt</button>
+                                <button class="btn-accept" onclick={() => handleAction('accepted')}>{$t('write.dashboard.accept')}</button>
                                 {#if !exhaustedPasses}
                                     <button class="btn-pass" onclick={() => handleAction('passed')}>
-                                        Pass — Get Another
+                                        {$t('write.dashboard.pass')}
                                     </button>
-                                    <span class="passes-remaining">{passesRemaining} pass{passesRemaining !== 1 ? 'es' : ''} remaining</span>
+                                    <span class="passes-remaining">{passesRemaining === 1 ? $t('write.dashboard.passes_remaining_one').replace('{count}', passesRemaining) : $t('write.dashboard.passes_remaining').replace('{count}', passesRemaining)}</span>
                                 {:else}
-                                    <p class="passes-exhausted">No passes remaining today. You can still <a href="/write/new">write freely</a> without a prompt.</p>
+                                    <p class="passes-exhausted">{@html $t('write.dashboard.passes_exhausted')}</p>
                                 {/if}
                             </div>
                         {:else}
                             <div class="prompt-accepted">
-                                <span class="accepted-badge">✓ Accepted</span>
-                                <a href="/write/new?promptId={promptId}" class="btn-accent">Start Writing</a>
+                                <span class="accepted-badge">{$t('write.dashboard.accepted')}</span>
+                                <a href="/write/new?promptId={promptId}" class="btn-accent">{$t('write.dashboard.start_writing')}</a>
                             </div>
                         {/if}
                     </div>
@@ -102,9 +102,9 @@
 
                 {#if exhaustedPasses && !acceptedToday}
                     <div class="free-write-card">
-                        <h3>Free Writing</h3>
-                        <p>Out of passes? Write about anything that inspires you.</p>
-                        <a href="/write/new" class="btn-glass">Start Free Writing</a>
+                        <h3>{$t('write.dashboard.free_writing')}</h3>
+                        <p>{$t('write.dashboard.free_writing_desc')}</p>
+                        <a href="/write/new" class="btn-glass">{$t('write.dashboard.start_free_writing')}</a>
                     </div>
                 {/if}
             </div>
@@ -113,39 +113,39 @@
             <aside class="write-sidebar">
                 {#if stats}
                     <div class="stats-card">
-                        <h3>Your Stats</h3>
+                        <h3>{$t('write.dashboard.your_stats')}</h3>
                         <div class="stat-grid">
                             <div class="stat-item">
                                 <span class="stat-value">{fmtNum(stats.total_writings)}</span>
-                                <span class="stat-label">Writings</span>
+                                <span class="stat-label">{$t('write.dashboard.writings')}</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-value">{fmtNum(stats.total_words)}</span>
-                                <span class="stat-label">Words</span>
+                                <span class="stat-label">{$t('write.dashboard.words')}</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-value">{fmtNum(stats.current_streak)}</span>
-                                <span class="stat-label">Day Streak</span>
+                                <span class="stat-label">{$t('write.dashboard.day_streak')}</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-value">{fmtNum(stats.prompts_accepted)}</span>
-                                <span class="stat-label">Accepted</span>
+                                <span class="stat-label">{$t('write.dashboard.accepted_label')}</span>
                             </div>
                         </div>
                         {#if stats.longest_streak > 0}
-                            <p class="stat-note">Longest streak: {stats.longest_streak} days</p>
+                            <p class="stat-note">{$t('write.dashboard.longest_streak').replace('{count}', stats.longest_streak)}</p>
                         {/if}
                     </div>
                 {/if}
 
                 {#if data.recentWritings?.length > 0}
                     <div class="recent-card">
-                        <h3>Recent Writings</h3>
+                        <h3>{$t('write.dashboard.recent_writings')}</h3>
                         <ul class="recent-list">
                             {#each data.recentWritings as w}
                                 <li>
                                     <span class="recent-title">{w.title}</span>
-                                    <span class="recent-meta">{w.word_count} words · {formatDate(w.created_at)}</span>
+                                    <span class="recent-meta">{w.word_count} {$t('write.dashboard.words_word')} · {formatDate(w.created_at)}</span>
                                 </li>
                             {/each}
                         </ul>

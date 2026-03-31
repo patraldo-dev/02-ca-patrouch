@@ -1,11 +1,14 @@
 import { redirect } from '@sveltejs/kit';
 import { getTodayData } from '$lib/server/writing-stats.js';
+import { getTranslation } from '$lib/i18n/server.js';
 
-export async function load({ locals }) {
+export async function load({ locals, url }) {
   if (!locals.user) return { user: null };
 
   const db = locals.db;
   const ai = locals.platform?.env?.AI;
+  const lang = locals.locale || 'es';
+  const t = getTranslation(lang);
 
   // Get today's prompt + stats server-side (no client-side loading state needed)
   let todayData;
@@ -14,7 +17,7 @@ export async function load({ locals }) {
   } catch (err) {
     console.error('Failed to load today data:', err);
     todayData = {
-      prompt: { id: null, prompt_text: 'Write freely today — the muse is resting.', category: 'free writing' },
+      prompt: { id: null, prompt_text: t('write.dashboard.fallback_prompt'), category: 'free writing' },
       userAction: null,
       acceptedPromptId: null,
       passesRemaining: 3,

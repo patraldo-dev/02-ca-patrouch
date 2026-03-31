@@ -1,20 +1,21 @@
 <!-- src/routes/admin/+error.svelte -->
 <script>
   import { page } from '$app/stores';
+  import { t } from '$lib/i18n';
 
   let { status } = $props();
 </script>
 
 <div class="error-page">
   {#if status === 403}
-    <h1>🔒 Access Denied</h1>
-    <p>This area is reserved for administrators. Your writing space is waiting at <a href="/write">/write</a>.</p>
-    <a href="/write" class="btn-accent">Go to Your Writing Space</a>
-    <a href="/" class="btn-glass">Back to Home</a>
+    <h1>{$t('pages.admin.error.access_denied')}</h1>
+    <p>{@html $t('pages.admin.error.reserved')}</p>
+    <a href="/write" class="btn-accent">{$t('pages.admin.error.go_write')}</a>
+    <a href="/" class="btn-glass">{$t('pages.admin.error.back_home')}</a>
   {:else}
     <h1>{status}</h1>
-    <p>Something went wrong.</p>
-    <a href="/" class="btn">Back to Home</a>
+    <p>{$t('pages.admin.error.something_wrong')}</p>
+    <a href="/" class="btn">{$t('pages.admin.error.back_home')}</a>
   {/if}
 </div>
 
