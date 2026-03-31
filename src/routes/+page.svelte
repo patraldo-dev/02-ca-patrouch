@@ -26,7 +26,7 @@
             <span class="hero-last">Patraldo</span>
         </h1>
         <p class="hero-tagline">{$t('pages.home.hero.tagline')}</p>
-        <a href="#portfolio" class="hero-scroll">
+        <a href="#prompt-teaser" class="hero-scroll">
             <div class="scroll-line"></div>
         </a>
     </div>
@@ -34,7 +34,7 @@
 
 <!-- TODAY'S PROMPT TEASER -->
 {#if data.communityPrompt}
-<section class="prompt-teaser">
+<section id="prompt-teaser" class="prompt-teaser">
     <div class="container">
         <span class="teaser-label">{$t('write.dashboard.community_prompt')}</span>
         <blockquote class="teaser-quote">
@@ -112,7 +112,7 @@
     /* ── Hero ── */
     .hero {
         position: relative;
-        min-height: 85vh;
+        min-height: 55vh;
         display: flex;
         align-items: center;
         justify-content: center;
