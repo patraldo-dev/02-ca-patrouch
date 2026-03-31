@@ -1,16 +1,17 @@
 <script>
     import { page } from '$app/stores';
+    import { onMount } from 'svelte';
 
-    export let data;
+    let { data } = $props();
 
-    let prompt = null;
-    let userAction = null;
-    let promptId = null;
-    let passesRemaining = 0;
+    let prompt = $state(null);
+    let userAction = $state(null);
+    let promptId = $state(null);
+    let passesRemaining = $state(0);
     let passesUsed = 0;
-    let stats = null;
+    let stats = $state(null);
     let loading = true;
-    let error = null;
+    let error = $state(null);
 
     const categoryLabels = {
         fiction: 'Fiction', poetry: 'Poetry', memoir: 'Memoir', 'sci-fi': 'Sci-Fi',
@@ -74,14 +75,14 @@
         } catch (e) {}
     }
 
-    $: acceptedToday = userAction === 'accepted';
-    $: exhaustedPasses = passesRemaining <= 0 && !acceptedToday;
+    let acceptedToday = $derived(userAction === 'accepted');
+    let exhaustedPasses = $derived(passesRemaining <= 0 && !acceptedToday);
 
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
     function formatDate(d) { if (!d) return ''; return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
 
     // Auto-refresh prompt data on mount
-    $: if (data.user) loadToday();
+    onMount(() => { if (data.user) loadToday(); });
 </script>
 
 <div class="write-page">
@@ -108,9 +109,9 @@
 
                         {#if !acceptedToday}
                             <div class="prompt-actions">
-                                <button class="btn-accept" on:click={() => handleAction('accepted')}>Accept This Prompt</button>
+                                <button class="btn-accept" onclick={() => handleAction('accepted')}>Accept This Prompt</button>
                                 {#if !exhaustedPasses}
-                                    <button class="btn-pass" on:click={() => handleAction('passed')}>
+                                    <button class="btn-pass" onclick={() => handleAction('passed')}>
                                         Pass — Get Another
                                     </button>
                                     <span class="passes-remaining">{passesRemaining} pass{passesRemaining !== 1 ? 'es' : ''} remaining</span>

@@ -1,5 +1,5 @@
 <script>
-    export let data;
+    let { data } = $props();
     import { enhance } from '$app/forms';
 
     let formData = {
@@ -9,8 +9,8 @@
         aiAssisted: $state(false)
     };
 
-    $: wordCount = formData.content.trim() ? formData.content.trim().split(/\s+/).length : 0;
-    $: saving = false;
+    let wordCount = $derived(formData.content.trim() ? formData.content.trim().split(/\s+/).length : 0);
+    let saving = $state(false);
 
     const categoryLabels = {
         fiction: 'Fiction', poetry: 'Poetry', memoir: 'Memoir', 'sci-fi': 'Sci-Fi',
