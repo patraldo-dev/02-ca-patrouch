@@ -167,6 +167,33 @@
         justify-content: center;
         text-decoration: none;
         cursor: pointer;
+        padding: 2rem;
+        border-radius: 50%;
+        position: relative;
+        overflow: visible;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .hero-scroll::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(201, 168, 124, 0.15);
+        transform: translate(-50%, -50%);
+        transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .hero-scroll:active::after {
+        width: 80px;
+        height: 80px;
+        opacity: 1;
+        transition: none;
     }
 
     .scroll-line {
@@ -174,12 +201,11 @@
         height: 56px;
         background: linear-gradient(to bottom, var(--accent), transparent);
         animation: scrollPulse 2s ease-in-out infinite;
-        transition: height 0.3s ease, background 0.3s ease;
+        transition: height 0.3s ease;
     }
 
     .hero-scroll:hover .scroll-line {
         height: 72px;
-        background: linear-gradient(to bottom, var(--accent), var(--accent));
     }
 
     @keyframes scrollPulse {
