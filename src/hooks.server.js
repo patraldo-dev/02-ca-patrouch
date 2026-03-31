@@ -123,6 +123,10 @@ export async function handle({ event, resolve }) {
 
     event.locals.db = event.platform.env.DB_book;
 
+    // Read locale from cookie (set by i18n on client)
+    const localeCookie = event.cookies.get('preferredLanguage') || event.cookies.get('locale');
+    event.locals.locale = ['en', 'es', 'fr'].includes(localeCookie) ? localeCookie : 'es';
+
     // Log Mailgun key for debugging
     if (event.platform?.env?.MAILGUN_API_KEY) {
         console.log('🔑 MAILGUN_API_KEY is set (length:', event.platform.env.MAILGUN_API_KEY.length, ')');

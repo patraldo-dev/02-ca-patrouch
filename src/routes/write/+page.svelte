@@ -6,6 +6,7 @@
 
     // Initialize from server-side load
     let prompt = $state(data.prompt || null);
+    let promptSource = $state(data.promptSource || 'community');
     let userAction = $state(data.userAction || null);
     let promptId = $state(data.acceptedPromptId || null);
     let passesRemaining = $state(data.passesRemaining || 3);
@@ -28,6 +29,7 @@
                 const d = await res.json();
                 if (action === 'passed') {
                     prompt = d.prompt;
+                    promptSource = d.promptSource || 'personal';
                     passesRemaining = d.passesRemaining;
                     passesUsed = d.passesUsed;
                     userAction = null;
@@ -36,6 +38,7 @@
                 } else if (action === 'accepted') {
                     promptId = d.promptId;
                     userAction = 'accepted';
+                    promptSource = d.promptSource || promptSource;
                     // Reload stats
                     loadStats();
                 }
@@ -56,7 +59,7 @@
     let exhaustedPasses = $derived(passesRemaining <= 0 && !acceptedToday);
 
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
-    function formatDate(d) { if (!d) return ''; return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+    function formatDate(d) { if (!d) return ''; const s = d.replace(' ', 'T'); return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
 </script>
 
 <div class="write-page">
@@ -76,7 +79,15 @@
                     <div class="prompt-card error">{error}</div>
                 {:else if prompt}
                     <div class="prompt-card">
-                        <span class="prompt-category">{catLabel(prompt.category)}</span>
+                        <div class="prompt-header">
+                            <span class="prompt-category">{catLabel(prompt.category)}</span>
+                            {#if promptSource === 'community' && !acceptedToday}
+                                <span class="prompt-source-tag community">{$t('write.dashboard.community_prompt')}</span>
+                                <span class="prompt-community-note">{$t('write.dashboard.community_note')}</span>
+                            {:else if promptSource === 'personal' && !acceptedToday}
+                                <span class="prompt-source-tag personal">{$t('write.dashboard.personal_prompt')}</span>
+                            {/if}
+                        </div>
                         <p class="prompt-text">{prompt.prompt_text}</p>
 
                         {#if !acceptedToday}
@@ -232,6 +243,41 @@
         padding: 0.25rem 0.75rem;
         border-radius: 999px;
         margin-bottom: 1rem;
+    }
+
+    .prompt-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .prompt-source-tag {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+    }
+
+    .prompt-source-tag.community {
+        color: #c084fc;
+        background: rgba(192, 132, 252, 0.12);
+        border: 1px solid rgba(192, 132, 252, 0.25);
+    }
+
+    .prompt-source-tag.personal {
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .prompt-community-note {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-style: italic;
     }
 
     .prompt-text {

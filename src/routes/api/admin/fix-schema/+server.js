@@ -97,6 +97,32 @@ export async function POST({ platform }) {
             changes.push('Fixed table schema');
         }
         
+        // ── daily_prompt_log: add is_community ──
+        const promptLogTable = await platform.env.DB_book.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='daily_prompt_log';").first();
+        if (promptLogTable) {
+            const promptLogInfo = await platform.env.DB_book.prepare("PRAGMA table_info(daily_prompt_log);").all();
+            const hasIsCommunity = promptLogInfo.results.some(c => c.name === 'is_community');
+            if (!hasIsCommunity) {
+                await platform.env.DB_book.exec("ALTER TABLE daily_prompt_log ADD COLUMN is_community INTEGER DEFAULT 1;");
+                changes.push('Added is_community column to daily_prompt_log');
+            }
+        }
+
+        // ── writings: add locale and category columns ──
+        const writingsTable = await platform.env.DB_book.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='writings';").first();
+        if (writingsTable) {
+            const writingsInfo = await platform.env.DB_book.prepare("PRAGMA table_info(writings);").all();
+            const cols = writingsInfo.results.map(c => c.name);
+            if (!cols.includes('locale')) {
+                await platform.env.DB_book.exec("ALTER TABLE writings ADD COLUMN locale TEXT DEFAULT 'en';");
+                changes.push('Added locale column to writings');
+            }
+            if (!cols.includes('category')) {
+                await platform.env.DB_book.exec("ALTER TABLE writings ADD COLUMN category TEXT;");
+                changes.push('Added category column to writings');
+            }
+        }
+
         return json({ 
             success: true, 
             message: changes.length > 0 ? `Schema fixed: ${changes.join(', ')}` : 'Schema is already correct',

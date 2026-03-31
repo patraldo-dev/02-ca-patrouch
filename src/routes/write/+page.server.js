@@ -40,6 +40,7 @@ export async function load({ locals, url }) {
   return {
     user: locals.user,
     prompt: todayData.prompt,
+    promptSource: todayData.promptSource,
     userAction: todayData.userAction,
     acceptedPromptId: todayData.acceptedPromptId,
     passesRemaining: todayData.passesRemaining,

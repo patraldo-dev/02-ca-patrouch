@@ -48,9 +48,27 @@ export async function getNewPromptForUser(db, ai, dateStr, userId, locale = 'en'
   return getOrCreateDailyPrompt(db, ai, dateStr, cat, locale);
 }
 
+export async function getOrCreateCommunityPrompt(db, ai, dateStr, locale = 'en') {
+  const existing = await db.prepare(
+    "SELECT id, prompt_text, category FROM writing_prompts WHERE prompt_date = ? AND locale = ? AND category = 'daily-community' LIMIT 1"
+  ).bind(dateStr, locale).first();
+
+  if (existing) return existing;
+
+  const promptText = await generatePromptWithAI(ai, 'daily-community', locale);
+  const id = crypto.randomUUID();
+  await db.prepare(
+    'INSERT INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
+  ).bind(id, promptText, dateStr, 'daily-community', locale).run();
+
+  return { id, prompt_text: promptText, category: 'daily-community' };
+}
+
 export async function generatePromptWithAI(ai, category, locale = 'en') {
   const lang = LOCALE_LANGUAGES[locale] || 'English';
-  const systemPrompt = `You are a creative writing prompt generator. Generate a single, inspiring writing prompt for the "${category}" genre. The prompt should be 1-3 sentences, vivid, and thought-provoking. You MUST output the prompt in ${lang}. Output ONLY the prompt text, nothing else.`;
+  const isCommunity = category === 'daily-community';
+  const genreDesc = isCommunity ? 'a genre of your choosing (vary it — fiction, poetry, memoir, sci-fi, etc.)' : `the "${category}" genre`;
+  const systemPrompt = `You are a creative writing prompt generator. Generate a single, inspiring writing prompt for ${genreDesc}. The prompt should be 1-3 sentences, vivid, and thought-provoking. You MUST output the prompt in ${lang}. Output ONLY the prompt text, nothing else.`;
 
   try {
     const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {

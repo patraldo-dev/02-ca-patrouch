@@ -1,4 +1,4 @@
-import { getOrCreateDailyPrompt, getNewPromptForUser, getCategoryForDate } from './prompt-generator.js';
+import { getOrCreateDailyPrompt, getNewPromptForUser, getOrCreateCommunityPrompt, getCategoryForDate } from './prompt-generator.js';
 
 const DAILY_PASS_LIMIT = 3;
 
@@ -15,44 +15,69 @@ function getYesterday() {
 export async function getTodayData(db, ai, userId, locale = 'en') {
   const today = getToday();
 
-  // Get today's default prompt (with fallback)
-  let prompt;
+  // Get or create the community prompt for today
+  let communityPrompt;
   try {
-    prompt = await getOrCreateDailyPrompt(db, ai, today, null, locale);
+    communityPrompt = await getOrCreateCommunityPrompt(db, ai, today, locale);
   } catch (err) {
-    console.error('Failed to generate prompt:', err);
-    prompt = {
+    console.error('Failed to generate community prompt:', err);
+    communityPrompt = {
       id: null,
       prompt_text: 'The well is dry today. Write whatever moves you — no prompt needed.',
-      category: 'free writing'
+      category: 'daily-community'
     };
   }
 
-  // Check user's action today for this locale
-  const log = await db.prepare(
-    'SELECT action, prompt_id FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action IN (?, ?) ORDER BY created_at DESC LIMIT 1'
-  ).bind(userId, today, locale, 'accepted', 'passed').first();
+  // Check user's log entries for today+locale
+  const logs = await db.prepare(
+    'SELECT action, prompt_id, is_community FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action IN (?, ?) ORDER BY created_at DESC'
+  ).bind(userId, today, locale, 'accepted', 'passed').all();
+  const entries = logs.results || [];
 
-  // Count passes used today for this locale
+  // Count passes used today
   const passCount = await db.prepare(
     "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed'"
   ).bind(userId, today, locale).first();
-
   const passesUsed = passCount?.count || 0;
   const passesRemaining = Math.max(0, DAILY_PASS_LIMIT - passesUsed);
 
-  // If they passed and have remaining passes, show a new prompt
-  let currentPrompt = prompt;
-  if (log?.action === 'passed' && passesRemaining > 0) {
-    currentPrompt = await getNewPromptForUser(db, ai, today, userId, locale);
+  // Find if user accepted anything (community or personal)
+  const acceptedEntry = entries.find(e => e.action === 'accepted');
+
+  // Determine what to show
+  let currentPrompt = communityPrompt;
+  let promptSource = 'community'; // 'community' | 'personal'
+  let acceptedPromptId = null;
+  let userAction = null;
+
+  if (acceptedEntry) {
+    // User already accepted a prompt — show it
+    userAction = 'accepted';
+    acceptedPromptId = acceptedEntry.prompt_id;
+    promptSource = acceptedEntry.is_community ? 'community' : 'personal';
+    // Fetch the prompt they accepted
+    if (acceptedEntry.prompt_id) {
+      const p = await db.prepare('SELECT id, prompt_text, category FROM writing_prompts WHERE id = ?').bind(acceptedEntry.prompt_id).first();
+      if (p) currentPrompt = p;
+    }
+  } else if (passesUsed > 0) {
+    // User passed but hasn't accepted yet — show a personal prompt
+    promptSource = 'personal';
+    try {
+      currentPrompt = await getNewPromptForUser(db, ai, today, userId, locale);
+    } catch (err) {
+      console.error('Failed to generate personal prompt:', err);
+    }
   }
+  // else: no entries yet → show community prompt (default above)
 
   const stats = await getStats(db, userId);
 
   return {
     prompt: currentPrompt,
-    userAction: log?.action || null,
-    acceptedPromptId: log?.action === 'accepted' ? log.prompt_id : null,
+    promptSource,
+    userAction,
+    acceptedPromptId,
     passesRemaining,
     passesUsed,
     dailyPassLimit: DAILY_PASS_LIMIT,
@@ -73,10 +98,10 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
       return { error: 'No passes remaining today', passesRemaining: 0 };
     }
 
-    const currentPrompt = await getOrCreateDailyPrompt(db, ai, today, null, locale);
+    const communityPrompt = await getOrCreateCommunityPrompt(db, ai, today, locale);
     await db.prepare(
-      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(crypto.randomUUID(), userId, currentPrompt.id, today, 'passed', locale).run();
+      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(crypto.randomUUID(), userId, communityPrompt.id, today, 'passed', locale, 1).run();
 
     await updateStats(db, userId, 'passed');
 
@@ -85,6 +110,7 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
 
     return {
       prompt: newPrompt,
+      promptSource: 'personal',
       passesRemaining: newRemaining,
       passesUsed: passesUsed + 1,
       action: 'passed'
@@ -92,16 +118,36 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
   }
 
   if (action === 'accepted') {
-    const currentPrompt = await getOrCreateDailyPrompt(db, ai, today, null, locale);
+    // Check if user has passed (in which case we accept the current personal prompt)
+    // or if no entries yet (accept community prompt)
+    const logs = await db.prepare(
+      'SELECT action FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? ORDER BY created_at DESC'
+    ).bind(userId, today, locale).all();
+    const hasPassed = (logs.results || []).some(e => e.action === 'passed');
+
+    let currentPrompt;
+    let isCommunity;
+
+    if (hasPassed) {
+      // Accept the current personal prompt
+      currentPrompt = await getNewPromptForUser(db, ai, today, userId, locale);
+      isCommunity = 0;
+    } else {
+      // Accept the community prompt
+      currentPrompt = await getOrCreateCommunityPrompt(db, ai, today, locale);
+      isCommunity = 1;
+    }
+
     await db.prepare(
-      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(crypto.randomUUID(), userId, currentPrompt.id, today, 'accepted', locale).run();
+      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(crypto.randomUUID(), userId, currentPrompt.id, today, 'accepted', locale, isCommunity).run();
 
     await updateStats(db, userId, 'accepted');
 
     return {
       promptId: currentPrompt.id,
       prompt: currentPrompt,
+      promptSource: isCommunity ? 'community' : 'personal',
       action: 'accepted',
       passesRemaining: await getPassesRemaining(db, userId, today, locale)
     };
@@ -141,10 +187,8 @@ export async function updateStats(db, userId, action, wordCount = 0) {
   let promptsPassed = existing.prompts_passed || 0;
   let lastDate = existing.last_writing_date;
 
-  // Update streak logic
   if (action === 'accepted' || action === 'written') {
     if (lastDate === today) {
-      // Already counted today, no streak change
     } else if (lastDate === yesterday) {
       currentStreak += 1;
     } else {
@@ -195,7 +239,6 @@ export async function getUserWritings(db, userId, options = {}) {
     binds.push(visibility);
   }
 
-  // Count
   const countResult = await db.prepare(query.replace('SELECT w.*', 'SELECT COUNT(*) as total')).bind(...binds).first();
   const total = countResult?.total || 0;
 
@@ -239,6 +282,118 @@ export async function saveDraft(db, userId, { title, content, promptId, aiAssist
   ).bind(id, userId, promptId || null, title, content, wordCount, aiAssisted ? 1 : 0).run();
 
   return { id, wordCount };
+}
+
+// ── Agora: public writing queries ──
+
+export async function getPublicWritings(db, options = {}) {
+  const page = options.page || 1;
+  const limit = Math.min(options.limit || 12, 50);
+  const offset = (page - 1) * limit;
+  const locale = options.locale || null;
+  const category = options.category || null;
+
+  let query = `
+    SELECT w.id, w.title, w.content, w.word_count, w.category, w.ai_assisted, w.visibility, w.status,
+           w.created_at, w.locale, u.username
+    FROM writings w
+    JOIN users u ON w.user_id = u.id
+    WHERE w.visibility = 'public' AND w.status = 'published'
+  `;
+  const binds = [];
+
+  if (locale) {
+    query += ' AND w.locale = ?';
+    binds.push(locale);
+  }
+  if (category) {
+    query += ' AND w.category = ?';
+    binds.push(category);
+  }
+
+  const countResult = await db.prepare(query.replace('SELECT w.id', 'SELECT COUNT(*) as total')).bind(...binds).first();
+  const total = countResult?.total || 0;
+
+  query += ' ORDER BY w.created_at DESC LIMIT ? OFFSET ?';
+  binds.push(limit, offset);
+
+  const { results } = await db.prepare(query).bind(...binds).all();
+
+  return { writings: results || [], total, page, pages: Math.ceil(total / limit) };
+}
+
+export async function getCommunityResponses(db, options = {}) {
+  const limit = Math.min(options.limit || 20, 50);
+  const locale = options.locale || null;
+
+  // Get dates that have community prompt responses
+  let dateQuery = `
+    SELECT DISTINCT w.created_at as date
+    FROM writings w
+    JOIN writing_prompts wp ON w.prompt_id = wp.id
+    JOIN users u ON w.user_id = u.id
+    WHERE w.visibility = 'public' AND w.status = 'published' AND wp.category = 'daily-community'
+  `;
+  const dateBinds = [];
+  if (locale) {
+    dateQuery += ' AND w.locale = ?';
+    dateBinds.push(locale);
+  }
+  dateQuery += ' ORDER BY date DESC LIMIT 30';
+
+  const { results: dates } = await db.prepare(dateQuery).bind(...dateBinds).all();
+
+  const groups = [];
+  for (const row of dates || []) {
+    const dateStr = row.date?.slice(0, 10);
+    if (!dateStr) continue;
+
+    // Get the community prompt for this date
+    const prompt = await db.prepare(
+      "SELECT prompt_text FROM writing_prompts WHERE prompt_date = ? AND category = 'daily-community' LIMIT 1"
+    ).bind(dateStr).first();
+
+    let responseQuery = `
+      SELECT w.id, w.title, w.content, w.word_count, w.ai_assisted, w.created_at, u.username
+      FROM writings w
+      JOIN writing_prompts wp ON w.prompt_id = wp.id
+      JOIN users u ON w.user_id = u.id
+      WHERE w.visibility = 'public' AND w.status = 'published' AND wp.category = 'daily-community'
+        AND w.created_at LIKE ?
+    `;
+    const rBinds = [dateStr + '%'];
+    if (locale) {
+      responseQuery += ' AND w.locale = ?';
+      rBinds.push(locale);
+    }
+    responseQuery += ' ORDER BY w.created_at DESC LIMIT ?';
+    rBinds.push(limit);
+
+    const { results: writings } = await db.prepare(responseQuery).bind(...rBinds).all();
+
+    if (writings?.length > 0) {
+      groups.push({ date: dateStr, prompt: prompt?.prompt_text || '', writings });
+    }
+  }
+
+  return groups;
+}
+
+export async function getUserProfile(db, username) {
+  const user = await db.prepare(
+    'SELECT id, username, email, role, created_at FROM users WHERE username = ?'
+  ).bind(username).first();
+  if (!user) return null;
+
+  const stats = await getStats(db, user.id);
+
+  const { results: publicWritings } = await db.prepare(
+    `SELECT id, title, content, word_count, category, ai_assisted, visibility, status, locale, created_at
+     FROM writings WHERE user_id = ? AND visibility = 'public' AND status = 'published'
+     ORDER BY created_at DESC LIMIT 50`
+  ).bind(user.id).all();
+
+  return { user, stats, writings: publicWritings || [] };
 }
 
 export { DAILY_PASS_LIMIT };
