@@ -1,139 +1,88 @@
 <svelte:head>
-    <title>Términos y Condiciones — Christophe R Patraldo</title>
+    <title>Terms of Service — patrouch.ca</title>
 </svelte:head>
 
 <div class="container">
-    <h1>Términos y Condiciones de Uso</h1>
-    
-    <p class="last-updated">Última actualización: [FECHA]</p>
+    <h1>Terms of Service</h1>
+    <p class="last-updated">Last updated: March 2026</p>
 
     <section>
-        <h2>1. Aceptación de los Términos</h2>
-        <p>Al acceder y utilizar este sitio, aceptas estar sujeto a estos Términos y Condiciones. Si no estás de acuerdo con alguno de estos términos, no debes usar este sitio.</p>
+        <h2>1. Acceptance</h2>
+        <p>By using patrouch.ca, you agree to these terms. If you disagree, please do not use the platform.</p>
     </section>
 
     <section>
-        <h2>2. Descripción del Servicio</h2>
-        <p>patrouch.ca es una plataforma que permite a los usuarios:</p>
+        <h2>2. The Service</h2>
+        <p>patrouch.ca is a creative writing platform that offers:</p>
         <ul>
-            <li>Leer y publicar reseñas de libros</li>
-            <li>Comentar sobre reseñas de otros usuarios</li>
-            <li>Descubrir nuevos libros y autores</li>
+            <li>Daily creative writing prompts (community and personal)</li>
+            <li>A personal writing space with a markdown editor</li>
+            <li>Writing stats (streaks, word counts, growth tracking)</li>
+            <li>The Agora — a community space to share published writings</li>
+            <li>Writer profiles</li>
         </ul>
     </section>
 
     <section>
-        <h2>3. Registro y Cuenta de Usuario</h2>
-        <p>Para utilizar ciertas funciones del sitio, debes registrarte y crear una cuenta. Al hacerlo, te comprometes a:</p>
+        <h2>3. Account</h2>
+        <p>To write and interact, you must register. You are responsible for:</p>
         <ul>
-            <li>Proporcionar información veraz y actualizada</li>
-            <li>Mantener la confidencialidad de tu contraseña</li>
-            <li>Ser responsable de todas las actividades bajo tu cuenta</li>
-            <li>Notificarnos inmediatamente sobre cualquier uso no autorizado de tu cuenta</li>
+            <li>Providing accurate information</li>
+            <li>Keeping your password confidential</li>
+            <li>All activity under your account</li>
         </ul>
     </section>
 
     <section>
-        <h2>4. Contenido del Usuario</h2>
-        <p>Al publicar contenido en este sitio (reseñas, comentarios, etc.), garantizas que:</p>
+        <h2>4. Your Content</h2>
+        <p>You retain ownership of everything you write. By setting visibility to "Community" or "Public," you grant us a license to display your writing on the platform. You can change visibility or delete your work at any time.</p>
+    </section>
+
+    <section>
+        <h2>5. Community Guidelines</h2>
         <ul>
-            <li>Tienes derecho a publicar dicho contenido</li>
-            <li>El contenido no infringe derechos de terceros</li>
-            <li>El contenido no es ofensivo, difamatorio, ni ilegal</li>
+            <li>Be respectful to other writers</li>
+            <li>Do not post harmful, illegal, or harassing content</li>
+            <li>Respect others' creative work — do not plagiarize</li>
+            <li>If you use AI assistance, disclose it honestly</li>
         </ul>
-        <p>Nos reservamos el derecho de eliminar cualquier contenido que viole estos términos.</p>
+        <p>We reserve the right to remove content that violates these guidelines.</p>
     </section>
 
     <section>
-        <h2>5. Propiedad Intelectual</h2>
-        <p>El contenido del sitio (diseño, código, textos, gráficos) es propiedad de Christophe R Patraldo o sus licenciantes y está protegido por las leyes de propiedad intelectual de México.</p>
-        <p>Al publicar contenido, otorgas una licencia no exclusiva, mundial, libre de regalías para usar, reproducir y mostrar tu contenido en el sitio.</p>
+        <h2>6. AI Features</h2>
+        <p>The platform uses AI for prompt generation only. AI does not write your content unless you explicitly choose to use it. The "AI Assisted" badge is a voluntary self-disclosure.</p>
     </section>
 
     <section>
-        <h2>6. Conducta Prohibida</h2>
-        <p>Está prohibido:</p>
-        <ul>
-            <li>Usar el sitio para fines ilegales</li>
-            <li>Acosar, amenazar o difamar a otros usuarios</li>
-            <li>Publicar contenido spam o comercial no autorizado</li>
-            <li>Intentar acceder a cuentas de otros usuarios</li>
-            <li>Interferir con el funcionamiento del sitio</li>
-            <li>Usar bots o scripts automatizados sin autorización</li>
-        </ul>
+        <h2>7. Availability</h2>
+        <p>We strive to keep the platform running, but cannot guarantee uninterrupted access. We may modify, suspend, or discontinue features with reasonable notice.</p>
     </section>
 
     <section>
-        <h2>7. Suspensión y Terminación</h2>
-        <p>Nos reservamos el derecho de suspender o cancelar tu cuenta si violas estos términos, sin previo aviso y sin responsabilidad alguna.</p>
+        <h2>8. Limitation of Liability</h2>
+        <p>The platform is provided "as is." We are not liable for any damages arising from your use of the service, including but not limited to loss of unpublished writings.</p>
     </section>
 
     <section>
-        <h2>8. Limitación de Responsabilidad</h2>
-        <p>Este sitio se proporciona "tal cual" sin garantías de ningún tipo. No nos hacemos responsables de:</p>
-        <ul>
-            <li>Errores u omisiones en el contenido</li>
-            <li>Pérdida de datos o interrupciones del servicio</li>
-            <li>Daños directos, indirectos o consecuentes derivados del uso del sitio</li>
-        </ul>
+        <h2>9. Changes</h2>
+        <p>We may update these terms. Continued use after changes constitutes acceptance. We will update the "Last updated" date.</p>
     </section>
 
     <section>
-        <h2>9. Indemnización</h2>
-        <p>Aceptas indemnizar y mantener indemne a Christophe R Patraldo de cualquier reclamación derivada de tu uso del sitio o violación de estos términos.</p>
+        <h2>10. Contact</h2>
+        <p>Questions? Reach us at <a href="mailto:cheftech@patrouch.ca">cheftech@patrouch.ca</a></p>
     </section>
-
-    <section>
-        <h2>10. Modificaciones</h2>
-        <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor al ser publicados en esta página. El uso continuo del sitio después de las modificaciones constituye tu aceptación de los nuevos términos.</p>
-    </section>
-
-    <section>
-        <h2>11. Ley Aplicable y Jurisdicción</h2>
-        <p>Estos términos se regirán e interpretarán de acuerdo con las leyes de los Estados Unidos Mexicanos. Cualquier disputa será sometida a la jurisdicción de los tribunales de [CIUDAD, ESTADO, MÉXICO].</p>
-    </section>
-
-    <section>
-        <h2>12. Contacto</h2>
-        <p>Para preguntas sobre estos términos, contáctanos en:</p>
-        <p><strong>Correo electrónico:</strong> [EMAIL DE CONTACTO]</p>
-        <p><strong>Dirección:</strong> [DIRECCIÓN COMPLETA]</p>
-    </section>
-
-    <div class="back-link">
-        <a href="/" class="btn-secondary">Volver al Inicio</a>
-    </div>
 </div>
 
 <style>
-    .container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-    }
-    
-    .last-updated {
-        color: var(--text-muted);
-        font-style: italic;
-        margin-bottom: 2rem;
-    }
-    
-    section {
-        margin-bottom: 2rem;
-    }
-
-    section p {
-        color: var(--text-dim);
-        line-height: 1.7;
-    }
-
-    section ul {
-        margin-left: 1.5rem;
-        line-height: 1.8;
-        color: var(--text-dim);
-    }
-    
-    .back-link {
-        margin-top: 3rem;
-    }
+    .container { max-width: 720px; margin: 4rem auto; padding: 0 1.5rem; }
+    h1 { font-family: var(--font-heading); font-size: 2rem; margin-bottom: 0.5rem; color: var(--text); }
+    .last-updated { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 3rem; }
+    section { margin-bottom: 2.5rem; }
+    h2 { font-family: var(--font-heading); font-size: 1.25rem; color: var(--accent); margin-bottom: 1rem; }
+    p { color: var(--text-dim); line-height: 1.7; margin-bottom: 0.75rem; }
+    a { color: var(--accent); }
+    ul { color: var(--text-dim); padding-left: 1.5rem; line-height: 1.8; }
+    li { margin-bottom: 0.5rem; }
 </style>

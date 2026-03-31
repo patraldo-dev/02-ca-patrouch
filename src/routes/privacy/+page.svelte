@@ -1,124 +1,86 @@
 <svelte:head>
-    <title>Aviso de Privacidad — Christophe R Patraldo</title>
+    <title>Privacy Policy — patrouch.ca</title>
 </svelte:head>
 
 <div class="container">
-    <h1>Aviso de Privacidad</h1>
-    
-    <p class="last-updated">Última actualización: [FECHA]</p>
+    <h1>Privacy Policy</h1>
+    <p class="last-updated">Last updated: March 2026</p>
 
     <section>
-        <h2>1. Identidad y Domicilio del Responsable</h2>
-        <p><strong>patrouch.ca</strong></p>
-        <p><strong>Domicilio:</strong> Ciudad de México</p>
-        <p><strong>Correo electrónico:</strong> cheftech@patrouch.ca</p>
+        <h2>1. Who We Are</h2>
+        <p><strong>patrouch.ca</strong> is a creative writing platform hosted by Christophe R Patraldo.</p>
+        <p><strong>Location:</strong> Mexico City</p>
+        <p><strong>Contact:</strong> cheftech@patrouch.ca</p>
     </section>
 
     <section>
-        <h2>2. Datos Personales que Recabamos</h2>
-        <p>Christophe R Patraldo recaba los siguientes datos personales:</p>
+        <h2>2. Information We Collect</h2>
+        <p>We collect the following information:</p>
         <ul>
-            <li>Nombre de usuario</li>
-            <li>Dirección de correo electrónico</li>
-            <li>Contraseña (almacenada de forma encriptada)</li>
-            <li>Reseñas y comentarios que publiques</li>
-            <li>Información de navegación y cookies</li>
+            <li><strong>Account info:</strong> username, email address, encrypted password</li>
+            <li><strong>Writings:</strong> content you create (stories, drafts, prompt responses)</li>
+            <li><strong>Activity:</strong> prompt interactions, writing stats, streaks</li>
+            <li><strong>Technical:</strong> browser type, IP address, cookies for session management and language preference</li>
         </ul>
     </section>
 
     <section>
-        <h2>3. Finalidades del Tratamiento</h2>
-        <p>Tus datos personales serán utilizados para:</p>
+        <h2>3. How We Use Your Information</h2>
         <ul>
-            <li>Crear y administrar tu cuenta de usuario</li>
-            <li>Publicar tus reseñas y comentarios de libros</li>
-            <li>Enviarte notificaciones sobre tu cuenta (si autorizas)</li>
-            <li>Mejorar nuestros servicios</li>
-            <li>Cumplir con obligaciones legales</li>
+            <li>To provide and maintain the writing platform</li>
+            <li>To display your published writings in the Agora (community space)</li>
+            <li>To track your writing stats (streaks, word counts)</li>
+            <li>To communicate important updates about the service</li>
         </ul>
     </section>
 
     <section>
-        <h2>4. Transferencias de Datos</h2>
-        <p>Tus datos pueden ser transferidos y procesados por:</p>
+        <h2>4. Your Writings & Visibility</h2>
+        <p>You control the visibility of your writings:</p>
         <ul>
-            <li><strong>Cloudflare, Inc.</strong> (Estados Unidos) — Hospedaje y seguridad</li>
-            <li><strong>Mailgun</strong> (Estados Unidos) — Envío de correos electrónicos</li>
+            <li><strong>Private:</strong> only you can see them</li>
+            <li><strong>Community:</strong> visible to other registered users</li>
+            <li><strong>Public:</strong> visible to anyone on the internet</li>
         </ul>
-        <p>Estas transferencias son necesarias para la prestación del servicio.</p>
+        <p>You can change visibility at any time or delete your writings.</p>
     </section>
 
     <section>
-        <h2>5. Derechos ARCO</h2>
-        <p>Como titular de datos personales, tienes derecho a:</p>
+        <h2>5. AI Usage</h2>
+        <p>We use Cloudflare Workers AI to generate creative writing prompts. Your writings are not used to train AI models. When you mark a piece as "AI Assisted," this is a voluntary disclosure to readers.</p>
+    </section>
+
+    <section>
+        <h2>6. Data Storage</h2>
+        <p>Your data is stored on Cloudflare's infrastructure (D1 database). Data is encrypted in transit. We do not sell or share your personal information with third parties.</p>
+    </section>
+
+    <section>
+        <h2>7. Cookies</h2>
         <ul>
-            <li><strong>Acceso:</strong> Conocer qué datos tenemos sobre ti</li>
-            <li><strong>Rectificación:</strong> Corregir datos incorrectos</li>
-            <li><strong>Cancelación:</strong> Solicitar la eliminación de tus datos</li>
-            <li><strong>Oposición:</strong> Oponerte al tratamiento de tus datos</li>
+            <li><strong>Session cookie:</strong> keeps you logged in (HttpOnly, 30 days)</li>
+            <li><strong>Language preference:</strong> remembers your chosen language</li>
         </ul>
-        <p>Para ejercer tus derechos ARCO, envía un correo a: <strong>[EMAIL PARA ARCO]</strong></p>
     </section>
 
     <section>
-        <h2>6. Revocación del Consentimiento</h2>
-        <p>Puedes revocar tu consentimiento para el tratamiento de tus datos en cualquier momento contactándonos a: <strong>[EMAIL DE CONTACTO]</strong></p>
+        <h2>8. Your Rights</h2>
+        <p>You may request to view, modify, or delete your personal data at any time by contacting cheftech@patrouch.ca.</p>
     </section>
 
     <section>
-        <h2>7. Cookies y Tecnologías de Rastreo</h2>
-        <p>Utilizamos cookies para mantener tu sesión activa y mejorar la experiencia de usuario. Puedes configurar tu navegador para rechazar cookies, aunque esto puede afectar la funcionalidad del sitio.</p>
+        <h2>9. Changes</h2>
+        <p>We may update this policy. Changes will be reflected on this page with an updated date.</p>
     </section>
-
-    <section>
-        <h2>8. Medidas de Seguridad</h2>
-        <p>Implementamos medidas de seguridad administrativas, técnicas y físicas para proteger tus datos personales, incluyendo encriptación de contraseñas y conexiones seguras HTTPS.</p>
-    </section>
-
-    <section>
-        <h2>9. Cambios al Aviso de Privacidad</h2>
-        <p>Nos reservamos el derecho de modificar este Aviso de Privacidad. Los cambios se publicarán en esta página y la fecha de actualización se modificará.</p>
-    </section>
-
-    <section>
-        <h2>10. Contacto</h2>
-        <p>Para cualquier duda sobre este Aviso de Privacidad, contáctanos en: <strong>[EMAIL DE CONTACTO]</strong></p>
-    </section>
-
-    <div class="back-link">
-        <a href="/" class="btn-secondary">Volver al Inicio</a>
-    </div>
 </div>
 
 <style>
-    .container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-    }
-    
-    .last-updated {
-        color: var(--text-muted);
-        font-style: italic;
-        margin-bottom: 2rem;
-    }
-    
-    section {
-        margin-bottom: 2rem;
-    }
-    
-    section p {
-        color: var(--text-dim);
-        line-height: 1.7;
-    }
-
-    section ul {
-        margin-left: 1.5rem;
-        line-height: 1.8;
-        color: var(--text-dim);
-    }
-    
-    .back-link {
-        margin-top: 3rem;
-    }
+    .container { max-width: 720px; margin: 4rem auto; padding: 0 1.5rem; }
+    h1 { font-family: var(--font-heading); font-size: 2rem; margin-bottom: 0.5rem; color: var(--text); }
+    .last-updated { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 3rem; }
+    section { margin-bottom: 2.5rem; }
+    h2 { font-family: var(--font-heading); font-size: 1.25rem; color: var(--accent); margin-bottom: 1rem; }
+    p { color: var(--text-dim); line-height: 1.7; margin-bottom: 0.75rem; }
+    ul { color: var(--text-dim); padding-left: 1.5rem; line-height: 1.8; }
+    li { margin-bottom: 0.5rem; }
 </style>

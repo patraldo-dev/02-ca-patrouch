@@ -171,6 +171,7 @@
             <div class="footer-bottom">
                 <p class="footer-tagline">{$t('common.footer.tagline')}</p>
                 <p class="footer-copy">© {new Date().getFullYear()} Christophe R Patraldo — <a href="https://patrouch.ca">patrouch.ca</a></p>
+                <p class="footer-built">{@html $t('common.footer.built_by')}</p>
                 <p class="footer-links">
                     <a href="/privacy">{$t('common.footer.privacy')}</a>
                     <span class="footer-sep">·</span>
@@ -430,6 +431,15 @@
     }
 
     .footer-copy a { color: var(--accent); }
+
+    .footer-built {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .footer-built a { color: var(--accent); text-decoration: none; }
+    .footer-built a:hover { text-decoration: underline; }
 
     .footer-links {
         display: flex;

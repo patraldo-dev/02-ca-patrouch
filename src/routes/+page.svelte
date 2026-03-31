@@ -57,23 +57,23 @@
         <p class="section-desc fade-in">{$t('pages.home.works.description')}</p>
         <div class="works-grid">
             <article class="glass-card fade-in">
-                <span class="card-icon">🎬</span>
-                <h3>{$t('pages.home.works.filmscripts')}</h3>
-                <p>{$t('pages.home.works.filmscripts.desc')}</p>
+                <span class="card-icon">✨</span>
+                <h3>{$t('write.dashboard.daily_prompt')}</h3>
+                <p>{$t('write.dashboard.community_note')}</p>
             </article>
             <article class="glass-card fade-in">
-                <span class="card-icon">📖</span>
+                <span class="card-icon">📚</span>
                 <h3>{$t('pages.home.works.novels')}</h3>
                 <p>{$t('pages.home.works.novels.desc')}</p>
             </article>
             <article class="glass-card fade-in">
-                <span class="card-icon">✍️</span>
-                <h3>{$t('pages.home.works.shortStories')}</h3>
+                <span class="card-icon">🏛️</span>
+                <h3>{$t('common.nav.agora')}</h3>
                 <p>{$t('pages.home.works.shortStories.desc')}</p>
             </article>
             <article class="glass-card fade-in">
-                <span class="card-icon">🔮</span>
-                <h3>{$t('pages.home.works.comingSoon')}</h3>
+                <span class="card-icon">📊</span>
+                <h3>{$t('write.dashboard.your_stats')}</h3>
                 <p>{$t('pages.home.works.comingSoon.desc')}</p>
             </article>
         </div>
