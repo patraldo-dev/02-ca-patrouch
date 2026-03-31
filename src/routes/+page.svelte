@@ -28,15 +28,14 @@
             <span class="hero-last">Patraldo</span>
         </h1>
         <p class="hero-tagline">{$t('pages.home.hero.tagline')}</p>
-        <div class="hero-scroll">
-            <div class="scroll-label">↓</div>
+        <a href="#portfolio" class="hero-scroll">
             <div class="scroll-line"></div>
-        </div>
+        </a>
     </div>
 </section>
 
 <!-- WORKS -->
-<section class="section works-section">
+<section id="portfolio" class="section works-section">
     <div class="container">
         <div class="section-label fade-in">{$t('pages.home.works.label')}</div>
         <h2 class="fade-in">{$t('pages.home.works.heading')}</h2>
@@ -165,26 +164,22 @@
     .hero-scroll {
         margin-top: 3rem;
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .scroll-label {
-        font-size: 0.7rem;
-        font-weight: 600;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: var(--accent);
-        opacity: 0.6;
-        animation: scrollPulse 2s ease-in-out infinite;
+        justify-content: center;
+        text-decoration: none;
+        cursor: pointer;
     }
 
     .scroll-line {
         width: 1px;
-        height: 48px;
+        height: 56px;
         background: linear-gradient(to bottom, var(--accent), transparent);
         animation: scrollPulse 2s ease-in-out infinite;
+        transition: height 0.3s ease, background 0.3s ease;
+    }
+
+    .hero-scroll:hover .scroll-line {
+        height: 72px;
+        background: linear-gradient(to bottom, var(--accent), var(--accent));
     }
 
     @keyframes scrollPulse {
