@@ -57,9 +57,7 @@
 
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
     function formatDate(d) { if (!d) return ''; return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
-
-
-    function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }</script>
+</script>
 
 <div class="write-page">
     {#if !data.user}
