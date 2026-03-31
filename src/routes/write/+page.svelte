@@ -1,6 +1,6 @@
 <script>
     import { page } from '$app/stores';
-    import { t } from '$lib/i18n';
+    import { t, locale } from '$lib/i18n';
 
     let { data } = $props();
 
@@ -22,7 +22,7 @@
             const res = await fetch('/api/write/today/action', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action })
+                body: JSON.stringify({ action, locale: $locale })
             });
             if (res.ok) {
                 const d = await res.json();

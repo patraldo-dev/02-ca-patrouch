@@ -12,13 +12,13 @@ function getYesterday() {
   return d.toISOString().slice(0, 10);
 }
 
-export async function getTodayData(db, ai, userId) {
+export async function getTodayData(db, ai, userId, locale = 'en') {
   const today = getToday();
 
   // Get today's default prompt (with fallback)
   let prompt;
   try {
-    prompt = await getOrCreateDailyPrompt(db, ai, today);
+    prompt = await getOrCreateDailyPrompt(db, ai, today, null, locale);
   } catch (err) {
     console.error('Failed to generate prompt:', err);
     prompt = {
@@ -28,15 +28,15 @@ export async function getTodayData(db, ai, userId) {
     };
   }
 
-  // Check user's action today
+  // Check user's action today for this locale
   const log = await db.prepare(
-    'SELECT action, prompt_id FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND action IN (?, ?) ORDER BY created_at DESC LIMIT 1'
-  ).bind(userId, today, 'accepted', 'passed').first();
+    'SELECT action, prompt_id FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action IN (?, ?) ORDER BY created_at DESC LIMIT 1'
+  ).bind(userId, today, locale, 'accepted', 'passed').first();
 
-  // Count passes used today
+  // Count passes used today for this locale
   const passCount = await db.prepare(
-    "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND action = 'passed'"
-  ).bind(userId, today).first();
+    "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed'"
+  ).bind(userId, today, locale).first();
 
   const passesUsed = passCount?.count || 0;
   const passesRemaining = Math.max(0, DAILY_PASS_LIMIT - passesUsed);
@@ -44,7 +44,7 @@ export async function getTodayData(db, ai, userId) {
   // If they passed and have remaining passes, show a new prompt
   let currentPrompt = prompt;
   if (log?.action === 'passed' && passesRemaining > 0) {
-    currentPrompt = await getNewPromptForUser(db, ai, today, userId);
+    currentPrompt = await getNewPromptForUser(db, ai, today, userId, locale);
   }
 
   const stats = await getStats(db, userId);
@@ -60,31 +60,27 @@ export async function getTodayData(db, ai, userId) {
   };
 }
 
-export async function handleAction(db, ai, userId, action) {
+export async function handleAction(db, ai, userId, action, locale = 'en') {
   const today = getToday();
 
   if (action === 'passed') {
-    // Check remaining passes
     const passCount = await db.prepare(
-      "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND action = 'passed'"
-    ).bind(userId, today).first();
+      "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed'"
+    ).bind(userId, today, locale).first();
     const passesUsed = passCount?.count || 0;
 
     if (passesUsed >= DAILY_PASS_LIMIT) {
       return { error: 'No passes remaining today', passesRemaining: 0 };
     }
 
-    // Log the pass action with current prompt
-    const currentPrompt = await getOrCreateDailyPrompt(db, ai, today);
+    const currentPrompt = await getOrCreateDailyPrompt(db, ai, today, null, locale);
     await db.prepare(
-      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action) VALUES (?, ?, ?, ?, ?)'
-    ).bind(crypto.randomUUID(), userId, currentPrompt.id, today, 'passed').run();
+      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(crypto.randomUUID(), userId, currentPrompt.id, today, 'passed', locale).run();
 
-    // Update stats
     await updateStats(db, userId, 'passed');
 
-    // Get a new prompt
-    const newPrompt = await getNewPromptForUser(db, ai, today, userId);
+    const newPrompt = await getNewPromptForUser(db, ai, today, userId, locale);
     const newRemaining = DAILY_PASS_LIMIT - passesUsed - 1;
 
     return {
@@ -96,10 +92,10 @@ export async function handleAction(db, ai, userId, action) {
   }
 
   if (action === 'accepted') {
-    const currentPrompt = await getOrCreateDailyPrompt(db, ai, today);
+    const currentPrompt = await getOrCreateDailyPrompt(db, ai, today, null, locale);
     await db.prepare(
-      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action) VALUES (?, ?, ?, ?, ?)'
-    ).bind(crypto.randomUUID(), userId, currentPrompt.id, today, 'accepted').run();
+      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(crypto.randomUUID(), userId, currentPrompt.id, today, 'accepted', locale).run();
 
     await updateStats(db, userId, 'accepted');
 
@@ -107,17 +103,17 @@ export async function handleAction(db, ai, userId, action) {
       promptId: currentPrompt.id,
       prompt: currentPrompt,
       action: 'accepted',
-      passesRemaining: await getPassesRemaining(db, userId, today)
+      passesRemaining: await getPassesRemaining(db, userId, today, locale)
     };
   }
 
   return { error: 'Invalid action' };
 }
 
-async function getPassesRemaining(db, userId, dateStr) {
+async function getPassesRemaining(db, userId, dateStr, locale = 'en') {
   const passCount = await db.prepare(
-    "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND action = 'passed'"
-  ).bind(userId, dateStr).first();
+    "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed'"
+  ).bind(userId, dateStr, locale).first();
   return Math.max(0, DAILY_PASS_LIMIT - (passCount?.count || 0));
 }
 

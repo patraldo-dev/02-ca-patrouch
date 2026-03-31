@@ -1,15 +1,27 @@
 import { json } from '@sveltejs/kit';
 import { getTodayData } from '$lib/server/writing-stats.js';
 
+function getUrlLocale(event) {
+  const q = event.url.searchParams.get('locale');
+  if (['en', 'es', 'fr'].includes(q)) return q;
+  const cookie = event.cookies.get('locale');
+  if (['en', 'es', 'fr'].includes(cookie)) return cookie;
+  const accept = event.request.headers.get('accept-language') || '';
+  if (accept.startsWith('fr')) return 'fr';
+  if (accept.startsWith('es')) return 'es';
+  return 'en';
+}
+
 export async function GET(event) {
   const user = event.locals.user;
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = event.locals.db;
   const ai = event.platform?.env?.AI;
+  const locale = getUrlLocale(event) || 'en';
 
   try {
-    const data = await getTodayData(db, ai, user.id);
+    const data = await getTodayData(db, ai, user.id, locale);
     return json(data);
   } catch (err) {
     console.error('GET /api/write/today error:', err);

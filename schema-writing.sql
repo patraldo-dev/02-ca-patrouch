@@ -5,11 +5,13 @@ CREATE TABLE IF NOT EXISTS writing_prompts (
   prompt_text TEXT NOT NULL,
   prompt_date TEXT NOT NULL,
   category TEXT NOT NULL,
+  locale TEXT DEFAULT 'en',
   created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_prompts_date ON writing_prompts(prompt_date);
 CREATE INDEX IF NOT EXISTS idx_prompts_category ON writing_prompts(category);
+CREATE INDEX IF NOT EXISTS idx_prompts_date_cat_locale ON writing_prompts(prompt_date, category, locale);
 
 CREATE TABLE IF NOT EXISTS writings (
   id TEXT PRIMARY KEY,
@@ -36,11 +38,16 @@ CREATE TABLE IF NOT EXISTS daily_prompt_log (
   prompt_id TEXT NOT NULL REFERENCES writing_prompts(id),
   prompt_date TEXT NOT NULL,
   action TEXT NOT NULL,
+  locale TEXT DEFAULT 'en',
   created_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_prompt_log_user_date ON daily_prompt_log(user_id, prompt_date);
-CREATE INDEX IF NOT EXISTS idx_prompt_log_action ON daily_prompt_log(user_id, prompt_date, action);
+CREATE INDEX IF NOT EXISTS idx_prompt_log_user_date ON daily_prompt_log(user_id, prompt_date, locale);
+CREATE INDEX IF NOT EXISTS idx_prompt_log_action ON daily_prompt_log(user_id, prompt_date, locale, action);
+
+-- Migration: add locale column to existing tables
+-- ALTER TABLE writing_prompts ADD COLUMN locale TEXT DEFAULT 'en';
+-- ALTER TABLE daily_prompt_log ADD COLUMN locale TEXT DEFAULT 'en';
 
 CREATE TABLE IF NOT EXISTS user_writing_stats (
   user_id TEXT PRIMARY KEY REFERENCES users(id),

@@ -9,11 +9,12 @@ export async function load({ locals, url }) {
   const ai = locals.platform?.env?.AI;
   const lang = locals.locale || 'es';
   const t = getTranslation(lang);
+  const locale = ['en', 'es', 'fr'].includes(lang) ? lang : 'es';
 
   // Get today's prompt + stats server-side (no client-side loading state needed)
   let todayData;
   try {
-    todayData = await getTodayData(db, ai, locals.user.id);
+    todayData = await getTodayData(db, ai, locals.user.id, locale);
   } catch (err) {
     console.error('Failed to load today data:', err);
     todayData = {
