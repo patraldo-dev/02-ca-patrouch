@@ -1,7 +1,7 @@
 <!-- src/lib/components/LanguageSwitcherMobile.svelte -->
 <script>
   import { locale } from '$lib/i18n';
-  import { fade, fly } from 'svelte/transition';
+  import { browser } from '$app/environment';
 
   const languages = [
     { code: 'en', label: 'EN' },
@@ -9,29 +9,15 @@
     { code: 'fr', label: 'FR' }
   ];
 
-  let isOpen = false;
-
-  async function switchLanguage(lang) {
+  function switchLanguage(lang) {
     if (!browser) return;
-    try {
-      const res = await fetch('/api/locale', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: lang })
-      });
-      if (res.ok) {
-        localStorage.setItem('preferredLanguage', lang);
-        locale.set(lang);
-        // Full navigation to ensure server-side load runs with new cookie
-        window.location.href = window.location.pathname + window.location.search;
-      }
-    } catch (e) {
-      locale.set(lang);
-      localStorage.setItem('preferredLanguage', lang);
-    }
+    // Set cookie client-side as fallback, then navigate
+    document.cookie = `preferredLanguage=${lang};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
+    localStorage.setItem('preferredLanguage', lang);
+    locale.set(lang);
+    // Navigate via query param — server endpoint sets the proper cookie
+    window.location.href = `/api/locale?lang=${lang}&redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   }
-
-  $: current = languages.find(l => l.code === $locale);
 </script>
 
 <div class="lang-switcher">
@@ -39,7 +25,7 @@
     <button
       class="lang-pill"
       class:active={$locale === lang.code}
-      on:click|stopPropagation={() => switchLanguage(lang.code)}
+      onclick={() => switchLanguage(lang.code)}
       aria-label="Switch to {lang.label}"
     >
       {lang.label}
