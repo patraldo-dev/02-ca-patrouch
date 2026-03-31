@@ -1,4 +1,5 @@
-// src/routes/+page.server.js
+import { redirect } from '@sveltejs/kit';
+
 export async function load() {
-    return {};
+    throw redirect(302, '/write');
 }

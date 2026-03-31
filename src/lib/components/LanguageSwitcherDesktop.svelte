@@ -12,13 +12,12 @@
   let isOpen = false;
 
   function switchLanguage(lang) {
+    if (!browser) return;
     locale.set(lang);
-    if (browser) {
-      localStorage.setItem('preferredLanguage', lang);
-      document.cookie = `preferredLanguage=${lang};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
-      // Reload to refresh server-side content (prompts, etc.)
-      window.location.reload();
-    }
+    localStorage.setItem('preferredLanguage', lang);
+    document.cookie = `preferredLanguage=${lang};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
+    // Navigate to same path to re-run server-side load with new locale
+    window.location.href = window.location.pathname + window.location.search;
   }
 
   $: current = languages.find(l => l.code === $locale);
