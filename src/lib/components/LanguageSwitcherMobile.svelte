@@ -13,7 +13,11 @@
 
   function switchLanguage(lang) {
     locale.set(lang);
-    isOpen = false;
+    if (browser) {
+      localStorage.setItem('preferredLanguage', lang);
+      document.cookie = `preferredLanguage=${lang};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
+      window.location.reload();
+    }
   }
 
   $: current = languages.find(l => l.code === $locale);
