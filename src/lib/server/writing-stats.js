@@ -15,8 +15,18 @@ function getYesterday() {
 export async function getTodayData(db, ai, userId) {
   const today = getToday();
 
-  // Get today's default prompt
-  const prompt = await getOrCreateDailyPrompt(db, ai, today);
+  // Get today's default prompt (with fallback)
+  let prompt;
+  try {
+    prompt = await getOrCreateDailyPrompt(db, ai, today);
+  } catch (err) {
+    console.error('Failed to generate prompt:', err);
+    prompt = {
+      id: null,
+      prompt_text: 'The well is dry today. Write whatever moves you — no prompt needed.',
+      category: 'free writing'
+    };
+  }
 
   // Check user's action today
   const log = await db.prepare(

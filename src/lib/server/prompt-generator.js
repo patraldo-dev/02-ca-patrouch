@@ -63,16 +63,32 @@ export async function getNewPromptForUser(db, ai, dateStr, userId) {
 export async function generatePromptWithAI(ai, category) {
   const systemPrompt = `You are a creative writing prompt generator. Generate a single, inspiring writing prompt for the "${category}" genre. The prompt should be 1-3 sentences, vivid, and thought-provoking. Output ONLY the prompt text, nothing else.`;
 
-  const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: `Give me a creative writing prompt in the ${category} genre.` }
-    ],
-    max_tokens: 150,
-    temperature: 0.9
-  });
+  try {
+    const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Give me a creative writing prompt in the ${category} genre.` }
+      ],
+      max_tokens: 150,
+      temperature: 0.9
+    });
 
-  return response.response?.trim() || `Write a ${category} piece about a moment that changed everything.`;
+    return response.response?.trim() || `Write a ${category} piece about a moment that changed everything.`;
+  } catch (err) {
+    console.error('AI prompt generation failed:', err);
+    // Static fallback prompts per category
+    const fallbacks = {
+      fiction: 'A letter arrives at your door, written in your own handwriting, dated ten years from now.',
+      poetry: 'Describe the sound of a color no one else can see.',
+      memoir: 'The meal that changed your understanding of home.',
+      'sci-fi': 'Humanity receives a reply to its first interstellar message — but it\'s in a language we invented as a joke.',
+      mystery: 'A painting in a museum changes slightly every night. Only you notice.',
+      romance: 'Two strangers keep finding each other\'s lost things.',
+      fantasy: 'The last dragon is small enough to fit in your pocket, and it has opinions.',
+      'creative non-fiction': 'Write about a place that exists differently in memory than in reality.'
+    };
+    return fallbacks[category] || 'Write about something you almost said but didn\'t.';
+  }
 }
 
 export { CATEGORIES, getCategoryForDate };
