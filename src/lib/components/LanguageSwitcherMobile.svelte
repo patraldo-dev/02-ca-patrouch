@@ -22,8 +22,8 @@
       if (res.ok) {
         localStorage.setItem('preferredLanguage', lang);
         locale.set(lang);
-        const { goto } = await import('$app/navigation');
-        goto(window.location.pathname + window.location.search, { invalidateAll: true });
+        // Full navigation to ensure server-side load runs with new cookie
+        window.location.href = window.location.pathname + window.location.search;
       }
     } catch (e) {
       locale.set(lang);
@@ -39,7 +39,7 @@
     <button
       class="lang-pill"
       class:active={$locale === lang.code}
-      on:click={() => switchLanguage(lang.code)}
+      on:click|stopPropagation={() => switchLanguage(lang.code)}
       aria-label="Switch to {lang.label}"
     >
       {lang.label}
