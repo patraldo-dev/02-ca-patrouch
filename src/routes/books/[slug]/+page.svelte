@@ -110,7 +110,120 @@
 </div>
 
 <style>
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
     
+    .book-detail {
+        color: var(--text, #e4e4e7);
+    }
+    
+    .book-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .book-header h1 {
+        font-family: var(--font-heading, 'Playfair Display', serif);
+        font-size: 2.5rem;
+        font-weight: 400;
+        color: var(--text, #e4e4e7);
+        margin: 0;
+    }
+    
+    .book-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .btn-secondary {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border, #27272a);
+        border-radius: var(--radius, 8px);
+        color: var(--text-dim, #a1a1aa);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-secondary:hover {
+        border-color: var(--accent, #c9a87c);
+        color: var(--accent, #c9a87c);
+    }
+    
+    .book-content {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .book-cover {
+        flex-shrink: 0;
+    }
+    
+    .book-cover img {
+        width: 200px;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    
+    .book-info {
+        flex: 1;
+        min-width: 250px;
+    }
+    
+    .book-info p {
+        color: var(--text-dim, #a1a1aa);
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+    }
+    
+    .book-info p strong {
+        color: var(--text, #e4e4e7);
+    }
+    
+    .book-description {
+        margin-top: 1.5rem;
+    }
+    
+    .book-description h3 {
+        font-family: var(--font-heading, 'Playfair Display', serif);
+        font-weight: 400;
+        color: var(--accent, #c9a87c);
+        margin-bottom: 0.75rem;
+    }
+    
+    .book-description p {
+        color: var(--text-dim, #a1a1aa);
+        line-height: 1.8;
+    }
+    
+    .back-link {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border, #27272a);
+    }
+    
+    .error {
+        text-align: center;
+        padding: 3rem;
+        background: var(--surface, #141417);
+        border-radius: 12px;
+        color: var(--text-dim, #a1a1aa);
+    }
+
     .reviews-section {
         margin-top: 3rem;
         padding-top: 2rem;
@@ -148,7 +261,7 @@
     }
     
     .review-content {
-        color: var(--text, #e4e4e7);
+        color: var(--text, #e4e4e7) !important;
         line-height: 1.6;
     }
     

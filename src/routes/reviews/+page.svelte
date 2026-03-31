@@ -165,7 +165,7 @@
     .review-header h3 {
         font-size: 1.25rem;
         font-weight: 600;
-        color: var(--text);
+        color: var(--text, #e4e4e7) !important;
         margin: 0;
     }
     
@@ -179,16 +179,16 @@
     .review-meta {
         display: flex;
         gap: 1rem;
-        color: var(--text-muted);
+        color: var(--text-muted, #71717a) !important;
         font-size: 0.875rem;
         margin-bottom: 1rem;
         padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border, #27272a);
     }
     
     .review-content {
         line-height: 1.6;
-        color: var(--text-dim);
+        color: var(--text-dim, #a1a1aa) !important;
         margin-bottom: 1.5rem;
     }
     
