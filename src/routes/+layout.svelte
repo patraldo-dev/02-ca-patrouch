@@ -97,9 +97,7 @@
                 <a href="/about" class:active={$page.url.pathname.startsWith('/about')}>{$t('common.nav.about')}</a>
                 <a href="/blog" class:active={$page.url.pathname.startsWith('/blog')}>{$t('common.nav.blog')}</a>
                 <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
-                {#if data?.user}
-                    <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
-                {/if}
+                <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
             </nav>
 
             <!-- Desktop: Lang + Auth -->
@@ -141,9 +139,7 @@
                 <a href="/blog" on:click={toggleMobileMenu}>{$t('common.nav.blog')}</a>
                 <a href="/reviews" on:click={toggleMobileMenu}>{$t('common.nav.reviews')}</a>
                 <a href="/agora" on:click={toggleMobileMenu}>{$t('common.nav.agora')}</a>
-                {#if data?.user}
-                    <a href="/write" on:click={toggleMobileMenu}>{$t('common.nav.write')}</a>
-                {/if}
+                <a href="/write" on:click={toggleMobileMenu}>{$t('common.nav.write')}</a>
             </nav>
             <div class="mobile-lang">
                 <LanguageSwitcherMobile />
