@@ -11,12 +11,22 @@
 
   let isOpen = false;
 
-  function switchLanguage(lang) {
+  async function switchLanguage(lang) {
     if (!browser) return;
-    locale.set(lang);
-    localStorage.setItem('preferredLanguage', lang);
-    document.cookie = `preferredLanguage=${lang};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
-    window.location.href = window.location.pathname + window.location.search;
+    try {
+      await fetch('/api/locale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: lang })
+      });
+      localStorage.setItem('preferredLanguage', lang);
+      window.location.href = window.location.pathname + window.location.search;
+    } catch (e) {
+      locale.set(lang);
+      localStorage.setItem('preferredLanguage', lang);
+      document.cookie = `preferredLanguage=${lang};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
+      window.location.reload();
+    }
   }
 
   $: current = languages.find(l => l.code === $locale);

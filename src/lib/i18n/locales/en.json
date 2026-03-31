@@ -302,5 +302,6 @@
   "agora.pagination.page": "Page {current} of {total}",
   "agora.read_more": "Read more →",
   "pages.home.prompt.start_writing": "Start Writing",
-  "pages.home.prompt.sign_in": "Sign In to Write"
+  "pages.home.prompt.sign_in": "Sign In to Write",
+  "write.category.daily-community": "Daily Community"
 }

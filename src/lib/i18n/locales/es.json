@@ -302,5 +302,6 @@
   "agora.pagination.page": "Página {current} de {total}",
   "agora.read_more": "Leer más →",
   "pages.home.prompt.start_writing": "Empezar a Escribir",
-  "pages.home.prompt.sign_in": "Inicia Sesión para Escribir"
+  "pages.home.prompt.sign_in": "Inicia Sesión para Escribir",
+  "write.category.daily-community": "Comunidad Diaria"
 }
