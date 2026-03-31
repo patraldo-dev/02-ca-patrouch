@@ -14,18 +14,20 @@
   async function switchLanguage(lang) {
     if (!browser) return;
     try {
-      await fetch('/api/locale', {
+      const res = await fetch('/api/locale', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ locale: lang })
       });
-      localStorage.setItem('preferredLanguage', lang);
-      window.location.href = window.location.pathname + window.location.search;
+      if (res.ok) {
+        localStorage.setItem('preferredLanguage', lang);
+        locale.set(lang);
+        const { goto } = await import('$app/navigation');
+        goto(window.location.pathname + window.location.search, { invalidateAll: true });
+      }
     } catch (e) {
       locale.set(lang);
       localStorage.setItem('preferredLanguage', lang);
-      document.cookie = `preferredLanguage=${lang};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
-      window.location.reload();
     }
   }
 
