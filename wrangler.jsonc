@@ -33,8 +33,12 @@
       ],
 
 	"images": {
-		"binding": "IMAGES"  // ← This will be available as env.IMAGES in your Worker
-	    }
+		"binding": "IMAGES"
+	},
+
+	"ai": {
+		"binding": "AI"
+	}
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
