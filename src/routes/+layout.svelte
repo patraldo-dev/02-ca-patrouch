@@ -125,8 +125,6 @@
                 </span>
             </button>
         </div>
-
-        </div>
     </header>
 
     <!-- Mobile Menu (outside header to avoid z-index/blur conflicts) -->
