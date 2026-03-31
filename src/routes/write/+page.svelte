@@ -1,44 +1,21 @@
 <script>
     import { page } from '$app/stores';
-    import { onMount } from 'svelte';
 
     let { data } = $props();
 
-    let prompt = $state(null);
-    let userAction = $state(null);
-    let promptId = $state(null);
-    let passesRemaining = $state(0);
-    let passesUsed = 0;
-    let stats = $state(null);
-    let loading = true;
+    // Initialize from server-side load
+    let prompt = $state(data.prompt || null);
+    let userAction = $state(data.userAction || null);
+    let promptId = $state(data.acceptedPromptId || null);
+    let passesRemaining = $state(data.passesRemaining || 3);
+    let passesUsed = $state(data.passesUsed || 0);
+    let stats = $state(data.stats || null);
     let error = $state(null);
 
     const categoryLabels = {
         fiction: 'Fiction', poetry: 'Poetry', memoir: 'Memoir', 'sci-fi': 'Sci-Fi',
         mystery: 'Mystery', romance: 'Romance', fantasy: 'Fantasy', 'creative non-fiction': 'Creative Non-Fiction'
     };
-
-    async function loadToday() {
-        loading = true;
-        error = null;
-        try {
-            const res = await fetch('/api/write/today');
-            if (res.ok) {
-                const d = await res.json();
-                prompt = d.prompt;
-                userAction = d.userAction;
-                promptId = d.acceptedPromptId;
-                passesRemaining = d.passesRemaining;
-                passesUsed = d.passesUsed;
-                stats = d.stats;
-            } else {
-                error = 'Failed to load today\'s prompt';
-            }
-        } catch (e) {
-            error = 'Network error';
-        }
-        loading = false;
-    }
 
     async function handleAction(action) {
         try {
@@ -81,9 +58,8 @@
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
     function formatDate(d) { if (!d) return ''; return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
 
-    // Auto-refresh prompt data on mount
-    onMount(() => { if (data.user) loadToday(); });
-</script>
+
+    function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }</script>
 
 <div class="write-page">
     {#if !data.user}
@@ -98,9 +74,7 @@
             <div class="write-main">
                 <h1 class="write-heading">Today's Prompt</h1>
 
-                {#if loading}
-                    <div class="prompt-card loading">Loading today's prompt…</div>
-                {:else if error}
+                {#if error}
                     <div class="prompt-card error">{error}</div>
                 {:else if prompt}
                     <div class="prompt-card">
