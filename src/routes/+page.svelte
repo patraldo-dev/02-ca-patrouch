@@ -29,6 +29,7 @@
         </h1>
         <p class="hero-tagline">{$t('pages.home.hero.tagline')}</p>
         <div class="hero-scroll">
+            <div class="scroll-label">↓</div>
             <div class="scroll-line"></div>
         </div>
     </div>
@@ -97,7 +98,7 @@
     /* ── Hero ── */
     .hero {
         position: relative;
-        min-height: 100vh;
+        min-height: 85vh;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -162,14 +163,26 @@
     }
 
     .hero-scroll {
-        margin-top: 4rem;
+        margin-top: 3rem;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .scroll-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent);
+        opacity: 0.6;
+        animation: scrollPulse 2s ease-in-out infinite;
     }
 
     .scroll-line {
         width: 1px;
-        height: 60px;
+        height: 48px;
         background: linear-gradient(to bottom, var(--accent), transparent);
         animation: scrollPulse 2s ease-in-out infinite;
     }
