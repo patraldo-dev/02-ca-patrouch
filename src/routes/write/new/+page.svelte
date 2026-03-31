@@ -2,14 +2,12 @@
     let { data } = $props();
     import { enhance } from '$app/forms';
 
-    let formData = {
-        title: $state(''),
-        content: $state(''),
-        visibility: $state('private'),
-        aiAssisted: $state(false)
-    };
+    let title = $state('');
+    let content = $state('');
+    let visibility = $state('private');
+    let aiAssisted = $state(false);
 
-    let wordCount = $derived(formData.content.trim() ? formData.content.trim().split(/\s+/).length : 0);
+    let wordCount = $derived(content.trim() ? content.trim().split(/\s+/).length : 0);
     let saving = $state(false);
 
     const categoryLabels = {
@@ -36,25 +34,25 @@
 
         <div class="editor-field">
             <label for="title">Title</label>
-            <input id="title" name="title" type="text" bind:value={formData.title} placeholder="Give your piece a title…" required />
+            <input id="title" name="title" type="text" bind:value={title} placeholder="Give your piece a title…" required />
         </div>
 
         <div class="editor-field full">
             <label for="content">Content <span class="word-count">{wordCount} words</span></label>
-            <textarea id="content" name="content" bind:value={formData.content} placeholder="Start writing…" rows="16" required></textarea>
+            <textarea id="content" name="content" bind:value={content} placeholder="Start writing…" rows="16" required></textarea>
         </div>
 
         <div class="editor-options">
             <div class="option-group">
                 <label>Visibility</label>
-                <select name="visibility" bind:value={formData.visibility}>
+                <select name="visibility" bind:value={visibility}>
                     <option value="private">Private</option>
                     <option value="public">Public</option>
                 </select>
             </div>
 
             <label class="toggle-label">
-                <input type="checkbox" name="aiAssisted" bind:checked={formData.aiAssisted} />
+                <input type="checkbox" name="aiAssisted" bind:checked={aiAssisted} />
                 <span>AI Assisted</span>
             </label>
         </div>
