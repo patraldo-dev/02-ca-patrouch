@@ -182,7 +182,7 @@
     }
     
     .signup-link {
-        color: #d4d4d8;
+        color: #e4e4e7;
         font-size: 14px;
         margin-top: 8px !important;
     }
@@ -217,7 +217,7 @@
     }
 
     .subscribe-text {
-        color: #d4d4d8;
+        color: #e4e4e7;
         font-size: 0.85rem;
         margin-bottom: 0.75rem;
     }
@@ -441,7 +441,17 @@
         color: var(--accent);
     }
     
-    @media (max-width: 768px) {
+
+    .form-group input::placeholder {
+        color: #71717a;
+        opacity: 1;
+    }
+    
+    .subscribe-form input::placeholder {
+        color: #71717a;
+        opacity: 1;
+    }
+        @media (max-width: 768px) {
         .login-container {
             flex-direction: column;
             max-width: 400px;
