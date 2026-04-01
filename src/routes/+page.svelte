@@ -58,23 +58,18 @@
         <div class="works-grid">
             <article class="glass-card fade-in">
                 <span class="card-icon">✨</span>
-                <h3>{$t('write.dashboard.daily_prompt')}</h3>
-                <p>{$t('write.dashboard.community_note')}</p>
-            </article>
-            <article class="glass-card fade-in">
-                <span class="card-icon">📚</span>
-                <h3>{$t('pages.home.works.novels')}</h3>
-                <p>{$t('pages.home.works.novels.desc')}</p>
+                <h3>{$t('pages.home.works.prompts')}</h3>
+                <p>{$t('pages.home.works.prompts.desc')}</p>
             </article>
             <article class="glass-card fade-in">
                 <span class="card-icon">🏛️</span>
-                <h3>{$t('common.nav.agora')}</h3>
-                <p>{$t('pages.home.works.shortStories.desc')}</p>
+                <h3>{$t('pages.home.works.agora')}</h3>
+                <p>{$t('pages.home.works.agora.desc')}</p>
             </article>
             <article class="glass-card fade-in">
                 <span class="card-icon">📊</span>
-                <h3>{$t('write.dashboard.your_stats')}</h3>
-                <p>{$t('pages.home.works.comingSoon.desc')}</p>
+                <h3>{$t('pages.home.works.stats')}</h3>
+                <p>{$t('pages.home.works.stats.desc')}</p>
             </article>
         </div>
     </div>
