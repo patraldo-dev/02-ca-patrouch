@@ -204,12 +204,6 @@
         margin: 16px auto;
         border-radius: 2px;
     }
-    
-        width: 40px;
-        height: 2px;
-        background: linear-gradient(to bottom, var(--accent), rgba(201, 168, 124, 0.3));
-        margin: 16px auto;
-        border-radius: 2px;
 
     .subscribe-section {
         margin-top: auto;
