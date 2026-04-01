@@ -1,77 +1,77 @@
 <svelte:head>
-    <title>Terms of Service — patrouch.ca</title>
+    <title>{$t('pages.terms.title')} — patrouch.ca</title>
 </svelte:head>
 
 <div class="container">
-    <h1>Terms of Service</h1>
-    <p class="last-updated">Last updated: March 2026</p>
+    <h1>{$t('pages.terms.heading')}</h1>
+    <p class="last-updated">{$t('pages.terms.last_updated')}</p>
 
     <section>
-        <h2>1. Acceptance</h2>
-        <p>By using patrouch.ca, you agree to these terms. If you disagree, please do not use the platform.</p>
+        <h2>{$t('pages.terms.s1_heading')}</h2>
+        <p>{@html $t('pages.terms.s1_body')}</p>
     </section>
 
     <section>
-        <h2>2. The Service</h2>
-        <p>patrouch.ca is a creative writing platform that offers:</p>
+        <h2>{$t('pages.terms.s2_heading')}</h2>
+        <p>{$t('pages.terms.s2_intro')}</p>
         <ul>
-            <li>Daily creative writing prompts (community and personal)</li>
-            <li>A personal writing space with a markdown editor</li>
-            <li>Writing stats (streaks, word counts, growth tracking)</li>
-            <li>The Agora — a community space to share published writings</li>
-            <li>Writer profiles</li>
+            <li>{$t('pages.terms.s2_li1')}</li>
+            <li>{$t('pages.terms.s2_li2')}</li>
+            <li>{$t('pages.terms.s2_li3')}</li>
+            <li>{@html $t('pages.terms.s2_li4')}</li>
+            <li>{$t('pages.terms.s2_li5')}</li>
         </ul>
     </section>
 
     <section>
-        <h2>3. Account</h2>
-        <p>To write and interact, you must register. You are responsible for:</p>
+        <h2>{$t('pages.terms.s3_heading')}</h2>
+        <p>{@html $t('pages.terms.s3_body')}</p>
         <ul>
-            <li>Providing accurate information</li>
-            <li>Keeping your password confidential</li>
-            <li>All activity under your account</li>
+            <li>{$t('pages.terms.s3_li1')}</li>
+            <li>{$t('pages.terms.s3_li2')}</li>
+            <li>{$t('pages.terms.s3_li3')}</li>
         </ul>
     </section>
 
     <section>
-        <h2>4. Your Content</h2>
-        <p>You retain ownership of everything you write. By setting visibility to "Community" or "Public," you grant us a license to display your writing on the platform. You can change visibility or delete your work at any time.</p>
+        <h2>{$t('pages.terms.s4_heading')}</h2>
+        <p>{@html $t('pages.terms.s4_body')}</p>
     </section>
 
     <section>
-        <h2>5. Community Guidelines</h2>
+        <h2>{$t('pages.terms.s5_heading')}</h2>
         <ul>
-            <li>Be respectful to other writers</li>
-            <li>Do not post harmful, illegal, or harassing content</li>
-            <li>Respect others' creative work — do not plagiarize</li>
-            <li>If you use AI assistance, disclose it honestly</li>
+            <li>{@html $t('pages.terms.s5_li1')}</li>
+            <li>{@html $t('pages.terms.s5_li2')}</li>
+            <li>{@html $t('pages.terms.s5_li3')}</li>
+            <li>{@html $t('pages.terms.s5_li4')}</li>
         </ul>
-        <p>We reserve the right to remove content that violates these guidelines.</p>
+        <p>{@html $t('pages.terms.s5_footer')}</p>
     </section>
 
     <section>
-        <h2>6. AI Features</h2>
-        <p>The platform uses AI for prompt generation only. AI does not write your content unless you explicitly choose to use it. The "AI Assisted" badge is a voluntary self-disclosure.</p>
+        <h2>{$t('pages.terms.s6_heading')}</h2>
+        <p>{@html $t('pages.terms.s6_body')}</p>
     </section>
 
     <section>
-        <h2>7. Availability</h2>
-        <p>We strive to keep the platform running, but cannot guarantee uninterrupted access. We may modify, suspend, or discontinue features with reasonable notice.</p>
+        <h2>{$t('pages.terms.s7_heading')}</h2>
+        <p>{@html $t('pages.terms.s7_body')}</p>
     </section>
 
     <section>
-        <h2>8. Limitation of Liability</h2>
-        <p>The platform is provided "as is." We are not liable for any damages arising from your use of the service, including but not limited to loss of unpublished writings.</p>
+        <h2>{$t('pages.terms.s8_heading')}</h2>
+        <p>{@html $t('pages.terms.s8_body')}</p>
     </section>
 
     <section>
-        <h2>9. Changes</h2>
-        <p>We may update these terms. Continued use after changes constitutes acceptance. We will update the "Last updated" date.</p>
+        <h2>{$t('pages.terms.s9_heading')}</h2>
+        <p>{@html $t('pages.terms.s9_body')}</p>
     </section>
 
     <section>
-        <h2>10. Contact</h2>
-        <p>Questions? Reach us at <a href="mailto:cheftech@patrouch.ca">cheftech@patrouch.ca</a></p>
+        <h2>{$t('pages.terms.s10_heading')}</h2>
+        <p>{@html $t('pages.terms.s10_body')}</p>
     </section>
 </div>
 
