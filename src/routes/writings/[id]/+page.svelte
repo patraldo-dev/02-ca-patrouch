@@ -6,8 +6,12 @@
     let { data } = $props();
     let w = $state(data.writing);
 
-    // Track view
-    track('view_writing', w.id, { title: w.title, status: w.status });
+    // Track view (client-side only via effect)
+    $effect(() => {
+        if (typeof window !== 'undefined') {
+            track('view_writing', w.id, { title: w.title, status: w.status });
+        }
+    });
 
     function formatDate(d) {
         if (!d) return '';
@@ -20,10 +24,6 @@
 
     function wordCountDisplay(n) {
         return n != null ? n.toLocaleString() : '0';
-    }
-
-    async function handleDelete() {
-        if (!confirm($t('write.view.confirm_delete'))) return;
     }
 
     async function confirmDelete() {
