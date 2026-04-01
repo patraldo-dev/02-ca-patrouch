@@ -318,5 +318,8 @@
   "auth.login.sign_up": "Sign up",
   "auth.login.error_required": "Please enter your email or username and password",
   "auth.login.error_invalid": "Invalid credentials",
-  "auth.login.error_network": "Network error. Please try again."
+  "auth.login.error_network": "Network error. Please try again.",
+  "auth.login.subscribe_text": "Stay inspired — get writing tips and prompts in your inbox",
+  "auth.login.subscribe_placeholder": "your@email.com",
+  "auth.login.subscribe_button": "Subscribe"
 }

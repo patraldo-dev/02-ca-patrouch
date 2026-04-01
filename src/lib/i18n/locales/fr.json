@@ -318,5 +318,8 @@
   "auth.login.sign_up": "S'inscrire",
   "auth.login.error_required": "Veuillez entrer votre email ou nom d'utilisateur et mot de passe",
   "auth.login.error_invalid": "Identifiants invalides",
-  "auth.login.error_network": "Erreur réseau. Veuillez réessayer."
+  "auth.login.error_network": "Erreur réseau. Veuillez réessayer.",
+  "auth.login.subscribe_text": "Restez inspiré — recevez des conseils et des stimulations d'écriture",
+  "auth.login.subscribe_placeholder": "votre@email.com",
+  "auth.login.subscribe_button": "S'abonner"
 }

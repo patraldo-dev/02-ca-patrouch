@@ -105,6 +105,16 @@
                     {/if}
                 </button>
             </form>
+
+            <div class="gold-divider"></div>
+
+            <div class="subscribe-section">
+                <p class="subscribe-text">{$t('auth.login.subscribe_text')}</p>
+                <form class="subscribe-form" on:submit|preventDefault>
+                    <input type="email" placeholder="{$t('auth.login.subscribe_placeholder')}" required />
+                    <button type="submit">{$t('auth.login.subscribe_button')}</button>
+                </form>
+            </div>
         </div>
         
         <div class="login-illustration">
@@ -194,6 +204,62 @@
         border-radius: 2px;
     }
     
+    .gold-divider {
+        width: 40px;
+        height: 2px;
+        background: linear-gradient(to bottom, var(--accent), rgba(201, 168, 124, 0.3));
+        margin: 16px auto;
+        border-radius: 2px;
+    }
+
+    .subscribe-section {
+        margin-top: auto;
+        text-align: center;
+    }
+
+    .subscribe-text {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .subscribe-form {
+        display: flex;
+        gap: 8px;
+    }
+
+    .subscribe-form input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 0.85rem;
+        outline: none;
+    }
+
+    .subscribe-form input:focus {
+        border-color: var(--accent);
+    }
+
+    .subscribe-form button {
+        padding: 8px 16px;
+        background: rgba(201, 168, 124, 0.15);
+        color: var(--accent);
+        border: 1px solid rgba(201, 168, 124, 0.3);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+
+    .subscribe-form button:hover {
+        background: rgba(201, 168, 124, 0.25);
+    }
+
     .error-message {
         display: flex;
         align-items: center;

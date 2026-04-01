@@ -318,5 +318,8 @@
   "auth.login.sign_up": "Regístrate",
   "auth.login.error_required": "Por favor ingresa tu correo o usuario y contraseña",
   "auth.login.error_invalid": "Credenciales inválidas",
-  "auth.login.error_network": "Error de red. Por favor intenta de nuevo."
+  "auth.login.error_network": "Error de red. Por favor intenta de nuevo.",
+  "auth.login.subscribe_text": "Mantente inspirado — recibe consejos y estímulos de escritura",
+  "auth.login.subscribe_placeholder": "tu@correo.com",
+  "auth.login.subscribe_button": "Suscribirse"
 }
