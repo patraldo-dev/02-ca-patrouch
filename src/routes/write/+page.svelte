@@ -1,6 +1,6 @@
 <script>
-    import { page } from '$app/stores'
-import { goto } from '$app/navigation';
+    import { page } from '$app/stores';
+    import { goto } from '$app/navigation';
     import { t, locale } from '$lib/i18n';
     import { track } from '$lib/analytics';
 
