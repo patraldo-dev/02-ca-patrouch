@@ -123,7 +123,7 @@ id="confirmPassword"
 <style>
     main {
         max-width: 400px;
-        margin: 2rem auto;
+        margin: 4rem auto 2rem;
         padding: 2rem;
         border: 1px solid #27272a;
         border-radius: 8px;

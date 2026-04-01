@@ -52,7 +52,8 @@
                     </svg>
                 </div>
                 <h1>Welcome Back</h1>
-                <p>Sign in to continue to C. R Patraldo</p>
+                <p>Sign in to continue writing</p>
+                <p class="signup-link">Don't have an account? <a href="/signup">Sign up</a></p>
             </div>
             
             {#if error}
@@ -110,19 +111,15 @@
                     {/if}
                 </button>
             </form>
-            
-            <div class="login-footer">
-                <p>Don't have an account? <a href="/signup">Sign up</a></p>
-            </div>
         </div>
         
         <div class="login-illustration">
             <div class="illustration-content">
-                <h2>Discover Your Next Favorite Book</h2>
-                <p>Join our community of book lovers and share your thoughts on the latest reads.</p>
+                <h2>Find Your Voice</h2>
+                <p>Join a community of writers. Daily prompts, personal spaces, and the Agora to share your stories with the world.</p>
                 <div class="testimonial">
-                    <blockquote>"C. R Patraldo has transformed how I discover and discuss books. The reviews are thoughtful and the community is welcoming."</blockquote>
-                    <cite>- A Happy Reader</cite>
+                    <blockquote>"The daily prompts got me writing again after years of procrastination. The community is supportive and the streaks keep me coming back."</blockquote>
+                    <cite>- A Happy Writer</cite>
                 </div>
             </div>
         </div>
@@ -152,20 +149,20 @@
     
     .login-card {
         flex: 1;
-        padding: 40px;
+        padding: 40px 40px 30px 40px;
         display: flex;
         flex-direction: column;
     }
     
     .login-header {
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
     }
     
     .logo {
         display: flex;
         justify-content: center;
-        margin-bottom: 20px;
+        margin-bottom: 12px;
     }
     
     .login-header h1 {
@@ -177,8 +174,24 @@
     
     .login-header p {
         color: #71717a;
-        margin: 0;
+        margin: 0 0 0 0;
         font-size: 16px;
+    }
+    
+    .signup-link {
+        color: #71717a;
+        font-size: 14px;
+        margin-top: 8px !important;
+    }
+    
+    .signup-link a {
+        color: #c9a87c;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .signup-link a:hover {
+        text-decoration: underline;
     }
     
     .error-message {
