@@ -134,8 +134,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #09090b;
+        background: var(--bg);
         padding: 20px;
+        padding-top: 80px;
     }
     
     .login-container {
@@ -145,8 +146,8 @@
         border-radius: 20px;
         overflow: hidden;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-        background: #141417;
-        border: 1px solid #27272a;
+        background: var(--surface);
+        border: 1px solid var(--border);
     }
     
     .login-card {
@@ -170,24 +171,24 @@
     .login-header h1 {
         font-size: 28px;
         font-weight: 700;
-        color: #e4e4e7;
+        color: var(--text);
         margin: 0 0 8px 0;
     }
     
     .login-header p {
-        color: #71717a;
+        color: var(--text-muted);
         margin: 0 0 0 0;
         font-size: 16px;
     }
     
     .signup-link {
-        color: #71717a;
+        color: var(--text-muted);
         font-size: 14px;
         margin-top: 8px !important;
     }
     
     .signup-link a {
-        color: #c9a87c;
+        color: var(--accent);
         text-decoration: none;
         font-weight: 600;
     }
@@ -285,30 +286,30 @@
         display: block;
         font-size: 14px;
         font-weight: 600;
-        color: #a1a1aa;
+        color: var(--text-dim);
         margin-bottom: 8px;
     }
     
     .form-group input {
         width: 100%;
         padding: 12px 16px;
-        border: 1px solid #27272a;
+        border: 1px solid var(--border);
         border-radius: 8px;
         font-size: 16px;
         transition: border-color 0.2s, box-shadow 0.2s;
-        background: #1c1c21;
-        color: #e4e4e7;
+        background: var(--surface-raised);
+        color: var(--text);
     }
     
     .form-group input:focus {
         outline: none;
-        border-color: #c9a87c;
+        border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(201, 168, 124, 0.15);
     }
     
     .form-group input:disabled {
         background-color: #18181b;
-        color: #71717a;
+        color: var(--text-muted);
         cursor: not-allowed;
     }
     
@@ -324,7 +325,7 @@
         align-items: center;
         cursor: pointer;
         font-size: 14px;
-        color: #a1a1aa;
+        color: var(--text-dim);
     }
     
     .checkbox-container input {
@@ -334,7 +335,7 @@
     .checkbox-container .checkmark {
         width: 18px;
         height: 18px;
-        border: 1px solid #27272a;
+        border: 1px solid var(--border);
         border-radius: 4px;
         margin-right: 8px;
         position: relative;
@@ -342,8 +343,8 @@
     }
     
     .checkbox-container input:checked + .checkmark {
-        background-color: #c9a87c;
-        border-color: #c9a87c;
+        background-color: var(--accent);
+        border-color: var(--accent);
     }
     
     .checkbox-container input:checked + .checkmark:after {
@@ -359,7 +360,7 @@
     }
     
     .forgot-link {
-        color: #c9a87c;
+        color: var(--accent);
         text-decoration: none;
         font-size: 14px;
         font-weight: 500;
@@ -394,19 +395,19 @@
     
     .login-button:disabled {
         background: #3f3f46;
-        color: #71717a;
+        color: var(--text-muted);
         cursor: not-allowed;
     }
     
     .login-footer {
         margin-top: auto;
         text-align: center;
-        color: #71717a;
+        color: var(--text-muted);
         font-size: 14px;
     }
     
     .login-footer a {
-        color: #c9a87c;
+        color: var(--accent);
         text-decoration: none;
         font-weight: 600;
     }
@@ -418,7 +419,7 @@
     .login-illustration {
         flex: 1;
         background: linear-gradient(135deg, #18181b 0%, #1c1c21 100%);
-        color: #e4e4e7;
+        color: var(--text);
         padding: 60px 40px;
         display: flex;
         flex-direction: column;
