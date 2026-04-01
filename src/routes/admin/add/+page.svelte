@@ -75,7 +75,7 @@
             </div>
         {/if}
 
-        <form on:submit|preventDefault={handleSubmit} use:enhance>
+        <form onsubmit={handleSubmit} use:enhance>
             <div class="form-group">
                 <label for="bookId">Book *</label>
                 <select id="bookId" bind:value={bookId} required>

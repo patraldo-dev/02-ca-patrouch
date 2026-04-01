@@ -46,7 +46,7 @@
 </script>
 
 <h1>Test Image Upload</h1>
-<form on:submit|preventDefault={uploadFile}>
+<form onsubmit={(e)=>{e.preventDefault();uploadFile(e)}}>
   <input type="file" id="fileInput" accept="image/*" required />
   <button type="submit">Upload</button>
 </form>

@@ -25,7 +25,7 @@
     <h1>UTF-8 Internationalization Test</h1>
     <form accept-charset="UTF-8">
         <textarea bind:value={input} rows="4" placeholder="Type text with diacritics..."></textarea>
-        <button type="button" on:click={testUTF8}>Test UTF-8</button>
+        <button type="button" onclick={testUTF8}>Test UTF-8</button>
     </form>
     {#if result}
         <div class="result">

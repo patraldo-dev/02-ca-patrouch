@@ -2,11 +2,11 @@
 <script>
     import { browser } from '$app/environment';
 
-    let password = '';
-    let confirmPassword = '';
-    let error = '';
-    let success = '';
-    let isLoading = false;
+    let password = $state('');
+    let confirmPassword = $state('');
+    let error = $state('');
+    let success = $state('');
+    let isLoading = $state(false);
     let token = '';
 
     if (browser) {
@@ -17,7 +17,8 @@
         }
     }
 
-    async function handleReset() {
+    async function handleReset(e) {
+        e.preventDefault();
         if (password !== confirmPassword) {
             error = 'Passwords do not match';
             return;
@@ -61,7 +62,7 @@
         {:else if error}
             <div class="error-banner">{error}</div>
         {:else}
-            <form on:submit|preventDefault={handleReset}>
+            <form onsubmit={handleReset}>
                 <div class="input-group">
                     <label for="password">New Password</label>
                     <input
