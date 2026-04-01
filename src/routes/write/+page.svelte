@@ -55,6 +55,8 @@
         }
     }
 
+    function viewWriting(id) { goto('/writings/' + id); }
+
     async function loadStats() {
         try {
             const res = await fetch('/api/write/stats');
@@ -168,7 +170,7 @@
                         <ul class="recent-list">
                             {#each data.recentWritings as w}
                                 <li>
-                                    <a href="/writings/{w.id}" class="recent-link" onclick={(e) => { e.preventDefault(); goto('/writings/{w.id}'); }}>
+                                    <a href="/writings/{w.id}" class="recent-link" onclick={(e) => { e.preventDefault(); viewWriting(w.id); }}>
                                         <span class="recent-title">{w.title}</span>
                                         <span class="recent-meta">
                                             {formatDate(w.created_at)} · {w.word_count} {$t('write.dashboard.words_word')}
