@@ -8,6 +8,8 @@
     let redirectTo = $derived(data?.redirectTo || '/');
     let error = $state(data?.errorMessage || '');
     let isLoading = $state(false);
+    let identifier = $state('');
+    let password = $state('');
     
     async function handleLogin() {
         if (!identifier || !password) {
