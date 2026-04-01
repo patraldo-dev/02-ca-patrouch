@@ -57,7 +57,7 @@
                 <button 
                   class="action-btn delete-btn"
                   onclick={() => alert('Delete functionality not implemented yet')}
-                  title={$t('pages.admin.sections.users.delete')}
+                  aria-label={$t('pages.admin.sections.users.delete')}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 7L18.1327 19.1425C18.056 20.2163 17.1536 21 16.0759 21H7.92412C6.84642 21 5.94403 20.2163 5.86728 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>

@@ -19,13 +19,13 @@
     }
 
     /** @type {import('./$types').LayoutData} */
-    let { data } = $props();
+    let { data, children } = $props();
 
     beforeNavigate(() => { mobileMenuOpen = false; });
 
     let mobileMenuOpen = $state(false);
-    let scrolled = false;
-    let scrollProgress = 0;
+    let scrolled = $state(false);
+    let scrollProgress = $state(0);
 
     function toggleMobileMenu() {
         mobileMenuOpen = !mobileMenuOpen;
@@ -169,7 +169,7 @@
 
     <!-- MAIN -->
     <main class="main-content">
-        <slot />
+        {@render children()}
     </main>
 
     <!-- FOOTER -->

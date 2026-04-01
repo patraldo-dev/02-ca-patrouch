@@ -1,3 +1,6 @@
+<script>
+    let { children } = $props();
+</script>
 <!-- src/routes/admin/+layout.svelte -->
 <script>
     import { page } from '$app/stores';
@@ -18,7 +21,7 @@
     </nav>
 
     <main class="admin-content">
-        <slot />
+        {@render children()}
     </main>
 </div>
 

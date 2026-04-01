@@ -94,7 +94,7 @@
             <span class="hero-last">Patraldo</span>
         </h1>
         <p class="hero-tagline" bind:this={heroTaglineEl}>{$t('pages.home.hero.tagline')}</p>
-        <a href="#prompt-teaser" class="hero-scroll">
+        <a href="#prompt-teaser" class="hero-scroll" aria-label="Scroll to prompt">
             <div class="scroll-line"></div>
         </a>
     </div>

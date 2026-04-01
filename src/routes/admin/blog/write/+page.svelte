@@ -2,11 +2,11 @@
 <script>
     import { enhance } from '$app/forms';
 
-    let title = '';
-    let content = '';
-    let isPublished = false;
-    let error = '';
-    let success = false;
+    let title = $state('');
+    let content = $state('');
+    let isPublished = $state(false);
+    let error = $state('');
+    let success = $state(false);
 
     // Auto-generate slug from title
     let slug = $derived(title

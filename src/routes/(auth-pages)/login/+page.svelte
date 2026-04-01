@@ -6,12 +6,8 @@
     let { data } = $props();
     
     let redirectTo = $derived(data?.redirectTo || '/');
-    let initialError = $derived(data?.errorMessage || '');
-    
-    let identifier = '';
-    let password = '';
-    let error = initialError;
-    let isLoading = false;
+    let error = $state(data?.errorMessage || '');
+    let isLoading = $state(false);
     
     async function handleLogin() {
         if (!identifier || !password) {

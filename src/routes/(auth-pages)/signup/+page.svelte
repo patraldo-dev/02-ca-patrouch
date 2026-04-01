@@ -2,13 +2,13 @@
 <script>
     import { browser } from '$app/environment';
 
-    let username = '';
-    let email = '';
-    let password = '';
-    let confirmPassword = '';
-    let error = '';
-    let success = '';
-    let isLoading = false;
+    let username = $state('');
+    let email = $state('');
+    let password = $state('');
+    let confirmPassword = $state('');
+    let error = $state('');
+    let success = $state('');
+    let isLoading = $state(false);
 
     async function handleSignup() {
         if (password !== confirmPassword) {
