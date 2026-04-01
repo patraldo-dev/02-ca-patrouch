@@ -11,8 +11,6 @@
 <div class="admin-layout">
     <nav class="admin-nav">
         <a href="/admin" class:active={$page.url.pathname === '/admin'}>{$t('pages.admin.layout.dashboard')}</a>
-        <a href="/admin/books" class:active={$page.url.pathname.startsWith('/admin/books')}>{$t('pages.admin.layout.books')}</a>
-        <a href="/admin/reviews" class:active={$page.url.pathname.startsWith('/admin/reviews')}>{$t('pages.admin.layout.reviews')}</a>
         <a href="/admin/blog" class:active={$page.url.pathname.startsWith('/admin/blog')}>{$t('pages.admin.layout.blog')}</a>
         <a href="/admin/users" class:active={$page.url.pathname.startsWith('/admin/users')}>{$t('pages.admin.layout.users')}</a>
         <a href="/admin/analytics" class:active={$page.url.pathname.startsWith('/admin/analytics')}>📊 Analytics</a>

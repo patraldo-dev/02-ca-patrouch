@@ -102,7 +102,6 @@
             <!-- Desktop Nav -->
             <nav class="desktop-nav" aria-label="Main navigation">
                 <a href="/" class:active={$page.url.pathname === '/'}>{$t('common.nav.home')}</a>
-                <a href="/books" class:active={$page.url.pathname.startsWith('/books')}>{$t('common.nav.works')}</a>
                 <a href="/about" class:active={$page.url.pathname.startsWith('/about')}>{$t('common.nav.about')}</a>
                 <a href="/blog" class:active={$page.url.pathname.startsWith('/blog')}>{$t('common.nav.blog')}</a>
                 <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
@@ -118,7 +117,7 @@
                         {#if data.user?.role === 'admin'}
                         <a href="/admin" class="btn-glass">{$t('common.nav.admin')}</a>
                         {/if}
-                        <button on:click={handleLogout} class="btn-glass">{$t('common.nav.logout')}</button>
+                        <button onclick={handleLogout} class="btn-glass">{$t('common.nav.logout')}</button>
                     {:else}
                         <a href="/login" class="btn-glass">{$t('common.nav.login')}</a>
                         <a href="/signup" class="btn-accent">{$t('common.nav.signup')}</a>
@@ -131,7 +130,7 @@
                 class="mobile-toggle"
                 aria-label="Toggle menu"
                 aria-expanded={mobileMenuOpen}
-                on:click={toggleMobileMenu}
+                onclick={toggleMobileMenu}
             >
                 <span class="hamburger" class:open={mobileMenuOpen}>
                     <span></span><span></span><span></span>
@@ -144,13 +143,11 @@
     {#if mobileMenuOpen}
         <div class="mobile-menu" role="dialog" aria-modal="true">
             <nav class="mobile-nav">
-                <a href="/" on:click={toggleMobileMenu}>{$t('common.nav.home')}</a>
-                <a href="/books" on:click={toggleMobileMenu}>{$t('common.nav.works')}</a>
-                <a href="/about" on:click={toggleMobileMenu}>{$t('common.nav.about')}</a>
-                <a href="/blog" on:click={toggleMobileMenu}>{$t('common.nav.blog')}</a>
-                <a href="/reviews" on:click={toggleMobileMenu}>{$t('common.nav.reviews')}</a>
-                <a href="/agora" on:click={toggleMobileMenu}>{$t('common.nav.agora')}</a>
-                <a href="/write" on:click={toggleMobileMenu}>{$t('common.nav.write')}</a>
+                <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
+                <a href="/about" onclick={toggleMobileMenu}>{$t('common.nav.about')}</a>
+                <a href="/blog" onclick={toggleMobileMenu}>{$t('common.nav.blog')}</a>
+                <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
+                <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
             </nav>
             <div class="mobile-lang">
                 <LanguageSwitcherMobile />
@@ -159,12 +156,12 @@
                 {#if data?.user}
                     <p class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></p>
                     {#if data.user?.role === 'admin'}
-                    <a href="/admin" on:click={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
+                    <a href="/admin" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
                     {/if}
-                    <button on:click={() => { toggleMobileMenu(); handleLogout(); }} class="btn-glass block">{$t('common.nav.logout')}</button>
+                    <button onclick={() => { toggleMobileMenu(); handleLogout(); }} class="btn-glass block">{$t('common.nav.logout')}</button>
                 {:else}
-                    <a href="/login" on:click={toggleMobileMenu} class="btn-glass block">{$t('common.nav.login')}</a>
-                    <a href="/signup" on:click={toggleMobileMenu} class="btn-accent block">{$t('common.nav.signup')}</a>
+                    <a href="/login" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.login')}</a>
+                    <a href="/signup" onclick={toggleMobileMenu} class="btn-accent block">{$t('common.nav.signup')}</a>
                 {/if}
             </div>
         </div>

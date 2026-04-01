@@ -4,10 +4,9 @@
     let { data } = $props();
 
     const categories = [
-        { key: 'featureFilms', icon: '🎬' },
-        { key: 'shortFilms', icon: '🎞️' },
-        { key: 'novels', icon: '📖' },
-        { key: 'shortStories', icon: '✍️' },
+        { key: 'prompts', icon: '✨' },
+        { key: 'agora', icon: '🏛️' },
+        { key: 'writing', icon: '📝' },
         { key: 'sciFi', icon: '🚀' }
     ];
 </script>

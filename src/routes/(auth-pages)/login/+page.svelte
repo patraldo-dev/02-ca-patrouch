@@ -61,7 +61,7 @@
                 </div>
             {/if}
             
-            <form on:submit|preventDefault={handleLogin} class="login-form">
+            <form onsubmit={(e) => { e.preventDefault(); handleLogin(); }} class="login-form">
                 <div class="form-group">
                     <label for="identifier">{$t('auth.login.email_label')}</label>
                     <input
