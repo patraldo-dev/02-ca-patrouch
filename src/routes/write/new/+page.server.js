@@ -84,6 +84,6 @@ export const actions = {
              VALUES (?, ?, ?, ?, ?, ?, ?, 'private', 'draft', datetime('now'), datetime('now'))`
         ).bind(id, locals.user.id, promptId, title, content, wordCount, aiAssisted ? 1 : 0).run();
 
-        throw redirect(303, '/write');
+        return { saved: true };
     }
 };

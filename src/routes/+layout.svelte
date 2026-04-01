@@ -226,16 +226,17 @@
     }
 
     .logo-initials {
-        color: var(--accent);
+        color: var(--text-dim);
         font-weight: 600;
         font-style: italic;
     }
 
     .logo-name {
-        color: var(--text-dim);
+        color: var(--accent);
     }
 
-    .logo:hover .logo-name { color: var(--text); }
+    .logo:hover .logo-initials { color: var(--text); }
+    .logo:hover .logo-name { color: var(--accent-hover, #d4b98f); }
 
     .desktop-nav {
         display: none;
