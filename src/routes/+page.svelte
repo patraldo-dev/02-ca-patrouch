@@ -9,6 +9,76 @@
         { key: 'writing', icon: '📝' },
         { key: 'sciFi', icon: '🚀' }
     ];
+
+    // Check reduced motion preference
+    const prefersReducedMotion = typeof window !== 'undefined'
+        ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        : false;
+
+    // Effect 1: Letter reveal for hero tagline
+    let heroTaglineEl = $state(null);
+    $effect(() => {
+        const el = heroTaglineEl;
+        if (!el || prefersReducedMotion) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting) return;
+                const text = el.textContent;
+                el.innerHTML = '';
+                [...text].forEach((char, i) => {
+                    const span = document.createElement('span');
+                    span.textContent = char === ' ' ? '\u00A0' : char;
+                    span.style.animationDelay = `${i * 30}ms`;
+                    span.classList.add('letter-reveal');
+                    el.appendChild(span);
+                });
+                observer.disconnect();
+            },
+            { threshold: 0.5 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    });
+
+    // Effect 3: Staggered card entrance
+    let worksGridEl = $state(null);
+    $effect(() => {
+        const el = worksGridEl;
+        if (!el || prefersReducedMotion) return;
+        const cards = el.querySelectorAll('.glass-card');
+        cards.forEach((card) => card.classList.add('card-hidden'));
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting) return;
+                cards.forEach((card, i) => {
+                    (card as HTMLElement).style.animationDelay = `${i * 120}ms`;
+                    card.classList.remove('card-hidden');
+                    card.classList.add('card-reveal');
+                });
+                observer.disconnect();
+            },
+            { threshold: 0.15 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    });
+
+    // Effect 4: Ink reveal for prompt teaser
+    let teaserQuoteEl = $state(null);
+    $effect(() => {
+        const el = teaserQuoteEl;
+        if (!el || prefersReducedMotion) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting) return;
+                el.classList.add('ink-reveal');
+                observer.disconnect();
+            },
+            { threshold: 0.3 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    });
 </script>
 
 <svelte:head>
@@ -24,7 +94,7 @@
             <span class="hero-first">Christophe R</span>
             <span class="hero-last">Patraldo</span>
         </h1>
-        <p class="hero-tagline">{$t('pages.home.hero.tagline')}</p>
+        <p class="hero-tagline" bind:this={heroTaglineEl}>{$t('pages.home.hero.tagline')}</p>
         <a href="#prompt-teaser" class="hero-scroll">
             <div class="scroll-line"></div>
         </a>
@@ -36,7 +106,7 @@
 <section id="prompt-teaser" class="prompt-teaser">
     <div class="container">
         <span class="teaser-label">{$t('write.dashboard.community_prompt')}</span>
-        <blockquote class="teaser-quote">
+        <blockquote class="teaser-quote" bind:this={teaserQuoteEl}>
             <p>{data.communityPrompt.prompt_text}</p>
         </blockquote>
         {#if data.user}
@@ -54,18 +124,18 @@
         <div class="section-label fade-in">{$t('pages.home.works.label')}</div>
         <h2 class="fade-in">{$t('pages.home.works.heading')}</h2>
         <p class="section-desc fade-in">{$t('pages.home.works.description')}</p>
-        <div class="works-grid">
-            <article class="glass-card fade-in">
+        <div class="works-grid" bind:this={worksGridEl}>
+            <article class="glass-card">
                 <span class="card-icon">✨</span>
                 <h3>{$t('pages.home.works.prompts')}</h3>
                 <p>{$t('pages.home.works.prompts.desc')}</p>
             </article>
-            <article class="glass-card fade-in">
+            <article class="glass-card">
                 <span class="card-icon">🏛️</span>
                 <h3>{$t('pages.home.works.agora')}</h3>
                 <p>{$t('pages.home.works.agora.desc')}</p>
             </article>
-            <article class="glass-card fade-in">
+            <article class="glass-card">
                 <span class="card-icon">📊</span>
                 <h3>{$t('pages.home.works.stats')}</h3>
                 <p>{$t('pages.home.works.stats.desc')}</p>
@@ -209,8 +279,15 @@
         width: 2px;
         height: 72px;
         background: linear-gradient(to bottom, var(--accent), transparent);
-        animation: scrollPulse 2s ease-in-out infinite;
+        transform-origin: top;
+        animation: scrollLineDraw 1.2s ease-out forwards, scrollPulse 2s ease-in-out 1.2s infinite;
+        transform: scaleY(0);
         transition: height 0.3s ease;
+    }
+
+    @keyframes scrollLineDraw {
+        from { transform: scaleY(0); }
+        to { transform: scaleY(1); }
     }
 
     .hero-scroll:hover .scroll-line {
@@ -244,15 +321,6 @@
     .teaser-quote {
         max-width: 600px;
         margin: 0 auto 2rem;
-    }
-
-    .teaser-quote p {
-        font-family: var(--font-heading);
-        font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-        font-weight: 300;
-        font-style: italic;
-        color: var(--text);
-        line-height: 1.6;
     }
 
     .teaser-cta {
@@ -370,5 +438,78 @@
 
     @media (min-width: 900px) {
         .works-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* ── Effect 1: Letter reveal ── */
+    .letter-reveal {
+        display: inline-block;
+        opacity: 0;
+        animation: letterReveal 0.5s ease forwards;
+    }
+
+    @keyframes letterReveal {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Effect 3: Card stagger entrance ── */
+    .card-hidden {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    .card-reveal {
+        animation: cardSlideUp 0.6s ease forwards;
+    }
+
+    @keyframes cardSlideUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Effect 4: Ink reveal for teaser quote ── */
+    .teaser-quote p {
+        font-family: var(--font-heading);
+        font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+        font-weight: 300;
+        font-style: italic;
+        color: var(--text);
+        line-height: 1.6;
+    }
+
+    .ink-reveal p {
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        background-image: linear-gradient(
+            var(--text) var(--text),
+            var(--text) var(--text)
+        );
+        -webkit-text-fill-color: var(--text);
+        animation: inkBleed 1.5s ease forwards;
+    }
+
+    @keyframes inkBleed {
+        from { opacity: 0; filter: blur(2px); }
+        60% { opacity: 0.8; filter: blur(0.5px); }
+        to { opacity: 1; filter: blur(0); }
+    }
+
+    /* ── Reduced motion ── */
+    @media (prefers-reduced-motion: reduce) {
+        .letter-reveal,
+        .card-reveal,
+        .ink-reveal p {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+            filter: none !important;
+            color: var(--text) !important;
+            -webkit-text-fill-color: var(--text) !important;
+        }
+        .scroll-line {
+            animation: none !important;
+            transform: scaleY(1) !important;
+        }
     }
 </style>
