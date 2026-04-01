@@ -3,10 +3,10 @@
     import { browser } from '$app/environment';
     import { t } from '$lib/i18n';
     
-    export let data;
+    let { data } = $props();
     
-    $: redirectTo = data?.redirectTo || '/';
-    $: initialError = data?.errorMessage || '';
+    let redirectTo = $derived(data?.redirectTo || '/');
+    let initialError = $derived(data?.errorMessage || '');
     
     let identifier = '';
     let password = '';
@@ -277,10 +277,12 @@
     }
     
     .form-group {
+        text-align: left;
         margin-bottom: 20px;
     }
     
     .form-group label {
+        text-align: left;
         display: block;
         font-size: 14px;
         font-weight: 600;
@@ -291,7 +293,7 @@
     .form-group input {
         width: 100%;
         padding: 12px 16px;
-        border: 1px solid #3f3f46;
+        border: 2px solid #3f3f46;
         border-radius: 8px;
         font-size: 16px;
         transition: border-color 0.2s, box-shadow 0.2s;
