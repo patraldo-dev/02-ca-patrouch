@@ -59,7 +59,7 @@
         <footer class="writing-footer">
             <form id="delete-form" method="POST" action="?/delete" style="display:none"></form>
             <div class="footer-actions">
-                <a href="/write/{w.id}/edit" class="btn-glass">{$t('write.view.edit')}</a>
+                <a href="/writings/{w.id}/edit" class="btn-glass">{$t('write.view.edit')}</a>
                 <button onclick={() => { if (confirm($t('write.view.confirm_delete'))) confirmDelete(); }} class="btn-danger">{$t('write.view.delete')}</button>
             </div>
         </footer>

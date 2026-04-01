@@ -155,7 +155,7 @@
                         <ul class="recent-list">
                             {#each data.recentWritings as w}
                                 <li>
-                                    <a href="/write/{w.id}" class="recent-link">
+                                    <a href="/writings/{w.id}" class="recent-link">
                                         <span class="recent-title">{w.title}</span>
                                         <span class="recent-meta">
                                             {formatDate(w.created_at)} · {w.word_count} {$t('write.dashboard.words_word')}
