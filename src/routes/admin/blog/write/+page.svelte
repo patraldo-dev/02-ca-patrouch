@@ -3,14 +3,13 @@
     import { enhance } from '$app/forms';
 
     let title = '';
-    let slug = '';
     let content = '';
     let isPublished = false;
     let error = '';
     let success = false;
 
     // Auto-generate slug from title
-let slug = $derived(title
+    let slug = $derived(title
     .normalize('NFD')                  // Decompose accented characters
     .replace(/[\u0300-\u036f]/g, '')  // Remove diacritics (accents)
     .toLowerCase()
