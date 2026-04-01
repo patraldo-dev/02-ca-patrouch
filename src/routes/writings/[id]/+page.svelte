@@ -1,5 +1,5 @@
 <script>
-    import { t } from '$lib/i18n';
+    import { t, getLocale } from '$lib/i18n';
     import { track } from '$lib/analytics';
     import { page } from '$app/stores';
 
@@ -16,7 +16,8 @@
     function formatDate(d) {
         if (!d) return '';
         const s = d.replace(' ', 'T');
-        return new Date(s).toLocaleDateString($t('common.locale_code') || 'en-US', {
+        const localeCode = getLocale() || 'en-US';
+        return new Date(s).toLocaleDateString(localeCode, {
             year: 'numeric', month: 'long', day: 'numeric',
             hour: '2-digit', minute: '2-digit'
         });
