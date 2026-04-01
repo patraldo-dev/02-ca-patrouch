@@ -47,6 +47,7 @@
             <div class="login-header">
                 <h1>{$t('auth.login.title')}</h1>
                 <p>{$t('auth.login.subtitle')}</p>
+                <p class="signup-link">{$t('auth.login.no_account')} <a href="/signup">{$t('auth.login.sign_up')}</a></p>
             </div>
             
             {#if error}
@@ -104,10 +105,6 @@
                     {/if}
                 </button>
             </form>
-            
-            <div class="gold-divider"></div>
-            
-            <p class="signup-link">{$t('auth.login.no_account')} <a href="/signup">{$t('auth.login.sign_up')}</a></p>
         </div>
         
         <div class="login-illustration">
