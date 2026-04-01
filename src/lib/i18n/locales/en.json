@@ -406,5 +406,8 @@
   "pages.privacy.s9_body": "We may update this policy. Changes will be reflected on this page with an updated date.",
   "pages.home.categories.prompts": "Daily Prompts",
   "pages.home.categories.agora": "The Agora",
-  "pages.home.categories.writing": "Your Writing"
+  "pages.home.categories.writing": "Your Writing",
+  "write.dashboard.done": "Done ✓",
+  "write.dashboard.completed": "Today's writing complete",
+  "write.dashboard.completed_msg": "Well done. Come back tomorrow for a new prompt."
 }

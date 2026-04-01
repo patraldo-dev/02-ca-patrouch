@@ -3,7 +3,10 @@ import { getOrCreateDailyPrompt, getNewPromptForUser, getOrCreateCommunityPrompt
 const DAILY_PASS_LIMIT = 3;
 
 function getToday() {
-  return new Date().toISOString().slice(0, 10);
+    // Use CST (America/Mexico_City) date, not UTC
+    const now = new Date();
+    const cst = new Date(now.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+    return cst.toISOString().slice(0, 10);
 }
 
 function getYesterday() {
@@ -41,8 +44,9 @@ export async function getTodayData(db, ai, userId, locale = 'en') {
   const passesUsed = passCount?.count || 0;
   const passesRemaining = Math.max(0, DAILY_PASS_LIMIT - passesUsed);
 
-  // Find if user accepted anything (community or personal)
+  // Find if user accepted anything (community or personal) and hasn't completed it
   const acceptedEntry = entries.find(e => e.action === 'accepted');
+  const completedEntry = entries.find(e => e.action === 'completed');
 
   // Determine what to show
   let currentPrompt = communityPrompt;
@@ -50,7 +54,10 @@ export async function getTodayData(db, ai, userId, locale = 'en') {
   let acceptedPromptId = null;
   let userAction = null;
 
-  if (acceptedEntry) {
+  if (completedEntry) {
+    // User already completed today — show congratulations / free write
+    userAction = 'completed';
+  } else if (acceptedEntry) {
     // User already accepted a prompt — show it
     userAction = 'accepted';
     acceptedPromptId = acceptedEntry.prompt_id;
@@ -151,6 +158,15 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
       action: 'accepted',
       passesRemaining: await getPassesRemaining(db, userId, today, locale)
     };
+  }
+
+  if (action === 'completed') {
+    // Mark today's accepted prompt as completed — user is done writing for the day
+    await db.prepare(
+      "UPDATE daily_prompt_log SET action = 'completed' WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'accepted'"
+    ).bind(userId, today, locale).run();
+
+    return { action: 'completed' };
   }
 
   return { error: 'Invalid action' };

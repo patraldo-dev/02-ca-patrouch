@@ -406,5 +406,8 @@
   "pages.privacy.s9_body": "Nous pouvons mettre à jour cette politique. Les modifications seront reflétées sur cette page avec une date mise à jour.",
   "pages.home.categories.prompts": "Stimulations Quotidiennes",
   "pages.home.categories.agora": "L'Agora",
-  "pages.home.categories.writing": "Votre Écriture"
+  "pages.home.categories.writing": "Votre Écriture",
+  "write.dashboard.done": "Terminé ✓",
+  "write.dashboard.completed": "Écriture du jour terminée",
+  "write.dashboard.completed_msg": "Bien joué. Revenez demain pour un nouveau stimulus."
 }

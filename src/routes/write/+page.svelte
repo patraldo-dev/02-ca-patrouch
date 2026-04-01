@@ -44,6 +44,9 @@
                     // Reload stats
                     loadStats();
                     track('accept_prompt', d.promptId);
+                } else if (action === 'completed') {
+                    userAction = 'completed';
+                    loadStats();
                 }
             }
         } catch (e) {
@@ -109,6 +112,12 @@
                             <div class="prompt-accepted">
                                 <span class="accepted-badge">{$t('write.dashboard.accepted')}</span>
                                 <a href="/write/new?promptId={promptId}" class="btn-accent">{$t('write.dashboard.start_writing')}</a>
+                                <button onclick={() => handleAction('completed')} class="btn-done">{$t('write.dashboard.done')}</button>
+                            </div>
+                        {:else if userAction === 'completed'}
+                            <div class="prompt-completed">
+                                <span class="completed-badge">{$t('write.dashboard.completed')}</span>
+                                <p class="completed-msg">{$t('write.dashboard.completed_msg')}</p>
                             </div>
                         {/if}
                     </div>
@@ -363,6 +372,27 @@
         color: #4ade80;
         font-weight: 500;
     }
+
+    .btn-done {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.5rem 1.25rem;
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-done:hover { border-color: #4ade80; color: #4ade80; }
+
+    .prompt-completed {
+        text-align: center;
+        padding: 1rem 0;
+    }
+    .completed-badge { color: var(--accent); font-weight: 600; font-size: 1.1rem; }
+    .completed-msg { color: var(--text-muted); margin-top: 0.5rem; font-style: italic; }
 
     /* Free Write Card */
     .free-write-card {

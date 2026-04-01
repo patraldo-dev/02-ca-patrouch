@@ -406,5 +406,8 @@
   "pages.privacy.s9_body": "Podemos actualizar esta política. Los cambios se reflejarán en esta página con una fecha actualizada.",
   "pages.home.categories.prompts": "Estímulos Diarios",
   "pages.home.categories.agora": "El Ágora",
-  "pages.home.categories.writing": "Tu Escritura"
+  "pages.home.categories.writing": "Tu Escritura",
+  "write.dashboard.done": "Listo ✓",
+  "write.dashboard.completed": "Escritura del día completada",
+  "write.dashboard.completed_msg": "Bien hecho. Regresa mañana para un nuevo estímulo."
 }

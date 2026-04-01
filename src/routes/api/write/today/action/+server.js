@@ -20,7 +20,7 @@ export async function POST(event) {
   const { action } = body;
   const locale = body.locale || getLocale(event);
 
-  if (!action || !['accepted', 'passed'].includes(action)) {
+  if (!action || !['accepted', 'passed', 'completed'].includes(action)) {
     return json({ error: 'Action must be "accepted" or "passed"' }, { status: 400 });
   }
 
