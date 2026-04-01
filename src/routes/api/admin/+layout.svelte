@@ -1,9 +1,7 @@
-<script>
-    let { children } = $props();
-</script>
-<!-- src/routes/admin/+layout.svelte -->
+<!-- src/routes/api/admin/+layout.svelte -->
 <script>
     import { page } from '$app/stores';
+    let { children } = $props();
 </script>
 
 <svelte:head>
