@@ -51,7 +51,7 @@
             ([entry]) => {
                 if (!entry.isIntersecting) return;
                 cards.forEach((card, i) => {
-                    (card as HTMLElement).style.animationDelay = `${i * 120}ms`;
+                    card.style.animationDelay = `${i * 120}ms`;
                     card.classList.remove('card-hidden');
                     card.classList.add('card-reveal');
                 });
