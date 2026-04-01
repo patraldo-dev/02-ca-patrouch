@@ -159,20 +159,20 @@
     
     .login-header {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 36px;
     }
     
     .logo {
         display: flex;
         justify-content: center;
-        margin-bottom: 12px;
+        margin-bottom: 0;
     }
     
     .login-header h1 {
-        font-size: 28px;
+        font-size: 31px;
         font-weight: 700;
         color: #ffffff;
-        margin: 0 0 8px 0;
+        margin: 0 0 12px 0;
     }
     
     .login-header p {
