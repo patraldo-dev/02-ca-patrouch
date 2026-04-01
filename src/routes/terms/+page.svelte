@@ -1,3 +1,7 @@
+<script>
+    import { t } from '$lib/i18n';
+</script>
+
 <svelte:head>
     <title>{$t('pages.terms.title')} — patrouch.ca</title>
 </svelte:head>
