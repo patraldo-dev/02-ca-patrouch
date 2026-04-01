@@ -147,7 +147,7 @@
         overflow: hidden;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         background: var(--surface);
-        border: 1px solid var(--border);
+        border: 1px solid #3f3f46;
     }
     
     .login-card {
@@ -171,18 +171,18 @@
     .login-header h1 {
         font-size: 28px;
         font-weight: 700;
-        color: var(--text);
+        color: #ffffff;
         margin: 0 0 8px 0;
     }
     
     .login-header p {
-        color: var(--text-muted);
+        color: #d4d4d8;
         margin: 0 0 0 0;
         font-size: 16px;
     }
     
     .signup-link {
-        color: var(--text-muted);
+        color: #d4d4d8;
         font-size: 14px;
         margin-top: 8px !important;
     }
@@ -205,13 +205,11 @@
         border-radius: 2px;
     }
     
-    .gold-divider {
         width: 40px;
         height: 2px;
         background: linear-gradient(to bottom, var(--accent), rgba(201, 168, 124, 0.3));
         margin: 16px auto;
         border-radius: 2px;
-    }
 
     .subscribe-section {
         margin-top: auto;
@@ -219,7 +217,7 @@
     }
 
     .subscribe-text {
-        color: var(--text-muted);
+        color: #d4d4d8;
         font-size: 0.85rem;
         margin-bottom: 0.75rem;
     }
@@ -232,7 +230,7 @@
     .subscribe-form input {
         flex: 1;
         padding: 8px 12px;
-        border: 1px solid var(--border);
+        border: 1px solid #3f3f46;
         border-radius: 6px;
         background: var(--surface);
         color: var(--text);
@@ -293,12 +291,12 @@
     .form-group input {
         width: 100%;
         padding: 12px 16px;
-        border: 1px solid var(--border);
+        border: 1px solid #3f3f46;
         border-radius: 8px;
         font-size: 16px;
         transition: border-color 0.2s, box-shadow 0.2s;
-        background: var(--surface-raised);
-        color: var(--text);
+        background: #1c1c21;
+        color: #ffffff;
     }
     
     .form-group input:focus {
@@ -335,7 +333,7 @@
     .checkbox-container .checkmark {
         width: 18px;
         height: 18px;
-        border: 1px solid var(--border);
+        border: 1px solid #3f3f46;
         border-radius: 4px;
         margin-right: 8px;
         position: relative;
