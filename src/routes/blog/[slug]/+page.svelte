@@ -1,7 +1,7 @@
 <!-- src/routes/blog/[slug]/+page.svelte -->
 <script>
     /** @type {import('./$types').PageData} */
-    export let data;
+    let { data } = $props();
 </script>
 
 <svelte:head>

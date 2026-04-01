@@ -1,8 +1,8 @@
 <!-- src/routes/admin/+page.svelte -->
 <script>
   import { t } from '$lib/i18n';
-export let data;
-  $: user = data.user;
+  let { data } = $props();
+  let user = $derived(data.user);
 </script>
 
 <svelte:head>

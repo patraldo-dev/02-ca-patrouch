@@ -248,9 +248,9 @@ async function fixSchema() {
         }
     }
     
-    $: {
+    $effect(() => {
         applyFiltersAndSort();
-    }
+    });
 </script>
 
 <svelte:head>
@@ -261,11 +261,11 @@ async function fixSchema() {
     <div class="admin-header">
         <h1>Book Management</h1>
         <div class="header-actions">
-            <button on:click={debugBooks} class="btn-secondary">Debug Books</button>
-            <button on:click={fixSchema} class="btn-secondary">Fix Schema</button>
-            <button on:click={cleanupBooks} class="btn-secondary">Cleanup Books</button>
-            <button on:click={updateSlugs} class="btn-secondary">Update Slugs</button>
-            <button on:click={runMigration} class="btn-secondary">Run Migration</button>
+            <button onclick={debugBooks} class="btn-secondary">Debug Books</button>
+            <button onclick={fixSchema} class="btn-secondary">Fix Schema</button>
+            <button onclick={cleanupBooks} class="btn-secondary">Cleanup Books</button>
+            <button onclick={updateSlugs} class="btn-secondary">Update Slugs</button>
+            <button onclick={runMigration} class="btn-secondary">Run Migration</button>
             <a href="/admin/books/add" class="btn-primary">Add New Book</a>
         </div>
     </div>
@@ -310,7 +310,7 @@ async function fixSchema() {
             {#if books.length === 0}
                 <a href="/admin/books/add" class="btn-primary">Add Your First Book</a>
             {:else}
-                <button on:click={() => {searchQuery = ''; filterPublished = 'all';}} class="btn-secondary">Clear Filters</button>
+                <button onclick={() => {searchQuery = ''; filterPublished = 'all';}} class="btn-secondary">Clear Filters</button>
             {/if}
         </div>
     {:else}
@@ -344,7 +344,7 @@ async function fixSchema() {
                     <td class="actions">
                         <a href={`/books/${book.slug}`} class="btn-secondary" target="_blank">View</a>
                         <a href={`/admin/books/edit/${book.slug}`} class="btn-secondary">Edit</a>
-                        <button on:click={() => deleteBook(book.slug)} class="btn-danger">Delete</button>
+                        <button onclick={() => deleteBook(book.slug)} class="btn-danger">Delete</button>
                     </td>
                 </tr>
             {/each}

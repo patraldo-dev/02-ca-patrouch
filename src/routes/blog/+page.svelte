@@ -3,13 +3,13 @@
     import { t } from '$lib/i18n';
 
     // ✅ Get data from +page.server.js — no fetch needed!
-    export let data;
+    let { data } = $props();
 
     // Since data is preloaded, we simulate "loading = false" immediately
     // But we keep your UI structure for consistency
     let loading = false;
     let error = null;
-    $: posts = data?.posts || [];
+    let posts = $derived(data?.posts || []);
 </script>
 
 <svelte:head>

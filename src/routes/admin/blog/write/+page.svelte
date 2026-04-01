@@ -10,14 +10,14 @@
     let success = false;
 
     // Auto-generate slug from title
-$: slug = title
+let slug = $derived(title
     .normalize('NFD')                  // Decompose accented characters
     .replace(/[\u0300-\u036f]/g, '')  // Remove diacritics (accents)
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, '')     // Keep only a-z, 0-9, space, hyphen
     .replace(/[\s_-]+/g, '-')         // Replace spaces/underscores with hyphen
-    .replace(/^-+|-+$/g, '');         // Trim hyphens from start/end
+    .replace(/^-+|-+$/g, ''));         // Trim hyphens from start/end
 
     const handleSubmit = async (event) => {
         error = '';
@@ -77,7 +77,7 @@ $: slug = title
             </div>
         {/if}
 
-        <form on:submit|preventDefault={handleSubmit} use:enhance>
+        <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} use:enhance>
             <div class="form-group">
                 <label for="title">Title *</label>
                 <input

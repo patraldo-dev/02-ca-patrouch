@@ -42,9 +42,11 @@
         }
     }
 
-    $: if (password && !confirmPassword) {
-        confirmPassword = password;
-    }
+    $effect(() => {
+        if (password && !confirmPassword) {
+            confirmPassword = password;
+        }
+    });
 </script>
 
 <main>
@@ -61,7 +63,7 @@
 <div class="success-banner">{success}</div>
     {/if}
 
-    <form on:submit|preventDefault={handleSignup}>
+    <form onsubmit={(e) => { e.preventDefault(); handleSignup(); }}>
         <div>
             <label for="username">Username</label>
             <input

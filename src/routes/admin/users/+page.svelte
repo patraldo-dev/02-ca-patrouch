@@ -1,8 +1,8 @@
 <!-- src/routes/admin/users/+page.svelte -->
 <script>
   import { t } from '$lib/i18n';
-  export let data;
-  $: users = data.users || [];
+  let { data } = $props();
+  let users = $derived(data.users || []);
 </script>
 
 <svelte:head>
@@ -56,7 +56,7 @@
               <td class="actions-cell">
                 <button 
                   class="action-btn delete-btn"
-                  on:click={() => alert('Delete functionality not implemented yet')}
+                  onclick={() => alert('Delete functionality not implemented yet')}
                   title={$t('pages.admin.sections.users.delete')}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

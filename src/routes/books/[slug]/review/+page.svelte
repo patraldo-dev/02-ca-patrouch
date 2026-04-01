@@ -2,7 +2,7 @@
 <script>
     import { enhance } from '$app/forms';
 
-    export let data;
+    let { data } = $props();
     const { book, user } = data;
 
     let rating = 5;
@@ -69,7 +69,7 @@
             </div>
         </div>
 
-        <form on:submit|preventDefault={handleSubmit} use:enhance class="review-form">
+        <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} use:enhance class="review-form">
             <div class="form-group">
                 <label>
                     Rating:

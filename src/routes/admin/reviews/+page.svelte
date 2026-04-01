@@ -4,14 +4,14 @@
     import { page } from '$app/stores';
     import { t } from '$lib/i18n';
     
-    export let data; // Get data from +page.server.js
+    let { data } = $props();
     
     let reviews = [];
     let loading = true;
     let error = null;
     
     // Check if user is admin
-    $: isAdmin = data?.user?.role === 'admin' || data?.user?.is_admin;
+    let isAdmin = $derived(data?.user?.role === 'admin' || data?.user?.is_admin);
     
     onMount(async () => {
         try {
@@ -108,7 +108,7 @@
                 <button 
                     aria-label="Delete review"
                     class="delete-btn" 
-                    on:click={() => deleteReview(review.id)}
+                    onclick={() => deleteReview(review.id)}
                 >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

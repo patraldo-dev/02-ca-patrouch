@@ -3,10 +3,10 @@
     import { t } from '$lib/i18n';
     import { page } from '$app/stores';
 
-    export let data;
+    let { data } = $props();
     
-    $: book = data.book;
-    $: error = data.error;
+    let book = $derived(data.book);
+    let error = $derived(data.error);
 </script>
 
 <svelte:head>
@@ -17,7 +17,7 @@
     {#if error}
         <div class="error">
             <p>{$t('pages.bookReview.error.message')}</p>
-            <button on:click={() => goto('/')} class="btn-secondary">{$t('pages.bookReview.goHome')}</button>
+            <button onclick={() => goto('/')} class="btn-secondary">{$t('pages.bookReview.goHome')}</button>
         </div>
     {:else if book}
         <div class="book-detail">
@@ -104,7 +104,7 @@
     {:else}
         <div class="error">
             <p>{$t('pages.bookReview.error.notFound')}</p>
-            <button on:click={() => goto('/')} class="btn-secondary">{$t('pages.bookReview.goHome')}</button>
+            <button onclick={() => goto('/')} class="btn-secondary">{$t('pages.bookReview.goHome')}</button>
         </div>
     {/if}
 </div>

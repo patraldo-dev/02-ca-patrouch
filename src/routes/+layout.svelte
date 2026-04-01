@@ -19,7 +19,7 @@
     }
 
     /** @type {import('./$types').LayoutData} */
-    export let data;
+    let { data } = $props();
 
     beforeNavigate(() => { mobileMenuOpen = false; });
 

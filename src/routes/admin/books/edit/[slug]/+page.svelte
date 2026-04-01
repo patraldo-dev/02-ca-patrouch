@@ -16,10 +16,10 @@
         description: ''
     };
     
-    export let data;
+    let { data } = $props();
     
     // Initialize form with data from server load function
-    $: {
+    $effect(() => {
         if (data?.book) {
             form = {
                 title: data.book.title,
@@ -31,7 +31,7 @@
                 description: data.book.description || ''
             };
         }
-    }
+    });
     
     onMount(async () => {
         // No need to fetch data here since it's already loaded by the server
@@ -135,7 +135,7 @@ async function handleFileChange(event) {
             <p>{error}</p>
         </div>
     {:else if data?.book}
-        <form class="book-form" on:submit|preventDefault={handleSubmit}>
+        <form class="book-form" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
 
 
             <div class="form-group">
@@ -182,7 +182,7 @@ async function handleFileChange(event) {
                 src={`https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${form.coverImageId}/thumbnail`} 
                 alt="Current cover"
             />
-            <button type="button" class="btn-danger" on:click={() => form = {...form, coverImageId: null}}>
+            <button type="button" class="btn-danger" onclick={() => form = {...form, coverImageId: null}}>
                 Remove Cover
             </button>
         </div>
@@ -192,7 +192,7 @@ async function handleFileChange(event) {
             name="coverImage"
             type="file" 
             accept="image/*" 
-            on:change={handleFileChange}
+            onchange={handleFileChange}
             disabled={uploading}
         />
         {#if uploading}

@@ -3,7 +3,7 @@
     import { t, getLocale } from '$lib/i18n';
     import ExLibrisIcon from '$lib/components/ExLibrisIcon.svelte';
 
-    export let data;
+    let { data } = $props();
     
     let loading = false;
     let error = null;
@@ -57,7 +57,7 @@
     {:else if error}
         <div class="state-box error">
             <p>{error}</p>
-            <button on:click={fetchBooks} class="btn-accent">{$t('pages.books.retry')}</button>
+            <button onclick={fetchBooks} class="btn-accent">{$t('pages.books.retry')}</button>
         </div>
     {:else if books.length === 0}
         <div class="state-box empty">

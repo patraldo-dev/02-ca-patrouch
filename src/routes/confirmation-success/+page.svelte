@@ -2,8 +2,8 @@
 <script>
     import { page } from '$app/stores';
     
-    $: alreadyConfirmed = $page.url.searchParams.get('already') === 'true';
-    $: type = $page.url.searchParams.get('type') || 'user'; // 'user' or 'newsletter'
+    let alreadyConfirmed = $derived($page.url.searchParams.get('already') === 'true');
+    let type = $derived($page.url.searchParams.get('type') || 'user'); // 'user' or 'newsletter'
 </script>
 
 <div class="container">
