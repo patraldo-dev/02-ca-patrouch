@@ -2,9 +2,18 @@
     import { t, getLocale } from '$lib/i18n';
     import { track } from '$lib/analytics';
     import { page } from '$app/stores';
+    import { marked } from 'marked';
 
     let { data } = $props();
     let w = $state(data.writing);
+    let renderedContent = $state('');
+
+    // Render markdown
+    $effect(() => {
+        if (w.content) {
+            marked.parse(w.content).then(html => { renderedContent = html; });
+        }
+    });
 
     // Track view (client-side only via effect)
     $effect(() => {
@@ -57,8 +66,7 @@
         </header>
 
         <div class="writing-content">
-            {w.content.split('\n').map(para => para.trim() ? `<p>${para}</p>` : '').join('')}
-            {@html w.content.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('')}
+            {@html renderedContent}
         </div>
 
         <footer class="writing-footer">
