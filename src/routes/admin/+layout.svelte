@@ -15,6 +15,7 @@
         <a href="/admin/reviews" class:active={$page.url.pathname.startsWith('/admin/reviews')}>{$t('pages.admin.layout.reviews')}</a>
         <a href="/admin/blog" class:active={$page.url.pathname.startsWith('/admin/blog')}>{$t('pages.admin.layout.blog')}</a>
         <a href="/admin/users" class:active={$page.url.pathname.startsWith('/admin/users')}>{$t('pages.admin.layout.users')}</a>
+        <a href="/admin/analytics" class:active={$page.url.pathname.startsWith('/admin/analytics')}>📊 Analytics</a>
     </nav>
 
     <main class="admin-content">
