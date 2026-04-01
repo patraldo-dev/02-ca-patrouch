@@ -331,5 +331,11 @@
   "pages.home.works.stats.desc": "Sigue tus rachas de escritura, conteos de palabras y crecimiento.",
   "write.editor.saved": "Borrador guardado exitosamente",
   "write.editor.saving": "Guardando...",
-  "write.editor.view_dashboard": "Ver panel →"
+  "write.editor.view_dashboard": "Ver panel →",
+  "write.view.from_prompt": "Del estímulo",
+  "write.view.status_draft": "Borrador",
+  "write.view.status_published": "Publicado",
+  "write.view.edit": "Editar",
+  "write.view.delete": "Eliminar",
+  "write.view.confirm_delete": "¿Estás seguro de que deseas eliminar este texto? Esta acción no se puede deshacer."
 }

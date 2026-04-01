@@ -331,5 +331,11 @@
   "pages.home.works.stats.desc": "Track your writing streaks, word counts, and growth over time.",
   "write.editor.saved": "Draft saved successfully",
   "write.editor.saving": "Saving...",
-  "write.editor.view_dashboard": "View dashboard →"
+  "write.editor.view_dashboard": "View dashboard →",
+  "write.view.from_prompt": "From prompt",
+  "write.view.status_draft": "Draft",
+  "write.view.status_published": "Published",
+  "write.view.edit": "Edit",
+  "write.view.delete": "Delete",
+  "write.view.confirm_delete": "Are you sure you want to delete this writing? This cannot be undone."
 }

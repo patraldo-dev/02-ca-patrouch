@@ -59,7 +59,7 @@
     let exhaustedPasses = $derived(passesRemaining <= 0 && !acceptedToday);
 
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
-    function formatDate(d) { if (!d) return ''; const s = d.replace(' ', 'T'); return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+    function formatDate(d) { if (!d) return ''; const s = d.replace(' ', 'T'); return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 </script>
 
 <div class="write-page">
@@ -155,8 +155,15 @@
                         <ul class="recent-list">
                             {#each data.recentWritings as w}
                                 <li>
-                                    <span class="recent-title">{w.title}</span>
-                                    <span class="recent-meta">{w.word_count} {$t('write.dashboard.words_word')} · {formatDate(w.created_at)}</span>
+                                    <a href="/write/{w.id}" class="recent-link">
+                                        <span class="recent-title">{w.title}</span>
+                                        <span class="recent-meta">
+                                            {formatDate(w.created_at)} · {w.word_count} {$t('write.dashboard.words_word')}
+                                            {#if w.status === 'draft'}
+                                                <span class="draft-tag">{$t('write.view.status_draft')}</span>
+                                            {/if}
+                                        </span>
+                                    </a>
                                 </li>
                             {/each}
                         </ul>
@@ -468,15 +475,34 @@
     }
 
     .recent-list li {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .recent-list li:last-child { border-bottom: none; }
+
+    .recent-link {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
         padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border);
         gap: 0.5rem;
+        text-decoration: none;
     }
 
-    .recent-list li:last-child { border-bottom: none; }
+    .recent-link:hover .recent-title {
+        color: var(--accent);
+    }
+
+    .draft-tag {
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #fde047;
+        background: rgba(250, 204, 21, 0.12);
+        padding: 0.1rem 0.4rem;
+        border-radius: 999px;
+        margin-left: 0.35rem;
+    }
 
     .recent-title {
         color: var(--text-dim);
