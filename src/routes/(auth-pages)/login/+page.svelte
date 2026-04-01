@@ -117,10 +117,12 @@
         </div>
         
         <div class="login-illustration">
-            <div class="illustration-content">
-                <div class="monogram">CRP</div>
-                <p class="monogram-sub">Christophe R Patraldo</p>
-            </div>
+            <svg class="illustration-icon" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-width="1" opacity="0.2"/>
+                <path d="M40 16 L40 64" stroke="currentColor" stroke-width="1.5" opacity="0.15"/>
+                <path d="M16 40 L64 40" stroke="currentColor" stroke-width="1.5" opacity="0.15"/>
+                <text x="40" y="46" text-anchor="middle" font-family="Georgia, serif" font-size="28" font-style="italic" fill="currentColor">CRP</text>
+            </svg>
         </div>
     </div>
 </div>
@@ -368,23 +370,17 @@
         border-left: 1px solid #27272a;
     }
 
-    .monogram {
+    .illustration-icon {
+        color: var(--accent);
+        margin-bottom: 2rem;
+    }
+
+    .illustration-label {
         font-family: var(--font-heading);
-        font-size: 4rem;
+        font-size: 1.5rem;
         font-weight: 300;
         font-style: italic;
         color: var(--accent);
-        letter-spacing: 0.1em;
-        margin-bottom: 0.75rem;
-        text-align: center;
-    }
-
-    .monogram-sub {
-        font-size: 0.85rem;
-        font-weight: 500;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--text-muted);
     }
     
     @media (max-width: 768px) {

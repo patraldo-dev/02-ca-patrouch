@@ -48,6 +48,13 @@
 </script>
 
 <main>
+    <svg class="signup-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="26" stroke="#c9a87c" stroke-width="1" opacity="0.3"/>
+        <path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M22 16 L26 28" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="26" cy="28" r="1.5" fill="#c9a87c"/>
+        <path d="M26 28 Q30 32 34 26" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    </svg>
     <h1>Create an Account</h1>
 
     {#if success}
@@ -124,11 +131,17 @@ id="confirmPassword"
     main {
         max-width: 400px;
         margin: 4rem auto 2rem;
-        padding: 2rem;
+        padding: 2rem 2rem 1.5rem;
         border: 1px solid #27272a;
         border-radius: 8px;
         background: #141417;
         color: #e4e4e7;
+        text-align: center;
+    }
+
+    .signup-icon {
+        margin-bottom: 1rem;
+        color: #c9a87c;
     }
 
     form {
