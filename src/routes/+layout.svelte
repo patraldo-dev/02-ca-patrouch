@@ -23,7 +23,7 @@
 
     beforeNavigate(() => { mobileMenuOpen = false; });
 
-    let mobileMenuOpen = false;
+    let mobileMenuOpen = $state(false);
     let scrolled = false;
     let scrollProgress = 0;
 
