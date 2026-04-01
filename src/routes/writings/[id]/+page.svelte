@@ -60,7 +60,12 @@
             <form id="delete-form" method="POST" action="?/delete" style="display:none"></form>
             <div class="footer-actions">
                 <a href="/writings/{w.id}/edit" class="btn-glass">{$t('write.view.edit')}</a>
-                <button onclick={() => { if (confirm($t('write.view.confirm_delete'))) confirmDelete(); }} class="btn-danger">{$t('write.view.delete')}</button>
+                <button onclick={() => { if (confirm($t('write.view.confirm_delete'))) confirmDelete(); }} class="btn-icon-delete" title={$t('write.view.delete')}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
         </footer>
     </article>
@@ -200,21 +205,23 @@
 
     .btn-glass:hover { border-color: var(--accent); color: var(--accent); }
 
-    .btn-danger {
+    .btn-icon-delete {
         background: rgba(239, 68, 68, 0.1);
         border: 1px solid rgba(239, 68, 68, 0.25);
         border-radius: var(--radius);
-        padding: 0.5rem 1.25rem;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: #fca5a5;
-        font-family: var(--font-body);
-        font-size: 0.85rem;
-        font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
     }
 
-    .btn-danger:hover {
+    .btn-icon-delete:hover {
         background: rgba(239, 68, 68, 0.2);
         border-color: rgba(239, 68, 68, 0.4);
+        color: #f87171;
     }
 </style>
