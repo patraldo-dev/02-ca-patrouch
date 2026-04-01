@@ -106,18 +106,11 @@
                 </button>
             </form>
         </div>
-        
-        <div class="gold-divider-v"></div>
-        
-        <div class="login-illustration">
-            <svg class="illustration-icon" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-width="1" opacity="0.2"/>
-                <path d="M40 16 L40 64" stroke="currentColor" stroke-width="1.5" opacity="0.15"/>
-                <path d="M16 40 L64 40" stroke="currentColor" stroke-width="1.5" opacity="0.15"/>
-                <text x="40" y="46" text-anchor="middle" font-family="Georgia, serif" font-size="28" font-style="italic" fill="currentColor">CRP</text>
-            </svg>
-        </div>
     </div>
+
+    <a href="#footer" class="hero-scroll" aria-label="Scroll to subscribe">
+        <span class="scroll-line"></span>
+    </a>
 </div>
 
 <style>
@@ -134,7 +127,7 @@
     .login-container {
         display: flex;
         width: 100%;
-        max-width: 1000px;
+        max-width: 440px;
         border-radius: 20px;
         overflow: hidden;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
@@ -346,63 +339,43 @@
         text-decoration: underline;
     }
     
-    .gold-divider-v {
-        width: 2px;
-        background: linear-gradient(to bottom, var(--accent), rgba(201, 168, 124, 0.1), var(--accent));
-        margin: 40px 0;
-        align-self: stretch;
-    }
 
-    .login-illustration {
-        flex: 1;
-        background: linear-gradient(135deg, #18181b 0%, #1c1c21 100%);
-        color: var(--text);
-        padding: 60px 40px;
+    .hero-scroll {
         display: flex;
-        flex-direction: column;
         justify-content: center;
-        align-items: center;
+        padding: 32px 0;
+        text-decoration: none;
     }
 
-    .illustration-icon {
-        color: var(--accent);
-        margin-bottom: 2rem;
+    .hero-scroll .scroll-line {
+        width: 2px;
+        height: 48px;
+        background: linear-gradient(to bottom, var(--accent), transparent);
+        animation: scrollPulse 2s ease-in-out infinite;
+        transition: height 0.3s ease;
     }
 
-    .illustration-label {
-        font-family: var(--font-heading);
-        font-size: 1.5rem;
-        font-weight: 300;
-        font-style: italic;
-        color: var(--accent);
+    .hero-scroll:hover .scroll-line {
+        height: 64px;
     }
-    
+
+    @keyframes scrollPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
 
     .form-group input::placeholder {
         color: #71717a;
         opacity: 1;
     }
     
-    .subscribe-form input::placeholder {
-        color: #71717a;
-        opacity: 1;
-    }
         @media (max-width: 768px) {
         .login-container {
-            flex-direction: column;
             max-width: 400px;
         }
         
         .login-card {
             padding: 30px 20px;
-        }
-        
-        .login-illustration {
-            display: none;
-        }
-
-        .gold-divider-v {
-            display: none;
         }
         
         .login-header h1 {

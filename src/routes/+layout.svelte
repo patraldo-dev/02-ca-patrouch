@@ -163,7 +163,7 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="site-footer">
+    <footer id="footer" class="site-footer">
         <div class="container">
             <div class="newsletter-section">
                 <NewsletterForm />
