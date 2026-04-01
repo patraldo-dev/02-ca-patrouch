@@ -53,7 +53,6 @@
                 </div>
                 <h1>Welcome Back</h1>
                 <p>Sign in to continue writing</p>
-                <p class="signup-link">Don't have an account? <a href="/signup">Sign up</a></p>
             </div>
             
             {#if error}
@@ -111,16 +110,16 @@
                     {/if}
                 </button>
             </form>
+            
+            <div class="gold-divider"></div>
+            
+            <p class="signup-link">Don't have an account? <a href="/signup">Sign up</a></p>
         </div>
         
         <div class="login-illustration">
             <div class="illustration-content">
-                <h2>Find Your Voice</h2>
-                <p>Join a community of writers. Daily prompts, personal spaces, and the Agora to share your stories with the world.</p>
-                <div class="testimonial">
-                    <blockquote>"The daily prompts got me writing again after years of procrastination. The community is supportive and the streaks keep me coming back."</blockquote>
-                    <cite>- A Happy Writer</cite>
-                </div>
+                <div class="monogram">CRP</div>
+                <p class="monogram-sub">Christophe R Patraldo</p>
             </div>
         </div>
     </div>
@@ -192,6 +191,14 @@
     
     .signup-link a:hover {
         text-decoration: underline;
+    }
+    
+    .gold-divider {
+        width: 40px;
+        height: 2px;
+        background: linear-gradient(to bottom, var(--accent), rgba(201, 168, 124, 0.3));
+        margin: 16px auto;
+        border-radius: 2px;
     }
     
     .error-message {
@@ -357,57 +364,27 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
+        align-items: center;
         border-left: 1px solid #27272a;
     }
-    
-    .illustration-content h2 {
-        font-size: 32px;
-        font-weight: 700;
-        margin: 0 0 20px 0;
-        color: #c9a87c;
-    }
-    
-    .illustration-content p {
-        font-size: 16px;
-        line-height: 1.6;
-        margin-bottom: 40px;
-        color: #a1a1aa;
-    }
-    
-    .testimonial {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 20px;
-        position: relative;
-        border: 1px solid #27272a;
-    }
-    
-    .testimonial:before {
-        content: '"';
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        font-size: 60px;
-        line-height: 1;
-        opacity: 0.2;
-        color: #c9a87c;
-        font-family: Georgia, serif;
-    }
-    
-    .testimonial blockquote {
-        margin: 0 0 15px 0;
+
+    .monogram {
+        font-family: var(--font-heading);
+        font-size: 4rem;
+        font-weight: 300;
         font-style: italic;
-        font-size: 16px;
-        line-height: 1.6;
-        position: relative;
-        z-index: 1;
-        color: #a1a1aa;
+        color: var(--accent);
+        letter-spacing: 0.1em;
+        margin-bottom: 0.75rem;
+        text-align: center;
     }
-    
-    .testimonial cite {
-        font-style: normal;
-        font-size: 14px;
-        color: #71717a;
+
+    .monogram-sub {
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--text-muted);
     }
     
     @media (max-width: 768px) {

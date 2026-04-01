@@ -212,15 +212,15 @@
     }
 
     .scroll-line {
-        width: 1px;
-        height: 56px;
+        width: 2px;
+        height: 72px;
         background: linear-gradient(to bottom, var(--accent), transparent);
         animation: scrollPulse 2s ease-in-out infinite;
         transition: height 0.3s ease;
     }
 
     .hero-scroll:hover .scroll-line {
-        height: 72px;
+        height: 88px;
     }
 
     @keyframes scrollPulse {
