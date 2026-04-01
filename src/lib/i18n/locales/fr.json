@@ -304,5 +304,19 @@
   "pages.home.prompt.start_writing": "Commencer à Écrire",
   "pages.home.prompt.sign_in": "Connectez-vous pour Écrire",
   "write.category.daily-community": "Communauté Quotidienne",
-  "common.footer.built_by": "Créé par <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche Poutine! Digital</a>"
+  "common.footer.built_by": "Créé par <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche Poutine! Digital</a>",
+  "auth.login.title": "Bon Retour",
+  "auth.login.subtitle": "Connectez-vous pour continuer à écrire",
+  "auth.login.email_label": "Email ou Nom d'utilisateur",
+  "auth.login.email_placeholder": "Entrez votre email ou nom d'utilisateur",
+  "auth.login.password_label": "Mot de passe",
+  "auth.login.password_placeholder": "Entrez votre mot de passe",
+  "auth.login.forgot": "Mot de passe oublié ?",
+  "auth.login.sign_in": "Se Connecter",
+  "auth.login.signing_in": "Connexion en cours...",
+  "auth.login.no_account": "Pas encore de compte ?",
+  "auth.login.sign_up": "S'inscrire",
+  "auth.login.error_required": "Veuillez entrer votre email ou nom d'utilisateur et mot de passe",
+  "auth.login.error_invalid": "Identifiants invalides",
+  "auth.login.error_network": "Erreur réseau. Veuillez réessayer."
 }

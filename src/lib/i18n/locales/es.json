@@ -304,5 +304,19 @@
   "pages.home.prompt.start_writing": "Empezar a Escribir",
   "pages.home.prompt.sign_in": "Inicia Sesión para Escribir",
   "write.category.daily-community": "Comunidad Diaria",
-  "common.footer.built_by": "Creado por <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche Poutine! Digital</a>"
+  "common.footer.built_by": "Creado por <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche Poutine! Digital</a>",
+  "auth.login.title": "Bienvenido de Vuelta",
+  "auth.login.subtitle": "Inicia sesión para seguir escribiendo",
+  "auth.login.email_label": "Correo o Usuario",
+  "auth.login.email_placeholder": "Ingresa tu correo o usuario",
+  "auth.login.password_label": "Contraseña",
+  "auth.login.password_placeholder": "Ingresa tu contraseña",
+  "auth.login.forgot": "¿Olvidaste tu contraseña?",
+  "auth.login.sign_in": "Iniciar Sesión",
+  "auth.login.signing_in": "Iniciando sesión...",
+  "auth.login.no_account": "¿No tienes cuenta?",
+  "auth.login.sign_up": "Regístrate",
+  "auth.login.error_required": "Por favor ingresa tu correo o usuario y contraseña",
+  "auth.login.error_invalid": "Credenciales inválidas",
+  "auth.login.error_network": "Error de red. Por favor intenta de nuevo."
 }

@@ -1,6 +1,7 @@
 <!-- src/routes/(auth-pages)/login/+page.svelte -->
 <script>
     import { browser } from '$app/environment';
+    import { t } from '$lib/i18n';
     
     export let data;
     
@@ -44,15 +45,8 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <div class="logo">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#3b82f6"/>
-                        <path d="M2 17L12 22L22 17" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                <h1>Welcome Back</h1>
-                <p>Sign in to continue writing</p>
+                <h1>{$t('auth.login.title')}</h1>
+                <p>{$t('auth.login.subtitle')}</p>
             </div>
             
             {#if error}
@@ -68,12 +62,12 @@
             
             <form on:submit|preventDefault={handleLogin} class="login-form">
                 <div class="form-group">
-                    <label for="identifier">Email or Username</label>
+                    <label for="identifier">{$t('auth.login.email_label')}</label>
                     <input
                         id="identifier"
                         bind:value={identifier}
                         type="text"
-                        placeholder="Enter your email or username"
+                        placeholder="{$t('auth.login.email_placeholder')}"
                         required
                         autocomplete="username"
                         disabled={isLoading}
@@ -81,12 +75,12 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password">{$t('auth.login.password_label')}</label>
                     <input
                         id="password"
                         bind:value={password}
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder="{$t('auth.login.password_placeholder')}"
                         required
                         autocomplete="current-password"
                         disabled={isLoading}
@@ -99,21 +93,21 @@
                         <span class="checkmark"></span>
                         Remember me
                     </label>
-                    <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+                    <a href="/forgot-password" class="forgot-link">{$t('auth.login.forgot')}</a>
                 </div>
                 
                 <button type="submit" class="login-button" disabled={isLoading}>
                     {#if isLoading}
-                        Signing in...
+                        {$t('auth.login.signing_in')}
                     {:else}
-                        Sign In
+                        {$t('auth.login.sign_in')}
                     {/if}
                 </button>
             </form>
             
             <div class="gold-divider"></div>
             
-            <p class="signup-link">Don't have an account? <a href="/signup">Sign up</a></p>
+            <p class="signup-link">{$t('auth.login.no_account')} <a href="/signup">{$t('auth.login.sign_up')}</a></p>
         </div>
         
         <div class="login-illustration">
