@@ -106,7 +106,9 @@
                 <div class="auth-actions">
                     {#if data?.user}
                         <span class="welcome">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></span>
+                        {#if data.user?.role === 'admin'}
                         <a href="/admin" class="btn-glass">{$t('common.nav.admin')}</a>
+                        {/if}
                         <button on:click={handleLogout} class="btn-glass">{$t('common.nav.logout')}</button>
                     {:else}
                         <a href="/login" class="btn-glass">{$t('common.nav.login')}</a>
@@ -147,7 +149,9 @@
             <div class="mobile-auth">
                 {#if data?.user}
                     <p class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></p>
+                    {#if data.user?.role === 'admin'}
                     <a href="/admin" on:click={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
+                    {/if}
                     <button on:click={() => { toggleMobileMenu(); handleLogout(); }} class="btn-glass block">{$t('common.nav.logout')}</button>
                 {:else}
                     <a href="/login" on:click={toggleMobileMenu} class="btn-glass block">{$t('common.nav.login')}</a>
