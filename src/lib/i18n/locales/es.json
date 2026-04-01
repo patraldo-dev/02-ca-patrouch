@@ -328,5 +328,8 @@
   "pages.home.works.agora": "El Ágora",
   "pages.home.works.agora.desc": "Comparte tu trabajo y descubre la escritura de otros en la comunidad.",
   "pages.home.works.stats": "Tu Progreso",
-  "pages.home.works.stats.desc": "Sigue tus rachas de escritura, conteos de palabras y crecimiento."
+  "pages.home.works.stats.desc": "Sigue tus rachas de escritura, conteos de palabras y crecimiento.",
+  "write.editor.saved": "Borrador guardado exitosamente",
+  "write.editor.saving": "Guardando...",
+  "write.editor.view_dashboard": "Ver panel →"
 }

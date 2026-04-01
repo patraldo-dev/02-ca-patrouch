@@ -328,5 +328,8 @@
   "pages.home.works.agora": "The Agora",
   "pages.home.works.agora.desc": "Share your work and discover writing from others in the community.",
   "pages.home.works.stats": "Your Progress",
-  "pages.home.works.stats.desc": "Track your writing streaks, word counts, and growth over time."
+  "pages.home.works.stats.desc": "Track your writing streaks, word counts, and growth over time.",
+  "write.editor.saved": "Draft saved successfully",
+  "write.editor.saving": "Saving...",
+  "write.editor.view_dashboard": "View dashboard →"
 }

@@ -10,6 +10,7 @@
 
     let wordCount = $derived(content.trim() ? content.trim().split(/\s+/).length : 0);
     let saving = $state(false);
+    let saved = $state(false);
 
     function catLabel(key) {
         return $t('write.category.' + key) || key;
@@ -29,7 +30,7 @@
         </div>
     {/if}
 
-    <form method="POST" use:enhance={() => { saving = true; return async () => { saving = false; }; }}>
+    <form method="POST" use:enhance={() => { saving = true; saved = false; return async ({ result }) => { saving = false; if (result.type === 'success') saved = true; }; }}>
         <input type="hidden" name="promptId" value={data.prompt?.id || ''} />
 
         <div class="editor-field">
@@ -57,9 +58,16 @@
             </label>
         </div>
 
+        {#if saved}
+            <div class="save-toast">
+                <span>✓</span> {$t('write.editor.saved')}
+                <a href="/write" class="back-link-inline">{$t('write.editor.view_dashboard')}</a>
+            </div>
+        {/if}
+
         <div class="editor-actions">
             <button type="submit" formaction="/write/new?/draft" class="btn-glass" disabled={saving}>
-                {$t('write.editor.save_draft')}
+                {saving ? $t('write.editor.saving') : $t('write.editor.save_draft')}
             </button>
             <button type="submit" formaction="/write/new?/publish" class="btn-accent" disabled={saving}>
                 {$t('write.editor.publish')}
@@ -223,6 +231,31 @@
     }
 
     /* Actions */
+    .save-toast {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #86efac;
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+
+    .save-toast .back-link-inline {
+        margin-left: auto;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .save-toast .back-link-inline:hover {
+        text-decoration: underline;
+    }
+
     .editor-actions {
         display: flex;
         gap: 0.75rem;
