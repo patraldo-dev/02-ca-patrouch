@@ -1,7 +1,8 @@
 <!-- src/lib/components/LanguageSwitcherDesktop.svelte -->
 <script>
   import { locale } from '$lib/i18n';
-  import { fly } from 'svelte/transition';
+  import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
 
   const languages = [
     { code: 'en', label: 'EN' },
@@ -9,7 +10,7 @@
     { code: 'fr', label: 'FR' }
   ];
 
-  let isOpen = false;
+  let current = $derived(languages.find(l => l.code === $locale));
 
   async function switchLanguage(lang) {
     if (!browser) return;
@@ -22,8 +23,6 @@
       if (res.ok) {
         localStorage.setItem('preferredLanguage', lang);
         locale.set(lang);
-        // Use goto for SvelteKit navigation — re-runs server load
-        const { goto } = await import('$app/navigation');
         goto(window.location.pathname + window.location.search, { invalidateAll: true });
       }
     } catch (e) {
@@ -31,8 +30,6 @@
       localStorage.setItem('preferredLanguage', lang);
     }
   }
-
-  $: current = languages.find(l => l.code === $locale);
 </script>
 
 <div class="lang-switcher">
@@ -40,7 +37,7 @@
     <button
       class="lang-pill"
       class:active={$locale === lang.code}
-      on:click={() => switchLanguage(lang.code)}
+      onclick={() => switchLanguage(lang.code)}
       aria-label="Switch to {lang.label}"
     >
       {lang.label}

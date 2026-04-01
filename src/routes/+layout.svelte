@@ -103,7 +103,6 @@
             <nav class="desktop-nav" aria-label="Main navigation">
                 <a href="/" class:active={$page.url.pathname === '/'}>{$t('common.nav.home')}</a>
                 <a href="/about" class:active={$page.url.pathname.startsWith('/about')}>{$t('common.nav.about')}</a>
-                <a href="/blog" class:active={$page.url.pathname.startsWith('/blog')}>{$t('common.nav.blog')}</a>
                 <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
                 <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
             </nav>
@@ -145,7 +144,6 @@
             <nav class="mobile-nav">
                 <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
                 <a href="/about" onclick={toggleMobileMenu}>{$t('common.nav.about')}</a>
-                <a href="/blog" onclick={toggleMobileMenu}>{$t('common.nav.blog')}</a>
                 <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
             </nav>
