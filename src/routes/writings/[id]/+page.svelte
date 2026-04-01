@@ -1,9 +1,13 @@
 <script>
     import { t } from '$lib/i18n';
+    import { track } from '$lib/analytics';
     import { page } from '$app/stores';
 
     let { data } = $props();
     let w = $state(data.writing);
+
+    // Track view
+    track('view_writing', w.id, { title: w.title, status: w.status });
 
     function formatDate(d) {
         if (!d) return '';

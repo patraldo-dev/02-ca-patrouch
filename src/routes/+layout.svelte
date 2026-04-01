@@ -5,9 +5,18 @@
     import { t, locale, setLocale } from '$lib/i18n';
     import { beforeNavigate } from '$app/navigation';
     import { page } from '$app/stores';
+    import { track } from '$lib/analytics';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
     import LanguageSwitcherDesktop from '$lib/components/LanguageSwitcherDesktop.svelte';
     import LanguageSwitcherMobile from '$lib/components/LanguageSwitcherMobile.svelte';
+
+    // Track page views on navigation
+    if (browser) {
+        $effect(() => {
+            const path = $page.url.pathname;
+            if (path) track('page_view', path);
+        });
+    }
 
     /** @type {import('./$types').LayoutData} */
     export let data;

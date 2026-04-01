@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { t, locale } from '$lib/i18n';
+    import { track } from '$lib/analytics';
 
     let { data } = $props();
 
@@ -35,12 +36,14 @@
                     userAction = null;
                     // Reload stats
                     loadStats();
+                    track('pass_prompt', prompt?.id);
                 } else if (action === 'accepted') {
                     promptId = d.promptId;
                     userAction = 'accepted';
                     promptSource = d.promptSource || promptSource;
                     // Reload stats
                     loadStats();
+                    track('accept_prompt', d.promptId);
                 }
             }
         } catch (e) {
