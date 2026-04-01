@@ -6,8 +6,7 @@
     const categories = [
         { key: 'prompts', icon: '✨' },
         { key: 'agora', icon: '🏛️' },
-        { key: 'writing', icon: '📝' },
-        { key: 'sciFi', icon: '🚀' }
+        { key: 'writing', icon: '📝' }
     ];
 
     // Check reduced motion preference

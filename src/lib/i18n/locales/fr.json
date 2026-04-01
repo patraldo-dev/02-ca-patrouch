@@ -403,5 +403,8 @@
   "pages.privacy.s8_heading": "8. Vos Droits",
   "pages.privacy.s8_body": "Vous pouvez demander à consulter, modifier ou supprimer vos données personnelles à tout moment en contactant <a href=\"mailto:cheftech@patrouch.ca\">cheftech@patrouch.ca</a>.",
   "pages.privacy.s9_heading": "9. Modifications",
-  "pages.privacy.s9_body": "Nous pouvons mettre à jour cette politique. Les modifications seront reflétées sur cette page avec une date mise à jour."
+  "pages.privacy.s9_body": "Nous pouvons mettre à jour cette politique. Les modifications seront reflétées sur cette page avec une date mise à jour.",
+  "pages.home.categories.prompts": "Stimulations Quotidiennes",
+  "pages.home.categories.agora": "L'Agora",
+  "pages.home.categories.writing": "Votre Écriture"
 }
