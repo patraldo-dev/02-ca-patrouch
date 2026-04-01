@@ -5,7 +5,7 @@
 
     let title = $state('');
     let content = $state('');
-    let visibility = $state('private');
+    let visibility = $state('public');
     let aiAssisted = $state(false);
 
     let wordCount = $derived(content.trim() ? content.trim().split(/\s+/).length : 0);
