@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { t } from '$lib/i18n';
 
-  let { status } = $props();
+  let status = $derived($page.status);
 </script>
 
 <div class="error-page">

@@ -229,7 +229,6 @@
         text-align: center;
         border-top: 1px solid var(--border);
         border-bottom: 1px solid var(--border);
-        background: var(--surface);
     }
 
     .teaser-label {
