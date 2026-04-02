@@ -237,6 +237,9 @@
         max-width: 500px;
         margin: 0 auto;
         line-height: 1.7;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
     }
 
     .hero-scroll {
