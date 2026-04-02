@@ -49,7 +49,7 @@
         <a href="/agora?locale=es{data.filters.author ? '&author=' + data.filters.author : ''}" class="filter-tag" class:active={data.filters.locale === 'es'}>ES</a>
         <a href="/agora?locale=fr{data.filters.author ? '&author=' + data.filters.author : ''}" class="filter-tag" class:active={data.filters.locale === 'fr'}>FR</a>
         <span class="filter-divider">|</span>
-        <a href="/agora{data.filters.locale ? '?locale=' + data.filters.locale : ''}" class="filter-tag" class:active={!data.filters.author}>{$t('agora.filter_humans')}</a>
+        <a href="/agora?author=humans{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'humans'}>{$t('agora.filter_humans')}</a>
         <a href="/agora?author=agents{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'agents'}>{$t('agora.filter_agents')}</a>
         <a href="/agora?author=both{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'both'}>{$t('agora.filter_both')}</a>
     </div>
