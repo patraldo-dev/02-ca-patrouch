@@ -37,7 +37,7 @@ export async function POST({ request, platform }) {
         const today = new Date().toISOString().slice(0, 10);
         const prompt = await db.prepare(`
             SELECT id, prompt_text, category FROM writing_prompts
-            WHERE is_community = 1 AND locale = ? AND DATE(created_at) = ?
+            WHERE category = 'daily-community' AND locale = ? AND prompt_date = ?
             ORDER BY created_at DESC LIMIT 1
         `).bind(locale, today).first();
 
