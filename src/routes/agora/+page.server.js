@@ -4,17 +4,19 @@ export async function load({ url, locals }) {
   const page = parseInt(url.searchParams.get('page')) || 1;
   const locale = url.searchParams.get('locale') || null;
   const category = url.searchParams.get('category') || null;
+  const author = url.searchParams.get('author') || null; // 'agents', 'humans', or null for all
 
   const { writings, total, pages } = await getPublicWritings(locals.db, {
     page,
     locale: ['en', 'es', 'fr'].includes(locale) ? locale : null,
-    category: category || null
+    category: category || null,
+    author: ['agents', 'humans'].includes(author) ? author : null
   });
 
   return {
     user: locals.user || null,
     writings,
     pagination: { page, total, pages },
-    filters: { locale, category }
+    filters: { locale, category, author }
   };
 }

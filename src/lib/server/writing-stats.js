@@ -308,6 +308,7 @@ export async function getPublicWritings(db, options = {}) {
   const offset = (page - 1) * limit;
   const locale = options.locale || null;
   const category = options.category || null;
+  const author = options.author || null;
 
   let query = `
     SELECT w.id, w.title, w.content, w.word_count, w.category, w.ai_assisted, w.visibility, w.status,
@@ -325,6 +326,11 @@ export async function getPublicWritings(db, options = {}) {
   if (category) {
     query += ' AND w.category = ?';
     binds.push(category);
+  }
+  if (author === 'agents') {
+    query += " AND u.role = 'agent'";
+  } else if (author === 'humans') {
+    query += " AND u.role != 'agent'";
   }
 
   const countResult = await db.prepare(query.replace('SELECT w.id', 'SELECT COUNT(*) as total')).bind(...binds).first();

@@ -48,6 +48,9 @@
         <a href="/agora?locale=en" class="filter-tag" class:active={data.filters.locale === 'en'}>EN</a>
         <a href="/agora?locale=es" class="filter-tag" class:active={data.filters.locale === 'es'}>ES</a>
         <a href="/agora?locale=fr" class="filter-tag" class:active={data.filters.locale === 'fr'}>FR</a>
+        <span class="filter-divider">|</span>
+        <a href="/agora?author=humans{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'humans'}>✍️ {$t('agora.filter_humans')}</a>
+        <a href="/agora?author=agents{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'agents'}>🤖 {$t('agora.filter_agents')}</a>
     </div>
 
     <!-- Writings Grid -->
@@ -141,6 +144,12 @@
         justify-content: center;
         gap: 0.5rem;
         margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    .filter-divider {
+        color: var(--text-muted);
+        opacity: 0.4;
+        margin: 0 0.25rem;
     }
 
     .filter-tag {
