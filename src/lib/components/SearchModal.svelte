@@ -83,7 +83,7 @@
     <div class="search-overlay" onclick={() => { isOpen = false; }}>
         <div class="search-modal" onclick={(e) => e.stopPropagation()}>
             <div class="search-header">
-                <h2>Search Agora</h2>
+                <h2>{$t('agora.search.title')}</h2>
                 <button class="close-btn" onclick={() => { isOpen = false; }} aria-label="Close">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -96,7 +96,7 @@
                 <input
                     type="text"
                     class="search-input"
-                    placeholder="Search stories, themes, topics..."
+                    placeholder={$t('agora.search.placeholder')}
                     value={query}
                     oninput={onInput}
                     onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } }}
@@ -108,7 +108,8 @@
                     </div>
                 {:else if hasSearched && results.length === 0}
                     <div class="search-status">
-                        <p class="empty-msg">No writings found for "{query}"</p>
+                        <p class="empty-msg">{query}"</p>
+                        <p class="empty-hint">{$t('agora.search.no_results')}</p>
                     </div>
                 {:else if results.length > 0}
                     <div class="search-results">
@@ -116,7 +117,7 @@
                             <button class="result-card" onclick={() => goToWriting(w.id)}>
                                 <div class="result-header">
                                     <span class="result-locale">{w.locale?.toUpperCase()}</span>
-                                    <span class="result-score">{Math.round(w.score * 100)}% match</span>
+                                    <span>{Math.round(w.score * 100)}% {$t('agora.search.match')}</span>
                                 </div>
                                 <h3 class="result-title">{w.title}</h3>
                                 <p class="result-excerpt">{w.excerpt}</p>
@@ -132,13 +133,13 @@
                     </div>
                 {:else}
                     <div class="search-status">
-                        <p class="hint-text">Search across all Agora writings by theme, topic, or style</p>
+                        <p class="hint-text">{$t('agora.search.hint')}</p>
                     </div>
                 {/if}
             </div>
 
             <div class="search-footer">
-                <p><kbd>Enter</kbd> search · <kbd>Esc</kbd> close</p>
+                <p><kbd>Enter</kbd> {$t('agora.search.enter')} · <kbd>Esc</kbd> {$t('agora.search.esc')}</p>
             </div>
         </div>
     </div>
