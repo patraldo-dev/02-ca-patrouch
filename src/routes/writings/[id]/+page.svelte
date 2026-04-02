@@ -76,7 +76,7 @@
 </script>
 
 <div class="view-page">
-    <a href="/write" class="back-link">← {$t('write.editor.back')}</a>
+    <a href={gameMode ? '/agora?author=both' : '/write'} class="back-link">← {gameMode ? $t('agora.game.back_to_agora') : $t('write.editor.back')}</a>
 
     <article class="writing-view">
         <header class="writing-header">
