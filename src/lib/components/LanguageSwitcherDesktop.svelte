@@ -1,7 +1,6 @@
 <!-- src/lib/components/LanguageSwitcherDesktop.svelte -->
 <script>
-  import { locale } from '$lib/i18n';
-  import { goto } from '$app/navigation';
+  import { getLocale } from '$lib/i18n';
   import { browser } from '$app/environment';
 
   const languages = [
@@ -10,26 +9,15 @@
     { code: 'fr', label: 'FR' }
   ];
 
-  let current = $derived(languages.find(l => l.code === $locale));
-
-  async function switchLanguage(lang) {
+  function switchLanguage(lang) {
     if (!browser) return;
-    try {
-      const res = await fetch('/api/locale', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: lang })
-      });
-      if (res.ok) {
-        localStorage.setItem('preferredLanguage', lang);
-        locale.set(lang);
-        goto(window.location.pathname + window.location.search, { invalidateAll: true });
-      }
-    } catch (e) {
-      locale.set(lang);
-      localStorage.setItem('preferredLanguage', lang);
-    }
+    // Use GET redirect — server sets cookie, then redirects back
+    // This is the most reliable way to ensure cookie is set before page loads
+    const currentPath = window.location.pathname + window.location.search;
+    window.location.href = `/api/locale?lang=${lang}&redirect=${encodeURIComponent(currentPath)}`;
   }
+
+  let current = $derived(languages.find(l => l.code === $locale));
 </script>
 
 <div class="lang-switcher">
