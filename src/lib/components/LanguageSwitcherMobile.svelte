@@ -8,13 +8,8 @@
     { code: 'fr', label: 'FR' }
   ];
 
-  function getCookieLocale() {
-    if (!browser) return 'es';
-    const match = document.cookie.match(/preferredLanguage=(en|es|fr)/);
-    return match ? match[1] : 'es';
-  }
-
-  let activeLocale = $state(getCookieLocale());
+  let { serverLocale = 'es' } = $props();
+  let activeLocale = $state(serverLocale || 'es');
 
   function switchLanguage(lang) {
     if (!browser) return;

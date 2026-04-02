@@ -17,13 +17,8 @@
     window.location.href = `/api/locale?lang=${lang}&redirect=${encodeURIComponent(currentPath)}`;
   }
 
-  function getCookieLocale() {
-    if (!browser) return 'es';
-    const match = document.cookie.match(/preferredLanguage=(en|es|fr)/);
-    return match ? match[1] : 'es';
-  }
-
-  let activeLocale = $state(getCookieLocale());
+  let { serverLocale = 'es' } = $props();
+  let activeLocale = $state(serverLocale || 'es');
   let current = $derived(languages.find(l => l.code === activeLocale));
 </script>
 

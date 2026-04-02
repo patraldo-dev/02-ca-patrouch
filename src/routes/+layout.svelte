@@ -109,7 +109,7 @@
 
             <!-- Desktop: Lang + Auth -->
             <div class="nav-actions">
-                <LanguageSwitcherDesktop />
+                <LanguageSwitcherDesktop serverLocale={data.serverLocale} />
                 <div class="auth-actions">
                     {#if data?.user}
                         <span class="welcome">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></span>
@@ -148,7 +148,7 @@
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
             </nav>
             <div class="mobile-lang">
-                <LanguageSwitcherMobile />
+                <LanguageSwitcherMobile serverLocale={data.serverLocale} />
             </div>
             <div class="mobile-auth">
                 {#if data?.user}
