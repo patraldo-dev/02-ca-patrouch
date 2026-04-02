@@ -141,7 +141,6 @@
             <!-- Desktop Nav -->
             <nav class="desktop-nav" aria-label="Main navigation">
                 <a href="/" class:active={$page.url.pathname === '/'}>{$t('common.nav.home')}</a>
-                <a href="/#about" class:active={$page.url.pathname.startsWith('/about')}>{$t('common.nav.about')}</a>
                 <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
                 <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
             </nav>
@@ -209,7 +208,6 @@
         <div class="mobile-menu" role="dialog" aria-modal="true">
             <nav class="mobile-nav">
                 <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
-                <a href="/#about" onclick={toggleMobileMenu}>{$t('common.nav.about')}</a>
                 <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
                 <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
