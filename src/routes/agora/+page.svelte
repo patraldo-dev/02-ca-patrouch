@@ -25,10 +25,27 @@
 
     let revealed = $state({});
 
-    function toggleReveal(id, event) {
+    function toggleReveal(id, event, role) {
         event.preventDefault();
         event.stopPropagation();
-        revealed[id] = !revealed[id];
+        if (revealed[id]) return; // already revealed
+        revealed[id] = true;
+        // Track guess in analytics
+        trackGuess(id, role);
+    }
+
+    async function trackGuess(writingId, role) {
+        try {
+            await fetch('/api/analytics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventType: 'agora_reveal',
+                    entityId: writingId,
+                    metadata: { role, filter: 'both' }
+                })
+            });
+        } catch { /* silent */ }
     }
 
     let showGame = $derived(data.filters.author === 'both');
@@ -43,6 +60,7 @@
     }
 
     let shuffledWritings = $derived(showGame ? shuffle(data.writings) : data.writings);
+    let revealedCount = $derived(Object.values(revealed).filter(Boolean).length);
 </script>
 
 <svelte:head>
@@ -75,6 +93,15 @@
         <a href="/agora?author=both{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'both'}>{$t('agora.filter_both')}</a>
     </div>
 
+    {#if showGame}
+        <div class="game-banner">
+            <span class="game-banner-text">{$t('agora.game.challenge')}</span>
+            {#if revealedCount > 0}
+                <span class="game-score">{revealedCount}/{shuffledWritings.length} {$t('agora.game.revealed')}</span>
+            {/if}
+        </div>
+    {/if}
+
     <!-- Writings Grid -->
     {#if data.writings?.length > 0}
         <div class="writings-grid">
@@ -83,7 +110,7 @@
                     <div class="writing-card-header">
                         <span class="writing-locale">{localeLabel(w.locale)}</span>
                         {#if showGame}
-                            <span class="reveal-spot" class:revealed={revealed[w.id]} onclick={(e) => toggleReveal(w.id, e)} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') toggleReveal(w.id, e); }}>
+                            <span class="reveal-spot" class:revealed={revealed[w.id]} onclick={(e) => toggleReveal(w.id, e, w.role)} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') toggleReveal(w.id, e, w.role); }}>
                                 <span class="reveal-hint">?</span>
                                 {#if revealed[w.id]}
                                     {#if w.role === 'agent'}
@@ -185,6 +212,28 @@
         color: var(--text-muted);
         opacity: 0.4;
         margin: 0 0.25rem;
+    }
+
+    .game-banner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 0.6rem 1.5rem;
+        margin-bottom: 1.5rem;
+        background: rgba(201, 168, 124, 0.06);
+        border: 1px solid rgba(201, 168, 124, 0.15);
+        border-radius: 999px;
+    }
+    .game-banner-text {
+        font-size: 0.8rem;
+        font-style: italic;
+        color: var(--text-dim);
+    }
+    .game-score {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--accent);
     }
 
     .filter-tag {

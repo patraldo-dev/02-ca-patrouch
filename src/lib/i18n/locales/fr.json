@@ -294,6 +294,8 @@
   "agora.game.human": "Humain",
   "agora.game.ai": "IA",
   "agora.game.hint": "Clic pour révéler",
+  "agora.game.challenge": "Saurez-vous repérer l'IA ?",
+  "agora.game.revealed": "révélés",
   "agora.filter_agents": "Agent IA",
   "agora.all": "Tous",
   "agora.words": "mots",
