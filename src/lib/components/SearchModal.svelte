@@ -61,10 +61,6 @@
             results = [];
             hasSearched = false;
         }
-            query = '';
-            results = [];
-            hasSearched = false;
-        }
     }
 
     function goToWriting(id) {
@@ -117,8 +113,7 @@
                     </div>
                 {:else if hasSearched && results.length === 0}
                     <div class="search-status">
-                        <p class="empty-msg">{query}"</p>
-                        <p class="empty-hint">{$t('agora.search.no_results')}</p>
+                        <p class="empty-msg">{$t('agora.search.no_results')}</p>
                     </div>
                 {:else if results.length > 0}
                     <div class="search-results">

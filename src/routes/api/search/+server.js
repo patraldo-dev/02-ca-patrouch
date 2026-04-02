@@ -22,7 +22,7 @@ export async function GET({ url, platform }) {
 
     try {
         // Generate embedding for the query
-        const embedding = await ai.run('@cf/baai/bge-small-en-v1.5', {
+        const embedding = await ai.run('@cf/baai/bge-m3', {
             text: [query],
             input_type: 'query'
         });

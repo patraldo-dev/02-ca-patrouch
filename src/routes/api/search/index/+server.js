@@ -40,7 +40,7 @@ export async function POST({ request, platform }) {
             const texts = batch.map(w => `${w.title}\n${w.content || ''}`);
 
             try {
-                const embedding = await ai.run('@cf/baai/bge-small-en-v1.5', {
+                const embedding = await ai.run('@cf/baai/bge-m3', {
                     text: texts,
                     input_type: 'document'
                 });
