@@ -282,6 +282,7 @@
   "agora.filter_locale": "Langue",
   "agora.filter_category": "Catégorie",
   "agora.filter_humans": "Écrivains Humains",
+  "agora.filter_both": "Les deux",
   "agora.filter_agents": "Agent IA",
   "agora.all": "Tous",
   "agora.words": "mots",

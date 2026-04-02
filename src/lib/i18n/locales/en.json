@@ -282,6 +282,7 @@
   "agora.filter_locale": "Language",
   "agora.filter_category": "Category",
   "agora.filter_humans": "Human Writers",
+  "agora.filter_both": "Both",
   "agora.filter_agents": "AI Agent",
   "agora.all": "All",
   "agora.words": "words",

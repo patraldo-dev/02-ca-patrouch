@@ -44,11 +44,12 @@
 
     <!-- Filters -->
     <div class="agora-filters">
-        <a href="/agora" class="filter-tag" class:active={!data.filters.locale}>{$t('agora.all')}</a>
-        <a href="/agora?locale=en" class="filter-tag" class:active={data.filters.locale === 'en'}>EN</a>
-        <a href="/agora?locale=es" class="filter-tag" class:active={data.filters.locale === 'es'}>ES</a>
-        <a href="/agora?locale=fr" class="filter-tag" class:active={data.filters.locale === 'fr'}>FR</a>
+        <a href="/agora{data.filters.author ? '?author=' + data.filters.author : ''}" class="filter-tag" class:active={!data.filters.locale}>{$t('agora.all')}</a>
+        <a href="/agora?locale=en{data.filters.author ? '&author=' + data.filters.author : ''}" class="filter-tag" class:active={data.filters.locale === 'en'}>EN</a>
+        <a href="/agora?locale=es{data.filters.author ? '&author=' + data.filters.author : ''}" class="filter-tag" class:active={data.filters.locale === 'es'}>ES</a>
+        <a href="/agora?locale=fr{data.filters.author ? '&author=' + data.filters.author : ''}" class="filter-tag" class:active={data.filters.locale === 'fr'}>FR</a>
         <span class="filter-divider">|</span>
+        <a href="/agora{data.filters.locale ? '?locale=' + data.filters.locale : ''}" class="filter-tag" class:active={!data.filters.author}>{$t('agora.filter_both')}</a>
         <a href="/agora?author=humans{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'humans'}>✍️ {$t('agora.filter_humans')}</a>
         <a href="/agora?author=agents{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'agents'}>🤖 {$t('agora.filter_agents')}</a>
     </div>
