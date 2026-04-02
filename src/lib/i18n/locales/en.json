@@ -375,7 +375,7 @@
   "pages.home.prompt.sign_in": "Sign In to Write",
   "pages.home.prompt.label": "Past Sparks",
   "write.category.daily-community": "Daily Spark",
-  "common.footer.built_by": "Built by <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche Poutine! Digital</a>",
+  "common.footer.built_by": "Built by <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche&nbsp;Poutine!&nbsp;Digital</a>",
   "auth.login.title": "Welcome Back",
   "auth.login.subtitle": "Sign in to continue writing",
   "auth.login.email_label": "Email or Username",

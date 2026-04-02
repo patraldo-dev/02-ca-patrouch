@@ -375,7 +375,7 @@
   "pages.home.prompt.label": "Stimules Passés",
   "pages.home.prompt.sign_in": "Connectez-vous pour Écrire",
   "write.category.daily-community": "Stimule Quotidien",
-  "common.footer.built_by": "Créé par <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche Poutine! Digital</a>",
+  "common.footer.built_by": "Créé par <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche&nbsp;Poutine!&nbsp;Digital</a>",
   "auth.login.title": "Bon Retour",
   "auth.login.subtitle": "Connectez-vous pour continuer à écrire",
   "auth.login.email_label": "Email ou Nom d'utilisateur",
