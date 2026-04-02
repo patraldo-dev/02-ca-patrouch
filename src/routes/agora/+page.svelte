@@ -103,10 +103,12 @@
     </div>
 
     {#if showGame}
-        <div class="game-banner" onclick={loadGameStats} role="button">
+        <div class="game-banner">
             <span class="game-banner-text">{$t('agora.game.challenge')}</span>
             {#if revealedCount > 0}
-                <span class="game-score">{revealedCount}/{shuffledWritings.length} {$t('agora.game.revealed')}</span>
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <span class="game-score" onclick={loadGameStats} role="button">{revealedCount}/{shuffledWritings.length} {$t('agora.game.revealed')}</span>
             {/if}
         </div>
     {/if}
@@ -476,7 +478,8 @@
         padding: 4rem 2rem;
         color: var(--text-muted);
     }
-    .game-banner { cursor: pointer; }
+    .game-banner {}
+    .game-score { cursor: pointer; }
     .writing-author.mystery {
         color: var(--text-muted);
         font-style: italic;
