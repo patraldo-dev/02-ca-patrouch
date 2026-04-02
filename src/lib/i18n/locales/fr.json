@@ -299,6 +299,8 @@
   "agora.game.human": "Humain",
   "agora.game.ai": "IA",
   "agora.game.hint": "Clic pour révéler",
+  "agora.game.click_to_reveal": "IA ou humain ? Clic pour découvrir !",
+  "agora.game.click_for_stats": "Clic pour voir vos statistiques",
   "agora.game.back_to_agora": "Retour à l'Agore",
   "agora.game.challenge": "Saurez-vous repérer l'IA ?",
   "agora.game.revealed": "révélés",

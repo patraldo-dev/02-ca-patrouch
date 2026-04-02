@@ -300,6 +300,8 @@
   "agora.game.human": "Human",
   "agora.game.ai": "AI",
   "agora.game.hint": "Click to reveal",
+  "agora.game.click_to_reveal": "Is this AI or human? Click to find out!",
+  "agora.game.click_for_stats": "Click to see your game stats",
   "agora.game.back_to_agora": "Back to Agora",
   "agora.game.challenge": "Can you spot the AI?",
   "agora.game.revealed": "revealed",

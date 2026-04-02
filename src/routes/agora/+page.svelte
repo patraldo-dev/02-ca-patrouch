@@ -108,7 +108,7 @@
             {#if revealedCount > 0}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <span class="game-score" onclick={loadGameStats} role="button">{revealedCount}/{shuffledWritings.length} {$t('agora.game.revealed')}</span>
+                <span class="game-score" onclick={loadGameStats} role="button" title={$t('agora.game.click_for_stats')}>{revealedCount}/{shuffledWritings.length} {$t('agora.game.revealed')}</span>
             {/if}
         </div>
     {/if}
@@ -121,7 +121,7 @@
                     <div class="writing-card-header">
                         <span class="writing-locale">{localeLabel(w.locale)}</span>
                         {#if showGame}
-                            <span class="reveal-spot" class:revealed={revealed[w.id]} onclick={(e) => toggleReveal(w.id, e, w.role)} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') toggleReveal(w.id, e, w.role); }}>
+                            <span class="reveal-spot" class:revealed={revealed[w.id]} onclick={(e) => toggleReveal(w.id, e, w.role)} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') toggleReveal(w.id, e, w.role); }} title={$t('agora.game.hint')}>
                                 <span class="reveal-hint">?</span>
                                 {#if revealed[w.id]}
                                     {#if w.role === 'agent'}
