@@ -7,12 +7,15 @@
     import { browser } from '$app/environment';
 
     let { data } = $props();
-    let form = $state({ title: data.writing.title, content: data.writing.content, visibility: data.writing.visibility || 'public' });
+    let title = $state(data.writing.title);
+    let content = $state(data.writing.content);
+    let visibility = $state(data.writing.visibility || 'public');
     let wordCount = $state(data.writing.word_count || 0);
     let showPreview = $state(false);
     let previewHtml = $state('');
     let toast = $state(null);
     let toastTimer = null;
+    let activeAction = $state('save');
 
     function showToast(type, message) {
         toast = { type, message };
@@ -21,7 +24,7 @@
     }
 
     $effect(() => {
-        const text = form.content || '';
+        const text = content || '';
         wordCount = text.trim().split(/\s+/).filter(Boolean).length;
         if (showPreview && browser) {
             marked.parse(text).then(html => { previewHtml = html; });
@@ -31,7 +34,7 @@
     function togglePreview() {
         showPreview = !showPreview;
         if (showPreview && browser) {
-            marked.parse(form.content || '').then(html => { previewHtml = html; });
+            marked.parse(content || '').then(html => { previewHtml = html; });
         }
     }
 
@@ -45,19 +48,19 @@
         });
     }
 
-    function saveEnhancer({ formElement, formData, action }) {
-        formData.set('title', form.title);
-        formData.set('content', form.content);
-        formData.set('visibility', form.visibility);
+    function saveEnhancer({ formData, action }) {
+        formData.set('title', title);
+        formData.set('content', content);
+        formData.set('visibility', visibility);
 
-        return async ({ update }) => {
-            if (action === '?/save') {
+        return async ({ update, result }) => {
+            if (action === '?/publish' && !result.error) {
+                showToast('success', 'Published!');
+                await update({ reset: false });
+                setTimeout(() => goto('/writings/' + data.writing.id), 800);
+            } else if (!result.error) {
                 await update({ reset: false });
                 showToast('success', 'Draft saved');
-            } else if (action === '?/publish') {
-                await update({ reset: false });
-                showToast('success', 'Published!');
-                setTimeout(() => goto('/writings/' + data.writing.id), 800);
             }
         };
     }
@@ -83,61 +86,50 @@
         </div>
     {/if}
 
-    <!-- Save form (hidden, triggered by buttons) -->
-    <form method="POST" action="?/save" use:enhance={saveEnhancer} style="display:none">
-        <input name="title" value={form.title} />
-        <input name="content" value={form.content} />
-        <input name="visibility" value={form.visibility} />
-        <button name="save" type="submit"></button>
-    </form>
-    <form method="POST" action="?/publish" use:enhance={saveEnhancer} style="display:none">
-        <input name="title" value={form.title} />
-        <input name="content" value={form.content} />
-        <input name="visibility" value={form.visibility} />
-        <button name="publish" type="submit"></button>
-    </form>
+    <form method="POST" use:enhance={saveEnhancer}>
+        <div class="editor-field">
+            <label for="edit-title">Title</label>
+            <input id="edit-title" name="title" type="text" value={title} required placeholder="Give your piece a title..." />
+        </div>
 
-    <div class="editor-field">
-        <label for="edit-title">Title</label>
-        <input id="edit-title" type="text" bind:value={form.title} required placeholder="Give your piece a title..." />
-    </div>
+        <div class="editor-toolbar">
+            <button type="button" class="toolbar-btn" onclick={togglePreview}>
+                {showPreview ? '✏️ Edit' : '👁 Preview'}
+            </button>
+            <div class="toolbar-spacer"></div>
+            <span class="visibility-label">{$t('write.editor.visibility')}:</span>
+            <select name="visibility" bind:value={visibility}>
+                <option value="public">{$t('write.editor.public')}</option>
+                <option value="private">{$t('write.editor.private')}</option>
+            </select>
+        </div>
 
-    <div class="editor-toolbar">
-        <button type="button" class="toolbar-btn" onclick={togglePreview}>
-            {showPreview ? '✏️ Edit' : '👁 Preview'}
-        </button>
-        <div class="toolbar-spacer"></div>
-        <span class="visibility-label">{$t('write.editor.visibility')}:</span>
-        <select bind:value={form.visibility}>
-            <option value="public">{$t('write.editor.public')}</option>
-            <option value="private">{$t('write.editor.private')}</option>
-        </select>
-    </div>
-
-    <div class="editor-body">
-        {#if showPreview}
-            <div class="preview-pane">
-                <div class="preview-content">
-                    {@html previewHtml}
+        <div class="editor-body">
+            {#if showPreview}
+                <div class="preview-pane">
+                    <div class="preview-content">
+                        {@html previewHtml}
+                    </div>
                 </div>
-            </div>
-        {:else}
-            <textarea
-                bind:value={form.content}
-                placeholder="Start writing..."
-                class="editor-textarea"
-            ></textarea>
-        {/if}
-    </div>
+            {:else}
+                <textarea
+                    name="content"
+                    bind:value={content}
+                    placeholder="Start writing..."
+                    class="editor-textarea"
+                ></textarea>
+            {/if}
+        </div>
 
-    <div class="editor-actions">
-        <button onclick={() => document.querySelector('[name="save"]').click()} class="btn-save">
-            💾 Save Draft
-        </button>
-        <button onclick={() => document.querySelector('[name="publish"]').click()} class="btn-publish">
-            🚀 Publish
-        </button>
-    </div>
+        <div class="editor-actions">
+            <button type="submit" formaction="?/save" class="btn-save">
+                💾 Save Draft
+            </button>
+            <button type="submit" formaction="?/publish" class="btn-publish">
+                🚀 Publish
+            </button>
+        </div>
+    </form>
 </div>
 
 <style>
@@ -187,6 +179,12 @@
     }
     .toast.success { background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); color: #4ade80; }
     .toast.error { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); color: #f87171; }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
 
     .editor-field label {
         display: block;
