@@ -1,6 +1,7 @@
 <!-- src/routes/reset-password/+page.svelte -->
 <script>
     import { browser } from '$app/environment';
+    import { t } from '$lib/i18n';
 
     let password = $state('');
     let confirmPassword = $state('');
@@ -13,14 +14,14 @@
         const url = new URL(window.location);
         token = url.searchParams.get('token') || '';
         if (!token) {
-            error = 'Invalid or missing reset token';
+            error = $t('reset.error_token');
         }
     }
 
     async function handleReset(e) {
         e.preventDefault();
         if (password !== confirmPassword) {
-            error = 'Passwords do not match';
+            error = $t('reset.error_match');
             return;
         }
 
@@ -38,15 +39,15 @@
             const result = await response.json();
 
             if (response.ok) {
-                success = 'Password reset! Redirecting to login...';
+                success = $t('reset.success');
                 setTimeout(() => {
                     window.location.href = '/login';
                 }, 2000);
             } else {
-                error = result.error || 'Failed to reset password';
+                error = result.error || $t('reset.error_failed');
             }
-        } catch (err) {
-            error = 'Network error. Please try again.';
+        } catch {
+            error = $t('reset.error_network');
         } finally {
             isLoading = false;
         }
@@ -55,7 +56,7 @@
 
 <div class="auth-container">
     <div class="auth-card">
-        <h1>Reset Password</h1>
+        <h1>{$t('reset.title')}</h1>
 
         {#if success}
             <div class="success-banner">{success}</div>
@@ -64,7 +65,7 @@
         {:else}
             <form onsubmit={handleReset}>
                 <div class="input-group">
-                    <label for="password">New Password</label>
+                    <label for="password">{$t('reset.password_label')}</label>
                     <input
                         id="password"
                         bind:value={password}
@@ -76,7 +77,7 @@
                     />
                 </div>
                 <div class="input-group">
-                    <label for="confirmPassword">Confirm Password</label>
+                    <label for="confirmPassword">{$t('reset.confirm_label')}</label>
                     <input
                         id="confirmPassword"
                         bind:value={confirmPassword}
@@ -87,7 +88,7 @@
                     />
                 </div>
                 <button type="submit" disabled={isLoading || !token}>
-                    {isLoading ? 'Resetting...' : 'Reset Password'}
+                    {isLoading ? $t('reset.submitting') : $t('reset.submit')}
                 </button>
             </form>
         {/if}
@@ -95,5 +96,87 @@
 </div>
 
 <style>
-    /* Reuse your existing auth styles */
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 60vh;
+        padding: 1.5rem;
+    }
+    .auth-card {
+        background: var(--surface, #141417);
+        border: 1px solid var(--border, rgba(255,255,255,0.1));
+        border-radius: var(--radius, 12px);
+        padding: 2.5rem 2rem;
+        max-width: 400px;
+        width: 100%;
+    }
+    .auth-card h1 {
+        font-family: var(--font-heading, 'Playfair Display', serif);
+        font-size: 1.5rem;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+    }
+    .input-group {
+        margin-bottom: 1.25rem;
+    }
+    .input-group label {
+        display: block;
+        color: #ffffff;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+    .input-group input {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
+        background: var(--bg, #09090b);
+        border: 2px solid var(--border, rgba(255,255,255,0.1));
+        border-radius: var(--radius, 8px);
+        color: var(--text-body, #e4e4e7);
+        font-family: var(--font-body, 'Inter', sans-serif);
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .input-group input:focus {
+        border-color: var(--accent, #c9a87c);
+    }
+    button[type="submit"] {
+        width: 100%;
+        padding: 0.7rem;
+        background: var(--accent, #c9a87c);
+        color: #09090b;
+        border: none;
+        border-radius: var(--radius, 8px);
+        font-family: var(--font-body, 'Inter', sans-serif);
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    button[type="submit"]:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    button[type="submit"]:hover:not(:disabled) {
+        opacity: 0.9;
+    }
+    .success-banner {
+        background: rgba(74, 222, 128, 0.1);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+        color: #4ade80;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius, 8px);
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+    .error-banner {
+        background: rgba(248, 113, 113, 0.1);
+        border: 1px solid rgba(248, 113, 113, 0.3);
+        color: #f87171;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius, 8px);
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
 </style>

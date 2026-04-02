@@ -10,7 +10,7 @@
     async function handleForgotPassword(e) {
         e.preventDefault();
         if (!email) {
-            error = 'Please enter your email';
+            error = $t('forgot.error_empty');
             return;
         }
 
@@ -28,12 +28,12 @@
             const result = await response.json();
 
             if (response.ok) {
-                success = 'Password reset link sent! Check your email.';
+                success = $t('forgot.success');
             } else {
-                error = result.error || 'Failed to send reset link';
+                error = result.error || $t('forgot.error_failed');
             }
-        } catch (err) {
-            error = 'Network error. Please try again.';
+        } catch {
+            error = $t('forgot.error_network');
         } finally {
             isLoading = false;
         }
@@ -42,8 +42,8 @@
 
 <div class="auth-container">
     <div class="auth-card">
-        <h1>Forgot Password?</h1>
-        <p>Enter your email and we'll send you a reset link.</p>
+        <h1>{$t('forgot.title')}</h1>
+        <p>{$t('forgot.subtitle')}</p>
 
         {#if success}
             <div class="success-banner">{success}</div>
@@ -55,23 +55,23 @@
 
         <form onsubmit={handleForgotPassword}>
             <div class="input-group">
-                <label for="email">Email</label>
+                <label for="email">{$t('forgot.email_label')}</label>
                 <input
                     id="email"
                     bind:value={email}
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder={$t('forgot.email_placeholder')}
                     required
                     disabled={isLoading}
                 />
             </div>
             <button type="submit" disabled={isLoading}>
-                {isLoading ? 'Sending...' : 'Send Reset Link'}
+                {isLoading ? $t('forgot.submitting') : $t('forgot.submit')}
             </button>
         </form>
 
         <p class="footer">
-            Remember your password? <a href="/login">Log in</a>
+            {$t('forgot.footer_text')} <a href="/login">{$t('forgot.footer_link')}</a>
         </p>
     </div>
 </div>
