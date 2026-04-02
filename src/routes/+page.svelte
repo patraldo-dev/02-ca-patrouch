@@ -257,7 +257,7 @@
         line-height: 1.7;
         hyphens: none;
         -webkit-hyphens: none;
-        overflow-wrap: normal;
+        overflow-wrap: break-word;
         word-break: normal;
     }
 
