@@ -1,6 +1,5 @@
 <!-- src/lib/components/LanguageSwitcherMobile.svelte -->
 <script>
-  import { locale } from '$lib/i18n';
   import { browser } from '$app/environment';
 
   const languages = [
@@ -9,13 +8,16 @@
     { code: 'fr', label: 'FR' }
   ];
 
+  function getCookieLocale() {
+    if (!browser) return 'es';
+    const match = document.cookie.match(/preferredLanguage=(en|es|fr)/);
+    return match ? match[1] : 'es';
+  }
+
+  let activeLocale = $state(getCookieLocale());
+
   function switchLanguage(lang) {
     if (!browser) return;
-    // Set cookie client-side as fallback, then navigate
-    document.cookie = `preferredLanguage=${lang};path=/;max-age=${365 * 24 * 60 * 60};SameSite=Lax`;
-    localStorage.setItem('preferredLanguage', lang);
-    locale.set(lang);
-    // Navigate via query param — server endpoint sets the proper cookie
     window.location.href = `/api/locale?lang=${lang}&redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   }
 </script>
@@ -24,7 +26,7 @@
   {#each languages as lang}
     <button
       class="lang-pill"
-      class:active={$locale === lang.code}
+      class:active={activeLocale === lang.code}
       onclick={() => switchLanguage(lang.code)}
       aria-label="Switch to {lang.label}"
     >

@@ -17,14 +17,21 @@
     window.location.href = `/api/locale?lang=${lang}&redirect=${encodeURIComponent(currentPath)}`;
   }
 
-  let current = $derived(languages.find(l => l.code === getLocale()));
+  function getCookieLocale() {
+    if (!browser) return 'es';
+    const match = document.cookie.match(/preferredLanguage=(en|es|fr)/);
+    return match ? match[1] : 'es';
+  }
+
+  let activeLocale = $state(getCookieLocale());
+  let current = $derived(languages.find(l => l.code === activeLocale));
 </script>
 
 <div class="lang-switcher">
   {#each languages as lang}
     <button
       class="lang-pill"
-      class:active={$locale === lang.code}
+      class:active={activeLocale === lang.code}
       onclick={() => switchLanguage(lang.code)}
       aria-label="Switch to {lang.label}"
     >
