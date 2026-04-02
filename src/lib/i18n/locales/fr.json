@@ -374,7 +374,6 @@
   "pages.home.prompt.cta_guest": "Découvrez le Stimule du Jour",
   "pages.home.prompt.sign_in": "Connectez-vous pour Écrire",
   "pages.home.prompt.label": "Stimules Passés",
-  "pages.home.prompt.sign_in": "Connectez-vous pour Écrire",
   "write.category.daily-community": "Stimule Quotidien",
   "common.footer.built_by": "Créé par <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche&nbsp;Poutine!&nbsp;Digital</a>",
   "auth.login.title": "Bon Retour",
@@ -485,5 +484,11 @@
   "pages.home.categories.writing": "Votre Écriture",
   "write.dashboard.done": "Terminé ✓",
   "write.dashboard.completed": "Écriture du jour terminée",
-  "write.dashboard.completed_msg": "Bien joué. Revenez demain pour un nouveau stimulus."
+  "write.dashboard.completed_msg": "Bien joué. Revenez demain pour un nouveau stimulus.",
+  "agora.game.how_to_play": "Clic sur ? de n'importe quelle carte pour deviner si c'est de l'IA ou un humain.",
+  "agora.game.what_do_you_think": "Votre choix ?",
+  "agora.game.guess_ai": "IA",
+  "agora.game.guess_human": "Humain",
+  "agora.game.correct": "Correct !",
+  "agora.game.wrong": "Faux !"
 }
