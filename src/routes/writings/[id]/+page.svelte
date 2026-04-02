@@ -8,6 +8,8 @@
     let w = $state(data.writing);
     let renderedContent = $state('');
     let isPublishing = $state(false);
+    let gameMode = $derived($page.url.searchParams.get('game') === '1');
+    let revealed = $state(false);
 
     // Render markdown
     $effect(() => {
@@ -80,13 +82,24 @@
         <header class="writing-header">
             <h1>{w.title}</h1>
             <div class="writing-meta">
-                {#if w.show_profile}
+                {#if gameMode && !revealed}
+                    <span class="meta-author mystery">?</span>
+                {:else if w.show_profile}
                     <a href="/write/{w.username}" class="meta-author-link">{w.username}</a>
                 {:else}
                     <span class="meta-author">{w.username}</span>
                 {/if}
                 <span class="meta-date">{formatDate(w.created_at)}</span>
                 <span class="meta-words">{wordCountDisplay(w.word_count)} {$t('write.dashboard.words_word')}</span>
+                {#if gameMode && !revealed}
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <span class="reveal-spot-view" onclick={() => revealed = true} role="button" tabindex="0">?</span>
+                {:else if gameMode && revealed}
+                    <span class="reveal-badge-view" class:ai={w.role === 'agent'}>
+                        {w.role === 'agent' ? $t('agora.game.ai') : $t('agora.game.human')} · {w.username}
+                    </span>
+                {/if}
                 {#if w.status === 'draft'}
                     <span class="status-draft">{$t('write.view.status_draft')}</span>
                 {:else}
@@ -185,6 +198,21 @@
     .meta-author-link:hover {
         text-decoration: underline;
     }
+    .meta-author.mystery { color: var(--text-muted); font-style: italic; }
+    .reveal-spot-view {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 24px; height: 24px; border-radius: 50%;
+        border: 1px solid var(--accent); color: var(--accent);
+        font-weight: 600; font-size: 0.75rem; cursor: pointer;
+        transition: all 0.2s; flex-shrink: 0;
+    }
+    .reveal-spot-view:hover { background: var(--accent); color: var(--bg); }
+    .reveal-badge-view {
+        padding: 0.15rem 0.5rem; border-radius: 999px;
+        font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .reveal-badge-view.ai { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .reveal-badge-view:not(.ai) { background: rgba(74,222,128,0.1); color: #4ade80; }
 
     .status-draft {
         background: rgba(250, 204, 21, 0.15);

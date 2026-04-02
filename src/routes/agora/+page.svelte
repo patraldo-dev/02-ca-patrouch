@@ -117,7 +117,7 @@
     {#if data.writings?.length > 0}
         <div class="writings-grid">
             {#each shuffledWritings as w}
-                <a href="/writings/{w.id}" class="writing-card">
+                <a href="/writings/{w.id}{showGame ? '?game=1' : ''}" class="writing-card">
                     <div class="writing-card-header">
                         <span class="writing-locale">{localeLabel(w.locale)}</span>
                         {#if showGame}
