@@ -184,7 +184,10 @@
     .preview-content :global(a) { color: var(--accent, #c9a87c); }
 
     .editor-actions { display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.5rem; position: relative; }
-    .toast { position: absolute; bottom: 100%; right: 0; margin-bottom: 0.5rem; padding: 0.5rem 1rem; border-radius: var(--radius, 8px); font-size: 0.85rem; white-space: nowrap; }, .btn-publish { padding: 0.6rem 1.25rem; border: none; border-radius: var(--radius, 8px); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .toast { position: absolute; bottom: 100%; right: 0; margin-bottom: 0.5rem; padding: 0.5rem 1rem; border-radius: var(--radius, 8px); font-size: 0.85rem; white-space: nowrap; }
+    .toast.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
+    .toast.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
+    .btn-save, .btn-publish { padding: 0.6rem 1.25rem; border: none; border-radius: var(--radius, 8px); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
     .btn-save { background: rgba(255,255,255,0.08); color: var(--text-body); border: 1px solid var(--border); }
     .btn-save:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
     .btn-publish { background: var(--accent, #c9a87c); color: #09090b; }
