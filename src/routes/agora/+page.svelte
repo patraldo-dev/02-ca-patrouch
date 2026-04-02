@@ -53,7 +53,7 @@
     {#if data.writings?.length > 0}
         <div class="writings-grid">
             {#each data.writings as w}
-                <article class="writing-card">
+                <a href="/writings/{w.id}" class="writing-card">
                     <div class="writing-card-header">
                         <span class="writing-locale">{localeLabel(w.locale)}</span>
                         {#if w.ai_assisted}
@@ -69,7 +69,7 @@
                         <span class="writing-sep">·</span>
                         <span>{formatDate(w.created_at)}</span>
                     </div>
-                </article>
+                </a>
             {/each}
         </div>
 
@@ -176,6 +176,9 @@
         border-radius: var(--radius);
         padding: 1.5rem;
         transition: border-color 0.2s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
     }
     .writing-card:hover { border-color: var(--accent); }
 

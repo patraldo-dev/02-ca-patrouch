@@ -1,10 +1,8 @@
 <!-- src/routes/writings/[id]/edit/+page.svelte -->
 <script>
     import { t, getLocale } from '$lib/i18n';
-    import { track } from '$lib/analytics';
     import { goto } from '$app/navigation';
     import { enhance } from '$app/forms';
-    import { page } from '$app/stores';
     import { marked } from 'marked';
     import { browser } from '$app/environment';
 
@@ -13,10 +11,15 @@
     let wordCount = $state(data.writing.word_count || 0);
     let showPreview = $state(false);
     let previewHtml = $state('');
-    let saving = $state(false);
     let toast = $state(null);
+    let toastTimer = null;
 
-    // Update word count and preview on content change
+    function showToast(type, message) {
+        toast = { type, message };
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { toast = null; }, 4000);
+    }
+
     $effect(() => {
         const text = form.content || '';
         wordCount = text.trim().split(/\s+/).filter(Boolean).length;
@@ -42,35 +45,21 @@
         });
     }
 
-    async function handleSave(e) {
-        saving = true;
-        const fd = new FormData(e.target);
-        fd.set('title', form.title);
-        fd.set('content', form.content);
-        fd.set('visibility', form.visibility);
+    function saveEnhancer({ formElement, formData, action }) {
+        formData.set('title', form.title);
+        formData.set('content', form.content);
+        formData.set('visibility', form.visibility);
 
-        try {
-            const actionUrl = e.submitter?.getAttribute('formaction');
-            const res = await fetch(actionUrl || '?/save', {
-                method: 'POST',
-                body: fd
-            });
-            const result = await res.json();
-            if (result.error) {
-                toast = { type: 'error', message: result.error };
-            } else {
-                toast = { type: 'success', message: result.published ? 'Published!' : 'Draft saved', wordCount: result.wordCount };
-                wordCount = result.wordCount;
-                if (result.published) {
-                    setTimeout(() => goto('/writings/' + data.writing.id), 1000);
-                }
+        return async ({ update }) => {
+            if (action === '?/save') {
+                await update({ reset: false });
+                showToast('success', 'Draft saved');
+            } else if (action === '?/publish') {
+                await update({ reset: false });
+                showToast('success', 'Published!');
+                setTimeout(() => goto('/writings/' + data.writing.id), 800);
             }
-        } catch (err) {
-            toast = { type: 'error', message: 'Save failed' };
-        } finally {
-            saving = false;
-            setTimeout(() => { toast = null; }, 3000);
-        }
+        };
     }
 
     function backToWriting() { goto('/writings/' + data.writing.id); }
@@ -88,59 +77,67 @@
         </div>
     </div>
 
-    <!-- Toast -->
     {#if toast}
         <div class="toast" class:success={toast.type === 'success'} class:error={toast.type === 'error'}>
             {toast.message}
-            {#if toast.type === 'success'}
-                <span class="toast-meta">{toast.wordCount} words</span>
-            {/if}
         </div>
     {/if}
 
-    <form onsubmit={handleSave} class="edit-form">
-        <div class="editor-field">
-            <label for="edit-title">Title</label>
-            <input id="edit-title" type="text" bind:value={form.title} required placeholder="Give your piece a title..." />
-        </div>
-
-        <div class="editor-toolbar">
-            <button type="button" class="toolbar-btn" onclick={togglePreview}>
-                {showPreview ? '✏️ Edit' : '👁 Preview'}
-            </button>
-            <div class="toolbar-spacer"></div>
-            <span class="visibility-label">{$t('write.editor.visibility')}:</span>
-            <select bind:value={form.visibility}>
-                <option value="public">{$t('write.editor.public')}</option>
-                <option value="private">{$t('write.editor.private')}</option>
-            </select>
-        </div>
-
-        <div class="editor-body">
-            {#if showPreview}
-                <div class="preview-pane">
-                    <div class="preview-content">
-                        {@html previewHtml}
-                    </div>
-                </div>
-            {:else}
-                <textarea
-                    bind:value={form.content}
-                    placeholder="Start writing..."
-                    class="editor-textarea"
-                ></textarea>
-            {/if}
-        </div>
-
-        <div class="editor-actions">
-            <button type="submit" formaction="?/save" class="btn-save" disabled={saving}>
-                {saving ? 'Saving...' : '💾 Save Draft'}
-            </button>
-            <button type="submit" formaction="?/publish" class="btn-publish" disabled={saving}>
-                🚀 Publish
-            </button>
-        </div>
+    <!-- Save form (hidden, triggered by buttons) -->
+    <form method="POST" action="?/save" use:enhance={saveEnhancer} style="display:none">
+        <input name="title" value={form.title} />
+        <input name="content" value={form.content} />
+        <input name="visibility" value={form.visibility} />
+        <button name="save" type="submit"></button>
     </form>
+    <form method="POST" action="?/publish" use:enhance={saveEnhancer} style="display:none">
+        <input name="title" value={form.title} />
+        <input name="content" value={form.content} />
+        <input name="visibility" value={form.visibility} />
+        <button name="publish" type="submit"></button>
+    </form>
+
+    <div class="editor-field">
+        <label for="edit-title">Title</label>
+        <input id="edit-title" type="text" bind:value={form.title} required placeholder="Give your piece a title..." />
+    </div>
+
+    <div class="editor-toolbar">
+        <button type="button" class="toolbar-btn" onclick={togglePreview}>
+            {showPreview ? '✏️ Edit' : '👁 Preview'}
+        </button>
+        <div class="toolbar-spacer"></div>
+        <span class="visibility-label">{$t('write.editor.visibility')}:</span>
+        <select bind:value={form.visibility}>
+            <option value="public">{$t('write.editor.public')}</option>
+            <option value="private">{$t('write.editor.private')}</option>
+        </select>
+    </div>
+
+    <div class="editor-body">
+        {#if showPreview}
+            <div class="preview-pane">
+                <div class="preview-content">
+                    {@html previewHtml}
+                </div>
+            </div>
+        {:else}
+            <textarea
+                bind:value={form.content}
+                placeholder="Start writing..."
+                class="editor-textarea"
+            ></textarea>
+        {/if}
+    </div>
+
+    <div class="editor-actions">
+        <button onclick={() => document.querySelector('[name="save"]').click()} class="btn-save">
+            💾 Save Draft
+        </button>
+        <button onclick={() => document.querySelector('[name="publish"]').click()} class="btn-publish">
+            🚀 Publish
+        </button>
+    </div>
 </div>
 
 <style>
@@ -180,30 +177,17 @@
         border-radius: 12px;
         font-size: 0.75rem;
     }
-    .word-count {
-        font-variant-numeric: tabular-nums;
-    }
+    .word-count { font-variant-numeric: tabular-nums; }
 
-    /* Toast */
     .toast {
         padding: 0.75rem 1rem;
         border-radius: var(--radius, 8px);
         margin-bottom: 1rem;
         font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
     }
     .toast.success { background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); color: #4ade80; }
     .toast.error { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); color: #f87171; }
-    .toast-meta { color: var(--text-dim, #a1a1aa); font-size: 0.8rem; }
 
-    /* Form */
-    .edit-form {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
     .editor-field label {
         display: block;
         color: #ffffff;
@@ -225,7 +209,6 @@
     }
     .editor-field input:focus { border-color: var(--accent, #c9a87c); }
 
-    /* Toolbar */
     .editor-toolbar {
         display: flex;
         align-items: center;
@@ -255,7 +238,6 @@
         cursor: pointer;
     }
 
-    /* Editor body */
     .editor-body {
         min-height: 400px;
         background: var(--surface, #141417);
@@ -306,7 +288,6 @@
     .preview-content :global(strong) { color: #ffffff; }
     .preview-content :global(a) { color: var(--accent, #c9a87c); }
 
-    /* Actions */
     .editor-actions {
         display: flex;
         gap: 0.75rem;
@@ -328,13 +309,12 @@
         color: var(--text-body, #e4e4e7);
         border: 1px solid var(--border, rgba(255,255,255,0.15));
     }
-    .btn-save:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+    .btn-save:hover { background: rgba(255,255,255,0.12); }
     .btn-publish {
         background: var(--accent, #c9a87c);
         color: #09090b;
     }
-    .btn-publish:hover:not(:disabled) { opacity: 0.9; }
-    .btn-save:disabled, .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-publish:hover { opacity: 0.9; }
 
     @media (max-width: 768px) {
         .edit-header { flex-direction: column; align-items: flex-start; }
