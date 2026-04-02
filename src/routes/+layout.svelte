@@ -4,6 +4,7 @@
     import { browser } from '$app/environment';
     import { t, locale, setLocale } from '$lib/i18n';
     import { beforeNavigate } from '$app/navigation';
+    import SearchModal from '$lib/components/SearchModal.svelte';
     import { page } from '$app/stores';
     import { track } from '$lib/analytics';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
@@ -24,6 +25,7 @@
     beforeNavigate(() => { mobileMenuOpen = false; });
 
     let mobileMenuOpen = $state(false);
+    let searchOpen = $state(false);
     let scrolled = $state(false);
     let scrollProgress = $state(0);
 
@@ -146,6 +148,7 @@
                 <a href="/about" onclick={toggleMobileMenu}>{$t('common.nav.about')}</a>
                 <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
+                <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
             </nav>
             <div class="mobile-lang">
                 <LanguageSwitcherMobile serverLocale={data.serverLocale} />
@@ -168,6 +171,8 @@
     <!-- MAIN -->
     <main class="main-content">
         {@render children()}
+
+        <SearchModal bind:open={searchOpen} serverLocale={data.serverLocale} />
     </main>
 
     <!-- FOOTER -->
@@ -388,6 +393,21 @@
 
     .mobile-nav a:hover { color: var(--accent); }
     .mobile-nav a.active { color: var(--accent); }
+    .mobile-search-trigger {
+        font-family: var(--font-heading);
+        font-size: 1.75rem;
+        font-weight: 300;
+        color: var(--text-dim);
+        background: none;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1rem 0;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .mobile-search-trigger:hover { color: var(--accent); }
 
     .mobile-lang {
         display: flex;

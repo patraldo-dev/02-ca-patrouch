@@ -4,7 +4,7 @@
     import { goto } from '$app/navigation';
     import { t } from '$lib/i18n';
 
-    let { serverLocale = 'en' } = $props();
+    let { serverLocale = 'en', open = $bindable(false) } = $props();
 
     let isOpen = $state(false);
     let query = $state('');
@@ -13,8 +13,11 @@
     let hasSearched = $state(false);
     let debounceTimer = null;
 
+    $effect(() => { isOpen = open; });
+
     function toggleSearch() {
         isOpen = !isOpen;
+        open = isOpen;
         if (isOpen && browser) {
             setTimeout(() => {
                 const input = document.querySelector('.search-input');
@@ -53,6 +56,11 @@
         }
         if (event.key === 'Escape' && isOpen) {
             isOpen = false;
+            open = false;
+            query = '';
+            results = [];
+            hasSearched = false;
+        }
             query = '';
             results = [];
             hasSearched = false;
