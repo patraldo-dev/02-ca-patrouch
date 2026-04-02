@@ -252,7 +252,7 @@
     .hero-tagline {
         font-size: clamp(1rem, 2vw, 1.25rem);
         color: var(--text-dim);
-        max-width: 560px;
+        max-width: 620px;
         margin: 0 auto;
         line-height: 1.7;
         overflow-wrap: break-word;
