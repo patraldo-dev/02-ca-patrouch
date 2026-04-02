@@ -125,12 +125,13 @@
                             <div class="prompt-completed">
                                 <span class="completed-badge">{$t('write.dashboard.completed')}</span>
                                 <p class="completed-msg">{$t('write.dashboard.completed_msg')}</p>
+                                <a href="/write/new" class="btn-glass" style="margin-top: 1rem;">{$t('write.dashboard.start_free_writing')}</a>
                             </div>
                         {/if}
                     </div>
                 {/if}
 
-                {#if exhaustedPasses && !acceptedToday}
+                {#if exhaustedPasses || acceptedToday}
                     <div class="free-write-card">
                         <h3>{$t('write.dashboard.free_writing')}</h3>
                         <p>{$t('write.dashboard.free_writing_desc')}</p>
