@@ -104,7 +104,7 @@
 
     {#if showGame}
         <div class="game-banner">
-            <span class="game-banner-text">{$t('agora.game.challenge')}</span>
+            <span class="game-banner-text" title={$t('agora.game.banner_hint')}>{$t('agora.game.challenge')}</span>
             {#if revealedCount > 0}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->

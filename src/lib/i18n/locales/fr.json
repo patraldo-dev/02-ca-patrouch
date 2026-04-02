@@ -301,6 +301,7 @@
   "agora.game.hint": "Clic pour révéler",
   "agora.game.click_to_reveal": "IA ou humain ? Clic pour découvrir !",
   "agora.game.click_for_stats": "Clic pour voir vos statistiques",
+  "agora.game.banner_hint": "Le filtre est sur 'Les deux' — sauriez-vous repérer les textes générés par l'IA ? Clic sur le ? pour révéler !",
   "agora.game.back_to_agora": "Retour à l'Agore",
   "agora.game.challenge": "Saurez-vous repérer l'IA ?",
   "agora.game.revealed": "révélés",

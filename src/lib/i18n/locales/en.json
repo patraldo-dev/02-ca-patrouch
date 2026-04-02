@@ -302,6 +302,7 @@
   "agora.game.hint": "Click to reveal",
   "agora.game.click_to_reveal": "Is this AI or human? Click to find out!",
   "agora.game.click_for_stats": "Click to see your game stats",
+  "agora.game.banner_hint": "Filter is set to 'Both' — can you tell which writings are AI-generated? Click the ? to reveal!",
   "agora.game.back_to_agora": "Back to Agora",
   "agora.game.challenge": "Can you spot the AI?",
   "agora.game.revealed": "revealed",
