@@ -90,12 +90,6 @@
         </div>
     </div>
 
-    {#if toast}
-        <div class="toast" class:success={toast.type === 'success'} class:error={toast.type === 'error'}>
-            {toast.message}
-        </div>
-    {/if}
-
     <div class="editor-field">
         <label for="edit-title">Title</label>
         <input id="edit-title" type="text" bind:value={title} required placeholder="Give your piece a title..." />
@@ -130,6 +124,11 @@
     </div>
 
     <div class="editor-actions">
+        {#if toast}
+            <div class="toast" class:success={toast.type === 'success'} class:error={toast.type === 'error'}>
+                {toast.message}
+            </div>
+        {/if}
         <button onclick={() => save('draft')} class="btn-save" disabled={saving}>
             {saving ? 'Saving...' : '💾 Save Draft'}
         </button>
@@ -184,8 +183,8 @@
     .preview-content :global(strong) { color: #fff; }
     .preview-content :global(a) { color: var(--accent, #c9a87c); }
 
-    .editor-actions { display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.5rem; }
-    .btn-save, .btn-publish { padding: 0.6rem 1.25rem; border: none; border-radius: var(--radius, 8px); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .editor-actions { display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.5rem; position: relative; }
+    .toast { position: absolute; bottom: 100%; right: 0; margin-bottom: 0.5rem; padding: 0.5rem 1rem; border-radius: var(--radius, 8px); font-size: 0.85rem; white-space: nowrap; }, .btn-publish { padding: 0.6rem 1.25rem; border: none; border-radius: var(--radius, 8px); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
     .btn-save { background: rgba(255,255,255,0.08); color: var(--text-body); border: 1px solid var(--border); }
     .btn-save:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
     .btn-publish { background: var(--accent, #c9a87c); color: #09090b; }
