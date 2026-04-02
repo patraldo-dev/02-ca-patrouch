@@ -13,8 +13,7 @@ export async function load({ locals }) {
                 SELECT id, prompt_text, locale, created_at
                 FROM writing_prompts
                 WHERE category = 'daily-community'
-                  AND status = 'available'
-                  AND created_at < datetime('now', 'start of day')
+                  AND created_at < datetime('now')
                 ORDER BY created_at DESC
                 LIMIT 14
             `).all();
