@@ -154,7 +154,20 @@
 
                 {#if error}
                     <div class="prompt-card error">{error}</div>
-                {:else if prompt}
+                {:else}
+                    <!-- Prompt Mode Toggle -->
+                    <div class="prompt-mode-toggle">
+                        <button class="mode-btn" class:active={promptMode === 'text'} onclick={() => { promptMode = 'text'; }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                            {$t('write.art.mode_text')}
+                        </button>
+                        <button class="mode-btn" class:active={promptMode === 'visual'} onclick={() => { promptMode = 'visual'; loadVisualPrompt(); }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            {$t('write.art.mode_visual')}
+                        </button>
+                    </div>
+
+                    {#if promptMode === 'text' && prompt}
                     <div class="prompt-card">
                         <div class="prompt-header">
                             <span class="prompt-category">{catLabel(prompt.category)}</span>
@@ -168,7 +181,6 @@
                             {/if}
                         </div>
                         <p class="prompt-text">{prompt.prompt_text}</p>
-
                         {#if !acceptedToday && !completedToday}
                             <div class="prompt-actions">
                                 <button class="btn-accept" onclick={() => handleAction('accepted')}>{$t('write.dashboard.accept')}</button>
@@ -183,21 +195,9 @@
                             </div>
                         {/if}
                     </div>
-                {/if}
+                    {/if}
 
-                <!-- Prompt Mode Toggle -->
-                <div class="prompt-mode-toggle">
-                    <button class="mode-btn" class:active={promptMode === 'text'} onclick={() => { promptMode = 'text'; }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
-                        {$t('write.art.mode_text')}
-                    </button>
-                    <button class="mode-btn" class:active={promptMode === 'visual'} onclick={() => { promptMode = 'visual'; loadVisualPrompt(); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                        {$t('write.art.mode_visual')}
-                    </button>
-                </div>
-
-                {#if promptMode === 'visual'}
+                    {#if promptMode === 'visual'}
                     <div class="art-inspiration">
                         {#if visualLoading}
                             <div class="art-loading">
@@ -213,14 +213,15 @@
                                 <span class="art-title">{visualPrompt.artwork.title}</span>
                                 <span class="art-credit">{visualPrompt.artwork.credit}</span>
                             </div>
-                        {:else if data.artwork}
-                            <img src={data.artwork.imageUrl} alt={data.artwork.title} class="art-image" loading="lazy" />
+                        {:else}
+                            <img src={data.artwork?.imageUrl} alt={data.artwork?.title} class="art-image" loading="lazy" />
                             <div class="art-meta">
-                                <span class="art-title">{data.artwork.title}</span>
-                                <span class="art-credit">{data.artwork.credit}</span>
+                                <span class="art-title">{data.artwork?.title}</span>
+                                <span class="art-credit">{data.artwork?.credit}</span>
                             </div>
                         {/if}
                     </div>
+                    {/if}
                 {/if}
 
                 <!-- Inline Editor - always visible -->
