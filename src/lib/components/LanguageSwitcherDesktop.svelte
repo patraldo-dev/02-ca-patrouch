@@ -1,6 +1,6 @@
 <!-- src/lib/components/LanguageSwitcherDesktop.svelte -->
 <script>
-  import { getLocale } from '$lib/i18n';
+  import { locale, getLocale } from '$lib/i18n';
   import { browser } from '$app/environment';
 
   const languages = [
@@ -17,7 +17,7 @@
     window.location.href = `/api/locale?lang=${lang}&redirect=${encodeURIComponent(currentPath)}`;
   }
 
-  let current = $derived(languages.find(l => l.code === $locale));
+  let current = $derived(languages.find(l => l.code === getLocale()));
 </script>
 
 <div class="lang-switcher">
