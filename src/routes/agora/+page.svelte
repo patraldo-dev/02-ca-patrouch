@@ -15,7 +15,8 @@
 
     function formatDate(d) {
         if (!d) return '';
-        return new Date(d + 'T12:00:00').toLocaleDateString(getLocale() || 'en', { month: 'short', day: 'numeric', year: 'numeric' });
+        const loc = data.filters?.locale || data.serverLocale || 'en';
+        return new Date(d + 'T12:00:00').toLocaleDateString(loc, { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     function localeLabel(code) {
