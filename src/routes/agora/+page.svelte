@@ -15,7 +15,7 @@
 
     function formatDate(d) {
         if (!d) return '';
-        const date = new Date(d + 'T12:00:00');
+        const date = new Date(d.replace(' ', 'T'));
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
