@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { t, locale, getLocale } from '$lib/i18n';
+    import SearchModal from '$lib/components/SearchModal.svelte';
 
     let { data } = $props();
 
@@ -96,6 +97,8 @@
         </div>
     {/if}
 </div>
+
+<SearchModal serverLocale={data.serverLocale} />
 
 <style>
     .agora-page {
