@@ -246,6 +246,7 @@
   "write.dashboard.fallback_prompt": "Escribe libremente hoy — la musa descansa.",
   "write.editor.back": "← Volver al Panel",
   "write.editor.heading": "Nuevo Escrito",
+  "write.art.label": "Inspiración Visual",
   "write.editor.from_prompt": "Escritura a partir de un prompt",
   "write.editor.title": "Título",
   "write.editor.title_placeholder": "Dale un título a tu texto…",

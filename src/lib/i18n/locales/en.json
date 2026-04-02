@@ -247,6 +247,7 @@
   "write.dashboard.fallback_prompt": "Write freely today — the muse is resting.",
   "write.editor.back": "← Back to Dashboard",
   "write.editor.heading": "New Writing",
+  "write.art.label": "Visual Inspiration",
   "write.editor.from_prompt": "Writing from prompt",
   "write.editor.title": "Title",
   "write.editor.title_placeholder": "Give your piece a title…",

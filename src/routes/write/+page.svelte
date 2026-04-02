@@ -168,6 +168,17 @@
                     </div>
                 {/if}
 
+                {#if data.artwork}
+                    <div class="art-inspiration">
+                        <div class="art-inspiration-header">
+                            <span class="art-label">{$t('write.art.label')}</span>
+                            <span class="art-credit">{data.artwork.credit}</span>
+                        </div>
+                        <img src={data.artwork.imageUrl} alt={data.artwork.title || 'Artwork'} class="art-image" loading="lazy" />
+                        <p class="art-title">{data.artwork.title}</p>
+                    </div>
+                {/if}
+
                 <!-- Inline Editor - always visible -->
                 <div class="inline-editor">
                     <h2 class="editor-heading">{$t('write.editor.heading')}</h2>
@@ -761,4 +772,40 @@
         }
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .art-inspiration {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .art-inspiration-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    .art-label {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .art-credit {
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        font-style: italic;
+    }
+    .art-image {
+        max-width: 280px;
+        width: 100%;
+        border-radius: 8px;
+        display: block;
+        margin: 0 auto;
+    }
+    .art-title {
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
 </style>

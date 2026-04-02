@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { getTodayData } from '$lib/server/writing-stats.js';
 import { getTranslation } from '$lib/i18n/server.js';
+import { getDailyArtwork } from '$lib/server/art-prompt.js';
 
 export async function load({ locals, url }) {
   if (!locals.user) return { user: null };
@@ -47,6 +48,7 @@ export async function load({ locals, url }) {
     passesUsed: todayData.passesUsed,
     dailyPassLimit: todayData.dailyPassLimit,
     stats: todayData.stats,
-    recentWritings
+    recentWritings,
+    artwork: getDailyArtwork()
   };
 }
