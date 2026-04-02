@@ -118,7 +118,11 @@
                         {:else}
                             <div class="prompt-accepted">
                                 <span class="accepted-badge">{$t('write.dashboard.accepted')}</span>
-                                <a href="/write/new?promptId={promptId}" class="btn-accent">{$t('write.dashboard.start_writing')}</a>
+                                {#if promptId}
+                                    <a href="/write/new?promptId={promptId}" class="btn-accent">{$t('write.dashboard.start_writing')}</a>
+                                {:else}
+                                    <a href="/write/new" class="btn-accent">{$t('write.dashboard.start_writing')}</a>
+                                {/if}
                                 <button onclick={() => handleAction('completed')} class="btn-done">{$t('write.dashboard.done')}</button>
                             </div>
                         {:else if userAction === 'completed'}
@@ -387,6 +391,12 @@
         display: flex;
         align-items: center;
         gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .prompt-accepted .btn-accent {
+        padding: 0.65rem 2rem;
+        font-size: 1rem;
     }
 
     .accepted-badge {
