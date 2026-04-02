@@ -233,7 +233,7 @@
   "write.dashboard.passes_exhausted": "Plus de passes aujourd'hui. Vous pouvez toujours <a href=\"/write/new\">écrire librement</a> sans prompt.",
   "write.dashboard.accepted": "✓ Accepté",
   "write.dashboard.start_writing": "Commencer à Écrire",
-  "write.dashboard.free_writing": "Écriture Libre",
+  "write.dashboard.free_writing": "Écriture Ouverte",
   "write.dashboard.free_writing_desc": "Plus de passes ? Écrivez sur ce qui vous inspire.",
   "write.dashboard.start_free_writing": "Commencer l'Écriture Libre",
   "write.dashboard.your_stats": "Vos Statistiques",

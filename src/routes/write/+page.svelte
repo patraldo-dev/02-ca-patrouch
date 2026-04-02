@@ -115,6 +115,7 @@
     }
 
     let acceptedToday = $derived(userAction === 'accepted');
+    let completedToday = $derived(userAction === 'completed');
     let exhaustedPasses = $derived(passesRemaining <= 0 && !acceptedToday);
 
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
@@ -140,16 +141,18 @@
                     <div class="prompt-card">
                         <div class="prompt-header">
                             <span class="prompt-category">{catLabel(prompt.category)}</span>
-                            {#if promptSource === 'community' && !acceptedToday}
+                            {#if promptSource === 'community'}
                                 <span class="prompt-source-tag community">{$t('write.dashboard.community_prompt')}</span>
-                                <span class="prompt-community-note">{$t('write.dashboard.community_note')}</span>
-                            {:else if promptSource === 'personal' && !acceptedToday}
+                            {:else if promptSource === 'personal'}
                                 <span class="prompt-source-tag personal">{$t('write.dashboard.personal_prompt')}</span>
+                            {/if}
+                            {#if acceptedToday}
+                                <span class="accepted-badge">{$t('write.dashboard.accepted')}</span>
                             {/if}
                         </div>
                         <p class="prompt-text">{prompt.prompt_text}</p>
 
-                        {#if !acceptedToday}
+                        {#if !acceptedToday && !completedToday}
                             <div class="prompt-actions">
                                 <button class="btn-accept" onclick={() => handleAction('accepted')}>{$t('write.dashboard.accept')}</button>
                                 {#if !exhaustedPasses}
@@ -161,54 +164,50 @@
                                     <p class="passes-exhausted">{@html $t('write.dashboard.passes_exhausted')}</p>
                                 {/if}
                             </div>
-                        {:else}
-                            <div class="prompt-accepted">
-                                <span class="accepted-badge">{$t('write.dashboard.accepted')}</span>
-                                <button onclick={() => handleAction('completed')} class="btn-done">{$t('write.dashboard.done')}</button>
-                            </div>
-                            <!-- Inline Editor -->
-                            <div class="inline-editor">
-                                <form onsubmit={handlePublish}>
-                                    <input type="hidden" name="promptId" value={promptId || ''} />
-                                    <div class="editor-field">
-                                        <label>{$t('write.editor.title')}</label>
-                                        <input type="text" bind:value={editorTitle} placeholder={$t('write.editor.title_placeholder')} required />
-                                    </div>
-                                    <div class="editor-field full">
-                                        <label>{$t('write.editor.content')} <span class="word-count">{editorWordCount} {$t('write.editor.words')}</span></label>
-                                        <textarea bind:value={editorContent} placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
-                                    </div>
-                                    <div class="editor-options">
-                                        <div class="option-group">
-                                            <label>{$t('write.editor.visibility')}</label>
-                                            <select bind:value={editorVisibility}>
-                                                <option value="private">{$t('write.editor.private')}</option>
-                                                <option value="public">{$t('write.editor.public')}</option>
-                                            </select>
-                                        </div>
-                                        <label class="toggle-label">
-                                            <input type="checkbox" bind:checked={editorAiAssisted} />
-                                            <span>{$t('write.editor.ai_assisted')}</span>
-                                        </label>
-                                    </div>
-                                    {#if editorMessage}
-                                        <div class="save-toast">{editorMessage}</div>
-                                    {/if}
-                                    <div class="editor-actions">
-                                        <button type="button" class="btn-save" onclick={handleSave} disabled={editorSaving}>{$t('write.editor.save_draft')}</button>
-                                        <button type="submit" class="btn-accent" disabled={editorSaving}>{$t('write.editor.publish')}</button>
-                                    </div>
-                                </form>
-                            </div>
-                        {:else if userAction === 'completed'}
-                            <div class="prompt-completed">
-                                <span class="completed-badge">{$t('write.dashboard.completed')}</span>
-                                <p class="completed-msg">{$t('write.dashboard.completed_msg')}</p>
-                                <a href="/write/new" class="btn-glass" style="margin-top: 1rem;">{$t('write.dashboard.start_free_writing')}</a>
-                            </div>
                         {/if}
                     </div>
                 {/if}
+
+                <!-- Inline Editor - always visible -->
+                <div class="inline-editor">
+                    <h2 class="editor-heading">{$t('write.editor.heading')}</h2>
+                    {#if prompt && promptId}
+                        <div class="editor-prompt-ref">
+                            <span>{$t('write.editor.from_prompt')}:</span> {prompt.prompt_text?.slice(0, 80)}{prompt.prompt_text?.length > 80 ? '…' : ''}
+                        </div>
+                    {/if}
+                    <form onsubmit={handlePublish}>
+                        <input type="hidden" name="promptId" value={promptId || ''} />
+                        <div class="editor-field">
+                            <label>{$t('write.editor.title')}</label>
+                            <input type="text" bind:value={editorTitle} placeholder={$t('write.editor.title_placeholder')} required />
+                        </div>
+                        <div class="editor-field full">
+                            <label>{$t('write.editor.content')} <span class="word-count">{editorWordCount} {$t('write.editor.words')}</span></label>
+                            <textarea bind:value={editorContent} placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
+                        </div>
+                        <div class="editor-options">
+                            <div class="option-group">
+                                <label>{$t('write.editor.visibility')}</label>
+                                <select bind:value={editorVisibility}>
+                                    <option value="private">{$t('write.editor.private')}</option>
+                                    <option value="public">{$t('write.editor.public')}</option>
+                                </select>
+                            </div>
+                            <label class="toggle-label">
+                                <input type="checkbox" bind:checked={editorAiAssisted} />
+                                <span>{$t('write.editor.ai_assisted')}</span>
+                            </label>
+                        </div>
+                        {#if editorMessage}
+                            <div class="save-toast">{editorMessage}</div>
+                        {/if}
+                        <div class="editor-actions">
+                            <button type="button" class="btn-save" onclick={handleSave} disabled={editorSaving}>{$t('write.editor.save_draft')}</button>
+                            <button type="submit" class="btn-accent" disabled={editorSaving}>{$t('write.editor.publish')}</button>
+                        </div>
+                    </form>
+                </div>
 
                 {#if exhaustedPasses && !acceptedToday}
                     <div class="free-write-card">
