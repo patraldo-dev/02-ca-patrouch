@@ -41,12 +41,11 @@
                     loadStats();
                     track('pass_prompt', prompt?.id);
                 } else if (action === 'accepted') {
-                    promptId = d.promptId;
                     userAction = 'accepted';
-                    promptSource = d.promptSource || promptSource;
-                    // Reload stats
                     loadStats();
                     track('accept_prompt', d.promptId);
+                    // Navigate directly to editor with prompt
+                    goto(`/write/new?promptId=${d.promptId}`);
                 } else if (action === 'completed') {
                     userAction = 'completed';
                     loadStats();
