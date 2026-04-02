@@ -39,7 +39,7 @@ export async function getTodayData(db, ai, userId, locale = 'en') {
 
   // Count passes used today
   const passCount = await db.prepare(
-    "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed'"
+    "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed' AND is_community = 1"
   ).bind(userId, today, locale).first();
   const passesUsed = passCount?.count || 0;
   const passesRemaining = Math.max(0, DAILY_PASS_LIMIT - passesUsed);
@@ -97,7 +97,7 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
 
   if (action === 'passed') {
     const passCount = await db.prepare(
-      "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed'"
+      "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed' AND is_community = 1"
     ).bind(userId, today, locale).first();
     const passesUsed = passCount?.count || 0;
 
@@ -114,6 +114,11 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
 
     const newPrompt = await getNewPromptForUser(db, ai, today, userId, locale);
     const newRemaining = DAILY_PASS_LIMIT - passesUsed - 1;
+
+    // Log the new personal prompt as shown so we don't repeat it
+    await db.prepare(
+      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(crypto.randomUUID(), userId, newPrompt.id, today, 'passed', locale, 0).run();
 
     return {
       prompt: newPrompt,
@@ -175,7 +180,7 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
 
 async function getPassesRemaining(db, userId, dateStr, locale = 'en') {
   const passCount = await db.prepare(
-    "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed'"
+    "SELECT COUNT(*) as count FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND action = 'passed' AND is_community = 1"
   ).bind(userId, dateStr, locale).first();
   return Math.max(0, DAILY_PASS_LIMIT - (passCount?.count || 0));
 }
