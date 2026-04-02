@@ -389,6 +389,7 @@
   "pages.home.works.stats": "Votre Progression",
   "pages.home.works.stats.desc": "Suivez vos séries d'écriture, vos comptes de mots et votre évolution.",
   "write.editor.saved": "Brouillon enregistré avec succès",
+  "write.editor.published": "Publié !",
   "write.editor.saving": "Enregistrement...",
   "write.editor.view_dashboard": "Voir le tableau de bord →",
   "write.view.from_prompt": "De la stimulation",

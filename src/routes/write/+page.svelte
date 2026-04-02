@@ -14,6 +14,13 @@
     let passesRemaining = $state(data.passesRemaining || 3);
     let passesUsed = $state(data.passesUsed || 0);
     let isPassing = $state(false);
+    let editorTitle = $state('');
+    let editorContent = $state('');
+    let editorWordCount = $derived(editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0);
+    let editorVisibility = $state('public');
+    let editorAiAssisted = $state(false);
+    let editorSaving = $state(false);
+    let editorMessage = $state('');
     let stats = $state(data.stats || null);
     let error = $state(null);
 
@@ -61,6 +68,44 @@
     }
 
     function viewWriting(id) { goto('/writings/' + id); }
+
+    async function handleSave() {
+        if (!editorTitle.trim() || !editorContent.trim()) return;
+        editorSaving = true;
+        editorMessage = '';
+        try {
+            const res = await fetch('/api/writings/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted })
+            });
+            if (res.ok) {
+                editorMessage = $t('write.editor.saved');
+                setTimeout(() => { editorMessage = ''; }, 3000);
+            }
+        } catch {}
+        editorSaving = false;
+    }
+
+    async function handlePublish(e) {
+        e.preventDefault();
+        if (!editorTitle.trim() || !editorContent.trim()) return;
+        editorSaving = true;
+        editorMessage = '';
+        try {
+            const res = await fetch('/api/writings/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, visibility: editorVisibility })
+            });
+            if (res.ok) {
+                const d = await res.json();
+                editorMessage = $t('write.editor.published');
+                goto('/writings/' + d.id);
+            }
+        } catch {}
+        editorSaving = false;
+    }
 
     async function loadStats() {
         try {
@@ -119,12 +164,41 @@
                         {:else}
                             <div class="prompt-accepted">
                                 <span class="accepted-badge">{$t('write.dashboard.accepted')}</span>
-                                {#if promptId}
-                                    <a href="/write/new?promptId={promptId}" class="btn-accent">{$t('write.dashboard.start_writing')}</a>
-                                {:else}
-                                    <a href="/write/new" class="btn-accent">{$t('write.dashboard.start_writing')}</a>
-                                {/if}
                                 <button onclick={() => handleAction('completed')} class="btn-done">{$t('write.dashboard.done')}</button>
+                            </div>
+                            <!-- Inline Editor -->
+                            <div class="inline-editor">
+                                <form onsubmit={handlePublish}>
+                                    <input type="hidden" name="promptId" value={promptId || ''} />
+                                    <div class="editor-field">
+                                        <label>{$t('write.editor.title')}</label>
+                                        <input type="text" bind:value={editorTitle} placeholder={$t('write.editor.title_placeholder')} required />
+                                    </div>
+                                    <div class="editor-field full">
+                                        <label>{$t('write.editor.content')} <span class="word-count">{editorWordCount} {$t('write.editor.words')}</span></label>
+                                        <textarea bind:value={editorContent} placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
+                                    </div>
+                                    <div class="editor-options">
+                                        <div class="option-group">
+                                            <label>{$t('write.editor.visibility')}</label>
+                                            <select bind:value={editorVisibility}>
+                                                <option value="private">{$t('write.editor.private')}</option>
+                                                <option value="public">{$t('write.editor.public')}</option>
+                                            </select>
+                                        </div>
+                                        <label class="toggle-label">
+                                            <input type="checkbox" bind:checked={editorAiAssisted} />
+                                            <span>{$t('write.editor.ai_assisted')}</span>
+                                        </label>
+                                    </div>
+                                    {#if editorMessage}
+                                        <div class="save-toast">{editorMessage}</div>
+                                    {/if}
+                                    <div class="editor-actions">
+                                        <button type="button" class="btn-save" onclick={handleSave} disabled={editorSaving}>{$t('write.editor.save_draft')}</button>
+                                        <button type="submit" class="btn-accent" disabled={editorSaving}>{$t('write.editor.publish')}</button>
+                                    </div>
+                                </form>
                             </div>
                         {:else if userAction === 'completed'}
                             <div class="prompt-completed">
@@ -418,6 +492,104 @@
         transition: all 0.2s;
     }
     .btn-done:hover { border-color: #4ade80; color: #4ade80; }
+
+    .inline-editor {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+    }
+    .inline-editor .editor-field {
+        margin-bottom: 1rem;
+    }
+    .inline-editor .editor-field label {
+        display: block;
+        color: var(--text);
+        font-size: 0.85rem;
+        margin-bottom: 0.4rem;
+    }
+    .inline-editor .editor-field input,
+    .inline-editor .editor-field textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-body, #e4e4e7);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        outline: none;
+        box-sizing: border-box;
+    }
+    .inline-editor .editor-field input:focus,
+    .inline-editor .editor-field textarea:focus {
+        border-color: var(--accent);
+    }
+    .inline-editor .editor-field textarea {
+        min-height: 300px;
+        resize: vertical;
+    }
+    .inline-editor .editor-options {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    .inline-editor .option-group label {
+        display: block;
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        margin-bottom: 0.3rem;
+    }
+    .inline-editor .option-group select {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        padding: 0.4rem 0.6rem;
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+    }
+    .inline-editor .toggle-label {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+    .inline-editor .word-count {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+    .inline-editor .save-toast {
+        background: rgba(74, 222, 128, 0.1);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+        color: #4ade80;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+    .inline-editor .editor-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    .inline-editor .btn-save {
+        padding: 0.6rem 1.5rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .inline-editor .btn-save:hover { border-color: var(--accent); color: var(--accent); }
+    .inline-editor .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .prompt-completed {
         text-align: center;

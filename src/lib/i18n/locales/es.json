@@ -389,6 +389,7 @@
   "pages.home.works.stats": "Tu Progreso",
   "pages.home.works.stats.desc": "Sigue tus rachas de escritura, conteos de palabras y crecimiento.",
   "write.editor.saved": "Borrador guardado exitosamente",
+  "write.editor.published": "¡Publicado!",
   "write.editor.saving": "Guardando...",
   "write.editor.view_dashboard": "Ver panel →",
   "write.view.from_prompt": "Del estímulo",

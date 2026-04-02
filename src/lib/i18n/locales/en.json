@@ -388,6 +388,7 @@
   "pages.home.works.stats": "Your Progress",
   "pages.home.works.stats.desc": "Track your writing streaks, word counts, and growth over time.",
   "write.editor.saved": "Draft saved successfully",
+  "write.editor.published": "Published!",
   "write.editor.saving": "Saving...",
   "write.editor.view_dashboard": "View dashboard →",
   "write.view.from_prompt": "From prompt",
