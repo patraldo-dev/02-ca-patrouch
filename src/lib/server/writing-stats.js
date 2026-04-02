@@ -230,10 +230,29 @@ export async function updateStats(db, userId, action, wordCount = 0) {
 }
 
 export async function getStats(db, userId) {
-  return db.prepare('SELECT * FROM user_writing_stats WHERE user_id = ?').bind(userId).first() || {
+  const row = await db.prepare('SELECT * FROM user_writing_stats WHERE user_id = ?').bind(userId).first();
+
+  // Cross-check with actual writings count to ensure stats aren't stale
+  const writings = await db.prepare(
+    'SELECT COUNT(*) as total, COALESCE(SUM(word_count), 0) as words FROM writings WHERE user_id = ? AND status = ?'
+  ).bind(userId, 'published').first();
+
+  const totalWritings = writings?.total || 0;
+  const totalWords = writings?.words || 0;
+
+  // Update if out of sync
+  if (row && (row.total_writings !== totalWritings || row.total_words !== totalWords)) {
+    await db.prepare(
+      `UPDATE user_writing_stats SET total_writings = ?, total_words = ?, updated_at = datetime('now') WHERE user_id = ?`
+    ).bind(totalWritings, totalWords, userId).run();
+    row.total_writings = totalWritings;
+    row.total_words = totalWords;
+  }
+
+  return row || {
     user_id: userId,
-    total_writings: 0,
-    total_words: 0,
+    total_writings: totalWritings,
+    total_words: totalWords,
     current_streak: 0,
     longest_streak: 0,
     prompts_accepted: 0,
@@ -297,6 +316,8 @@ export async function saveDraft(db, userId, { title, content, promptId, aiAssist
     `INSERT INTO writings (id, user_id, prompt_id, title, content, word_count, ai_assisted, visibility, status, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, 'private', 'draft', datetime('now'), datetime('now'))`
   ).bind(id, userId, promptId || null, title, content, wordCount, aiAssisted ? 1 : 0).run();
+
+  await updateStats(db, userId, 'written', wordCount);
 
   return { id, wordCount };
 }
