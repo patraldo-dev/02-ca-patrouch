@@ -155,6 +155,9 @@
                             <button class="profile-trigger" onclick={() => profilesOpen = !profilesOpen}>
                                 <span class="profile-avatar">{(activeDisplayName || '?')[0].toUpperCase()}</span>
                                 <span class="profile-name">{activeDisplayName}</span>
+                                {#if data.user?.role === 'admin'}
+                                    <span class="admin-badge">admin</span>
+                                {/if}
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                             </button>
                             {#if profilesOpen}
@@ -392,6 +395,16 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+    .admin-badge {
+        font-size: 0.55rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--bg);
+        background: #a78bfa;
+        padding: 0.1rem 0.4rem;
+        border-radius: 999px;
     }
     .profile-dropdown {
         position: absolute;
