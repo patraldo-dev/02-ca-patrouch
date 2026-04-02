@@ -38,10 +38,13 @@
             const loc = getLocale() || 'en';
             const res = await fetch(`/api/write/art-prompt?locale=${loc}`);
             if (res.ok) {
-                const data = await res.json();
-                visualPrompt = data;
+                visualPrompt = await res.json();
+            } else {
+                console.error('Art prompt API error:', res.status);
             }
-        } catch {}
+        } catch (err) {
+            console.error('Art prompt fetch error:', err);
+        }
         visualLoading = false;
     }
 
@@ -206,19 +209,23 @@
                             </div>
                         {:else if visualPrompt}
                             <img src={visualPrompt.artwork.imageUrl} alt={visualPrompt.artwork.title} class="art-image" loading="lazy" />
-                            <div class="art-prompt-text">
-                                <p>{visualPrompt.prompt}</p>
-                            </div>
+                            {#if visualPrompt.prompt}
+                                <div class="art-prompt-text">
+                                    <p>{visualPrompt.prompt}</p>
+                                </div>
+                            {/if}
                             <div class="art-meta">
                                 <span class="art-title">{visualPrompt.artwork.title}</span>
                                 <span class="art-credit">{visualPrompt.artwork.credit}</span>
                             </div>
-                        {:else}
-                            <img src={data.artwork?.imageUrl} alt={data.artwork?.title} class="art-image" loading="lazy" />
+                        {:else if data.artwork}
+                            <img src={data.artwork.imageUrl} alt={data.artwork.title} class="art-image" loading="lazy" />
                             <div class="art-meta">
-                                <span class="art-title">{data.artwork?.title}</span>
-                                <span class="art-credit">{data.artwork?.credit}</span>
+                                <span class="art-title">{data.artwork.title}</span>
+                                <span class="art-credit">{data.artwork.credit}</span>
                             </div>
+                        {:else}
+                            <p class="art-loading">{$t('write.art.generating')}</p>
                         {/if}
                     </div>
                     {/if}
