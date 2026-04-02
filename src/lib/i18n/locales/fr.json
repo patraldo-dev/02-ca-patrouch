@@ -226,6 +226,7 @@
   "write.dashboard.error_generic": "Un problème est survenu",
   "write.dashboard.accept": "Accepter Ce Prompt",
   "write.dashboard.pass": "Passer — Voir un Autre",
+  "write.dashboard.passing": "Génération d'un nouveau stimule...",
   "write.dashboard.passes_remaining": "{count} passes restantes",
   "write.dashboard.passes_remaining_one": "{count} passe restante",
   "write.dashboard.passes_exhausted": "Plus de passes aujourd'hui. Vous pouvez toujours <a href=\"/write/new\">écrire librement</a> sans prompt.",

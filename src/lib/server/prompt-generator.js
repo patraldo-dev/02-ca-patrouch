@@ -71,7 +71,7 @@ export async function generatePromptWithAI(ai, category, locale = 'en') {
   const systemPrompt = `You are a creative writing prompt generator. Generate a single, inspiring writing prompt for ${genreDesc}. The prompt should be 1-3 sentences, vivid, and thought-provoking. You MUST output the prompt in ${lang}. Output ONLY the prompt text, nothing else.`;
 
   try {
-    const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await ai.run('@cf/mistral/mistral-7b-instruct-v0.1', {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Give me a creative writing prompt in the ${category} genre. Reply in ${lang}.` }

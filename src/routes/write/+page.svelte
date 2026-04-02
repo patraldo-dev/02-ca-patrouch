@@ -13,6 +13,7 @@
     let promptId = $state(data.acceptedPromptId || null);
     let passesRemaining = $state(data.passesRemaining || 3);
     let passesUsed = $state(data.passesUsed || 0);
+    let isPassing = $state(false);
     let stats = $state(data.stats || null);
     let error = $state(null);
 
@@ -21,6 +22,7 @@
     }
 
     async function handleAction(action) {
+        if (action === 'passed') isPassing = true;
         try {
             const res = await fetch('/api/write/today/action', {
                 method: 'POST',
@@ -52,6 +54,8 @@
             }
         } catch (e) {
             error = $t('write.dashboard.error_generic');
+        } finally {
+            isPassing = false;
         }
     }
 
@@ -103,8 +107,8 @@
                             <div class="prompt-actions">
                                 <button class="btn-accept" onclick={() => handleAction('accepted')}>{$t('write.dashboard.accept')}</button>
                                 {#if !exhaustedPasses}
-                                    <button class="btn-pass" onclick={() => handleAction('passed')}>
-                                        {$t('write.dashboard.pass')}
+                                    <button class="btn-pass" onclick={() => handleAction('passed')} disabled={isPassing}>
+                                        {isPassing ? $t('write.dashboard.passing') : $t('write.dashboard.pass')}
                                     </button>
                                     <span class="passes-remaining">{passesRemaining === 1 ? $t('write.dashboard.passes_remaining_one').replace('{count}', passesRemaining) : $t('write.dashboard.passes_remaining').replace('{count}', passesRemaining)}</span>
                                 {:else}
@@ -346,6 +350,19 @@
     }
 
     .btn-pass:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-pass:disabled { opacity: 0.5; cursor: wait; }
+    .btn-pass:disabled::before {
+        content: '';
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin-right: 0.4rem;
+        vertical-align: middle;
+    }
 
     .passes-remaining {
         font-size: 0.8rem;
@@ -560,4 +577,5 @@
             grid-template-columns: 2fr 1fr;
         }
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
 </style>

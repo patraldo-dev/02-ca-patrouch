@@ -226,6 +226,7 @@
   "write.dashboard.error_generic": "Something went wrong",
   "write.dashboard.accept": "Accept This Prompt",
   "write.dashboard.pass": "Pass — Get Another",
+  "write.dashboard.passing": "Generating new prompt...",
   "write.dashboard.passes_remaining": "{count} passes remaining",
   "write.dashboard.passes_remaining_one": "{count} pass remaining",
   "write.dashboard.passes_exhausted": "No passes remaining today. You can still <a href=\"/write/new\">write freely</a> without a prompt.",

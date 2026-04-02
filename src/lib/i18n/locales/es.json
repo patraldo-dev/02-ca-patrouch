@@ -226,6 +226,7 @@
   "write.dashboard.error_generic": "Algo salió mal",
   "write.dashboard.accept": "Aceptar Este Prompt",
   "write.dashboard.pass": "Pasar — Ver Otro",
+  "write.dashboard.passing": "Generando nuevo estímulo...",
   "write.dashboard.passes_remaining": "{count} pases restantes",
   "write.dashboard.passes_remaining_one": "{count} pase restante",
   "write.dashboard.passes_exhausted": "No quedan pases hoy. Aún puedes <a href=\"/write/new\">escribir libremente</a> sin un prompt.",
