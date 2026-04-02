@@ -33,14 +33,6 @@
             </div>
         </section>
 
-        <!-- Add Test Content -->
-        <section class="admin-card">
-            <h2>{$t('pages.admin.sections.add.title')}</h2>
-            <p class="card-desc">{$t('pages.admin.sections.add.subtitle')}</p>
-            <div class="admin-actions">
-                <a href="/admin/add" class="btn-primary">{$t('pages.admin.sections.add.view')}</a>
-            </div>
-        </section>
     </div>
 
     <div class="admin-footer">
