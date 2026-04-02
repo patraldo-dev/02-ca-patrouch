@@ -22,6 +22,16 @@
     function localeLabel(code) {
         return { en: 'English', es: 'Español', fr: 'Français' }[code] || code;
     }
+
+    let revealed = $state({});
+
+    function toggleReveal(id, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        revealed[id] = !revealed[id];
+    }
+
+    let showGame = $derived(data.filters.author === 'both');
 </script>
 
 <svelte:head>
@@ -61,8 +71,16 @@
                 <a href="/writings/{w.id}" class="writing-card">
                     <div class="writing-card-header">
                         <span class="writing-locale">{localeLabel(w.locale)}</span>
-                        {#if w.ai_assisted && w.role !== 'agent'}
-                            <span class="ai-badge">{$t('agora.ai_assisted')}</span>
+                        {#if showGame}
+                            <span class="reveal-spot" class:revealed={revealed[w.id]} onclick={(e) => toggleReveal(w.id, e)} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') toggleReveal(w.id, e); }}>
+                                <span class="reveal-hint">?</span>
+                                <span class="reveal-label reveal-ai">AI</span>
+                                <span class="reveal-label reveal-human">{$t('agora.game.human')}</span>
+                            </span>
+                        {:else}
+                            {#if w.ai_assisted && w.role !== 'agent'}
+                                <span class="ai-badge">{$t('agora.ai_assisted')}</span>
+                            {/if}
                         {/if}
                     </div>
                     <h3 class="writing-title">{w.title}</h3>
@@ -221,6 +239,59 @@
         padding: 0.15rem 0.5rem;
         border-radius: 999px;
     }
+
+    .reveal-spot {
+        margin-left: auto;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+    }
+    .reveal-spot:hover {
+        border-color: var(--accent);
+        background: rgba(201, 168, 124, 0.1);
+        transform: scale(1.15);
+    }
+    .reveal-spot:hover .reveal-hint {
+        opacity: 0.3;
+    }
+    .reveal-hint {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        transition: opacity 0.2s;
+    }
+    .reveal-label {
+        position: absolute;
+        font-size: 0.55rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.1rem 0.45rem;
+        border-radius: 999px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    .reveal-ai {
+        color: #a78bfa;
+        background: rgba(167, 139, 250, 0.15);
+    }
+    .reveal-human {
+        color: var(--accent);
+        background: rgba(201, 168, 124, 0.15);
+    }
+    .reveal-spot.revealed .reveal-hint { opacity: 0; }
+    .reveal-spot.revealed { border-color: transparent; background: none; width: auto; padding: 0; }
+    .reveal-spot.revealed .reveal-ai { opacity: 1; pointer-events: auto; }
+    .reveal-spot.revealed .reveal-human { opacity: 1; pointer-events: auto; }
 
     .writing-title {
         font-family: var(--font-heading);
