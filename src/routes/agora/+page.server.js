@@ -4,7 +4,7 @@ export async function load({ url, locals }) {
   const page = parseInt(url.searchParams.get('page')) || 1;
   const locale = url.searchParams.get('locale') || null;
   const category = url.searchParams.get('category') || null;
-  const author = url.searchParams.get('author') || null; // 'agents', 'humans', or null for all
+  const author = url.searchParams.get('author') || null;
 
   const { writings, total, pages } = await getPublicWritings(locals.db, {
     page,
