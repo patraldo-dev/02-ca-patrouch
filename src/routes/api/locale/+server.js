@@ -11,7 +11,8 @@ export async function GET({ url, cookies }) {
   cookies.set('preferredLanguage', lang, {
     path: '/',
     maxAge: 365 * 24 * 60 * 60,
-    sameSite: 'lax'
+    sameSite: 'lax',
+    httpOnly: false
   });
 
   throw redirect(302, redirectTo);
@@ -27,7 +28,8 @@ export async function POST({ request, cookies }) {
   cookies.set('preferredLanguage', locale, {
     path: '/',
     maxAge: 365 * 24 * 60 * 60,
-    sameSite: 'lax'
+    sameSite: 'lax',
+    httpOnly: false
   });
 
   const referer = request.headers.get('referer') || '/';
