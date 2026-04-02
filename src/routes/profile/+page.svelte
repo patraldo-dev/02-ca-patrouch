@@ -16,6 +16,17 @@
     let editBio = $state('');
     let message = $state('');
     let messageError = $state(false);
+    let showProfile = $state(data.showProfile ?? 1);
+
+    async function toggleProfileVisibility() {
+        const newVal = showProfile ? 0 : 1;
+        const res = await fetch('/api/profile/visibility', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ show_profile: newVal })
+        });
+        if (res.ok) showProfile = newVal;
+    }
 
     function flash(msg, isError = false) {
         message = msg;
@@ -101,6 +112,17 @@
     {#if message}
         <div class="message" class:error={messageError}>{message}</div>
     {/if}
+
+    <section class="privacy-section">
+        <h2>Privacy</h2>
+        <label class="toggle-row">
+            <span>Public profile</span>
+            <button class="toggle-btn" class:active={showProfile} onclick={toggleProfileVisibility}>
+                <span class="toggle-knob"></span>
+            </button>
+        </label>
+        <p class="privacy-hint">When enabled, your username links to your public writer profile from your writings.</p>
+    </section>
 
     <!-- Existing Profiles -->
     <div class="profiles-list">
@@ -288,4 +310,54 @@
     .writing-item-info { display: flex; flex-direction: column; gap: 0.2rem; }
     .writing-item-title { font-size: 0.9rem; color: var(--text); }
     .writing-item-meta { font-size: 0.75rem; color: var(--text-muted); }
+    .privacy-section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    .privacy-section h2 {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 400;
+        color: var(--text);
+        margin-bottom: 0.75rem;
+    }
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--text);
+        font-size: 0.9rem;
+    }
+    .toggle-btn {
+        width: 44px; height: 24px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .toggle-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+    .toggle-knob {
+        position: absolute;
+        top: 2px; left: 2px;
+        width: 18px; height: 18px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.2s;
+    }
+    .toggle-btn.active .toggle-knob {
+        transform: translateX(20px);
+    }
+    .privacy-hint {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
 </style>

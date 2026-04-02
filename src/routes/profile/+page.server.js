@@ -22,5 +22,7 @@ export async function load({ locals }) {
         LIMIT 10
     `).bind(user.id).all();
 
-    return { profiles: results || [], writings: writings || [] };
+    const vis = await db.prepare('SELECT show_profile FROM users WHERE id = ?').bind(user.id).first();
+
+    return { profiles: results || [], writings: writings || [], showProfile: vis?.show_profile ?? 1 };
 }

@@ -80,7 +80,11 @@
         <header class="writing-header">
             <h1>{w.title}</h1>
             <div class="writing-meta">
-                <span class="meta-author">{w.username}</span>
+                {#if w.show_profile}
+                    <a href="/write/{w.username}" class="meta-author-link">{w.username}</a>
+                {:else}
+                    <span class="meta-author">{w.username}</span>
+                {/if}
                 <span class="meta-date">{formatDate(w.created_at)}</span>
                 <span class="meta-words">{wordCountDisplay(w.word_count)} {$t('write.dashboard.words_word')}</span>
                 {#if w.status === 'draft'}
@@ -172,6 +176,14 @@
     .meta-author {
         color: var(--accent);
         font-weight: 500;
+    }
+    .meta-author-link {
+        color: var(--accent);
+        font-weight: 500;
+        text-decoration: none;
+    }
+    .meta-author-link:hover {
+        text-decoration: underline;
     }
 
     .status-draft {
