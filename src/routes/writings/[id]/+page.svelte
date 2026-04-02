@@ -7,6 +7,7 @@
     let { data } = $props();
     let w = $state(data.writing);
     let renderedContent = $state('');
+    let isPublishing = $state(false);
 
     // Render markdown
     $effect(() => {
@@ -39,6 +40,36 @@
     async function confirmDelete() {
         const form = document.querySelector('#delete-form');
         if (form) form.submit();
+    }
+
+    async function publishWriting() {
+        isPublishing = true;
+        try {
+            const res = await fetch(`/api/writings/${w.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'published', visibility: 'public' })
+            });
+            if (res.ok) {
+                w = { ...w, status: 'published', visibility: 'public' };
+            }
+        } catch {}
+        isPublishing = false;
+    }
+
+    async function unpublishWriting() {
+        isPublishing = true;
+        try {
+            const res = await fetch(`/api/writings/${w.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'draft', visibility: 'private' })
+            });
+            if (res.ok) {
+                w = { ...w, status: 'draft', visibility: 'private' };
+            }
+        } catch {}
+        isPublishing = false;
     }
 </script>
 
@@ -74,6 +105,11 @@
             <div class="footer-actions">
                 {#if data.user?.id === w.user_id}
                     <a href="/writings/{w.id}/edit" class="btn-glass">{$t('write.view.edit')}</a>
+                    {#if w.status === 'draft'}
+                        <button onclick={publishWriting} class="btn-publish" disabled={isPublishing}>{isPublishing ? $t('write.view.publishing') : $t('write.view.publish')}</button>
+                    {:else}
+                        <button class="btn-unpublish" onclick={unpublishWriting} disabled={isPublishing}>{isPublishing ? $t('write.view.publishing') : $t('write.view.unpublish')}</button>
+                    {/if}
                     <button onclick={() => { if (confirm($t('write.view.confirm_delete'))) confirmDelete(); }} class="btn-icon-delete" aria-label={$t('write.view.delete')}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -219,6 +255,36 @@
     }
 
     .btn-glass:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-publish {
+        background: var(--accent);
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.5rem 1.25rem;
+        color: var(--bg);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    .btn-publish:hover { opacity: 0.85; }
+    .btn-publish:disabled { opacity: 0.4; cursor: wait; }
+
+    .btn-unpublish {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.5rem 1.25rem;
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-unpublish:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-unpublish:disabled { opacity: 0.4; cursor: wait; }
 
     .btn-icon-delete {
         background: rgba(239, 68, 68, 0.1);
