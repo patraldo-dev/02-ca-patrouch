@@ -1,6 +1,8 @@
 // src/lib/server/art-prompt.js
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
-const ANTOINE_ARTWORKS = [
+
+// Will be populated from DB or hardcoded list — for now a curated subset
+const ARTWORK_POOL = [
     { id: 'f8a136eb-363e-4a24-0f54-70bb4f4bf800', title: 'Mujer' },
     { id: '26fe40df-7745-41dc-7491-97cb36a32f00', title: 'Blue Alien King' },
     { id: '75b29e1a-2d22-4ef7-af19-2f7e3828bd00', title: 'Green Alien King' },
@@ -16,22 +18,49 @@ export function getDailyArtwork() {
     const today = new Date();
     const cst = new Date(today.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
     const dayOfYear = Math.floor((cst - new Date(cst.getFullYear(), 0, 0)) / 86400000);
-    const index = dayOfYear % ANTOINE_ARTWORKS.length;
-    const artwork = ANTOINE_ARTWORKS[index];
+    const index = dayOfYear % ARTWORK_POOL.length;
+    const artwork = ARTWORK_POOL[index];
     return {
         imageUrl: getImageUrl(artwork.id, 'gallery'),
         title: artwork.title,
         credit: 'Antoine Patraldo',
+        imageId: artwork.id,
     };
 }
 
-export function getRandomArtwork() {
-    const artwork = ANTOINE_ARTWORKS[Math.floor(Math.random() * ANTOINE_ARTWORKS.length)];
-    return {
-        imageUrl: getImageUrl(artwork.id, 'gallery'),
-        title: artwork.title,
-        credit: 'Antoine Patraldo',
+/**
+ * Use Workers AI vision model to generate a writing prompt from an artwork image.
+ */
+export async function generatePromptFromImage(ai, imageUrl, locale = 'en') {
+    const localeInstructions = {
+        en: 'Write the prompt in English.',
+        es: 'Escribe el prompt en español.',
+        fr: 'Écris le prompt en français.',
     };
+
+    const systemPrompt = `You are a creative writing prompt generator. Look at this artwork and craft a single, evocative writing prompt inspired by it. The prompt should be 1-2 sentences, open-ended, and invite the writer to explore emotions, stories, or perspectives suggested by the image. ${localeInstructions[locale] || localeInstructions.en}`;
+
+    try {
+        const response = await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', {
+            messages: [
+                { role: 'system', content: systemPrompt },
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'image', image: [{ url: imageUrl }] },
+                        { type: 'text', text: 'Generate a creative writing prompt inspired by this artwork.' }
+                    ]
+                }
+            ],
+            max_tokens: 200,
+        });
+
+        const text = response?.response || response?.[0]?.response || '';
+        return text.trim();
+    } catch (err) {
+        console.error('Vision model error:', err.message);
+        return null;
+    }
 }
 
-export { ANTOINE_ARTWORKS };
+export { ARTWORK_POOL };

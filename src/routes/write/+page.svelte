@@ -23,9 +23,26 @@
     let editorMessage = $state('');
     let stats = $state(data.stats || null);
     let error = $state(null);
+    let promptMode = $state('text'); // 'text' | 'visual'
+    let visualPrompt = $state(null);
+    let visualLoading = $state(false);
 
     function catLabel(key) {
         return $t('write.category.' + key) || key;
+    }
+
+    async function loadVisualPrompt() {
+        if (visualPrompt) return;
+        visualLoading = true;
+        try {
+            const loc = getLocale() || 'en';
+            const res = await fetch(`/api/write/art-prompt?locale=${loc}`);
+            if (res.ok) {
+                const data = await res.json();
+                visualPrompt = data;
+            }
+        } catch {}
+        visualLoading = false;
     }
 
     async function handleAction(action) {
@@ -168,14 +185,41 @@
                     </div>
                 {/if}
 
-                {#if data.artwork}
+                <!-- Prompt Mode Toggle -->
+                <div class="prompt-mode-toggle">
+                    <button class="mode-btn" class:active={promptMode === 'text'} onclick={() => { promptMode = 'text'; }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                        {$t('write.art.mode_text')}
+                    </button>
+                    <button class="mode-btn" class:active={promptMode === 'visual'} onclick={() => { promptMode = 'visual'; loadVisualPrompt(); }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                        {$t('write.art.mode_visual')}
+                    </button>
+                </div>
+
+                {#if promptMode === 'visual'}
                     <div class="art-inspiration">
-                        <div class="art-inspiration-header">
-                            <span class="art-label">{$t('write.art.label')}</span>
-                            <span class="art-credit">{data.artwork.credit}</span>
-                        </div>
-                        <img src={data.artwork.imageUrl} alt={data.artwork.title || 'Artwork'} class="art-image" loading="lazy" />
-                        <p class="art-title">{data.artwork.title}</p>
+                        {#if visualLoading}
+                            <div class="art-loading">
+                                <div class="spinner-small"></div>
+                                <span>{$t('write.art.generating')}</span>
+                            </div>
+                        {:else if visualPrompt}
+                            <img src={visualPrompt.artwork.imageUrl} alt={visualPrompt.artwork.title} class="art-image" loading="lazy" />
+                            <div class="art-prompt-text">
+                                <p>{visualPrompt.prompt}</p>
+                            </div>
+                            <div class="art-meta">
+                                <span class="art-title">{visualPrompt.artwork.title}</span>
+                                <span class="art-credit">{visualPrompt.artwork.credit}</span>
+                            </div>
+                        {:else if data.artwork}
+                            <img src={data.artwork.imageUrl} alt={data.artwork.title} class="art-image" loading="lazy" />
+                            <div class="art-meta">
+                                <span class="art-title">{data.artwork.title}</span>
+                                <span class="art-credit">{data.artwork.credit}</span>
+                            </div>
+                        {/if}
                     </div>
                 {/if}
 
@@ -772,40 +816,71 @@
         }
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .prompt-mode-toggle {
+        display: flex; gap: 0.5rem; margin-bottom: 1rem;
+    }
+    .mode-btn {
+        display: flex; align-items: center; gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .mode-btn.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(201,168,124,0.08);
+    }
     .art-inspiration {
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 1rem;
+        padding: 1.25rem;
         margin-bottom: 1.5rem;
-        text-align: center;
     }
-    .art-inspiration-header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 0.75rem;
+    .art-loading {
+        display: flex; align-items: center; gap: 0.75rem;
+        justify-content: center; padding: 2rem;
+        color: var(--text-muted); font-size: 0.9rem;
     }
-    .art-label {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    .art-credit {
-        color: var(--text-dim);
-        font-size: 0.75rem;
-        font-style: italic;
+    .spinner-small {
+        width: 16px; height: 16px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        display: inline-block;
     }
     .art-image {
-        max-width: 280px;
+        max-width: 300px;
         width: 100%;
         border-radius: 8px;
         display: block;
-        margin: 0 auto;
+        margin: 0 auto 1rem;
+    }
+    .art-prompt-text p {
+        color: var(--text);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        text-align: center;
+        font-style: italic;
+        margin-bottom: 0.75rem;
+    }
+    .art-meta {
+        display: flex; justify-content: space-between; align-items: center;
     }
     .art-title {
         color: var(--text-dim);
         font-size: 0.85rem;
-        margin-top: 0.5rem;
         font-style: italic;
+    }
+    .art-credit {
+        color: var(--text-muted);
+        font-size: 0.75rem;
     }
 </style>
