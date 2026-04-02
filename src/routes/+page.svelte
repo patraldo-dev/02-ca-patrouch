@@ -257,8 +257,8 @@
         line-height: 1.7;
         hyphens: none;
         -webkit-hyphens: none;
-        word-break: keep-all;
-        overflow-wrap: anywhere;
+        overflow-wrap: normal;
+        word-break: normal;
     }
 
     .hero-scroll {
