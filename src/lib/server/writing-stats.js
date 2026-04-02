@@ -125,7 +125,7 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
   }
 
   if (action === 'accepted') {
-    // Check if user has passed (in which case we accept the current personal prompt)
+    console.log('🎯 ACCEPT - userId:', userId, 'locale:', locale, 'today:', today);
     // or if no entries yet (accept community prompt)
     const logs = await db.prepare(
       'SELECT action FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? ORDER BY created_at DESC'
@@ -151,6 +151,7 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
 
     await updateStats(db, userId, 'accepted');
 
+    console.log('🎯 ACCEPT returning promptId:', currentPrompt.id);
     return {
       promptId: currentPrompt.id,
       prompt: currentPrompt,

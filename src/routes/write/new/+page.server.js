@@ -7,9 +7,13 @@ export async function load({ locals, url }) {
     let prompt = null;
 
     if (promptId) {
+        console.log('📝 write/new load - promptId:', promptId);
         prompt = await locals.db.prepare(
             'SELECT id, prompt_text, category FROM writing_prompts WHERE id = ?'
         ).bind(promptId).first();
+        console.log('📝 prompt found:', prompt ? 'YES' : 'NO', prompt ? prompt.prompt_text?.slice(0, 50) : '');
+    } else {
+        console.log('📝 write/new load - no promptId (free writing)');
     }
 
     return { user: locals.user, prompt };
