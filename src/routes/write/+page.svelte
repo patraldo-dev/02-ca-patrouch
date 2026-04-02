@@ -131,7 +131,7 @@
                     </div>
                 {/if}
 
-                {#if exhaustedPasses || acceptedToday}
+                {#if exhaustedPasses && !acceptedToday}
                     <div class="free-write-card">
                         <h3>{$t('write.dashboard.free_writing')}</h3>
                         <p>{$t('write.dashboard.free_writing_desc')}</p>
