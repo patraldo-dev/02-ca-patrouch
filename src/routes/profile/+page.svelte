@@ -166,6 +166,26 @@
             </div>
         </div>
     {/if}
+
+    <!-- Top 10 Writings -->
+    {#if data.writings?.length > 0}
+        <div class="writings-section">
+            <h2>{$t('profile.recent_writings')}</h2>
+            <div class="writings-list">
+                {#each data.writings as w}
+                    <a href="/writings/{w.id}" class="writing-item">
+                        <div class="writing-item-info">
+                            <span class="writing-item-title">{w.title}</span>
+                            <span class="writing-item-meta">
+                                {w.locale?.toUpperCase()} · {w.word_count} words · {new Date(w.created_at.replace(' ', 'T')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                    </a>
+                {/each}
+            </div>
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -256,4 +276,16 @@
     }
     .create-card h2 { font-size: 1rem; color: var(--text); margin: 0 0 1rem 0; font-weight: 400; }
     .create-form { display: flex; flex-direction: column; gap: 0.75rem; }
+    .writings-section { margin-top: 2rem; }
+    .writings-section h2 { font-size: 1.1rem; color: var(--text); font-weight: 400; margin-bottom: 1rem; }
+    .writings-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .writing-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.75rem 1rem; background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; text-decoration: none; color: inherit; transition: border-color 0.15s;
+    }
+    .writing-item:hover { border-color: var(--accent); }
+    .writing-item-info { display: flex; flex-direction: column; gap: 0.2rem; }
+    .writing-item-title { font-size: 0.9rem; color: var(--text); }
+    .writing-item-meta { font-size: 0.75rem; color: var(--text-muted); }
 </style>

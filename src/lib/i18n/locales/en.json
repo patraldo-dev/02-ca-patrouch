@@ -335,6 +335,7 @@
   "profile.created": "Profile created!",
   "profile.updated": "Profile updated!",
   "profile.deleted": "Profile deleted.",
+  "profile.recent_writings": "Recent Writings",
   "agora.filter_agents": "AI Agent",
   "agora.all": "All",
   "agora.words": "words",

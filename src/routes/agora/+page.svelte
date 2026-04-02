@@ -129,7 +129,7 @@
                     <h3 class="writing-title">{w.title}</h3>
                     <p class="writing-excerpt">{excerpt(w.content)}</p>
                     <div class="writing-meta">
-                        <span class="writing-author">{w.username}</span>
+                        <span class="writing-author" onclick={(e) => { e.preventDefault(); e.stopPropagation(); goto('/write/' + w.username); }}>{w.username}</span>
                         <span class="writing-sep">·</span>
                         <span>{w.word_count} {$t('agora.words')}</span>
                         <span class="writing-sep">·</span>
@@ -377,7 +377,8 @@
         flex-wrap: wrap;
     }
 
-    .writing-author { color: var(--accent); }
+    .writing-author { color: var(--accent); cursor: pointer; text-decoration: none; }
+    .writing-author:hover { text-decoration: underline; }
     .writing-sep { opacity: 0.4; }
 
     .pagination {
