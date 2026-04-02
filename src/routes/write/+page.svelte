@@ -1,7 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
-    import { t, locale } from '$lib/i18n';
+    import { t, locale, getLocale } from '$lib/i18n';
     import { track } from '$lib/analytics';
 
     let { data } = $props();
@@ -27,7 +27,7 @@
             const res = await fetch('/api/write/today/action', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, locale: $locale })
+                body: JSON.stringify({ action, locale: getLocale() })
             });
             if (res.ok) {
                 const d = await res.json();
