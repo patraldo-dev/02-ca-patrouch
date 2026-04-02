@@ -123,9 +123,8 @@ export async function handle({ event, resolve }) {
 
     event.locals.db = event.platform.env.DB_book;
 
-    // Read locale from cookie (set by i18n on client)
+    // Read locale from cookie
     const localeCookie = event.cookies.get('preferredLanguage') || event.cookies.get('locale');
-    console.log('🌐 Locale:', localeCookie || '(none)');
     event.locals.locale = ['en', 'es', 'fr'].includes(localeCookie) ? localeCookie : 'es';
 
     // Log Mailgun key for debugging
