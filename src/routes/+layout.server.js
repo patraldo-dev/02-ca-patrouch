@@ -2,8 +2,46 @@
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load({ locals, cookies }) {
     const serverLocale = cookies.get('preferredLanguage') || null;
+
+    // Auto-create primary profile for existing users who don't have one
+    const db = locals?.db;
+    const user = locals?.user;
+    let activeProfile = null;
+
+    if (db && user) {
+        const { count } = (await db.prepare(`SELECT COUNT(*) as count FROM profiles WHERE user_id = ?`).bind(user.id).first()) || { count: 0 };
+
+        if (count === 0) {
+            // Create primary profile from user data
+            const id = crypto.randomUUID();
+            await db.prepare(`
+                INSERT INTO profiles (id, user_id, display_name, locale, bio, is_primary, is_active)
+                VALUES (?, ?, ?, ?, '', 1, 1)
+            `).bind(id, user.id, user.username, serverLocale || 'en').run();
+        }
+
+        // Get active profile
+        activeProfile = await db.prepare(`
+            SELECT id, display_name, locale, bio, is_primary, is_active
+            FROM profiles WHERE user_id = ? AND is_active = 1
+        `).bind(user.id).first();
+
+        // Fallback to primary if no active
+        if (!activeProfile) {
+            const primary = await db.prepare(`
+                SELECT id, display_name, locale, bio, is_primary, is_active
+                FROM profiles WHERE user_id = ? AND is_primary = 1
+            `).bind(user.id).first();
+            if (primary) {
+                await db.prepare(`UPDATE profiles SET is_active = 1 WHERE id = ?`).bind(primary.id).run();
+                activeProfile = primary;
+            }
+        }
+    }
+
     return {
-        user: locals?.user || null,
-        serverLocale
+        user: user || null,
+        serverLocale,
+        activeProfile
     };
 }

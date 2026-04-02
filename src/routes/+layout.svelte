@@ -26,6 +26,43 @@
 
     let mobileMenuOpen = $state(false);
     let searchOpen = $state(false);
+    let profilesOpen = $state(false);
+    let profiles = $state([]);
+    let activeProfileId = $state(data.activeProfile?.id || null);
+    let activeDisplayName = $state(data.activeProfile?.display_name || data.user?.username || '');
+    let profileLoading = $state(false);
+
+    async function loadProfiles() {
+        try {
+            const res = await fetch('/api/profiles');
+            if (res.ok) {
+                const data = await res.json();
+                profiles = data.profiles || [];
+            }
+        } catch {}
+    }
+
+    async function switchProfile(id) {
+        profileLoading = true;
+        try {
+            const res = await fetch(`/api/profiles/${id}/switch`, { method: 'POST' });
+            if (res.ok) {
+                const d = await res.json();
+                activeProfileId = id;
+                activeDisplayName = d.activeProfile.display_name;
+                profiles = profiles.map(p => ({ ...p, is_active: p.id === id ? 1 : 0 }));
+                profilesOpen = false;
+                goto('?t=' + Date.now()); // refresh data
+            }
+        } catch {} finally {
+            profileLoading = false;
+        }
+    }
+
+    // Load profiles on mount if user
+    $effect(() => {
+        if (data?.user) loadProfiles();
+    });
     let scrolled = $state(false);
     let scrollProgress = $state(0);
 
@@ -114,7 +151,31 @@
                 <LanguageSwitcherDesktop serverLocale={data.serverLocale} />
                 <div class="auth-actions">
                     {#if data?.user}
-                        <span class="welcome">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></span>
+                        <div class="profile-switcher">
+                            <button class="profile-trigger" onclick={() => profilesOpen = !profilesOpen}>
+                                <span class="profile-avatar">{(activeDisplayName || '?')[0].toUpperCase()}</span>
+                                <span class="profile-name">{activeDisplayName}</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            {#if profilesOpen}
+                                <div class="profile-dropdown">
+                                    {#each profiles as p}
+                                        <button class="profile-option" class:active={p.is_active} onclick={() => switchProfile(p.id)} disabled={profileLoading}>
+                                            <span class="profile-option-avatar">{p.display_name[0].toUpperCase()}</span>
+                                            <span class="profile-option-info">
+                                                <span class="profile-option-name">{p.display_name}</span>
+                                                <span class="profile-option-locale">{p.locale?.toUpperCase()}</span>
+                                            </span>
+                                            {#if p.is_primary}
+                                                <span class="profile-primary-dot" title="Primary"></span>
+                                            {/if}
+                                        </button>
+                                    {/each}
+                                    <div class="profile-divider"></div>
+                                    <a href="/profile" class="profile-manage">{$t('common.nav.manage_profiles')}</a>
+                                </div>
+                            {/if}
+                        </div>
                         {#if data.user?.role === 'admin'}
                         <a href="/admin" class="btn-glass">{$t('common.nav.admin')}</a>
                         {/if}
@@ -295,6 +356,110 @@
     }
 
     .welcome strong { color: var(--text); }
+
+    .profile-switcher {
+        position: relative;
+    }
+    .profile-trigger {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem 0.3rem 0.3rem;
+        cursor: pointer;
+        color: var(--text-dim);
+        transition: border-color 0.2s;
+    }
+    .profile-trigger:hover { border-color: var(--accent); }
+    .profile-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .profile-name {
+        font-size: 0.8rem;
+        color: var(--text);
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .profile-dropdown {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.5rem;
+        min-width: 220px;
+        z-index: 100;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    .profile-option {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        width: 100%;
+        padding: 0.5rem 0.6rem;
+        border: none;
+        border-radius: 8px;
+        background: none;
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .profile-option:hover { background: rgba(255,255,255,0.05); }
+    .profile-option.active { color: var(--accent); }
+    .profile-option.active .profile-option-avatar { background: var(--accent); }
+    .profile-option-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .profile-option-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+    .profile-option-name { font-weight: 500; }
+    .profile-option-locale { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .profile-primary-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        margin-left: auto;
+    }
+    .profile-divider { height: 1px; background: var(--border); margin: 0.4rem 0; }
+    .profile-manage {
+        display: block;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: color 0.15s;
+    }
+    .profile-manage:hover { color: var(--accent); }
 
     .btn-glass {
         background: rgba(255, 255, 255, 0.05);
