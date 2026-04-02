@@ -3,9 +3,30 @@ import { json } from '@sveltejs/kit';
 export async function PUT({ request, locals, params }) {
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { title, content, visibility, status } = await request.json();
-    if (!title?.trim() || !content?.trim()) {
+    const body = await request.json();
+    const { title, content, visibility, status } = body;
+
+    // If only updating status/visibility (publish/unpublish), skip title/content validation
+    const isStatusUpdate = !title && !content;
+
+    if (!isStatusUpdate && (!title?.trim() || !content?.trim())) {
         return json({ error: 'Title and content are required' }, { status: 400 });
+    }
+
+    if (isStatusUpdate) {
+        // Just update status and/or visibility
+        const sets = [];
+        const values = [];
+        if (status) { sets.push('status = ?'); values.push(status); }
+        if (visibility) { sets.push('visibility = ?'); values.push(visibility); }
+        sets.push("updated_at = datetime('now')");
+        values.push(params.id, locals.user.id);
+
+        await locals.db.prepare(
+            `UPDATE writings SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`
+        ).bind(...values).run();
+
+        return json({ success: true });
     }
 
     const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
