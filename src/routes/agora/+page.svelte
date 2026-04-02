@@ -32,6 +32,17 @@
     }
 
     let showGame = $derived(data.filters.author === 'both');
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    let shuffledWritings = $derived(showGame ? shuffle(data.writings) : data.writings);
 </script>
 
 <svelte:head>
@@ -67,15 +78,20 @@
     <!-- Writings Grid -->
     {#if data.writings?.length > 0}
         <div class="writings-grid">
-            {#each data.writings as w}
+            {#each shuffledWritings as w}
                 <a href="/writings/{w.id}" class="writing-card">
                     <div class="writing-card-header">
                         <span class="writing-locale">{localeLabel(w.locale)}</span>
                         {#if showGame}
                             <span class="reveal-spot" class:revealed={revealed[w.id]} onclick={(e) => toggleReveal(w.id, e)} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') toggleReveal(w.id, e); }}>
                                 <span class="reveal-hint">?</span>
-                                <span class="reveal-label reveal-ai">AI</span>
-                                <span class="reveal-label reveal-human">{$t('agora.game.human')}</span>
+                                {#if revealed[w.id]}
+                                    {#if w.role === 'agent'}
+                                        <span class="reveal-label reveal-ai">{$t('agora.game.ai')}</span>
+                                    {:else}
+                                        <span class="reveal-label reveal-human">{$t('agora.game.human')}</span>
+                                    {/if}
+                                {/if}
                             </span>
                         {:else}
                             {#if w.ai_assisted && w.role !== 'agent'}
@@ -269,16 +285,12 @@
         transition: opacity 0.2s;
     }
     .reveal-label {
-        position: absolute;
         font-size: 0.55rem;
         font-weight: 700;
         letter-spacing: 0.1em;
         text-transform: uppercase;
         padding: 0.1rem 0.45rem;
         border-radius: 999px;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s;
     }
     .reveal-ai {
         color: #a78bfa;
@@ -290,8 +302,6 @@
     }
     .reveal-spot.revealed .reveal-hint { opacity: 0; }
     .reveal-spot.revealed { border-color: transparent; background: none; width: auto; padding: 0; }
-    .reveal-spot.revealed .reveal-ai { opacity: 1; pointer-events: auto; }
-    .reveal-spot.revealed .reveal-human { opacity: 1; pointer-events: auto; }
 
     .writing-title {
         font-family: var(--font-heading);
