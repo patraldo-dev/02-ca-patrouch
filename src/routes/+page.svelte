@@ -62,22 +62,20 @@
         return () => observer.disconnect();
     });
 
-    // Effect 4: Ink reveal for prompt teaser
-    let teaserQuoteEl = $state(null);
-    $effect(() => {
-        const el = teaserQuoteEl;
-        if (!el || prefersReducedMotion) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (!entry.isIntersecting) return;
-                el.classList.add('ink-reveal');
-                observer.disconnect();
-            },
-            { threshold: 0.3 }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    });
+    // Carousel state
+    let currentPrompt = $state(0);
+    let carouselDirection = $state('next');
+
+    function nextPrompt() {
+        if (data.pastPrompts.length === 0) return;
+        carouselDirection = 'next';
+        currentPrompt = (currentPrompt + 1) % data.pastPrompts.length;
+    }
+    function prevPrompt() {
+        if (data.pastPrompts.length === 0) return;
+        carouselDirection = 'prev';
+        currentPrompt = (currentPrompt - 1 + data.pastPrompts.length) % data.pastPrompts.length;
+    }
 </script>
 
 <svelte:head>
@@ -101,17 +99,37 @@
 </section>
 
 <!-- TODAY'S PROMPT TEASER -->
-{#if data.communityPrompt}
+{#if data.pastPrompts?.length > 0}
 <section id="prompt-teaser" class="prompt-teaser">
     <div class="container">
-        <span class="teaser-label">{$t('write.dashboard.community_prompt')}</span>
-        <blockquote class="teaser-quote" bind:this={teaserQuoteEl}>
-            <p>{data.communityPrompt.prompt_text}</p>
-        </blockquote>
+        <span class="teaser-label">{$t('pages.home.prompt.label')}</span>
+        <div class="carousel-container">
+            <button class="carousel-arrow carousel-arrow-left" onclick={prevPrompt} aria-label="Previous prompt">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="carousel-viewport">
+                {#each data.pastPrompts as prompt, i}
+                    {#if i === currentPrompt}
+                        <blockquote class="carousel-slide" class:slide-in-right={carouselDirection === 'next'} class:slide-in-left={carouselDirection === 'prev'}>
+                            <span class="slide-date">{prompt.dateLabel}</span>
+                            <p>{prompt.prompt_text}</p>
+                        </blockquote>
+                    {/if}
+                {/each}
+            </div>
+            <button class="carousel-arrow carousel-arrow-right" onclick={nextPrompt} aria-label="Next prompt">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+        <div class="carousel-dots">
+            {#each data.pastPrompts as _, i}
+                <span class="dot" class:active={i === currentPrompt} onclick={() => { carouselDirection = i > currentPrompt ? 'next' : 'prev'; currentPrompt = i; }}></span>
+            {/each}
+        </div>
         {#if data.user}
             <a href="/write" class="teaser-cta">{$t('pages.home.prompt.start_writing')}</a>
         {:else}
-            <a href="/login" class="teaser-cta">{$t('pages.home.prompt.sign_in')}</a>
+            <a href="/signup" class="teaser-cta">{$t('pages.home.prompt.cta_guest')}</a>
         {/if}
     </div>
 </section>
@@ -301,7 +319,7 @@
         50% { opacity: 1; transform: scaleY(1.2); }
     }
 
-    /* ── Prompt Teaser ── */
+    /* ── Prompt Carousel ── */
     .prompt-teaser {
         padding: 4rem 0;
         text-align: center;
@@ -320,10 +338,94 @@
         margin-bottom: 2rem;
     }
 
-    .teaser-quote {
-        max-width: 600px;
-        margin: 0 auto 2rem;
+    .carousel-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        max-width: 650px;
+        margin: 0 auto 1.5rem;
     }
+
+    .carousel-viewport {
+        flex: 1;
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .carousel-slide {
+        text-align: center;
+        width: 100%;
+    }
+
+    .carousel-slide p {
+        font-family: var(--font-heading);
+        font-size: clamp(1.15rem, 2.5vw, 1.5rem);
+        font-weight: 300;
+        font-style: italic;
+        color: var(--text);
+        line-height: 1.6;
+    }
+
+    .slide-date {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        background: rgba(255,255,255,0.05);
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        margin-bottom: 1rem;
+    }
+
+    .slide-in-right { animation: slideFromRight 0.35s ease; }
+    .slide-in-left { animation: slideFromLeft 0.35s ease; }
+
+    @keyframes slideFromRight {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideFromLeft {
+        from { opacity: 0; transform: translateX(-30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .carousel-arrow {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .carousel-arrow:hover { border-color: var(--accent); color: var(--accent); }
+
+    .carousel-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.4rem;
+        margin-bottom: 2rem;
+    }
+    .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--border);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .dot.active { background: var(--accent); transform: scale(1.4); }
 
     .teaser-cta {
         display: inline-block;
@@ -469,45 +571,15 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Effect 4: Ink reveal for teaser quote ── */
-    .teaser-quote p {
-        font-family: var(--font-heading);
-        font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-        font-weight: 300;
-        font-style: italic;
-        color: var(--text);
-        line-height: 1.6;
-    }
-
-    .ink-reveal p {
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        background-image: linear-gradient(
-            var(--text) var(--text),
-            var(--text) var(--text)
-        );
-        -webkit-text-fill-color: var(--text);
-        animation: inkBleed 1.5s ease forwards;
-    }
-
-    @keyframes inkBleed {
-        from { opacity: 0; filter: blur(2px); }
-        60% { opacity: 0.8; filter: blur(0.5px); }
-        to { opacity: 1; filter: blur(0); }
-    }
-
     /* ── Reduced motion ── */
     @media (prefers-reduced-motion: reduce) {
         .letter-reveal,
         .card-reveal,
-        .ink-reveal p {
+        .slide-in-right,
+        .slide-in-left {
             animation: none !important;
             opacity: 1 !important;
             transform: none !important;
-            filter: none !important;
-            color: var(--text) !important;
-            -webkit-text-fill-color: var(--text) !important;
         }
         .scroll-line {
             animation: none !important;

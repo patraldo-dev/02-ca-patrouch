@@ -5,18 +5,28 @@ export async function load({ locals }) {
     const ai = locals?.platform?.env?.AI;
     const user = locals?.user || null;
 
-    // Get the community prompt to tease on the landing page (no auth needed)
-    let communityPrompt = null;
-    if (db && ai) {
+    // Get historical community prompts for carousel (no auth needed)
+    let pastPrompts = [];
+    if (db) {
         try {
-            const { getOrCreateCommunityPrompt } = await import('$lib/server/prompt-generator.js');
-            const today = new Date().toISOString().slice(0, 10);
-            const locale = locals.locale || 'es';
-            communityPrompt = await getOrCreateCommunityPrompt(db, ai, today, locale);
-        } catch (e) {
-            // Silent fail — prompt is just a teaser
-        }
+            const { results } = await db.prepare(`
+                SELECT id, prompt_text, locale, created_at
+                FROM writing_prompts
+                WHERE category = 'daily-community'
+                  AND status = 'available'
+                  AND created_at < datetime('now', 'start of day')
+                ORDER BY created_at DESC
+                LIMIT 14
+            `).all();
+            pastPrompts = (results || []).map(p => ({
+                ...p,
+                dateLabel: new Date(p.created_at.replace(' ', 'T')).toLocaleDateString(
+                    locals.locale === 'fr' ? 'fr-FR' : locals.locale === 'en' ? 'en-US' : 'es-MX',
+                    { month: 'short', day: 'numeric' }
+                )
+            }));
+        } catch (e) {}
     }
 
-    return { user, communityPrompt };
+    return { user, pastPrompts };
 }
