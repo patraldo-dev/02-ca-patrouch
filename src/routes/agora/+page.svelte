@@ -1,6 +1,6 @@
 <script>
     import { page } from '$app/stores';
-    import { t, locale } from '$lib/i18n';
+    import { t, locale, getLocale } from '$lib/i18n';
 
     let { data } = $props();
 
@@ -15,7 +15,7 @@
 
     function formatDate(d) {
         if (!d) return '';
-        return new Date(d + 'T12:00:00').toLocaleDateString($locale || 'en', { month: 'short', day: 'numeric', year: 'numeric' });
+        return new Date(d + 'T12:00:00').toLocaleDateString(getLocale() || 'en', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     function localeLabel(code) {
