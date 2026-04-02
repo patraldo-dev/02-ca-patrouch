@@ -312,7 +312,7 @@ export async function getPublicWritings(db, options = {}) {
 
   let query = `
     SELECT w.id, w.title, w.content, w.word_count, w.category, w.ai_assisted, w.visibility, w.status,
-           w.created_at, w.locale, u.username
+           w.created_at, w.locale, u.username, u.role
     FROM writings w
     JOIN users u ON w.user_id = u.id
     WHERE w.visibility = 'public' AND w.status = 'published'

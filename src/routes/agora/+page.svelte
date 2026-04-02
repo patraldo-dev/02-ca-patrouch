@@ -61,7 +61,7 @@
                 <a href="/writings/{w.id}" class="writing-card">
                     <div class="writing-card-header">
                         <span class="writing-locale">{localeLabel(w.locale)}</span>
-                        {#if w.ai_assisted}
+                        {#if w.ai_assisted && w.role !== 'agent'}
                             <span class="ai-badge">{$t('agora.ai_assisted')}</span>
                         {/if}
                     </div>
