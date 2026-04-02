@@ -304,6 +304,12 @@
   "agora.game.hint": "Clic para revelar",
   "agora.game.challenge": "¿Puedes identificar a la IA?",
   "agora.game.revealed": "revelados",
+  "agora.game.stats_title": "Estadísticas del Juego",
+  "agora.game.stats_reveals": "Revelados",
+  "agora.game.stats_ai_found": "IA Encontrada",
+  "agora.game.stats_human_found": "Humano Encontrado",
+  "agora.game.stats_accuracy": "Precisión Humana",
+  "agora.game.stats_hint": "Las estadísticas reflejan todos los jugadores de la plataforma."
   "forgot.title": "¿Olvidaste tu contraseña?",
   "forgot.subtitle": "Ingresa tu correo y te enviaremos un enlace de restablecimiento.",
   "forgot.email_label": "Correo electrónico",

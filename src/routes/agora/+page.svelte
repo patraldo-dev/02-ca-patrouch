@@ -24,13 +24,14 @@
     }
 
     let revealed = $state({});
+    let showStatsModal = $state(false);
+    let gameStats = $state(null);
 
     function toggleReveal(id, event, role) {
         event.preventDefault();
         event.stopPropagation();
-        if (revealed[id]) return; // already revealed
-        revealed[id] = true;
-        // Track guess in analytics
+        if (revealed[id]) return;
+        revealed = { ...revealed, [id]: true };
         trackGuess(id, role);
     }
 
@@ -46,6 +47,14 @@
                 })
             });
         } catch { /* silent */ }
+    }
+
+    async function loadGameStats() {
+        showStatsModal = true;
+        try {
+            const res = await fetch('/api/agora/stats');
+            if (res.ok) gameStats = await res.json();
+        } catch {}
     }
 
     let showGame = $derived(data.filters.author === 'both');
@@ -94,7 +103,7 @@
     </div>
 
     {#if showGame}
-        <div class="game-banner">
+        <div class="game-banner" onclick={loadGameStats} role="button">
             <span class="game-banner-text">{$t('agora.game.challenge')}</span>
             {#if revealedCount > 0}
                 <span class="game-score">{revealedCount}/{shuffledWritings.length} {$t('agora.game.revealed')}</span>
@@ -129,7 +138,16 @@
                     <h3 class="writing-title">{w.title}</h3>
                     <p class="writing-excerpt">{excerpt(w.content)}</p>
                     <div class="writing-meta">
-                        <span class="writing-author" onclick={(e) => { e.preventDefault(); e.stopPropagation(); goto('/write/' + w.username); }}>{w.username}</span>
+                        {#if showGame && !revealed[w.id]}
+                            <span class="writing-author mystery">?</span>
+                        {:else}
+                            <span class="writing-author" onclick={(e) => { e.preventDefault(); e.stopPropagation(); goto('/write/' + w.username); }}>{w.username}</span>
+                            {#if showGame && revealed[w.id]}
+                                <span class="reveal-inline" class:ai-badge-inline={w.role === 'agent'} class:human-badge-inline={w.role !== 'agent'}>
+                                    {w.role === 'agent' ? $t('agora.game.ai') : $t('agora.game.human')}
+                                </span>
+                            {/if}
+                        {/if}
                         <span class="writing-sep">·</span>
                         <span>{w.word_count} {$t('agora.words')}</span>
                         <span class="writing-sep">·</span>
@@ -151,6 +169,41 @@
                 {/if}
             </div>
         {/if}
+    {#if showStatsModal}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="modal-overlay" onclick={() => showStatsModal = false}>
+            <div class="modal-content" onclick={(e) => e.stopPropagation()}>
+                <div class="modal-header">
+                    <h2>{$t('agora.game.stats_title')}</h2>
+                    <button class="modal-close" onclick={() => showStatsModal = false}>✕</button>
+                </div>
+                {#if gameStats}
+                    <div class="stats-grid">
+                        <div class="stat-block">
+                            <span class="stat-value">{gameStats.totalReveals}</span>
+                            <span class="stat-label">{$t('agora.game.stats_reveals')}</span>
+                        </div>
+                        <div class="stat-block">
+                            <span class="stat-value">{gameStats.aiCount}</span>
+                            <span class="stat-label">{$t('agora.game.stats_ai_found')}</span>
+                        </div>
+                        <div class="stat-block">
+                            <span class="stat-value">{gameStats.humanCount}</span>
+                            <span class="stat-label">{$t('agora.game.stats_human_found')}</span>
+                        </div>
+                        <div class="stat-block">
+                            <span class="stat-value">{gameStats.accuracy}%</span>
+                            <span class="stat-label">{$t('agora.game.stats_accuracy')}</span>
+                        </div>
+                    </div>
+                    <p class="stats-hint">{$t('agora.game.stats_hint')}</p>
+                {:else}
+                    <div class="stats-loading">…</div>
+                {/if}
+            </div>
+        </div>
+    {/if}
     {:else}
         <div class="empty-state">
             <p>{$t('agora.no_writings')}</p>
@@ -422,5 +475,71 @@
         text-align: center;
         padding: 4rem 2rem;
         color: var(--text-muted);
+    }
+    .game-banner { cursor: pointer; }
+    .writing-author.mystery {
+        color: var(--text-muted);
+        font-style: italic;
+    }
+    .reveal-inline {
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .ai-badge-inline { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .human-badge-inline { background: rgba(74,222,128,0.1); color: #4ade80; }
+    .modal-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 1000; padding: 1rem;
+    }
+    .modal-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 400px; width: 100%;
+    }
+    .modal-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    .modal-header h2 {
+        font-family: var(--font-heading);
+        font-size: 1.25rem;
+        font-weight: 400;
+        color: var(--text);
+    }
+    .modal-close {
+        background: none; border: none; color: var(--text-muted);
+        font-size: 1.2rem; cursor: pointer; padding: 0.25rem;
+    }
+    .modal-close:hover { color: var(--text); }
+    .stats-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    .stat-block {
+        text-align: center; padding: 1rem;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+    }
+    .stat-value {
+        display: block; font-size: 1.75rem; font-weight: 600;
+        color: var(--accent); font-family: var(--font-heading);
+    }
+    .stat-label {
+        display: block; font-size: 0.75rem; color: var(--text-muted);
+        margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .stats-hint {
+        color: var(--text-muted); font-size: 0.8rem;
+        text-align: center; margin-top: 1.25rem; font-style: italic;
+    }
+    .stats-loading {
+        text-align: center; color: var(--text-muted); padding: 2rem;
     }
 </style>
