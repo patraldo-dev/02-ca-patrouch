@@ -14,6 +14,9 @@
     // Track page views on navigation
     if (browser) {
         $effect(() => {
+            document.documentElement.lang = $locale || 'en';
+        });
+        $effect(() => {
             const path = $page.url.pathname;
             if (path) track('page_view', path);
         });
@@ -124,7 +127,6 @@
 
 <svelte:head>
     <title>Christophe R Patraldo — patrouch.ca</title>
-    <svelte:options lang={$locale} />
 </svelte:head>
 
 <!-- Scroll Progress Bar -->
