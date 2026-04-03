@@ -41,8 +41,7 @@ export async function POST({ request, platform }) {
 
             try {
                 const embedding = await ai.run('@cf/baai/bge-m3', {
-                    text: texts,
-                    input_type: 'document'
+                    text: texts
                 });
 
                 const vectors = embedding?.data || [];
