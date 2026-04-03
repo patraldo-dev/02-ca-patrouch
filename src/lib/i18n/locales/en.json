@@ -317,7 +317,7 @@
   "agora.game.stats_ai_found": "AI Found",
   "agora.game.stats_human_found": "Human Found",
   "agora.game.stats_accuracy": "Human Accuracy",
-  "agora.game.stats_hint": "Stats reflect all players across the platform.",
+  "agora.game.stats_hint": "Stats for this round only.",
   "forgot.title": "Forgot Password?",
   "forgot.subtitle": "Enter your email and we'll send you a reset link.",
   "forgot.email_label": "Email",

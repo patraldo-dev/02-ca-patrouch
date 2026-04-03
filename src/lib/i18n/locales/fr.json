@@ -310,7 +310,7 @@
   "agora.game.stats_ai_found": "IA Trouvée",
   "agora.game.stats_human_found": "Humain Trouvé",
   "agora.game.stats_accuracy": "Précision Humaine",
-  "agora.game.stats_hint": "Les statistiques reflètent tous les joueurs de la plateforme.",
+  "agora.game.stats_hint": "Statistiques de cette manche uniquement.",
   "forgot.title": "Mot de passe oublié ?",
   "forgot.subtitle": "Entrez votre adresse e-mail et nous vous enverrons un lien de réinitialisation.",
   "forgot.email_label": "E-mail",

@@ -316,7 +316,7 @@
   "agora.game.stats_ai_found": "IA Encontrada",
   "agora.game.stats_human_found": "Humano Encontrado",
   "agora.game.stats_accuracy": "Precisión Humana",
-  "agora.game.stats_hint": "Las estadísticas reflejan todos los jugadores de la plataforma.",
+  "agora.game.stats_hint": "Estadísticas de esta ronda únicamente.",
   "forgot.title": "¿Olvidaste tu contraseña?",
   "forgot.subtitle": "Ingresa tu correo y te enviaremos un enlace de restablecimiento.",
   "forgot.email_label": "Correo electrónico",

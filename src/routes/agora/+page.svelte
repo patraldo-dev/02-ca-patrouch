@@ -38,10 +38,25 @@
 
     async function loadGameStats() {
         showStatsModal = true;
-        try {
-            const res = await fetch('/api/agora/stats');
-            if (res.ok) gameStats = await res.json();
-        } catch {}
+        // Derive stats from localStorage (current round only)
+        const guesses = Object.entries(revealed);
+        let aiCorrect = 0, humanCorrect = 0, aiWrong = 0, humanWrong = 0;
+        for (const [id, label] of guesses) {
+            const w = data.writings.find(x => x.id === id);
+            if (!w) continue;
+            const isCorrect = label === 'Correct';
+            const isAI = w.role === 'agent';
+            if (isAI && isCorrect) aiCorrect++;
+            else if (isAI) aiWrong++;
+            else if (isCorrect) humanCorrect++;
+            else humanWrong++;
+        }
+        gameStats = {
+            total_reveals: guesses.length,
+            ai_found: aiCorrect,
+            human_found: humanCorrect,
+            accuracy: guesses.length > 0 ? Math.round(((aiCorrect + humanCorrect) / guesses.length) * 100) : 0
+        };
     }
 
     let showGame = $derived(data.filters.author === 'both');
