@@ -10,6 +10,26 @@
     let isPublishing = $state(false);
     let gameMode = $derived($page.url.searchParams.get('game') === '1');
     let revealed = $state(false);
+    let showGuess = $state(false);
+    let guessCorrect = $state(false);
+
+    function makeGuess(guess) {
+        const actual = w.role === 'agent' ? 'agent' : 'human';
+        guessCorrect = guess === actual;
+        showGuess = false;
+        revealed = true;
+        try {
+            fetch('/api/analytics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventType: 'agora_reveal',
+                    entityId: w.id,
+                    metadata: { role: actual, guess, filter: 'both' }
+                })
+            });
+        } catch { /* silent */ }
+    }
 
     // Render markdown
     $effect(() => {
@@ -94,10 +114,21 @@
                 {#if gameMode && !revealed}
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <span class="reveal-spot-view" onclick={() => revealed = true} role="button" tabindex="0">?</span>
+                    <div class="guess-container-view">
+                        <span class="reveal-spot-view" onclick={() => showGuess = !showGuess} role="button" tabindex="0">?</span>
+                        {#if showGuess}
+                            <div class="guess-popup-view">
+                                <p class="guess-question-view">{$t('agora.game.what_do_you_think')}</p>
+                                <div class="guess-buttons-view">
+                                    <button class="guess-btn-view ai" onclick={() => makeGuess('agent')}>{$t('agora.game.guess_ai')}</button>
+                                    <button class="guess-btn-view human" onclick={() => makeGuess('human')}>{$t('agora.game.guess_human')}</button>
+                                </div>
+                            </div>
+                        {/if}
+                    </div>
                 {:else if gameMode && revealed}
-                    <span class="reveal-badge-view" class:ai={w.role === 'agent'}>
-                        {w.role === 'agent' ? $t('agora.game.ai') : $t('agora.game.human')} · {w.username}
+                    <span class="reveal-badge-view" class:ai={w.role === 'agent'} class:correct={guessCorrect}>
+                        {guessCorrect ? $t('agora.game.correct') : $t('agora.game.wrong')} · {w.role === 'agent' ? $t('agora.game.ai') : $t('agora.game.human')} · {w.username}
                     </span>
                 {/if}
                 {#if w.status === 'draft'}
@@ -213,6 +244,26 @@
     }
     .reveal-badge-view.ai { background: rgba(251,191,36,0.15); color: #fbbf24; }
     .reveal-badge-view:not(.ai) { background: rgba(74,222,128,0.1); color: #4ade80; }
+    .reveal-badge-view.correct { border: 1px solid #4ade80; }
+    .reveal-badge-view:not(.correct) { border: 1px solid #ef4444; }
+    .guess-container-view { position: relative; display: inline-block; }
+    .guess-popup-view {
+        position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+        margin-top: 0.5rem; background: var(--surface); border: 1px solid var(--border);
+        border-radius: 10px; padding: 0.75rem; z-index: 50; min-width: 140px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .guess-question-view { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem; text-align: center; }
+    .guess-buttons-view { display: flex; gap: 0.5rem; }
+    .guess-btn-view {
+        flex: 1; padding: 0.4rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);
+        background: rgba(255,255,255,0.05); color: var(--text-dim);
+        font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+        font-family: var(--font-body);
+    }
+    .guess-btn-view:hover { border-color: var(--accent); color: var(--accent); }
+    .guess-btn-view.ai:hover { border-color: #fbbf24; color: #fbbf24; }
+    .guess-btn-view.human:hover { border-color: #4ade80; color: #4ade80; }
 
     .status-draft {
         background: rgba(250, 204, 21, 0.15);

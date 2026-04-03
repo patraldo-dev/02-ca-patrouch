@@ -26,37 +26,6 @@
     let revealed = $state({});
     let showStatsModal = $state(false);
     let gameStats = $state(null);
-    let guessingId = $state(null); // which card is showing guess popup
-
-    function toggleReveal(id, event, role) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (revealed[id]) return;
-        revealed = { ...revealed, [id]: true };
-        trackGuess(id, role);
-    }
-
-    function submitGuess(id, actualRole, guess) {
-        guessingId = null;
-        const correct = guess === actualRole;
-        const label = actualRole === 'agent' ? $t('agora.game.ai') : $t('agora.game.human');
-        revealed = { ...revealed, [id]: correct ? $t('agora.game.correct') + ' · ' + label : $t('agora.game.wrong') + ' · ' + label };
-        trackGuess(id, actualRole, guess);
-    }
-
-    async function trackGuess(writingId, role, guess) {
-        try {
-            await fetch('/api/analytics', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    eventType: 'agora_reveal',
-                    entityId: writingId,
-                    metadata: { role, guess, filter: 'both' }
-                })
-            });
-        } catch { /* silent */ }
-    }
 
     async function loadGameStats() {
         showStatsModal = true;
@@ -113,10 +82,7 @@
 
     {#if showGame}
         <div class="game-banner">
-            <div>
-                <span class="game-banner-text">{$t('agora.game.challenge')}</span>
-                <p class="game-instructions">{$t('agora.game.how_to_play')}</p>
-            </div>
+            <span class="game-banner-text" title={$t('agora.game.how_to_play')}>{$t('agora.game.challenge')}</span>
             {#if revealedCount > 0}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -133,21 +99,12 @@
                     <div class="writing-card-header">
                         <span class="writing-locale">{localeLabel(w.locale)}</span>
                         {#if showGame}
-                            <span class="reveal-spot" class:revealed={revealed[w.id]} onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (!revealed[w.id]) guessingId = w.id; }} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); guessingId = w.id; } }}>
+                            <span class="reveal-spot" class:revealed={revealed[w.id]} title={$t('agora.game.how_to_play')}>
                                 <span class="reveal-hint">?</span>
                                 {#if revealed[w.id]}
                                     <span class="reveal-label" class:reveal-ai={w.role === 'agent'} class:reveal-human={w.role !== 'agent'}>{revealed[w.id]}</span>
                                 {/if}
                             </span>
-                            {#if guessingId === w.id}
-                                <div class="guess-popup" onclick={(e) => e.stopPropagation()}>
-                                    <p class="guess-question">{$t('agora.game.what_do_you_think')}</p>
-                                    <div class="guess-buttons">
-                                        <button class="guess-btn ai" onclick={(e) => { e.stopPropagation(); submitGuess(w.id, w.role, 'agent'); }}>{$t('agora.game.guess_ai')}</button>
-                                        <button class="guess-btn human" onclick={(e) => { e.stopPropagation(); submitGuess(w.id, w.role, 'human'); }}>{$t('agora.game.guess_human')}</button>
-                                    </div>
-                                </div>
-                            {/if}
                         {:else}
                             {#if w.ai_assisted && w.role !== 'agent'}
                                 <span class="ai-badge">{$t('agora.ai_assisted')}</span>
@@ -302,11 +259,6 @@
         font-style: italic;
         color: var(--text-dim);
     }
-    .game-instructions {
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        margin-top: 0.25rem;
-    }
     .game-score {
         font-size: 0.75rem;
         font-weight: 600;
@@ -393,17 +345,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
         transition: all 0.3s;
         position: relative;
-    }
-    .reveal-spot:hover {
-        border-color: var(--accent);
-        background: rgba(201, 168, 124, 0.1);
-        transform: scale(1.15);
-    }
-    .reveal-spot:hover .reveal-hint {
-        opacity: 0.3;
     }
     .reveal-hint {
         font-size: 0.7rem;
@@ -432,25 +375,6 @@
     .reveal-label { padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
     .reveal-ai { background: rgba(251,191,36,0.15); color: #fbbf24; }
     .reveal-human { background: rgba(74,222,128,0.1); color: #4ade80; }
-    .guess-popup {
-        position: absolute; top: 100%; right: 0; margin-top: 0.5rem;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: 10px; padding: 0.75rem; z-index: 50;
-        min-width: 140px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
-    .guess-question {
-        font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem; text-align: center;
-    }
-    .guess-buttons { display: flex; gap: 0.5rem; }
-    .guess-btn {
-        flex: 1; padding: 0.4rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);
-        background: rgba(255,255,255,0.05); color: var(--text-dim);
-        font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
-        font-family: var(--font-body);
-    }
-    .guess-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .guess-btn.ai:hover { border-color: #fbbf24; color: #fbbf24; }
-    .guess-btn.human:hover { border-color: #4ade80; color: #4ade80; }
 
     .writing-title {
         font-family: var(--font-heading);
