@@ -39,7 +39,7 @@
     async function loadGameStats() {
         showStatsModal = true;
         // Derive stats from localStorage (current round only)
-        const guesses = Object.entries(revealed);
+        const guesses = Object.entries(revealed).filter(([id]) => shuffledWritings.some(w => w.id === id));
         let aiCorrect = 0, humanCorrect = 0, aiWrong = 0, humanWrong = 0;
         for (const [id, label] of guesses) {
             const w = data.writings.find(x => x.id === id);
@@ -71,7 +71,7 @@
     }
 
     let shuffledWritings = $derived(showGame ? shuffle(data.writings) : data.writings);
-    let revealedCount = $derived(Object.values(revealed).filter(Boolean).length);
+    let revealedCount = $derived(shuffledWritings.filter(w => revealed[w.id]).length);
 </script>
 
 <svelte:head>
