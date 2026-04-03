@@ -88,6 +88,10 @@
             diff > 0 ? nextPrompt() : prevPrompt();
         }
     }
+
+    function taglineWords(text) {
+        return text.replace(/\S+/g, w => `<span style=\"white-space:nowrap\">${w}</span>`);
+    }
 </script>
 
 <svelte:head>
@@ -103,7 +107,7 @@
             <span class="hero-first">Christophe R</span>
             <span class="hero-last">Patraldo</span>
         </h1>
-        <p class="hero-tagline" bind:this={heroTaglineEl}>{$t('pages.home.hero.tagline')}</p>
+        <p class="hero-tagline" bind:this={heroTaglineEl}>{@html taglineWords($t('pages.home.hero.tagline'))}</p>
         <a href={data.pastPrompts?.length > 0 ? '#prompt-teaser' : '#portfolio'} class="hero-scroll" aria-label="Scroll to content">
             <div class="scroll-line"></div>
         </a>
