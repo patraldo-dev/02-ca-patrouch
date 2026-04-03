@@ -76,6 +76,18 @@
         carouselDirection = 'prev';
         currentPrompt = (currentPrompt - 1 + data.pastPrompts.length) % data.pastPrompts.length;
     }
+
+    // Swipe support
+    let touchStartX = $state(0);
+    let touchEndX = $state(0);
+    function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
+    function handleTouchEnd(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+            diff > 0 ? nextPrompt() : prevPrompt();
+        }
+    }
 </script>
 
 <svelte:head>
@@ -107,7 +119,7 @@
             <button class="carousel-arrow carousel-arrow-left" onclick={prevPrompt} aria-label="Previous prompt">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
-            <div class="carousel-viewport">
+            <div class="carousel-viewport" ontouchstart={handleTouchStart} ontouchend={handleTouchEnd}>
                 {#each data.pastPrompts as prompt, i}
                     {#if i === currentPrompt}
                         <blockquote class="carousel-slide" class:slide-in-right={carouselDirection === 'next'} class:slide-in-left={carouselDirection === 'prev'}>
