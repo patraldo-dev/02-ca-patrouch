@@ -45,7 +45,7 @@ export async function POST({ request, platform, getClientAddress }) {
   }
 }
 
-export async function GET({ request, url, platform }) {
+export async function GET({ url, platform, locals }) {
   try {
     const db = platform?.env?.DB_book;
     if (!db) {
@@ -53,18 +53,7 @@ export async function GET({ request, url, platform }) {
     }
 
     // Auth check — analytics data is admin-only
-    const sessionCookie = request.headers.get('cookie') || '';
-    const sessionId = sessionCookie.match(/session=([^;]+)/)?.[1];
-    if (!sessionId) {
-      return json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await db.prepare(`
-      SELECT us.user_id, u.role FROM user_session us JOIN users u ON us.user_id = u.id
-      WHERE us.id = ? AND us.expires_at > datetime('now')
-    `).bind(sessionId).first();
-
-    if (!session || session.role !== 'admin') {
+    if (!locals.user || locals.user.role !== 'admin') {
       return json({ error: 'Forbidden' }, { status: 403 });
     }
 
