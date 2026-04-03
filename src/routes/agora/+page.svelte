@@ -183,15 +183,15 @@
                 {#if gameStats}
                     <div class="stats-grid">
                         <div class="stat-block">
-                            <span class="stat-value">{gameStats.totalReveals}</span>
+                            <span class="stat-value">{gameStats.total_reveals}</span>
                             <span class="stat-label">{$t('agora.game.stats_reveals')}</span>
                         </div>
                         <div class="stat-block">
-                            <span class="stat-value">{gameStats.aiCount}</span>
+                            <span class="stat-value">{gameStats.ai_found}</span>
                             <span class="stat-label">{$t('agora.game.stats_ai_found')}</span>
                         </div>
                         <div class="stat-block">
-                            <span class="stat-value">{gameStats.humanCount}</span>
+                            <span class="stat-value">{gameStats.human_found}</span>
                             <span class="stat-label">{$t('agora.game.stats_human_found')}</span>
                         </div>
                         <div class="stat-block">
