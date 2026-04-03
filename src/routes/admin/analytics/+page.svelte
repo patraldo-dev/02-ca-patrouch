@@ -13,8 +13,19 @@
         error = null;
         try {
             const res = await fetch(`/api/analytics?days=${days}`);
-            if (!res.ok) throw new Error('Failed to load');
-            analytics = await res.json();
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || `HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            analytics = {
+                overview: data.overview || {},
+                byType: data.byType || [],
+                countries: data.countries || [],
+                devices: data.devices || [],
+                daily: data.daily || [],
+                topWritings: data.topWritings || []
+            };
         } catch (e) {
             error = e.message;
         } finally {
@@ -33,6 +44,12 @@
     }
 
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
+
+    function getMaxVisitors() {
+        if (!analytics.daily || analytics.daily.length === 0) return 1;
+        const max = Math.max(...analytics.daily.map(d => d.visitors || 0));
+        return max > 0 ? max : 1;
+    }
 </script>
 
 <svelte:head>
@@ -150,7 +167,7 @@
                 <div class="trend-chart">
                     {#each analytics.daily as row}
                         <div class="trend-bar-container" title="{row.date}: {fmtNum(row.visitors)} visitors, {fmtNum(row.events)} events">
-                            <div class="trend-bar" style="height: {Math.max(4, (row.visitors / Math.max(...analytics.daily.map(d => d.visitors))) * 100)}%"></div>
+                            <div class="trend-bar" style="height: {Math.max(4, ((row.visitors || 0) / getMaxVisitors()) * 100)}%"></div>
                             <span class="trend-label">{row.date.slice(5)}</span>
                         </div>
                     {/each}
