@@ -259,7 +259,7 @@
         hyphens: none !important;
         -webkit-hyphens: none !important;
         -webkit-line-break: after-white-space !important;
-        line-break: strict !important;
+        text-wrap: pretty !important;
         overflow-wrap: break-word !important;
         word-break: keep-all !important;
     }
