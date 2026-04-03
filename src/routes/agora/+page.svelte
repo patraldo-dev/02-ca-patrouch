@@ -25,7 +25,7 @@
 
     let revealed = $state({});
     let showStatsModal = $state(false);
-    let gameStats = $state(null);
+    let gameStats = $state({ total_reveals: 0, ai_found: 0, human_found: 0, accuracy: 0 });
 
     // Load guess results from localStorage
     function loadGuesses() {
@@ -44,7 +44,7 @@
         for (const [id, label] of guesses) {
             const w = data.writings.find(x => x.id === id);
             if (!w) continue;
-            const isCorrect = label === 'Correct';
+            const isCorrect = String(label).startsWith('Correct');
             const isAI = w.role === 'agent';
             if (isAI && isCorrect) aiCorrect++;
             else if (isAI) aiWrong++;
