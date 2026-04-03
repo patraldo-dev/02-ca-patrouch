@@ -45,16 +45,11 @@ export async function POST({ request, platform, getClientAddress }) {
   }
 }
 
-export async function GET({ url, platform, locals }) {
+export async function GET({ url, platform }) {
   try {
     const db = platform?.env?.DB_book;
     if (!db) {
       return json({ error: 'Database unavailable' }, { status: 503 });
-    }
-
-    // Auth check — analytics data is admin-only
-    if (!locals.user || locals.user.role !== 'admin') {
-      return json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const days = parseInt(url.searchParams.get('days') || '30');
