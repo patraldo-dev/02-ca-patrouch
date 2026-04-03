@@ -24,12 +24,26 @@
                 if (!entry.isIntersecting) return;
                 const text = el.textContent;
                 el.innerHTML = '';
-                [...text].forEach((char, i) => {
-                    const span = document.createElement('span');
-                    span.textContent = char === ' ' ? '\u00A0' : char;
-                    span.style.animationDelay = `${i * 30}ms`;
-                    span.classList.add('letter-reveal');
-                    el.appendChild(span);
+                // Split by words to preserve word wrapping
+                const words = text.split(' ');
+                words.forEach((word, wordIndex) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.style.display = 'inline-block';
+                    wordSpan.style.whiteSpace = 'nowrap';
+                    // Add word-breaking space between words (except last)
+                    if (wordIndex > 0) {
+                        const space = document.createTextNode('\u00A0');
+                        el.appendChild(space);
+                    }
+                    [...word].forEach((char, charIndex) => {
+                        const span = document.createElement('span');
+                        span.textContent = char === ' ' ? '\u00A0' : char;
+                        const totalDelay = (wordIndex * 3 + charIndex) * 30;
+                        span.style.animationDelay = `${totalDelay}ms`;
+                        span.classList.add('letter-reveal');
+                        wordSpan.appendChild(span);
+                    });
+                    el.appendChild(wordSpan);
                 });
                 observer.disconnect();
             },
@@ -267,7 +281,7 @@
         max-width: 600px;
         margin: 0 auto;
         color: var(--text-dim);
-        word-break: normal;
+        word-wrap: break-word;
         overflow-wrap: break-word;
         hyphens: none;
         -webkit-hyphens: none;
@@ -276,11 +290,10 @@
 
     :lang(fr) .hero-tagline {
         line-height: 1.65;
-        word-spacing: -0.5px;
     }
 
     :lang(es) .hero-tagline {
-        -webkit-line-break: after-white-space;
+        line-height: 1.7;
     }
 
     .hero-scroll {
