@@ -124,6 +124,7 @@
 
 <svelte:head>
     <title>Christophe R Patraldo — patrouch.ca</title>
+    <svelte:options lang={$locale} />
 </svelte:head>
 
 <!-- Scroll Progress Bar -->

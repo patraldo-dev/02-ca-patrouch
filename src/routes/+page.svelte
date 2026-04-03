@@ -269,10 +269,18 @@
         color: var(--text-dim);
         word-break: normal;
         overflow-wrap: break-word;
-        white-space: normal;
-        text-wrap: pretty;
         hyphens: none;
         -webkit-hyphens: none;
+        text-wrap: pretty;
+    }
+
+    :lang(fr) .hero-tagline {
+        line-height: 1.65;
+        word-spacing: -0.5px;
+    }
+
+    :lang(es) .hero-tagline {
+        -webkit-line-break: after-white-space;
     }
 
     .hero-scroll {
