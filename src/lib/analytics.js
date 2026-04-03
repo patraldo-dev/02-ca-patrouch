@@ -7,6 +7,7 @@ const MAX_QUEUE_SIZE = 20;
 let flushTimer = null;
 
 function getQueue() {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return [];
     try {
         const data = localStorage.getItem(QUEUE_KEY);
         return data ? JSON.parse(data) : [];
@@ -14,11 +15,12 @@ function getQueue() {
 }
 
 function saveQueue(queue) {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
     try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queue)); } catch {}
 }
 
 function flush() {
-    if (flushTimer) return;
+    if (flushTimer || typeof window === 'undefined') return;
     flushTimer = setTimeout(async () => {
         flushTimer = null;
         const queue = getQueue();
