@@ -61,7 +61,7 @@ export async function GET({ request, url, platform }) {
 
     const session = await db.prepare(`
       SELECT us.user_id, u.role FROM user_session us JOIN users u ON us.user_id = u.id
-      WHERE us.session_id = ? AND us.expires_at > datetime('now')
+      WHERE us.id = ? AND us.expires_at > datetime('now')
     `).bind(sessionId).first();
 
     if (!session || session.role !== 'admin') {
