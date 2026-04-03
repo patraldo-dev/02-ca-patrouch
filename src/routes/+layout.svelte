@@ -127,7 +127,8 @@
 
 <svelte:head>
     <title>Christophe R Patraldo — patrouch.ca</title>
-</svelte:head>
+    {@const htmlLang = data.serverLocale || 'en'}
+    <html lang={htmlLang} />
 
 <!-- Scroll Progress Bar -->
 <div class="scroll-progress" style="width: {scrollProgress}%"></div>
