@@ -255,11 +255,13 @@
         max-width: 600px;
         margin: 0 auto;
         line-height: 1.7;
+        white-space: normal;
         hyphens: none !important;
         -webkit-hyphens: none !important;
+        -webkit-line-break: after-white-space !important;
+        line-break: strict !important;
         overflow-wrap: break-word !important;
         word-break: keep-all !important;
-        word-wrap: break-word !important;
     }
 
     .hero-scroll {
