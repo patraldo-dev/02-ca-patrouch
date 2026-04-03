@@ -18,6 +18,12 @@
         guessCorrect = guess === actual;
         showGuess = false;
         revealed = true;
+        // Save to localStorage for Agora card persistence
+        try {
+            const stored = JSON.parse(localStorage.getItem('agora_guesses') || '{}');
+            stored[w.id] = guessCorrect ? 'Correct' : 'Wrong';
+            localStorage.setItem('agora_guesses', JSON.stringify(stored));
+        } catch {}
         try {
             fetch('/api/analytics', {
                 method: 'POST',

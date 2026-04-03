@@ -27,6 +27,15 @@
     let showStatsModal = $state(false);
     let gameStats = $state(null);
 
+    // Load guess results from localStorage
+    function loadGuesses() {
+        try {
+            const stored = localStorage.getItem('agora_guesses');
+            if (stored) revealed = JSON.parse(stored);
+        } catch {}
+    }
+    loadGuesses();
+
     async function loadGameStats() {
         showStatsModal = true;
         try {
@@ -102,7 +111,9 @@
                             <span class="reveal-spot" class:revealed={revealed[w.id]} title={$t('agora.game.how_to_play')}>
                                 <span class="reveal-hint">?</span>
                                 {#if revealed[w.id]}
-                                    <span class="reveal-label" class:reveal-ai={w.role === 'agent'} class:reveal-human={w.role !== 'agent'}>{revealed[w.id]}</span>
+                                    <span class="reveal-label" class:reveal-ai={w.role === 'agent'} class:reveal-human={w.role !== 'agent'}>
+                                        {revealed[w.id] === 'Correct' ? $t('agora.game.correct') : $t('agora.game.wrong')} · {w.role === 'agent' ? $t('agora.game.ai') : $t('agora.game.human')}
+                                    </span>
                                 {/if}
                             </span>
                         {:else}
