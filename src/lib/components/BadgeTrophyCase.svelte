@@ -1,6 +1,6 @@
 <script>
-    import { t } from '$lib/i18n';
-    import { getLocale } from '$lib/i18n';
+    import { t, getLocale } from '$lib/i18n';
+    import { get } from 'svelte/store';
 
     let { badges = [] } = $props();
 
@@ -33,14 +33,18 @@
     let unlockedCount = $derived(badges.filter(b => b.unlocked).length);
     let totalCount = $derived(badges.length);
 
+    function translate(key) {
+        return get(t)(key);
+    }
+
     function badgeName(badge) {
         const key = 'badges.badge_' + badge.id + '_name';
-        return $t(key) || badge.name;
+        return translate(key) || badge.name;
     }
 
     function badgeDesc(badge) {
         const key = 'badges.badge_' + badge.id + '_description';
-        return $t(key) || badge.description;
+        return translate(key) || badge.description;
     }
 </script>
 
