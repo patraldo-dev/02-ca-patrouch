@@ -191,9 +191,7 @@
                     <div class="prompt-card">
                         <div class="prompt-header">
                             <span class="prompt-category">{catLabel(prompt.category)}</span>
-                            {#if promptSource === 'community'}
-                                <span class="prompt-source-tag community">{$t('write.dashboard.community_prompt')}</span>
-                            {:else if promptSource === 'personal'}
+                            {#if promptSource === 'personal'}
                                 <span class="prompt-source-tag personal">{$t('write.dashboard.personal_prompt')}</span>
                             {/if}
                             {#if acceptedToday}
