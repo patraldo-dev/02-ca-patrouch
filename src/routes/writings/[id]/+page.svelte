@@ -281,7 +281,7 @@
     .guess-buttons-view { display: flex; gap: 0.5rem; }
     .guess-btn-view {
         flex: 1; padding: 0.4rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);
-        background: rgba(255,255,255,0.05); color: var(--text-dim);
+        background: var(--glass-bg); color: var(--text-dim);
         font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
         font-family: var(--font-body);
     }
@@ -362,7 +362,7 @@
 
     .btn-glass {
         display: inline-block;
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 0.5rem 1.25rem;
@@ -393,7 +393,7 @@
     .btn-publish:disabled { opacity: 0.4; cursor: wait; }
 
     .btn-unpublish {
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 0.5rem 1.25rem;

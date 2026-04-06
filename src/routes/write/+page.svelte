@@ -613,7 +613,7 @@
     }
 
     .btn-done {
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 0.5rem 1.25rem;
@@ -712,7 +712,7 @@
     }
     .inline-editor .btn-save {
         padding: 0.6rem 1.5rem;
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         color: var(--text-dim);
@@ -773,7 +773,7 @@
 
     .btn-glass {
         display: inline-block;
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 0.5rem 1.25rem;
@@ -906,7 +906,7 @@
     .mode-btn {
         display: flex; align-items: center; gap: 0.4rem;
         padding: 0.5rem 1rem;
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: 8px;
         color: var(--text-dim);
@@ -918,7 +918,7 @@
     .mode-btn.active {
         border-color: var(--accent);
         color: var(--accent);
-        background: rgba(201,168,124,0.08);
+        background: var(--accent-bg);
     }
     .art-inspiration {
         background: var(--surface);

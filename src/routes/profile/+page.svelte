@@ -303,7 +303,7 @@
     .profile-edit-form { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
     .profile-edit-form input, .profile-edit-form textarea, .create-form input, .create-form textarea, .create-form select {
         width: 100%; padding: 0.6rem 0.75rem; background: var(--bg);
-        border: 2px solid var(--border); border-radius: 8px; color: var(--text-body, #e4e4e7);
+        border: 2px solid var(--border); border-radius: 8px; color: var(--text);
         font-family: var(--font-body); font-size: 0.9rem; outline: none; box-sizing: border-box;
     }
     .profile-edit-form input:focus, .profile-edit-form textarea:focus, .create-form input:focus, .create-form textarea:focus, .create-form select:focus {
@@ -316,7 +316,7 @@
         font-family: var(--font-body); font-size: 0.85rem; font-weight: 600; transition: opacity 0.15s;
     }
     .btn-save { background: var(--accent); color: var(--bg); }
-    .btn-cancel { background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border) !important; }
+    .btn-cancel { background: var(--glass-bg); color: var(--text-dim); border: 1px solid var(--border) !important; }
     .btn-create { background: var(--accent); color: var(--bg); }
     .btn-create:disabled { opacity: 0.4; cursor: not-allowed; }
     .create-card {
@@ -360,7 +360,7 @@
     }
     .toggle-btn {
         width: 44px; height: 24px;
-        background: rgba(255,255,255,0.1);
+        background: var(--glass-hover);
         border: 1px solid var(--border);
         border-radius: 12px;
         position: relative;
@@ -394,7 +394,7 @@
     }
     .tab-btn {
         padding: 0.5rem 1.25rem;
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: 8px;
         color: var(--text-dim);

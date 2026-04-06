@@ -557,5 +557,7 @@
   "write.milestones_all_done": "Tous les jalons atteints !",
   "write.view.feedback_published": "Publié avec succès",
   "write.view.feedback_unpublished": "Déplacé vers les brouillons",
-  "write.view.feedback_error": "Une erreur est survenue"
+  "write.view.feedback_error": "Une erreur est survenue",
+  "common.theme_light": "Clair",
+  "common.theme_dark": "Sombre"
 }

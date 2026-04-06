@@ -55,7 +55,7 @@
     font-weight: 600;
   }
   .btn-glass {
-    background: rgba(255,255,255,0.05);
+    background: var(--glass-bg);
     border: 1px solid var(--border);
     color: var(--text-dim);
     padding: 0.75rem 2rem;

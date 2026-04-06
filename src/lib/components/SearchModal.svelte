@@ -157,9 +157,9 @@
         width: 52px;
         height: 52px;
         border-radius: 50%;
-        background: var(--surface, #141417);
+        background: var(--surface);
         color: var(--accent, #c9a87c);
-        border: 1px solid var(--border, rgba(255,255,255,0.1));
+        border: 1px solid var(--border);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -182,8 +182,8 @@
     }
 
     .search-modal {
-        background: var(--bg, #09090b);
-        border: 1px solid var(--border, rgba(255,255,255,0.1));
+        background: var(--bg);
+        border: 1px solid var(--border);
         border-radius: 16px;
         width: 100%;
         max-width: 640px;
@@ -212,7 +212,7 @@
         background: var(--surface);
         border: 2px solid var(--border);
         border-radius: 8px;
-        color: var(--text-body, #e4e4e7);
+        color: var(--text);
         font-family: var(--font-body);
         font-size: 1rem;
         outline: none;
@@ -271,7 +271,7 @@
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--text-muted);
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         padding: 0.15rem 0.5rem;
         border-radius: 999px;
     }

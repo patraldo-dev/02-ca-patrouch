@@ -557,5 +557,7 @@
   "write.milestones_all_done": "All milestones achieved!",
   "write.view.feedback_published": "Published successfully",
   "write.view.feedback_unpublished": "Moved to drafts",
-  "write.view.feedback_error": "Something went wrong"
+  "write.view.feedback_error": "Something went wrong",
+  "common.theme_light": "Light",
+  "common.theme_dark": "Dark"
 }

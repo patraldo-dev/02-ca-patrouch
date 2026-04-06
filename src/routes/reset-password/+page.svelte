@@ -104,8 +104,8 @@
         padding: 1.5rem;
     }
     .auth-card {
-        background: var(--surface, #141417);
-        border: 1px solid var(--border, rgba(255,255,255,0.1));
+        background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: var(--radius, 12px);
         padding: 2.5rem 2rem;
         max-width: 400px;
@@ -129,10 +129,10 @@
     .input-group input {
         width: 100%;
         padding: 0.65rem 0.75rem;
-        background: var(--bg, #09090b);
-        border: 2px solid var(--border, rgba(255,255,255,0.1));
+        background: var(--bg);
+        border: 2px solid var(--border);
         border-radius: var(--radius, 8px);
-        color: var(--text-body, #e4e4e7);
+        color: var(--text);
         font-family: var(--font-body, 'Inter', sans-serif);
         font-size: 0.95rem;
         outline: none;
@@ -145,7 +145,7 @@
         width: 100%;
         padding: 0.7rem;
         background: var(--accent, #c9a87c);
-        color: #09090b;
+        color: var(--bg);
         border: none;
         border-radius: var(--radius, 8px);
         font-family: var(--font-body, 'Inter', sans-serif);

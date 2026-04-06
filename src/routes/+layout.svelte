@@ -10,6 +10,7 @@
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
     import LanguageSwitcherDesktop from '$lib/components/LanguageSwitcherDesktop.svelte';
     import LanguageSwitcherMobile from '$lib/components/LanguageSwitcherMobile.svelte';
+    import { getTheme, setTheme } from '$lib/theme.js';
 
     // Track page views on navigation
     if (browser) {
@@ -28,6 +29,13 @@
     beforeNavigate(() => { mobileMenuOpen = false; });
 
     let mobileMenuOpen = $state(false);
+    let currentTheme = $state(getTheme());
+
+    function toggleTheme() {
+        const next = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+        currentTheme = next;
+    }
     let searchOpen = $state(false);
     let profilesOpen = $state(false);
     let profiles = $state([]);
@@ -151,6 +159,13 @@
 
             <!-- Desktop: Lang + Auth -->
             <div class="nav-actions">
+                <button class="theme-toggle" onclick={toggleTheme} aria-label={currentTheme === 'dark' ? $t('common.theme_light') : $t('common.theme_dark')} title={currentTheme === 'dark' ? $t('common.theme_light') : $t('common.theme_dark')}>
+                    {#if currentTheme === 'dark'}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    {:else}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    {/if}
+                </button>
                 <LanguageSwitcherDesktop serverLocale={data.serverLocale} />
                 <div class="auth-actions">
                     {#if data?.user}
@@ -217,6 +232,15 @@
                 <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
             </nav>
             <div class="mobile-lang">
+                <button class="theme-toggle mobile-theme-toggle" onclick={toggleTheme} aria-label={currentTheme === 'dark' ? $t('common.theme_light') : $t('common.theme_dark')}>
+                    {#if currentTheme === 'dark'}
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <span>{$t('common.theme_light')}</span>
+                    {:else}
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <span>{$t('common.theme_dark')}</span>
+                    {/if}
+                </button>
                 <LanguageSwitcherMobile serverLocale={data.serverLocale} />
             </div>
             <div class="mobile-auth">
@@ -280,7 +304,7 @@
     }
 
     .navbar.scrolled {
-        background: rgba(9, 9, 11, 0.8);
+        background: var(--navbar-bg);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border-bottom-color: var(--border);
@@ -436,7 +460,7 @@
         cursor: pointer;
         transition: background 0.15s;
     }
-    .profile-option:hover { background: rgba(255,255,255,0.05); }
+    .profile-option:hover { background: var(--glass-hover); }
     .profile-option.active { color: var(--accent); }
     .profile-option.active .profile-option-avatar { background: var(--accent); }
     .profile-option-avatar {
@@ -478,7 +502,7 @@
     .profile-manage:hover { color: var(--accent); }
 
     .btn-glass {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 0.5rem 1rem;
@@ -663,6 +687,42 @@
     .footer-sep { color: var(--text-muted); }
 
     .main-content { flex: 1; }
+
+    /* ── Theme Toggle ── */
+    .theme-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.45rem 0.6rem;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+    }
+    .theme-toggle:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .mobile-theme-toggle {
+        border: none;
+        padding: 0.6rem 1rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .mobile-theme-toggle:hover {
+        color: var(--accent);
+    }
+    .mobile-lang {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: center;
+        padding: 1rem 0;
+    }
 
     /* ── Responsive ── */
     @media (min-width: 769px) {

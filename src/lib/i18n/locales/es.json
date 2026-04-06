@@ -557,5 +557,7 @@
   "write.milestones_all_done": "¡Todas las metas logradas!",
   "write.view.feedback_published": "Publicado exitosamente",
   "write.view.feedback_unpublished": "Movido a borradores",
-  "write.view.feedback_error": "Algo salió mal"
+  "write.view.feedback_error": "Algo salió mal",
+  "common.theme_light": "Claro",
+  "common.theme_dark": "Oscuro"
 }

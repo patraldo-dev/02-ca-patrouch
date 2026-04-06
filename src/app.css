@@ -20,6 +20,30 @@
   --radius: 8px;
   --radius-lg: 16px;
   --z-nav: 100;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-hover: rgba(255, 255, 255, 0.08);
+  --accent-bg: rgba(201, 168, 124, 0.08);
+  --accent-border: rgba(201, 168, 124, 0.3);
+  --navbar-bg: rgba(9, 9, 11, 0.8);
+  --selection-bg: rgba(201, 168, 124, 0.3);
+}
+
+html[data-theme="light"] {
+  --bg: #faf9f7;
+  --surface: #f0eeeb;
+  --surface-raised: #e8e5e1;
+  --border: rgba(0, 0, 0, 0.1);
+  --text: #1a1a1a;
+  --text-dim: #4a4a4a;
+  --text-muted: #8a8a8a;
+  --accent: #9a7b4f;
+  --accent-hover: #85693e;
+  --glass-bg: rgba(0, 0, 0, 0.04);
+  --glass-hover: rgba(0, 0, 0, 0.07);
+  --accent-bg: rgba(154, 123, 79, 0.1);
+  --accent-border: rgba(154, 123, 79, 0.3);
+  --navbar-bg: rgba(250, 249, 247, 0.85);
+  --selection-bg: rgba(154, 123, 79, 0.25);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -76,7 +100,7 @@ a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
 a:hover { color: var(--accent-hover); }
 
 ::selection {
-  background: rgba(201, 168, 124, 0.3);
+  background: var(--selection-bg);
   color: var(--text);
 }
 
@@ -149,8 +173,8 @@ a:hover { color: var(--accent-hover); }
 
 .glass-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(201, 168, 124, 0.3);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  border-color: var(--accent-border);
+  box-shadow: 0 12px 40px var(--glass-bg);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -171,7 +195,7 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(201, 168, 124, 0.15);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
 input::placeholder, textarea::placeholder {

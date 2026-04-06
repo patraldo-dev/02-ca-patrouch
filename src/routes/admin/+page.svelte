@@ -108,7 +108,7 @@
     }
     .btn-primary:hover { opacity: 0.85; }
     .btn-secondary {
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         color: var(--text-dim);
         border: 1px solid var(--border);
     }

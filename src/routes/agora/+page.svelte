@@ -345,7 +345,7 @@
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--text-muted);
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         padding: 0.15rem 0.5rem;
         border-radius: 999px;
     }
@@ -366,7 +366,7 @@
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: rgba(255,255,255,0.06);
+        background: var(--glass-hover);
         border: 1px solid var(--border);
         display: flex;
         align-items: center;
@@ -442,7 +442,7 @@
     .page-info { font-size: 0.85rem; color: var(--text-muted); }
 
     .btn-glass {
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 0.4rem 1rem;
@@ -522,7 +522,7 @@
     }
     .stat-block {
         text-align: center; padding: 1rem;
-        background: rgba(255,255,255,0.03);
+        background: var(--glass-bg);
         border-radius: 10px;
     }
     .stat-value {
