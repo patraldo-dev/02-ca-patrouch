@@ -77,7 +77,7 @@
             >
                 <span class="badge-icon">{badge.unlocked ? badge.icon : '🔒'}</span>
                 <span class="badge-name">{badge.unlocked ? badgeName(badge) : '???'}</span>
-                <span class="badge-rarity {badge.rarity}">{badge.rarity}</span>
+                <span class="badge-rarity {badge.rarity}">{$t('badges.rarity_' + badge.rarity)}</span>
             </button>
         {/each}
     </div>
@@ -88,7 +88,7 @@
                 <span class="detail-icon">{selectedBadge.unlocked ? selectedBadge.icon : '🔒'}</span>
                 <div>
                     <h4>{selectedBadge.unlocked ? badgeName(selectedBadge) : $t('badges.locked')}</h4>
-                    <span class="detail-rarity {selectedBadge.rarity}">{selectedBadge.rarity}</span>
+                    <span class="detail-rarity {selectedBadge.rarity}">{$t('badges.rarity_' + selectedBadge.rarity)}</span>
                 </div>
             </div>
             <p class="detail-desc">{badgeDesc(selectedBadge)}</p>
@@ -174,9 +174,10 @@
 
     .badge-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
         gap: 0.5rem;
         margin-bottom: 1rem;
+        overflow: hidden;
     }
 
     .badge-card {
@@ -190,6 +191,8 @@
         background: transparent;
         cursor: pointer;
         transition: all 0.2s;
+        min-width: 0;
+        overflow: hidden;
     }
 
     .badge-card.unlocked:hover {
@@ -216,6 +219,10 @@
         color: var(--text-dim);
         text-align: center;
         line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
     }
 
     .badge-rarity {

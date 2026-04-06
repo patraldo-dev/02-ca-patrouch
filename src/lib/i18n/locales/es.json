@@ -380,7 +380,6 @@
   "pages.home.prompt.cta_guest": "Descubre el Estímulo de Hoy",
   "pages.home.prompt.sign_in": "Inicia Sesión para Escribir",
   "pages.home.prompt.label": "Estímulos Pasados",
-  "pages.home.prompt.sign_in": "Inicia Sesión para Escribir",
   "write.category.daily-community": "Estímulo Cotidiano",
   "common.footer.built_by": "Creado por <a href=\"https://pinchepoutine.digital\" style=\"color:var(--accent)\">¡Pinche&nbsp;Poutine!&nbsp;Digital</a>",
   "auth.login.title": "Bienvenido de Vuelta",
@@ -538,5 +537,9 @@
   "badges.badge_017_name": "Líder de Círculo",
   "badges.badge_017_description": "Creaste tu primer círculo de escritura",
   "badges.badge_018_name": "Escritor Políglota",
-  "badges.badge_018_description": "Escribiste en los 3 idiomas"
+  "badges.badge_018_description": "Escribiste en los 3 idiomas",
+  "badges.rarity_common": "Común",
+  "badges.rarity_uncommon": "Poco común",
+  "badges.rarity_rare": "Raro",
+  "badges.rarity_legendary": "Legendario"
 }

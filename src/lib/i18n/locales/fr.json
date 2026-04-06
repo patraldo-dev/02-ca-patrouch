@@ -537,5 +537,9 @@
   "badges.badge_017_name": "Chef de Cercle",
   "badges.badge_017_description": "Tu as créé ton premier cercle d'écriture",
   "badges.badge_018_name": "Écrivain Polyglotte",
-  "badges.badge_018_description": "Tu as écrit dans les 3 langues"
+  "badges.badge_018_description": "Tu as écrit dans les 3 langues",
+  "badges.rarity_common": "Commun",
+  "badges.rarity_uncommon": "Peu commun",
+  "badges.rarity_rare": "Rare",
+  "badges.rarity_legendary": "Légendaire"
 }

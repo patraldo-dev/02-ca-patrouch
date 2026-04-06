@@ -114,7 +114,6 @@
   "pages.admin.sections.add.view": "Add Content",
   "pages.admin.sections.users.heading": "User Management",
   "pages.admin.sections.users.manage": "Manage Users",
-  "pages.admin.sections.users.subtitle": "Manage user accounts and roles across your platform.",
   "pages.admin.sections.users.empty": "No users found in the system.",
   "pages.admin.sections.users.table.username": "Username",
   "pages.admin.sections.users.table.email": "Email Address",
@@ -538,5 +537,9 @@
   "badges.badge_017_name": "Circle Leader",
   "badges.badge_017_description": "Created your first writing group",
   "badges.badge_018_name": "Polyglot Writer",
-  "badges.badge_018_description": "Wrote in all 3 languages"
+  "badges.badge_018_description": "Wrote in all 3 languages",
+  "badges.rarity_common": "Common",
+  "badges.rarity_uncommon": "Uncommon",
+  "badges.rarity_rare": "Rare",
+  "badges.rarity_legendary": "Legendary"
 }
