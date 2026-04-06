@@ -14,10 +14,11 @@
 
     // Check if onboarding should be shown
     let showOnboarding = $state(false);
-    if (browser) {
-        const onboarded = localStorage.getItem('onboarding_complete');
-        showOnboarding = !onboarded && !!data.user;
-    }
+    // TODO: Enable after onboarding flow is polished
+    // if (browser) {
+    //     const onboarded = localStorage.getItem('onboarding_complete');
+    //     showOnboarding = !onboarded && !!data.user;
+    // }
 
     // Initialize from server-side load
     let prompt = $state(data.prompt || null);
