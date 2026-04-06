@@ -544,5 +544,11 @@
   "badges.rarity_legendary": "Légendaire",
   "write.heatmap_title": "Activité",
   "write.heatmap_less": "Moins",
-  "write.heatmap_more": "Plus"
+  "write.heatmap_more": "Plus",
+  "write.milestones_title": "Jalons de Progrès",
+  "write.milestones_words": "Mots totaux :",
+  "write.milestones_writings": "Textes :",
+  "write.milestones_streak": "Série actuelle :",
+  "write.milestones_next": "Prochain",
+  "write.milestones_all_done": "Tous les jalons atteints !"
 }

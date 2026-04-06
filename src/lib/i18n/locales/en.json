@@ -544,5 +544,11 @@
   "badges.rarity_legendary": "Legendary",
   "write.heatmap_title": "Activity",
   "write.heatmap_less": "Less",
-  "write.heatmap_more": "More"
+  "write.heatmap_more": "More",
+  "write.milestones_title": "Progress Milestones",
+  "write.milestones_words": "Total Words:",
+  "write.milestones_writings": "Writings:",
+  "write.milestones_streak": "Current Streak:",
+  "write.milestones_next": "Next",
+  "write.milestones_all_done": "All milestones achieved!"
 }

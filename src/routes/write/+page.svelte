@@ -14,6 +14,7 @@
 
     // Check if onboarding should be shown
     let showOnboarding = $state(false);
+    let showMilestones = $state(false);
     // TODO: Enable after onboarding flow is polished
     // if (browser) {
     //     const onboarded = localStorage.getItem('onboarding_complete');
@@ -327,8 +328,11 @@
                         {/if}
                     </div>
 
-                    <!-- Word Milestones -->
-                    <WordMilestones stats={stats} />
+                    <!-- Milestones button -->
+                    <button class="milestones-btn" onclick={() => showMilestones = true}>
+                        <span>📊</span>
+                        <span>{$t('write.milestones_title')}</span>
+                    </button>
 
                     <!-- Badge Trophy Case -->
                     <BadgeTrophyCase badges={data.userBadges || []} />
@@ -363,6 +367,16 @@
         </div>
     {/if}
 </div>
+
+{#if showMilestones}
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div class="modal-overlay" onclick={() => showMilestones = false}>
+        <div class="modal-content" onclick={e => e.stopPropagation()}>
+            <button class="modal-close" onclick={() => showMilestones = false}>×</button>
+            <WordMilestones stats={stats} />
+        </div>
+    </div>
+{/if}
 
 {#if showOnboarding}
     <OnboardingFlow user={data.user} prompt={prompt} />
@@ -923,5 +937,66 @@
     .art-credit {
         color: var(--text-muted);
         font-size: 0.75rem;
+    }
+
+    .milestones-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        background: rgba(201, 168, 124, 0.06);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .milestones-btn:hover {
+        background: rgba(201, 168, 124, 0.12);
+        border-color: var(--accent);
+        color: var(--text);
+    }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-width: 500px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.25rem;
+        line-height: 1;
+    }
+
+    .modal-close:hover {
+        color: var(--text);
     }
 </style>

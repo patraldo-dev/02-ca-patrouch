@@ -1,4 +1,6 @@
 <script>
+    import { t } from '$lib/i18n';
+
     let { stats = {} } = $props();
 
     const totalWords = stats.total_words || 0;
@@ -24,12 +26,12 @@
     ];
 
     const streakMilestones = [
-        { value: 3, label: '3 days', icon: '🔥' },
-        { value: 7, label: '7 days', icon: '🔥' },
-        { value: 14, label: '14 days', icon: '🔥' },
-        { value: 30, label: '30 days', icon: '💫' },
-        { value: 60, label: '60 days', icon: '💫' },
-        { value: 100, label: '100 days', icon: '⭐' }
+        { value: 3, label: '3', icon: '🔥' },
+        { value: 7, label: '7', icon: '🔥' },
+        { value: 14, label: '14', icon: '🔥' },
+        { value: 30, label: '30', icon: '💫' },
+        { value: 60, label: '60', icon: '💫' },
+        { value: 100, label: '100', icon: '⭐' }
     ];
 
     function getProgress(current, target) {
@@ -45,12 +47,12 @@
     const nextStreakMilestone = $derived(getNextMilestone(streakMilestones, currentStreak));
 </script>
 
-<div class="milestones">
-    <h3>📊 Progress Milestones</h3>
+<div class="milestones-popup">
+    <h3>{$t('write.milestones_title')}</h3>
 
     <!-- Words -->
     <section class="milestone-group">
-        <h4>📝 Total Words: {totalWords.toLocaleString()}</h4>
+        <h4>{$t('write.milestones_words')} {totalWords.toLocaleString()}</h4>
         {#if nextWordMilestone}
             <div class="milestone-track">
                 {#each wordMilestones as m}
@@ -63,15 +65,15 @@
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {getProgress(totalWords, nextWordMilestone.value)}%"></div>
             </div>
-            <p class="next-milestone">Next: {nextWordMilestone.label} words ({(nextWordMilestone.value - totalWords).toLocaleString()} to go)</p>
+            <p class="next-milestone">{$t('write.milestones_next')}: {nextWordMilestone.label} ({(nextWordMilestone.value - totalWords).toLocaleString()})</p>
         {:else}
-            <p class="all-complete">🎉 All word milestones achieved!</p>
+            <p class="all-complete">{$t('write.milestones_all_done')}</p>
         {/if}
     </section>
 
     <!-- Writings -->
     <section class="milestone-group">
-        <h4>🖊️ Writings: {totalWritings}</h4>
+        <h4>{$t('write.milestones_writings')} {totalWritings}</h4>
         {#if nextWritingMilestone}
             <div class="milestone-track">
                 {#each writingMilestones as m}
@@ -84,15 +86,15 @@
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {getProgress(totalWritings, nextWritingMilestone.value)}%"></div>
             </div>
-            <p class="next-milestone">Next: {nextWritingMilestone.label} writings ({nextWritingMilestone.value - totalWritings} to go)</p>
+            <p class="next-milestone">{$t('write.milestones_next')}: {nextWritingMilestone.label} ({nextWritingMilestone.value - totalWritings})</p>
         {:else}
-            <p class="all-complete">🎉 All writing milestones achieved!</p>
+            <p class="all-complete">{$t('write.milestones_all_done')}</p>
         {/if}
     </section>
 
     <!-- Streak -->
     <section class="milestone-group">
-        <h4>🔥 Current Streak: {currentStreak} days</h4>
+        <h4>{$t('write.milestones_streak')} {currentStreak}</h4>
         {#if nextStreakMilestone}
             <div class="milestone-track">
                 {#each streakMilestones as m}
@@ -105,26 +107,24 @@
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {getProgress(currentStreak, nextStreakMilestone.value)}%"></div>
             </div>
-            <p class="next-milestone">Next: {nextStreakMilestone.label} ({nextStreakMilestone.value - currentStreak} days to go)</p>
+            <p class="next-milestone">{$t('write.milestones_next')}: {nextStreakMilestone.label} ({nextStreakMilestone.value - currentStreak})</p>
         {:else}
-            <p class="all-complete">🎉 All streak milestones achieved!</p>
+            <p class="all-complete">{$t('write.milestones_all_done')}</p>
         {/if}
     </section>
 </div>
 
 <style>
-    .milestones {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 1.25rem;
+    .milestones-popup {
+        max-height: 70vh;
+        overflow-y: auto;
     }
 
-    .milestones > h3 {
+    .milestones-popup h3 {
         font-family: var(--font-heading);
         color: var(--accent);
-        font-size: 1rem;
-        margin: 0 0 1rem;
+        font-size: 1.1rem;
+        margin: 0 0 1.25rem;
     }
 
     .milestone-group {
@@ -161,15 +161,15 @@
     }
 
     .dot {
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         background: rgba(201, 168, 124, 0.1);
         border: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         transition: all 0.3s;
     }
 
@@ -180,7 +180,7 @@
     }
 
     .label {
-        font-size: 0.55rem;
+        font-size: 0.6rem;
         color: var(--text-muted);
     }
 
