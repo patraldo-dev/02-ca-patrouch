@@ -554,5 +554,8 @@
   "write.milestones_writings": "Textes :",
   "write.milestones_streak": "Série actuelle :",
   "write.milestones_next": "Prochain",
-  "write.milestones_all_done": "Tous les jalons atteints !"
+  "write.milestones_all_done": "Tous les jalons atteints !",
+  "write.view.feedback_published": "Publié avec succès",
+  "write.view.feedback_unpublished": "Déplacé vers les brouillons",
+  "write.view.feedback_error": "Une erreur est survenue"
 }

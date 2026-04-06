@@ -554,5 +554,8 @@
   "write.milestones_writings": "Escritos:",
   "write.milestones_streak": "Racha Actual:",
   "write.milestones_next": "Siguiente",
-  "write.milestones_all_done": "¡Todas las metas logradas!"
+  "write.milestones_all_done": "¡Todas las metas logradas!",
+  "write.view.feedback_published": "Publicado exitosamente",
+  "write.view.feedback_unpublished": "Movido a borradores",
+  "write.view.feedback_error": "Algo salió mal"
 }

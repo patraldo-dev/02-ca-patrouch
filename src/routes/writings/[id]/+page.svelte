@@ -8,6 +8,7 @@
     let w = $state(data.writing);
     let renderedContent = $state('');
     let isPublishing = $state(false);
+    let feedback = $state('');
     let gameMode = $derived($page.url.searchParams.get('game') === '1');
     let revealed = $state(false);
     let showGuess = $state(false);
@@ -72,6 +73,7 @@
 
     async function publishWriting() {
         isPublishing = true;
+        feedback = '';
         try {
             const res = await fetch(`/api/writings/${w.id}`, {
                 method: 'PUT',
@@ -80,13 +82,18 @@
             });
             if (res.ok) {
                 w = { ...w, status: 'published', visibility: 'public' };
+                feedback = 'published';
+            } else {
+                feedback = 'error';
             }
-        } catch {}
+        } catch { feedback = 'error'; }
         isPublishing = false;
+        setTimeout(() => feedback = '', 3000);
     }
 
     async function unpublishWriting() {
         isPublishing = true;
+        feedback = '';
         try {
             const res = await fetch(`/api/writings/${w.id}`, {
                 method: 'PUT',
@@ -95,9 +102,13 @@
             });
             if (res.ok) {
                 w = { ...w, status: 'draft', visibility: 'private' };
+                feedback = 'unpublished';
+            } else {
+                feedback = 'error';
             }
-        } catch {}
+        } catch { feedback = 'error'; }
         isPublishing = false;
+        setTimeout(() => feedback = '', 3000);
     }
 </script>
 
@@ -173,6 +184,13 @@
                     </button>
                 {/if}
             </div>
+            {#if feedback}
+                <div class="feedback-toast" class:published={feedback === 'published'} class:error={feedback === 'error'}>
+                    {#if feedback === 'published'}{$t('write.view.feedback_published')}
+                    {:else if feedback === 'unpublished'}{$t('write.view.feedback_unpublished')}
+                    {:else}{$t('write.view.feedback_error')}{/if}
+                </div>
+            {/if}
         </footer>
     </article>
 </div>
@@ -407,5 +425,33 @@
         background: rgba(239, 68, 68, 0.2);
         border-color: rgba(239, 68, 68, 0.4);
         color: #f87171;
+    }
+    .feedback-toast {
+        margin-top: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        text-align: center;
+        background: rgba(201, 168, 124, 0.1);
+        color: var(--accent);
+        border: 1px solid rgba(201, 168, 124, 0.2);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .feedback-toast.published {
+        background: rgba(74, 222, 128, 0.1);
+        color: #4ade80;
+        border-color: rgba(74, 222, 128, 0.2);
+    }
+
+    .feedback-toast.error {
+        background: rgba(248, 113, 113, 0.1);
+        color: #f87171;
+        border-color: rgba(248, 113, 113, 0.2);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>

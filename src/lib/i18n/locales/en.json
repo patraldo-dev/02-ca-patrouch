@@ -554,5 +554,8 @@
   "write.milestones_writings": "Writings:",
   "write.milestones_streak": "Current Streak:",
   "write.milestones_next": "Next",
-  "write.milestones_all_done": "All milestones achieved!"
+  "write.milestones_all_done": "All milestones achieved!",
+  "write.view.feedback_published": "Published successfully",
+  "write.view.feedback_unpublished": "Moved to drafts",
+  "write.view.feedback_error": "Something went wrong"
 }
