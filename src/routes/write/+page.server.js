@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { getTodayData } from '$lib/server/writing-stats.js';
-import { getWritingHeatmapData, getCurrentWriterOfTheWeek } from '$lib/server/engagement.js';
+import { getWritingHeatmapData, getCurrentWriterOfTheWeek, getAllBadgesWithStatus } from '$lib/server/engagement.js';
 import { getTranslation } from '$lib/i18n/server.js';
 import { getDailyArtwork } from '$lib/server/art-prompt.js';
 
@@ -51,6 +51,12 @@ export async function load({ locals, url }) {
     writerOfTheWeek = await getCurrentWriterOfTheWeek(db);
   } catch (e) {}
 
+  // Get badges with unlock status
+  let userBadges = [];
+  try {
+    userBadges = await getAllBadgesWithStatus(db, locals.user.id);
+  } catch (e) {}
+
   return {
     user: locals.user,
     prompt: todayData.prompt,
@@ -64,6 +70,7 @@ export async function load({ locals, url }) {
     recentWritings,
     artwork: getDailyArtwork(),
     heatmapData,
-    writerOfTheWeek
+    writerOfTheWeek,
+    userBadges
   };
 }

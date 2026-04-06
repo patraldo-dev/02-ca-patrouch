@@ -328,6 +328,9 @@
 
                     <!-- Word Milestones -->
                     <WordMilestones stats={stats} />
+
+                    <!-- Badge Trophy Case -->
+                    <BadgeTrophyCase badges={data.userBadges || []} />
                 {/if}
 
                 {#if data.recentWritings?.length > 0}

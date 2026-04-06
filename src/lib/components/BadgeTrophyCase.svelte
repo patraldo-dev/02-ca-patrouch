@@ -1,5 +1,6 @@
 <script>
-    import { onMount } from 'svelte';
+    import { t } from '$lib/i18n';
+    import { getLocale } from '$lib/i18n';
 
     let { badges = [] } = $props();
 
@@ -7,14 +8,14 @@
     let filter = $state('all');
 
     const categories = ['all', 'streak', 'words', 'agora', 'social', 'challenge', 'milestone'];
-    const categoryLabels = {
-        all: 'All',
-        streak: '🔥 Streaks',
-        words: '📝 Words',
-        agora: '🔍 Agora',
-        social: '🌟 Social',
-        challenge: '🎯 Challenges',
-        milestone: '🏆 Milestones'
+    const categoryLabelKeys = {
+        all: 'badges.all',
+        streak: 'badges.streaks',
+        words: 'badges.words',
+        agora: 'badges.agora',
+        social: 'badges.social',
+        challenge: 'badges.challenges',
+        milestone: 'badges.milestones'
     };
 
     const rarityOrder = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
@@ -31,12 +32,22 @@
 
     let unlockedCount = $derived(badges.filter(b => b.unlocked).length);
     let totalCount = $derived(badges.length);
+
+    function badgeName(badge) {
+        const key = 'badges.badge_' + badge.id + '_name';
+        return $t(key) || badge.name;
+    }
+
+    function badgeDesc(badge) {
+        const key = 'badges.badge_' + badge.id + '_description';
+        return $t(key) || badge.description;
+    }
 </script>
 
 <div class="trophy-case">
     <div class="trophy-header">
-        <h3>🏅 Badge Collection</h3>
-        <span class="count">{unlockedCount} / {totalCount} unlocked</span>
+        <h3>{$t('badges.title')}</h3>
+        <span class="count">{$t('badges.unlocked').replace('{unlocked}', unlockedCount).replace('{total}', totalCount)}</span>
     </div>
 
     <div class="progress-bar">
@@ -50,7 +61,7 @@
                 class:active={filter === cat}
                 onclick={() => filter = cat}
             >
-                {categoryLabels[cat]}
+                {$t(categoryLabelKeys[cat])}
             </button>
         {/each}
     </div>
@@ -65,7 +76,7 @@
                 onclick={() => selectedBadge = selectedBadge?.id === badge.id ? null : badge}
             >
                 <span class="badge-icon">{badge.unlocked ? badge.icon : '🔒'}</span>
-                <span class="badge-name">{badge.unlocked ? badge.name : '???'}</span>
+                <span class="badge-name">{badge.unlocked ? badgeName(badge) : '???'}</span>
                 <span class="badge-rarity {badge.rarity}">{badge.rarity}</span>
             </button>
         {/each}
@@ -76,14 +87,14 @@
             <div class="badge-detail-header">
                 <span class="detail-icon">{selectedBadge.unlocked ? selectedBadge.icon : '🔒'}</span>
                 <div>
-                    <h4>{selectedBadge.unlocked ? selectedBadge.name : 'Locked'}</h4>
+                    <h4>{selectedBadge.unlocked ? badgeName(selectedBadge) : $t('badges.locked')}</h4>
                     <span class="detail-rarity {selectedBadge.rarity}">{selectedBadge.rarity}</span>
                 </div>
             </div>
-            <p class="detail-desc">{selectedBadge.description}</p>
+            <p class="detail-desc">{badgeDesc(selectedBadge)}</p>
             {#if selectedBadge.unlocked && selectedBadge.unlockedAt}
                 <p class="detail-unlocked">
-                    Unlocked {new Date(selectedBadge.unlockedAt.replace(' ', 'T')).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    {$t('badges.unlocked_on').replace('{date}', new Date(selectedBadge.unlockedAt.replace(' ', 'T')).toLocaleDateString(getLocale() || 'en', { month: 'long', day: 'numeric', year: 'numeric' }))}
                 </p>
             {/if}
         </div>
