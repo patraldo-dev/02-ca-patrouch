@@ -1,6 +1,7 @@
 <script>
     import { t, getLocale } from '$lib/i18n';
     import { track } from '$lib/analytics';
+    import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     import { marked } from 'marked';
 
@@ -67,8 +68,12 @@
     }
 
     async function confirmDelete() {
-        const form = document.querySelector('#delete-form');
-        if (form) form.submit();
+        try {
+            const res = await fetch(`/api/writings/${w.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                goto('/write');
+            }
+        } catch {}
     }
 
     async function publishWriting() {
@@ -167,7 +172,6 @@
         </div>
 
         <footer class="writing-footer">
-            <form id="delete-form" method="POST" action="?/delete" style="display:none"></form>
             <div class="footer-actions">
                 {#if data.user?.id === w.user_id}
                     <a href="/writings/{w.id}/edit" class="btn-glass">{$t('write.view.edit')}</a>
