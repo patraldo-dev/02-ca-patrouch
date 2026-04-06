@@ -68,13 +68,13 @@ export async function generatePromptWithAI(ai, category, locale = 'en') {
   const lang = LOCALE_LANGUAGES[locale] || 'English';
   const isCommunity = category === 'daily-community';
   const genreDesc = isCommunity ? 'a genre of your choosing (vary it — fiction, poetry, memoir, sci-fi, etc.)' : `the "${category}" genre`;
-  const systemPrompt = `You are a creative writing prompt generator. Generate a single, inspiring writing prompt for ${genreDesc}. The prompt should be 1-3 sentences, vivid, and thought-provoking. You MUST output the prompt in ${lang}. Output ONLY the prompt text, nothing else.`;
+  const systemPrompt = `You are a creative writing prompt generator. Generate a single, inspiring writing prompt for ${genreDesc}. The prompt should be 1-3 sentences, vivid, and thought-provoking. You MUST output the prompt in ${lang} ONLY. Do NOT include any translation, parenthetical translation, or bilingual text. Output ONLY the prompt text, nothing else.`;
 
   try {
     const response = await ai.run('@cf/mistral/mistral-7b-instruct-v0.1', {
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Give me a creative writing prompt in the ${category} genre. Reply in ${lang}.` }
+        { role: 'user', content: `Give me a creative writing prompt in the ${category} genre. Reply in ${lang} only. Do not include any translation.` }
       ],
       max_tokens: 150,
       temperature: 0.9
