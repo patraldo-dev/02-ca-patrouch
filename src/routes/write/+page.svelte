@@ -3,8 +3,21 @@
     import { goto } from '$app/navigation';
     import { t, locale, getLocale } from '$lib/i18n';
     import { track } from '$lib/analytics';
+    import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
+    import WordMilestones from '$lib/components/WordMilestones.svelte';
+    import BadgeTrophyCase from '$lib/components/BadgeTrophyCase.svelte';
+    import WriterOfTheWeek from '$lib/components/WriterOfTheWeek.svelte';
+    import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
+    import { browser } from '$app/environment';
 
     let { data } = $props();
+
+    // Check if onboarding should be shown
+    let showOnboarding = $state(false);
+    if (browser) {
+        const onboarded = localStorage.getItem('onboarding_complete');
+        showOnboarding = !onboarded && !!data.user;
+    }
 
     // Initialize from server-side load
     let prompt = $state(data.prompt || null);
@@ -283,6 +296,10 @@
 
             <!-- Sidebar -->
             <aside class="write-sidebar">
+                {#if data.writerOfTheWeek}
+                    <WriterOfTheWeek writer={data.writerOfTheWeek} />
+                {/if}
+
                 {#if stats}
                     <div class="stats-card">
                         <h3>{$t('write.dashboard.your_stats')}</h3>
@@ -308,6 +325,9 @@
                             <p class="stat-note">{$t('write.dashboard.longest_streak').replace('{count}', stats.longest_streak)}</p>
                         {/if}
                     </div>
+
+                    <!-- Word Milestones -->
+                    <WordMilestones stats={stats} />
                 {/if}
 
                 {#if data.recentWritings?.length > 0}
@@ -330,10 +350,19 @@
                         </ul>
                     </div>
                 {/if}
+
+                <!-- Writing Heatmap -->
+                {#if stats && stats.total_writings > 0}
+                    <WritingHeatmap heatmapData={data.heatmapData || {}} />
+                {/if}
             </aside>
         </div>
     {/if}
 </div>
+
+{#if showOnboarding}
+    <OnboardingFlow user={data.user} prompt={prompt} />
+{/if}
 
 <style>
     .write-page {

@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { getTodayData } from '$lib/server/writing-stats.js';
+import { getWritingHeatmapData, getCurrentWriterOfTheWeek } from '$lib/server/engagement.js';
 import { getTranslation } from '$lib/i18n/server.js';
 import { getDailyArtwork } from '$lib/server/art-prompt.js';
 
@@ -38,6 +39,18 @@ export async function load({ locals, url }) {
     recentWritings = results || [];
   } catch (e) {}
 
+  // Get heatmap data
+  let heatmapData = {};
+  try {
+    heatmapData = await getWritingHeatmapData(db, locals.user.id);
+  } catch (e) {}
+
+  // Get Writer of the Week
+  let writerOfTheWeek = null;
+  try {
+    writerOfTheWeek = await getCurrentWriterOfTheWeek(db);
+  } catch (e) {}
+
   return {
     user: locals.user,
     prompt: todayData.prompt,
@@ -49,6 +62,8 @@ export async function load({ locals, url }) {
     dailyPassLimit: todayData.dailyPassLimit,
     stats: todayData.stats,
     recentWritings,
-    artwork: getDailyArtwork()
+    artwork: getDailyArtwork(),
+    heatmapData,
+    writerOfTheWeek
   };
 }

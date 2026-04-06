@@ -1,4 +1,5 @@
 import { getOrCreateDailyPrompt, getNewPromptForUser, getOrCreateCommunityPrompt, getCategoryForDate } from './prompt-generator.js';
+import { checkAndUnlockBadges } from './engagement.js';
 
 const DAILY_PASS_LIMIT = 3;
 
@@ -232,6 +233,12 @@ export async function updateStats(db, userId, action, wordCount = 0) {
      longest_streak = ?, prompts_accepted = ?, prompts_passed = ?, last_writing_date = ?, updated_at = datetime('now')
      WHERE user_id = ?`
   ).bind(totalWritings, totalWords, currentStreak, longestStreak, promptsAccepted, promptsPassed, lastDate, userId).run();
+
+  // Check for newly unlocked badges
+  const stats = { total_writings: totalWritings, total_words: totalWords, current_streak: currentStreak, longest_streak: longestStreak };
+  const newBadges = await checkAndUnlockBadges(db, userId, stats);
+
+  return { stats, newBadges };
 }
 
 export async function getStats(db, userId) {
