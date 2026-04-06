@@ -15,6 +15,8 @@
     // Check if onboarding should be shown
     let showOnboarding = $state(false);
     let showMilestones = $state(false);
+    let showHeatmap = $state(false);
+    let showBadges = $state(false);
     // TODO: Enable after onboarding flow is polished
     // if (browser) {
     //     const onboarded = localStorage.getItem('onboarding_complete');
@@ -298,10 +300,6 @@
 
             <!-- Sidebar -->
             <aside class="write-sidebar">
-                {#if data.writerOfTheWeek}
-                    <WriterOfTheWeek writer={data.writerOfTheWeek} />
-                {/if}
-
                 {#if stats}
                     <div class="stats-card">
                         <h3>{$t('write.dashboard.your_stats')}</h3>
@@ -334,8 +332,15 @@
                         <span>{$t('write.milestones_title')}</span>
                     </button>
 
-                    <!-- Badge Trophy Case -->
-                    <BadgeTrophyCase badges={data.userBadges || []} />
+                    <button class="sidebar-action-btn" onclick={() => showHeatmap = true}>
+                        <span>🔥</span>
+                        <span>{$t('write.show_heatmap')}</span>
+                    </button>
+
+                    <button class="sidebar-action-btn" onclick={() => showBadges = true}>
+                        <span>🏅</span>
+                        <span>{$t('write.show_badges')}</span>
+                    </button>
                 {/if}
 
                 {#if data.recentWritings?.length > 0}
@@ -359,10 +364,7 @@
                     </div>
                 {/if}
 
-                <!-- Writing Heatmap -->
-                {#if stats && stats.total_writings > 0}
-                    <WritingHeatmap heatmapData={data.heatmapData || {}} />
-                {/if}
+
             </aside>
         </div>
     {/if}
@@ -374,6 +376,26 @@
         <div class="modal-content" onclick={e => e.stopPropagation()}>
             <button class="modal-close" onclick={() => showMilestones = false}>×</button>
             <WordMilestones stats={stats} />
+        </div>
+    </div>
+{/if}
+
+{#if showHeatmap}
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div class="modal-overlay" onclick={() => showHeatmap = false}>
+        <div class="modal-content" onclick={e => e.stopPropagation()}>
+            <button class="modal-close" onclick={() => showHeatmap = false}>×</button>
+            <WritingHeatmap heatmapData={data.heatmapData || {}} />
+        </div>
+    </div>
+{/if}
+
+{#if showBadges}
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div class="modal-overlay" onclick={() => showBadges = false}>
+        <div class="modal-content" onclick={e => e.stopPropagation()}>
+            <button class="modal-close" onclick={() => showBadges = false}>×</button>
+            <BadgeTrophyCase badges={data.userBadges || []} />
         </div>
     </div>
 {/if}
@@ -955,6 +977,28 @@
     }
 
     .milestones-btn:hover {
+        background: rgba(201, 168, 124, 0.12);
+        border-color: var(--accent);
+        color: var(--text);
+    }
+
+    .sidebar-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        background: rgba(201, 168, 124, 0.06);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 0.5rem;
+    }
+
+    .sidebar-action-btn:hover {
         background: rgba(201, 168, 124, 0.12);
         border-color: var(--accent);
         color: var(--text);

@@ -2,9 +2,14 @@
 <script>
     import { t } from '$lib/i18n';
     import { goto } from '$app/navigation';
+    import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
+    import WordMilestones from '$lib/components/WordMilestones.svelte';
+    import BadgeTrophyCase from '$lib/components/BadgeTrophyCase.svelte';
+    import WriterOfTheWeek from '$lib/components/WriterOfTheWeek.svelte';
 
     let { data } = $props();
 
+    let activeTab = $state('profile');
     let profiles = $state(data.profiles || []);
     let newName = $state('');
     let newLocale = $state('en');
@@ -113,6 +118,12 @@
         <div class="message" class:error={messageError}>{message}</div>
     {/if}
 
+    <div class="tab-bar">
+        <button class="tab-btn" class:active={activeTab === 'profile'} onclick={() => activeTab = 'profile'}>{$t('profile.tab_profile')}</button>
+        <button class="tab-btn" class:active={activeTab === 'stats'} onclick={() => activeTab = 'stats'}>{$t('profile.tab_stats')}</button>
+    </div>
+
+    {#if activeTab === 'profile'}
     <section class="privacy-section">
         <h2>Privacy</h2>
         <label class="toggle-row">
@@ -207,6 +218,22 @@
                 {/each}
             </div>
         </div>
+    {/if}
+    {/if}
+
+    {#if activeTab === 'stats'}
+    <div class="stats-tab">
+        {#if data.stats}
+            <WritingHeatmap heatmapData={data.heatmapData || {}} />
+            <BadgeTrophyCase badges={data.userBadges || []} />
+            {#if data.writerOfTheWeek}
+                <WriterOfTheWeek writer={data.writerOfTheWeek} />
+            {/if}
+            <WordMilestones stats={data.stats} />
+        {:else}
+            <p class="stats-empty">Write something to see your stats here!</p>
+        {/if}
+    </div>
     {/if}
 </div>
 
@@ -360,4 +387,24 @@
         font-size: 0.8rem;
         margin-top: 0.5rem;
     }
+    .tab-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+        padding: 0.5rem 1.25rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+    .tab-btn.active { background: rgba(201, 168, 124, 0.1); border-color: var(--accent); color: var(--accent); }
+    .stats-tab { display: flex; flex-direction: column; gap: 1.5rem; }
+    .stats-empty { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2rem; }
 </style>

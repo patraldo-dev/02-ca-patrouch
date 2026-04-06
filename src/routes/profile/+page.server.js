@@ -1,12 +1,13 @@
 // src/routes/profile/+page.server.js
 import { redirect } from '@sveltejs/kit';
+import { getWritingHeatmapData, getCurrentWriterOfTheWeek, getAllBadgesWithStatus } from '$lib/server/engagement.js';
 
 export async function load({ locals }) {
     const user = locals?.user;
     if (!user) throw redirect(302, '/login');
 
     const db = locals.db;
-    if (!db) return { profiles: [], writings: [] };
+    if (!db) return { profiles: [], writings: [], heatmapData: {}, writerOfTheWeek: null, userBadges: [], stats: null };
 
     const { results } = await db.prepare(`
         SELECT id, display_name, locale, bio, is_primary, is_active
@@ -24,5 +25,29 @@ export async function load({ locals }) {
 
     const vis = await db.prepare('SELECT show_profile FROM users WHERE id = ?').bind(user.id).first();
 
-    return { profiles: results || [], writings: writings || [], showProfile: vis?.show_profile ?? 1 };
+    // Get engagement data for Stats & Badges tab
+    let heatmapData = {};
+    try { heatmapData = await getWritingHeatmapData(db, user.id); } catch (e) {}
+
+    let writerOfTheWeek = null;
+    try { writerOfTheWeek = await getCurrentWriterOfTheWeek(db); } catch (e) {}
+
+    let userBadges = [];
+    try { userBadges = await getAllBadgesWithStatus(db, user.id); } catch (e) {}
+
+    let stats = null;
+    try {
+        const row = await db.prepare(`
+            SELECT
+                COUNT(*) as total_writings,
+                COALESCE(SUM(word_count), 0) as total_words,
+                COALESCE(MAX(streak), 0) as current_streak,
+                COALESCE(MAX( (SELECT MAX(s2.streak) FROM writing_streaks s2 WHERE s2.user_id = ?) ), 0) as longest_streak,
+                COUNT(CASE WHEN status = 'published' THEN 1 END) as published
+            FROM writings WHERE user_id = ?
+        `).bind(user.id, user.id).first();
+        stats = row;
+    } catch (e) {}
+
+    return { profiles: results || [], writings: writings || [], showProfile: vis?.show_profile ?? 1, heatmapData, writerOfTheWeek, userBadges, stats };
 }
