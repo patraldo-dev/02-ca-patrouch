@@ -184,14 +184,14 @@
                     </button>
                 {/if}
             </div>
-            {#if feedback}
-                <div class="feedback-toast" class:published={feedback === 'published'} class:error={feedback === 'error'}>
-                    {#if feedback === 'published'}{$t('write.view.feedback_published')}
-                    {:else if feedback === 'unpublished'}{$t('write.view.feedback_unpublished')}
-                    {:else}{$t('write.view.feedback_error')}{/if}
-                </div>
-            {/if}
         </footer>
+        {#if feedback}
+            <div class="feedback-toast" class:published={feedback === 'published'} class:error={feedback === 'error'}>
+                {#if feedback === 'published'}{$t('write.view.feedback_published')}
+                {:else if feedback === 'unpublished'}{$t('write.view.feedback_unpublished')}
+                {:else}{$t('write.view.feedback_error')}{/if}
+            </div>
+        {/if}
     </article>
 </div>
 
@@ -427,15 +427,18 @@
         color: #f87171;
     }
     .feedback-toast {
-        margin-top: 0.75rem;
-        padding: 0.5rem 0.75rem;
-        border-radius: 6px;
-        font-size: 0.8rem;
-        text-align: center;
-        background: rgba(201, 168, 124, 0.1);
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        z-index: 1000;
+        background: rgba(201, 168, 124, 0.15);
         color: var(--accent);
-        border: 1px solid rgba(201, 168, 124, 0.2);
-        animation: fadeIn 0.3s ease;
+        border: 1px solid rgba(201, 168, 124, 0.3);
+        backdrop-filter: blur(10px);
+        animation: slideUp 0.3s ease;
     }
 
     .feedback-toast.published {
@@ -450,8 +453,8 @@
         border-color: rgba(248, 113, 113, 0.2);
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-4px); }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
