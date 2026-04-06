@@ -409,6 +409,9 @@
         max-width: 1100px;
         margin: 0 auto;
         padding: 2rem 1.5rem 4rem;
+        box-sizing: border-box;
+        width: 100%;
+        overflow-x: hidden;
     }
 
     /* CTA */
@@ -456,6 +459,7 @@
         border-radius: var(--radius);
         padding: 2rem;
         margin-bottom: 1.5rem;
+        overflow: hidden;
     }
 
     .prompt-card.loading {
@@ -884,6 +888,11 @@
         font-size: 0.75rem;
         color: var(--text-muted);
         white-space: nowrap;
+    }
+
+    .write-sidebar {
+        min-width: 0;
+        overflow: hidden;
     }
 
     /* Responsive */
