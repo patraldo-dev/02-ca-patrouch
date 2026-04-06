@@ -41,13 +41,26 @@ export async function load({ locals }) {
             SELECT
                 COUNT(*) as total_writings,
                 COALESCE(SUM(word_count), 0) as total_words,
-                COALESCE(MAX(streak), 0) as current_streak,
-                COALESCE(MAX( (SELECT MAX(s2.streak) FROM writing_streaks s2 WHERE s2.user_id = ?) ), 0) as longest_streak,
                 COUNT(CASE WHEN status = 'published' THEN 1 END) as published
             FROM writings WHERE user_id = ?
-        `).bind(user.id, user.id).first();
-        stats = row;
-    } catch (e) {}
+        `).bind(user.id).first();
+        stats = row || { total_writings: 0, total_words: 0, current_streak: 0, longest_streak: 0, published: 0 };
+
+        // Calculate streaks from writings table directly
+        const streakRows = await db.prepare(`
+            SELECT DISTINCT DATE(created_at) as d
+            FROM writings WHERE user_id = ? AND status = 'published'
+            ORDER BY d DESC
+        `).bind(user.id).all();
+        const dates = (streakRows.results || []).map(r => r.d);
+        let streak = 0, maxStreak = 0;
+        for (const d of dates) {
+            streak++;
+            if (streak > maxStreak) maxStreak = streak;
+        }
+        stats.current_streak = streak;
+        stats.longest_streak = maxStreak;
+    } catch (e) { console.error('Stats error:', e); }
 
     return { profiles: results || [], writings: writings || [], showProfile: vis?.show_profile ?? 1, heatmapData, writerOfTheWeek, userBadges, stats };
 }
