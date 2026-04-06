@@ -80,7 +80,10 @@ export async function generatePromptWithAI(ai, category, locale = 'en') {
       temperature: 0.9
     });
 
-    return response.response?.trim() || getFallback(category, locale);
+    let text = response.response?.trim() || getFallback(category, locale);
+    // Strip parenthetical translations: remove anything in () at end
+    text = text.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    return text;
   } catch (err) {
     console.error('AI prompt generation failed:', err);
     return getFallback(category, locale);
