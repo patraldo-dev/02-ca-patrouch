@@ -1,6 +1,8 @@
 <script>
     import { onMount } from 'svelte';
 
+    import { t, getLocale } from '$lib/i18n';
+
     let { heatmapData = {} } = $props();
 
     const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -8,20 +10,17 @@
 
     let weeks = $state([]);
     let selectedDay = $state(null);
-    let loading = $state(true);
 
-    onMount(async () => {
+    onMount(() => {
         if (Object.keys(heatmapData).length > 0) {
             buildGrid(heatmapData);
-            loading = false;
         }
     });
 
     function buildGrid(data) {
         const today = new Date();
         const startDate = new Date(today);
-        startDate.setDate(today.getDate() - 364);
-        // Align to Monday
+        startDate.setDate(today.getDate() - 182); // 6 months, not 12
         const dayOfWeek = startDate.getDay();
         const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         startDate.setDate(startDate.getDate() + mondayOffset);
@@ -38,7 +37,6 @@
                     date: dateStr,
                     count: entry.count,
                     words: entry.words,
-                    day: current.getDate(),
                     month: current.getMonth(),
                     isFuture: current > today
                 });
@@ -48,7 +46,6 @@
         }
 
         weeks = grid;
-        loading = false;
     }
 
     function getLevel(count) {
@@ -62,11 +59,10 @@
     function getMonthLabel(weekIndex) {
         const week = weeks[weekIndex];
         if (!week) return '';
-        // Find the first day of the week that's in a new month
-        for (let i = 0; i < week.length; i++) {
-            if (i === 0 || week[i].month !== week[i - 1]?.month) {
-                return MONTHS[week[i].month];
-            }
+        if (weekIndex === 0) return MONTHS[week[0].month];
+        const prevWeek = weeks[weekIndex - 1];
+        if (week[0].month !== prevWeek[0].month) {
+            return MONTHS[week[0].month];
         }
         return '';
     }
@@ -78,64 +74,50 @@
 </script>
 
 <div class="heatmap-container">
-    {#if loading}
-        <div class="loading">Loading activity...</div>
-    {:else}
-        <div class="heatmap-header">
-            <span class="label">Less</span>
-            <div class="legend">
-                <span class="cell level-0"></span>
-                <span class="cell level-1"></span>
-                <span class="cell level-2"></span>
-                <span class="cell level-3"></span>
-                <span class="cell level-4"></span>
-            </div>
-            <span class="label">More</span>
+    <div class="heatmap-header">
+        <span class="heatmap-title">{$t('write.heatmap_title')}</span>
+        <div class="legend">
+            <span class="label">{$t('write.heatmap_less')}</span>
+            <span class="cell level-0"></span>
+            <span class="cell level-1"></span>
+            <span class="cell level-2"></span>
+            <span class="cell level-3"></span>
+            <span class="cell level-4"></span>
+            <span class="label">{$t('write.heatmap_more')}</span>
+        </div>
+    </div>
+
+    <div class="heatmap-grid">
+        <!-- Month labels -->
+        <div class="month-labels">
+            {#each weeks as week, i}
+                <span class="month-label">{getMonthLabel(i)}</span>
+            {/each}
         </div>
 
-        <div class="heatmap-scroll">
-            <div class="heatmap-grid">
-                <!-- Day labels -->
-                <div class="day-labels">
-                    {#each DAYS as day, i}
-                        <span>{day}</span>
+        <!-- Cells -->
+        <div class="cells">
+            {#each weeks as week}
+                <div class="week-col">
+                    {#each week as day}
+                        <button
+                            class="cell level-{getLevel(day.count)}"
+                            class:active={selectedDay?.date === day.date}
+                            onclick={() => handleDayClick(day)}
+                            title="{day.date}: {day.count} writing{day.count !== 1 ? 's' : ''}, {day.words} words"
+                            disabled={day.isFuture}
+                        ></button>
                     {/each}
                 </div>
-
-                <!-- Weeks -->
-                <div class="weeks">
-                    <!-- Month labels row -->
-                    <div class="month-labels">
-                        {#each weeks as week, i}
-                            <span class="month-label" style="grid-column: {i + 1}">{getMonthLabel(i)}</span>
-                        {/each}
-                    </div>
-
-                    <!-- Cells -->
-                    <div class="cells">
-                        {#each weeks as week, wi}
-                            {#each week as day, di}
-                                <button
-                                    class="cell level-{getLevel(day.count)}"
-                                    class:active={selectedDay?.date === day.date}
-                                    class:empty={day.count === 0}
-                                    onclick={() => handleDayClick(day)}
-                                    title="{day.date}: {day.count} writing{day.count !== 1 ? 's' : ''}, {day.words} words"
-                                    disabled={day.isFuture}
-                                ></button>
-                            {/each}
-                        {/each}
-                    </div>
-                </div>
-            </div>
+            {/each}
         </div>
+    </div>
 
-        {#if selectedDay}
-            <div class="day-tooltip">
-                <strong>{selectedDay.date}</strong>
-                <span>{selectedDay.count} writing{selectedDay.count !== 1 ? 's' : ''} · {selectedDay.words} words</span>
-            </div>
-        {/if}
+    {#if selectedDay}
+        <div class="day-tooltip">
+            <strong>{selectedDay.date}</strong>
+            <span>{selectedDay.count} writing{selectedDay.count !== 1 ? 's' : ''} · {selectedDay.words} words</span>
+        </div>
     {/if}
 </div>
 
@@ -144,86 +126,68 @@
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 1.25rem;
-    }
-
-    .loading {
-        text-align: center;
-        color: var(--text-muted);
-        padding: 2rem;
+        padding: 1rem;
+        overflow: hidden;
     }
 
     .heatmap-header {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
-        gap: 0.4rem;
-        margin-bottom: 0.5rem;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
     }
 
-    .label {
-        font-size: 0.65rem;
-        color: var(--text-muted);
+    .heatmap-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text);
     }
 
     .legend {
         display: flex;
-        gap: 3px;
+        align-items: center;
+        gap: 2px;
     }
 
-    .heatmap-scroll {
-        overflow-x: auto;
-        padding-bottom: 0.5rem;
+    .label {
+        font-size: 0.55rem;
+        color: var(--text-muted);
     }
 
     .heatmap-grid {
-        display: flex;
-        gap: 0.5rem;
-        min-width: fit-content;
-    }
-
-    .day-labels {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        padding-top: 14px;
-    }
-
-    .day-labels span {
-        font-size: 0.6rem;
-        color: var(--text-muted);
-        height: 11px;
-        line-height: 11px;
-    }
-
-    .weeks {
-        display: flex;
-        flex-direction: column;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .month-labels {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: 11px;
-        margin-bottom: 4px;
-        height: 12px;
+        display: flex;
+        gap: 2px;
+        margin-bottom: 2px;
     }
 
     .month-label {
-        font-size: 0.6rem;
+        font-size: 0.5rem;
         color: var(--text-muted);
+        width: 12px;
+        text-align: center;
+        flex-shrink: 0;
     }
 
     .cells {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: 11px;
-        gap: 3px;
+        display: flex;
+        gap: 2px;
+    }
+
+    .week-col {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex-shrink: 0;
     }
 
     .cell {
-        width: 11px;
-        height: 11px;
+        width: 12px;
+        height: 12px;
         border-radius: 2px;
         border: none;
         padding: 0;
@@ -231,7 +195,7 @@
         transition: outline 0.1s;
     }
 
-    .cell:hover:not(.empty):not(:disabled) {
+    .cell:hover:not(:disabled) {
         outline: 1px solid var(--accent);
     }
 
@@ -250,11 +214,11 @@
     }
 
     .day-tooltip {
-        margin-top: 0.75rem;
-        padding: 0.5rem 0.75rem;
+        margin-top: 0.5rem;
+        padding: 0.4rem 0.6rem;
         background: rgba(201, 168, 124, 0.1);
         border-radius: 6px;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         color: var(--text-dim);
         display: flex;
         gap: 0.5rem;

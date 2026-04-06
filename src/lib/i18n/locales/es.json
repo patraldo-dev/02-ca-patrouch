@@ -541,5 +541,8 @@
   "badges.rarity_common": "Común",
   "badges.rarity_uncommon": "Poco común",
   "badges.rarity_rare": "Raro",
-  "badges.rarity_legendary": "Legendario"
+  "badges.rarity_legendary": "Legendario",
+  "write.heatmap_title": "Actividad",
+  "write.heatmap_less": "Menos",
+  "write.heatmap_more": "Más"
 }
