@@ -275,7 +275,7 @@
         top: 2px;
         width: 5px;
         height: 10px;
-        border: solid #09090b;
+        border: solid var(--bg);
         border-width: 0 2px 2px 0;
         transform: rotate(45deg);
     }
@@ -297,7 +297,7 @@
         width: 100%;
         padding: 14px;
         background: #c9a87c;
-        color: #09090b;
+        color: var(--bg);
         border: none;
         border-radius: 8px;
         font-size: 16px;
@@ -363,7 +363,7 @@
     }
 
     .form-group input::placeholder {
-        color: #71717a;
+        color: var(--text-muted);
         opacity: 1;
     }
     

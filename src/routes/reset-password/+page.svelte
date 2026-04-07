@@ -114,7 +114,7 @@
     .auth-card h1 {
         font-family: var(--font-heading, 'Playfair Display', serif);
         font-size: 1.5rem;
-        color: #ffffff;
+        color: var(--text);
         margin-bottom: 0.5rem;
     }
     .input-group {
@@ -122,7 +122,7 @@
     }
     .input-group label {
         display: block;
-        color: #ffffff;
+        color: var(--text);
         font-size: 0.85rem;
         margin-bottom: 0.5rem;
     }

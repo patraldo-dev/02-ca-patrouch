@@ -200,9 +200,9 @@
         padding: 1.25rem 1.5rem;
         border-bottom: 1px solid var(--border);
     }
-    .search-header h2 { color: #fff; font-size: 1.1rem; margin: 0; font-family: var(--font-heading, serif); }
+    .search-header h2 { color: var(--text); font-size: 1.1rem; margin: 0; font-family: var(--font-heading, serif); }
     .close-btn { background: none; border: none; cursor: pointer; color: var(--text-dim); padding: 0.25rem; }
-    .close-btn:hover { color: #fff; }
+    .close-btn:hover { color: var(--text); }
 
     .search-body { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
 
@@ -284,7 +284,7 @@
     .result-title {
         font-family: var(--font-heading, serif);
         font-size: 1.05rem;
-        color: #fff;
+        color: var(--text);
         margin: 0 0 0.4rem 0;
         line-height: 1.3;
     }

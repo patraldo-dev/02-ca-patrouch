@@ -131,7 +131,7 @@
         width: 100%;
         padding: 0.7rem;
         background: var(--accent, #c9a87c);
-        color: #09090b;
+        color: var(--bg);
         border: none;
         border-radius: var(--radius, 8px);
         font-family: var(--font-body, 'Inter', sans-serif);

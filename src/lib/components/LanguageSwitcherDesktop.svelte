@@ -39,10 +39,10 @@
   .lang-switcher {
     display: flex;
     gap: 4px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--glass-bg);
     border-radius: 24px;
     padding: 3px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
   }
 
   .lang-pill {
@@ -59,8 +59,8 @@
   }
 
   .lang-pill:hover:not(.active) {
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-dim);
+    background: var(--glass-bg);
   }
 
   .lang-pill.active {

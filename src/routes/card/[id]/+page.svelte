@@ -283,8 +283,8 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        background: var(--glass-bg);
         color: #a3a3a3;
         cursor: pointer;
         transition: all 0.2s;
@@ -297,19 +297,19 @@
     .share-btn.whatsapp:hover {
         background: #25D366;
         border-color: #25D366;
-        color: #fff;
+        color: var(--text);
     }
 
     .share-btn.telegram:hover {
         background: #0088cc;
         border-color: #0088cc;
-        color: #fff;
+        color: var(--text);
     }
 
     .share-btn.mastodon:hover {
         background: #6364FF;
         border-color: #6364FF;
-        color: #fff;
+        color: var(--text);
     }
 
     .share-btn.native:hover {

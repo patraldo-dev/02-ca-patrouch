@@ -130,7 +130,7 @@
     .milestone-group {
         margin-bottom: 1.25rem;
         padding-bottom: 1.25rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid var(--glass-bg);
     }
 
     .milestone-group:last-child {

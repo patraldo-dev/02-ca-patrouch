@@ -136,7 +136,7 @@ id="confirmPassword"
         padding: 2rem 2rem 1.5rem;
         border: 1px solid #27272a;
         border-radius: 8px;
-        background: #141417;
+        background: var(--surface);
         color: var(--text-dim);
         text-align: center;
     }
@@ -156,7 +156,7 @@ id="confirmPassword"
         font-weight: bold;
         display: block;
         margin-bottom: 0.25rem;
-        color: #a1a1aa;
+        color: var(--text-dim);
     }
 
     input {
@@ -178,7 +178,7 @@ id="confirmPassword"
         padding: 0.75rem;
         font-size: 1rem;
         background: #c9a87c;
-        color: #09090b;
+        color: var(--bg);
         border: none;
         border-radius: 4px;
         cursor: pointer;

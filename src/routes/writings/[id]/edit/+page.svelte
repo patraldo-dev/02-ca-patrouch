@@ -150,7 +150,7 @@
     .toast.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
     .toast.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
 
-    .editor-field label { display: block; color: #fff; font-size: 0.85rem; margin-bottom: 0.4rem; }
+    .editor-field label { display: block; color: var(--text); font-size: 0.85rem; margin-bottom: 0.4rem; }
     .editor-field input {
         width: 100%; padding: 0.6rem 0.75rem; background: var(--surface, #141417);
         border: 2px solid var(--border, rgba(255,255,255,0.1)); border-radius: var(--radius, 8px);
@@ -174,13 +174,13 @@
     }
     .preview-pane { padding: 1.25rem; max-height: 600px; overflow-y: auto; }
     .preview-content { color: var(--text-body); line-height: 1.8; font-size: 1rem; }
-    .preview-content :global(h1), .preview-content :global(h2), .preview-content :global(h3) { font-family: var(--font-heading, 'Playfair Display', serif); color: #fff; margin: 1.5rem 0 0.75rem; }
+    .preview-content :global(h1), .preview-content :global(h2), .preview-content :global(h3) { font-family: var(--font-heading, 'Playfair Display', serif); color: var(--text); margin: 1.5rem 0 0.75rem; }
     .preview-content :global(h1) { font-size: 1.5rem; }
     .preview-content :global(h2) { font-size: 1.25rem; }
     .preview-content :global(p) { margin-bottom: 1rem; }
     .preview-content :global(em) { color: var(--accent, #c9a87c); }
     .preview-content :global(blockquote) { border-left: 3px solid var(--accent, #c9a87c); padding-left: 1rem; margin: 1rem 0; color: var(--text-dim); font-style: italic; }
-    .preview-content :global(strong) { color: #fff; }
+    .preview-content :global(strong) { color: var(--text); }
     .preview-content :global(a) { color: var(--accent, #c9a87c); }
 
     .editor-actions { display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.5rem; position: relative; }
@@ -190,7 +190,7 @@
     .btn-save, .btn-publish { padding: 0.6rem 1.25rem; border: none; border-radius: var(--radius, 8px); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
     .btn-save { background: rgba(255,255,255,0.08); color: var(--text-body); border: 1px solid var(--border); }
     .btn-save:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
-    .btn-publish { background: var(--accent, #c9a87c); color: #09090b; }
+    .btn-publish { background: var(--accent, #c9a87c); color: var(--bg); }
     .btn-publish:hover:not(:disabled) { opacity: 0.9; }
     .btn-save:disabled, .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
 
