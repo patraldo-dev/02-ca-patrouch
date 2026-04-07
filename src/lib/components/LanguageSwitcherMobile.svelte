@@ -34,10 +34,10 @@
   .lang-switcher {
     display: flex;
     gap: 4px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--glass-bg);
     border-radius: 24px;
     padding: 3px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
   }
 
   .lang-pill {
@@ -45,7 +45,7 @@
     border-radius: 20px;
     border: none;
     background: transparent;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.5px;

@@ -50,7 +50,7 @@
     border-radius: 20px;
     border: none;
     background: transparent;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.5px;
