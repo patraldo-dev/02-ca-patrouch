@@ -575,5 +575,6 @@
   "onboarding.skip": "Saltar tour",
   "onboarding.back": "← Atrás",
   "onboarding.next": "Siguiente →",
-  "onboarding.start_writing": "Empezar a Escribir →"
+  "onboarding.start_writing": "Empezar a Escribir →",
+  "badges.share_cta": "Únete a patrouch.ca — escribe todos los días, desbloquea insignias y descubre a la IA."
 }

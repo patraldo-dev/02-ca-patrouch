@@ -575,5 +575,6 @@
   "onboarding.skip": "Skip tour",
   "onboarding.back": "← Back",
   "onboarding.next": "Next →",
-  "onboarding.start_writing": "Start Writing →"
+  "onboarding.start_writing": "Start Writing →",
+  "badges.share_cta": "Join me at patrouch.ca — write every day, unlock badges, and spot the AI."
 }
