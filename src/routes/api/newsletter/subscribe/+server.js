@@ -9,7 +9,7 @@ function generateToken() {
 
 export async function POST({ request, platform }) {
     try {
-        const { email, type = 'daily-prompt' } = await request.json();
+        const { email, type = 'daily-prompt', locale = 'en' } = await request.json();
 
         if (!email) {
             return json({ error: 'Email is required' }, { status: 400 });
@@ -53,8 +53,8 @@ export async function POST({ request, platform }) {
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
         await db.prepare(
-            'INSERT INTO subscribers (email, type, confirmation_token, token_expires_at, confirmed, created_at) VALUES (?, ?, ?, ?, 0, ?)'
-        ).bind(email, type, token, expiresAt, new Date().toISOString()).run();
+            'INSERT INTO subscribers (email, type, confirmation_token, token_expires_at, confirmed, created_at, locale) VALUES (?, ?, ?, ?, 0, ?, ?)'
+        ).bind(email, type, token, expiresAt, new Date().toISOString(), locale).run();
 
         return json({
             success: true,

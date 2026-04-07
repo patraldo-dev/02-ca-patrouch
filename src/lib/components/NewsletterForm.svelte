@@ -1,6 +1,6 @@
 <!-- src/lib/components/NewsletterForm.svelte -->
 <script>
-    import { t } from '$lib/i18n';
+    import { t, getLocale } from '$lib/i18n';
 
     let email = $state('');
     let isSubmitting = $state(false);
@@ -22,7 +22,7 @@
             const response = await fetch('/api/newsletter/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, type: 'daily-prompt' })
+                body: JSON.stringify({ email, type: 'daily-prompt', locale: getLocale() || 'en' })
             });
 
             const result = await response.json();
