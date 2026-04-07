@@ -55,12 +55,12 @@
   }
 
   .lang-pill:active:not(.active) {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-bg);
   }
 
   .lang-pill.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+    background: var(--accent-bg);
+    color: var(--accent);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 </style>
