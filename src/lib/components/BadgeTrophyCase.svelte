@@ -52,7 +52,10 @@
         const name = badgeName(badge);
         const desc = badgeDesc(badge);
         const rarity = translate('badges.rarity_' + badge.rarity);
-        const text = `🏅 ${name} — ${desc} (${rarity})\n\n🏆 patrouch.ca`;
+        const text = `🏅 ${name}
+${desc}
+
+✏ Join me at patrouch.ca — write every day, unlock badges, and spot the AI.`;
         if (navigator.share) {
             navigator.share({ title: name, text });
         } else {
