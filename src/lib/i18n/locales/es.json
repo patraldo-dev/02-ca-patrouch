@@ -561,5 +561,19 @@
   "common.theme_light": "Claro",
   "common.theme_dark": "Oscuro",
   "badges.locked_hint": "¡Sigue escribiendo para desbloquear esta insignia!",
-  "badges.share": "Compartir"
+  "badges.share": "Compartir",
+  "onboarding.step0_title": "¡Bienvenido a Patrouch! ✍️",
+  "onboarding.step0_body": "Un espacio de escritura creativa donde los prompts diarios despiertan tu imaginación. Escribe en inglés, español o francés.",
+  "onboarding.step1_title": "Chispas Diarias ✨",
+  "onboarding.step1_body": "Cada día recibirás un prompt de escritura nuevo. Acepta y escribe, o pasa hasta 3 veces para uno nuevo. Cada paso es una oportunidad para encontrar la chispa perfecta.",
+  "onboarding.step2_title": "El Agora 🏛️",
+  "onboarding.step2_body": "Comparte tus escritos con la comunidad. Descubre lo que otros han escrito. Y juega \"Encuentra al AI\" — ¿puedes decir cuáles escritos son generados por IA?",
+  "onboarding.step3_title": "Sigue tu Crecimiento 📊",
+  "onboarding.step3_body": "Tus rachas de escritura, conteo de palabras y metas se rastrean automáticamente. ¡Gana insignias mientras creces. Cada palabra cuenta!",
+  "onboarding.step4_title": "¿Listo para Escribir?",
+  "onboarding.step4_body": "Tu primer prompt te espera. Acepta y empieza a escribir — o explora el Agora para ver lo que la comunidad está creando.",
+  "onboarding.skip": "Saltar tour",
+  "onboarding.back": "← Atrás",
+  "onboarding.next": "Siguiente →",
+  "onboarding.start_writing": "Empezar a Escribir →"
 }

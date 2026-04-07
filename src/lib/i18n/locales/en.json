@@ -561,5 +561,19 @@
   "common.theme_light": "Light",
   "common.theme_dark": "Dark",
   "badges.locked_hint": "Keep writing to unlock this badge!",
-  "badges.share": "Share"
+  "badges.share": "Share",
+  "onboarding.step0_title": "Welcome to Patrouch! ✍️",
+  "onboarding.step0_body": "A creative writing space where daily prompts spark your imagination. Write in English, Spanish, or French.",
+  "onboarding.step1_title": "Daily Sparks ✨",
+  "onboarding.step1_body": "Every day you'll get a fresh writing prompt. Accept it and write, or pass up to 3 times for a new one. Each pass is a chance to find the perfect spark.",
+  "onboarding.step2_title": "The Agora 🏛️",
+  "onboarding.step2_body": "Share your writings with the community. Discover what others have written. And play \"Spot the AI\" — can you tell which writings are AI-generated?",
+  "onboarding.step3_title": "Track Your Growth 📊",
+  "onboarding.step3_body": "Your writing streaks, word counts, and milestones are all tracked. Earn badges as you grow. Every word counts!",
+  "onboarding.step4_title": "Ready to Write?",
+  "onboarding.step4_body": "Your first prompt is waiting. Accept it and start writing — or explore the Agora to see what the community is creating.",
+  "onboarding.skip": "Skip tour",
+  "onboarding.back": "← Back",
+  "onboarding.next": "Next →",
+  "onboarding.start_writing": "Start Writing →"
 }

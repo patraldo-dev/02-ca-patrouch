@@ -17,11 +17,10 @@
     let showMilestones = $state(false);
     let showHeatmap = $state(false);
     let showBadges = $state(false);
-    // TODO: Enable after onboarding flow is polished
-    // if (browser) {
-    //     const onboarded = localStorage.getItem('onboarding_complete');
-    //     showOnboarding = !onboarded && !!data.user;
-    // }
+    if (browser) {
+        const onboarded = localStorage.getItem('onboarding_complete');
+        showOnboarding = !onboarded && !!data.user;
+    }
 
     // Initialize from server-side load
     let prompt = $state(data.prompt || null);
