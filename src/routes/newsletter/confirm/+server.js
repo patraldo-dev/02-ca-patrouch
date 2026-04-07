@@ -17,7 +17,7 @@ export async function GET({ url, platform }) {
     try {
         // Find subscriber with this token
         const subscriber = await db.prepare(`
-            SELECT id, email, confirmed, expires_at
+            SELECT id, email, confirmed, token_expires_at
             FROM subscribers
             WHERE confirmation_token = ?
         `).bind(token).first();
@@ -27,7 +27,7 @@ export async function GET({ url, platform }) {
         }
         
         // Check if token is expired
-        if (subscriber.expires_at && new Date(subscriber.expires_at) < new Date()) {
+        if (subscriber.token_expires_at && new Date(subscriber.token_expires_at) < new Date()) {
             return fail(400, { error: 'Confirmation token has expired' });
         }
         
@@ -39,7 +39,7 @@ export async function GET({ url, platform }) {
         // Confirm the subscription
         await db.prepare(`
             UPDATE subscribers
-            SET confirmed = 1, confirmation_token = NULL
+            SET confirmed = 1, confirmed_at = datetime('now'), confirmation_token = NULL
             WHERE id = ?
         `).bind(subscriber.id).run();
         

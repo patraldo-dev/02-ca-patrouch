@@ -1,5 +1,6 @@
 // src/routes/api/newsletter/subscribe/+server.js
 import { json } from '@sveltejs/kit';
+import { sendMailgunEmail } from '$lib/server/mailgun.js';
 
 function generateToken() {
     const array = new Uint8Array(32);
@@ -41,6 +42,18 @@ export async function POST({ request, platform }) {
                 await db.prepare(
                     'UPDATE subscribers SET confirmation_token = ?, token_expires_at = ? WHERE id = ?'
                 ).bind(token, expiresAt, existing.id).run();
+                // Send confirmation email
+                try {
+                    const origin = request.headers.get('origin') || 'https://patrouch.ca';
+                    const confirmUrl = `${origin}/newsletter/confirm?token=${token}`;
+                    const msgs = {
+                        en: { subject: 'Confirm your subscription', body: `Click here to confirm your Daily Spark subscription:\n${confirmUrl}` },
+                        es: { subject: 'Confirma tu suscripción', body: `Haz clic aquí para confirmar tu Chispa Dominical:\n${confirmUrl}` },
+                        fr: { subject: 'Confirme ton abonnement', body: `Clique ici pour confirmer ton Étincelle du Dimanche:\n${confirmUrl}` }
+                    };
+                    const m = msgs[locale] || msgs.en;
+                    await sendMailgunEmail(email, m.subject, `<a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${m.subject}</a>`, m.body, platform.env);
+                } catch (e) { console.error('Confirmation email error:', e); }
                 return json({
                     success: true,
                     message: 'Confirmation resent. Check your email.',
@@ -55,6 +68,19 @@ export async function POST({ request, platform }) {
         await db.prepare(
             'INSERT INTO subscribers (email, type, confirmation_token, token_expires_at, confirmed, created_at, locale) VALUES (?, ?, ?, ?, 0, ?, ?)'
         ).bind(email, type, token, expiresAt, new Date().toISOString(), locale).run();
+
+        // Send confirmation email
+        try {
+            const origin = request.headers.get('origin') || 'https://patrouch.ca';
+            const confirmUrl = `${origin}/newsletter/confirm?token=${token}`;
+            const msgs = {
+                en: { subject: 'Confirm your subscription', body: `Click here to confirm your Daily Spark subscription:\n${confirmUrl}` },
+                es: { subject: 'Confirma tu suscripción', body: `Haz clic aquí para confirmar tu Chispa Dominical:\n${confirmUrl}` },
+                fr: { subject: 'Confirme ton abonnement', body: `Clique ici pour confirmer ton Étincelle du Dimanche:\n${confirmUrl}` }
+            };
+            const m = msgs[locale] || msgs.en;
+            await sendMailgunEmail(email, m.subject, `<a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${m.subject}</a>`, m.body, platform.env);
+        } catch (e) { console.error('Confirmation email error:', e); }
 
         return json({
             success: true,
