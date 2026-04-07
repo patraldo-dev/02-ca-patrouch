@@ -173,6 +173,18 @@
 
         <footer class="writing-footer">
             <div class="footer-actions">
+                {#if w.status === 'published'}
+                    <a href="/card/{w.id}" class="btn-share" target="_blank" rel="noopener">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                        Share
+                    </a>
+                {/if}
                 {#if data.user?.id === w.user_id}
                     <a href="/writings/{w.id}/edit" class="btn-glass">{$t('write.view.edit')}</a>
                     {#if w.status === 'draft'}
@@ -362,6 +374,29 @@
     .footer-actions {
         display: flex;
         gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-share {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(201, 168, 124, 0.1);
+        border: 1px solid rgba(201, 168, 124, 0.3);
+        border-radius: var(--radius);
+        padding: 0.5rem 1rem;
+        color: var(--accent);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-share:hover {
+        background: rgba(201, 168, 124, 0.2);
+        border-color: var(--accent);
     }
 
     .btn-glass {

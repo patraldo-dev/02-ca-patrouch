@@ -1,10 +1,10 @@
 import { error } from '@sveltejs/kit';
 
-export async function load({ url, platform }) {
+export async function load({ params, platform }) {
     const db = platform?.env?.DB_book;
     if (!db) throw error(503, 'Database unavailable');
 
-    const writingId = url.searchParams.get('id');
+    const writingId = params.id;
     if (!writingId) throw error(400, 'Writing ID required');
 
     const writing = await db.prepare(`

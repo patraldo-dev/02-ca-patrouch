@@ -561,5 +561,19 @@
   "common.theme_light": "Clair",
   "common.theme_dark": "Sombre",
   "badges.locked_hint": "Continue d'écrire pour débloquer ce badge !",
-  "badges.share": "Partager"
+  "badges.share": "Partager",
+  "onboarding.step0_title": "Bienvenue sur Patrouch ! ✍️",
+  "onboarding.step0_body": "Un espace d'écriture créative où les prompts quotidiens éveillent ton imagination. Écris en anglais, espagnol ou français.",
+  "onboarding.step1_title": "Étincelles Quotidiennes ✨",
+  "onboarding.step1_body": "Chaque jour, tu recevras un nouveau prompt d'écriture. Accepte-le et écris, ou passe jusqu'à 3 fois pour un nouveau. Chaque passage est une chance de trouver l'étincelle parfaite.",
+  "onboarding.step2_title": "L'Agora 🏛️",
+  "onboarding.step2_body": "Partage tes écrits avec la communauté. Découvre ce que les autres ont écrit. Et joue à « Trouve l'IA » — peux-tu dire quels écrits sont générés par IA ?",
+  "onboarding.step3_title": "Suis ta Progression 📊",
+  "onboarding.step3_body": "Tes séries d'écriture, tes comptes de mots et tes objectifs sont suivis automatiquement. Gagne des badges en progressant. Chaque mot compte !",
+  "onboarding.step4_title": "Prêt à Écrire ?",
+  "onboarding.step4_body": "Ton premier prompt t'attend. Accepte-le et commence à écrire — ou explore l'Agora pour voir ce que la communauté crée.",
+  "onboarding.skip": "Passer la visite",
+  "onboarding.back": "← Retour",
+  "onboarding.next": "Suivant →",
+  "onboarding.start_writing": "Commencer à Écrire →"
 }

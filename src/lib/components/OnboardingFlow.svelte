@@ -7,33 +7,33 @@
     let step = $state(0);
     let animating = $state(false);
 
-    const steps = [
+    const steps = $derived([
         {
-            title: 'Welcome to Patrouch! ✍️',
-            body: 'A creative writing space where daily prompts spark your imagination. Write in English, Spanish, or French.',
+            title: $t('onboarding.step0_title'),
+            body: $t('onboarding.step0_body'),
             icon: '🌟'
         },
         {
-            title: 'Daily Sparks ✨',
-            body: 'Every day you\'ll get a fresh writing prompt. Accept it and write, or pass up to 3 times for a new one. Each pass is a chance to find the perfect spark.',
+            title: $t('onboarding.step1_title'),
+            body: $t('onboarding.step1_body'),
             icon: '💡'
         },
         {
-            title: 'The Agora 🏛️',
-            body: 'Share your writings with the community. Discover what others have written. And play "Spot the AI" — can you tell which writings are AI-generated?',
+            title: $t('onboarding.step2_title'),
+            body: $t('onboarding.step2_body'),
             icon: '🔍'
         },
         {
-            title: 'Track Your Growth 📊',
-            body: 'Your writing streaks, word counts, and milestones are all tracked. Earn badges as you grow. Every word counts!',
+            title: $t('onboarding.step3_title'),
+            body: $t('onboarding.step3_body'),
             icon: '🏅'
         },
         {
-            title: 'Ready to Write?',
-            body: 'Your first prompt is waiting. Accept it and start writing — or explore the Agora to see what the community is creating.',
+            title: $t('onboarding.step4_title'),
+            body: $t('onboarding.step4_body'),
             icon: '🚀'
         }
-    ];
+    ]);
 
     function nextStep() {
         if (step < steps.length - 1) {
@@ -68,7 +68,7 @@
 
 <div class="onboarding-overlay">
     <div class="onboarding-card" class:animate={animating}>
-        <button class="skip-btn" onclick={dismiss}>Skip tour</button>
+        <button class="skip-btn" onclick={dismiss}>{$t('onboarding.skip')}</button>
 
         <div class="step-content">
             <span class="step-icon">{steps[step].icon}</span>
@@ -84,10 +84,10 @@
 
         <div class="step-actions">
             {#if step > 0}
-                <button class="btn-secondary" onclick={prevStep}>← Back</button>
+                <button class="btn-secondary" onclick={prevStep}>{$t('onboarding.back')}</button>
             {/if}
             <button class="btn-primary" onclick={nextStep}>
-                {step === steps.length - 1 ? 'Start Writing →' : 'Next →'}
+                {step === steps.length - 1 ? $t('onboarding.start_writing') : $t('onboarding.next')}
             </button>
         </div>
     </div>
