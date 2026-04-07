@@ -134,7 +134,7 @@ id="confirmPassword"
         max-width: 400px;
         margin: 4rem auto 2rem;
         padding: 2rem 2rem 1.5rem;
-        border: 1px solid #27272a;
+        border: 1px solid var(--border);
         border-radius: 8px;
         background: var(--surface);
         color: var(--text-dim);
@@ -143,7 +143,7 @@ id="confirmPassword"
 
     .signup-icon {
         margin-bottom: 1rem;
-        color: #c9a87c;
+        color: var(--accent);
     }
 
     form {
@@ -162,22 +162,22 @@ id="confirmPassword"
     input {
         padding: 0.5rem;
         font-size: 1rem;
-        border: 1px solid #27272a;
+        border: 1px solid var(--border);
         border-radius: 4px;
-        background: #1c1c21;
+        background: var(--surface);
         color: var(--text-dim);
     }
 
     input:focus {
         outline: none;
-        border-color: #c9a87c;
+        border-color: var(--accent);
         box-shadow: 0 0 0 2px rgba(201, 168, 124, 0.15);
     }
 
     button {
         padding: 0.75rem;
         font-size: 1rem;
-        background: #c9a87c;
+        background: var(--accent);
         color: var(--bg);
         border: none;
         border-radius: 4px;
@@ -187,7 +187,7 @@ id="confirmPassword"
     }
 
     button:hover {
-        background: #b8976b;
+        background: var(--accent-bg);
     }
 
     button:disabled {
@@ -196,7 +196,7 @@ id="confirmPassword"
     }
 
     a {
-        color: #c9a87c;
+        color: var(--accent);
         text-decoration: none;
     }
 
@@ -205,8 +205,8 @@ id="confirmPassword"
     }
 
     .success-banner {
-        background: #14532d;
-        color: #86efac;
+        background: var(--surface);
+        color: var(--accent);
         padding: 0.75rem 1rem;
         border-radius: 4px;
         margin-bottom: 1rem;

@@ -130,7 +130,7 @@
         overflow: hidden;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         background: var(--surface);
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--border);
     }
     
     .login-card {
@@ -184,13 +184,13 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        background: #1c1012;
+        background: var(--surface);
         color: var(--text-dim);
         padding: 12px 16px;
         border-radius: 8px;
         margin-bottom: 24px;
         font-size: 14px;
-        border: 1px solid #3b1116;
+        border: 1px solid var(--border);
     }
     
     .login-form {
@@ -214,11 +214,11 @@
     .form-group input {
         width: 100%;
         padding: 12px 16px;
-        border: 2px solid #3f3f46;
+        border: 2px solid var(--border);
         border-radius: 8px;
         font-size: 16px;
         transition: border-color 0.2s, box-shadow 0.2s;
-        background: #1c1c21;
+        background: var(--surface);
         color: var(--text);
     }
     
@@ -256,7 +256,7 @@
     .checkbox-container .checkmark {
         width: 18px;
         height: 18px;
-        border: 1px solid #3f3f46;
+        border: 1px solid var(--border);
         border-radius: 4px;
         margin-right: 8px;
         position: relative;
@@ -289,14 +289,14 @@
     }
     
     .forgot-link:hover {
-        color: #b8976b;
+        color: var(--accent-bg);
         text-decoration: underline;
     }
     
     .login-button {
         width: 100%;
         padding: 14px;
-        background: #c9a87c;
+        background: var(--accent);
         color: var(--bg);
         border: none;
         border-radius: 8px;
@@ -311,11 +311,11 @@
     }
     
     .login-button:hover {
-        background: #b8976b;
+        background: var(--accent-bg);
     }
     
     .login-button:disabled {
-        background: #3f3f46;
+        background: var(--border);
         color: var(--text-muted);
         cursor: not-allowed;
     }
