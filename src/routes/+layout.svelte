@@ -5,6 +5,7 @@
     import { t, locale, setLocale } from '$lib/i18n';
     import { beforeNavigate } from '$app/navigation';
     import SearchModal from '$lib/components/SearchModal.svelte';
+    import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
     import { page } from '$app/stores';
     import { track } from '$lib/analytics';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
@@ -42,6 +43,7 @@
     let activeProfileId = $state(data.activeProfile?.id || null);
     let activeDisplayName = $state(data.activeProfile?.display_name || data.user?.username || '');
     let profileLoading = $state(false);
+    let showOnboarding = $state(false);
 
     async function loadProfiles() {
         try {
@@ -124,8 +126,11 @@
         if (browser) {
             window.addEventListener('scroll', onScroll, { passive: true });
             onScroll();
-            // Delay observer to allow DOM to settle
             setTimeout(initObserver, 100);
+            // Check onboarding for new users
+            if (data?.user && !data.user.onboarding_completed) {
+                showOnboarding = true;
+            }
         }
         return () => {
             if (browser) window.removeEventListener('scroll', onScroll);
@@ -264,6 +269,13 @@
         {@render children()}
 
         <SearchModal bind:open={searchOpen} serverLocale={data.serverLocale} />
+
+        {#if showOnboarding}
+            <OnboardingFlow user={data.user} onclose={async () => {
+                showOnboarding = false;
+                try { await fetch('/api/onboarding', { method: 'POST' }); } catch {}
+            }} />
+        {/if}
     </main>
 
     <!-- FOOTER -->

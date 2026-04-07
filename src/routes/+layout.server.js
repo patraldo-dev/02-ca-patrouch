@@ -39,9 +39,18 @@ export async function load({ locals, cookies }) {
         }
     }
 
+    let onboarding_completed = true;
+    if (user) {
+        const ob = await locals.db.prepare(
+            'SELECT onboarding_completed FROM users WHERE id = ?'
+        ).bind(user.id).first();
+        onboarding_completed = ob?.onboarding_completed === 1;
+    }
+
     return {
         user: user || null,
         serverLocale,
-        activeProfile
+        activeProfile,
+        onboarding_completed
     };
 }

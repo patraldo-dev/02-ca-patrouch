@@ -57,11 +57,6 @@
     }
 
     function dismiss() {
-        // Mark onboarding as complete
-        try {
-            localStorage.setItem('onboarding_complete', 'true');
-        } catch {}
-        // Notify parent to close the overlay
         onclose?.();
     }
 </script>
