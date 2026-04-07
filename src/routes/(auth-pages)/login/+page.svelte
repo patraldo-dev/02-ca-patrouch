@@ -159,13 +159,13 @@
     }
     
     .login-header p {
-        color: #d4d4d8;
+        color: var(--text-dim);
         margin: 0 0 0 0;
         font-size: 16px;
     }
     
     .signup-link {
-        color: #e4e4e7;
+        color: var(--text-dim);
         font-size: 14px;
         margin-top: 8px !important;
     }
@@ -185,7 +185,7 @@
         align-items: center;
         gap: 10px;
         background: #1c1012;
-        color: #fca5a5;
+        color: var(--text-dim);
         padding: 12px 16px;
         border-radius: 8px;
         margin-bottom: 24px;
@@ -229,7 +229,7 @@
     }
     
     .form-group input:disabled {
-        background-color: #18181b;
+        background-color: var(--surface);
         color: var(--text-muted);
         cursor: not-allowed;
     }

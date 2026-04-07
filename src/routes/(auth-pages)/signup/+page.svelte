@@ -137,7 +137,7 @@ id="confirmPassword"
         border: 1px solid #27272a;
         border-radius: 8px;
         background: #141417;
-        color: #e4e4e7;
+        color: var(--text-dim);
         text-align: center;
     }
 
@@ -165,7 +165,7 @@ id="confirmPassword"
         border: 1px solid #27272a;
         border-radius: 4px;
         background: #1c1c21;
-        color: #e4e4e7;
+        color: var(--text-dim);
     }
 
     input:focus {
