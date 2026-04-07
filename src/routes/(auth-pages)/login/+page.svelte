@@ -217,6 +217,8 @@
         border: 2px solid var(--border);
         border-radius: 8px;
         font-size: 16px;
+        background: var(--surface);
+        color: var(--text);
         transition: border-color 0.2s, box-shadow 0.2s;
         background: var(--surface);
         color: var(--text);
