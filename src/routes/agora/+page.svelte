@@ -72,6 +72,25 @@
 
     let shuffledWritings = $derived(showGame ? shuffle(data.writings) : data.writings);
     let revealedCount = $derived(shuffledWritings.filter(w => revealed[w.id]).length);
+    let showLeaderboard = $state(false);
+    let leaderboard = $state([]);
+    let leaderboardLoading = $state(false);
+
+    async function loadLeaderboard() {
+        showLeaderboard = true;
+        leaderboardLoading = true;
+        try {
+            // Use current round from localStorage or fetch latest
+            const res = await fetch('/api/agora/leaderboard');
+            if (res.ok) {
+                leaderboard = await res.json();
+            }
+        } catch (e) {
+            console.error('Failed to load leaderboard:', e);
+        } finally {
+            leaderboardLoading = false;
+        }
+    }
 </script>
 
 <svelte:head>
@@ -111,6 +130,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span class="game-score" onclick={loadGameStats} role="button" title={$t('agora.game.click_for_stats')}>{revealedCount}/{shuffledWritings.length} {$t('agora.game.revealed')}</span>
+                <button class="game-leaderboard-btn" onclick={loadLeaderboard} title="Leaderboard">🏆</button>
             {/if}
         </div>
     {/if}
@@ -206,6 +226,46 @@
             </div>
         </div>
     {/if}
+
+    {#if showLeaderboard}
+        <div class="modal-overlay" onclick={() => showLeaderboard = false}>
+            <div class="modal-content modal-wide" onclick={(e) => e.stopPropagation()}>
+                <div class="modal-header">
+                    <h2>🏆 Leaderboard</h2>
+                    <button class="modal-close" onclick={() => showLeaderboard = false}>✕</button>
+                </div>
+                {#if leaderboardLoading}
+                    <div class="stats-loading">Loading leaderboard…</div>
+                {:else if leaderboard.length > 0}
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Player</th>
+                                <th>Guesses</th>
+                                <th>Correct</th>
+                                <th>Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each leaderboard as entry, i}
+                                <tr class:top-three={i < 3}>
+                                    <td class="rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+                                    <td class="player">{entry.username}</td>
+                                    <td>{entry.total_guesses}</td>
+                                    <td>{entry.correct_guesses}</td>
+                                    <td class="accuracy">{entry.accuracy}%</td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                {:else}
+                    <p class="empty-state-text">No leaderboard data yet. Play the game to rank up!</p>
+                {/if}
+            </div>
+        </div>
+    {/if}
+
     {:else}
         <div class="empty-state">
             <p>{$t('agora.no_writings')}</p>
@@ -539,5 +599,65 @@
     }
     .stats-loading {
         text-align: center; color: var(--text-muted); padding: 2rem;
+    }
+
+    .game-leaderboard-btn {
+        background: none;
+        border: none;
+        font-size: 1.1rem;
+        cursor: pointer;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    .game-leaderboard-btn:hover {
+        background: rgba(201, 168, 124, 0.15);
+    }
+
+    .modal-wide {
+        max-width: 500px;
+    }
+
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .leaderboard-table th {
+        text-align: left;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .leaderboard-table td {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        border-bottom: 1px solid rgba(39, 39, 42, 0.5);
+    }
+    .leaderboard-table tr.top-three td {
+        color: var(--text);
+    }
+    .leaderboard-table td.rank {
+        font-size: 1rem;
+        text-align: center;
+    }
+    .leaderboard-table td.player {
+        font-weight: 500;
+        color: var(--accent);
+    }
+    .leaderboard-table td.accuracy {
+        font-weight: 600;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .empty-state-text {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 2rem;
+        font-style: italic;
     }
 </style>
