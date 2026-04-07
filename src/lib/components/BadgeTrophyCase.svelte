@@ -38,12 +38,12 @@
     }
 
     function badgeName(badge) {
-        const key = 'badges.badge_' + badge.id + '_name';
+        const key = 'badges.' + badge.id + '_name';
         return translate(key) || badge.name;
     }
 
     function badgeDesc(badge) {
-        const key = 'badges.badge_' + badge.id + '_description';
+        const key = 'badges.' + badge.id + '_description';
         return translate(key) || badge.description;
     }
 </script>
