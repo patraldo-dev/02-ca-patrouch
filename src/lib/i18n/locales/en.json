@@ -349,7 +349,7 @@
   "profile.cancel": "Cancel",
   "profile.create_new": "Create New Profile",
   "profile.name_placeholder": "Display name",
-  "profile.bio_placeholder": "Short bio (optional)",
+  "profile.bio_placeholder": "Bio (optional)",
   "profile.create": "Create Profile",
   "profile.created": "Profile created!",
   "profile.updated": "Profile updated!",
@@ -576,5 +576,14 @@
   "onboarding.back": "← Back",
   "onboarding.next": "Next →",
   "onboarding.start_writing": "Start Writing →",
-  "badges.share_cta": "Join me at patrouch.ca — write every day, unlock badges, and spot the AI."
+  "badges.share_cta": "Join me at patrouch.ca — write every day, unlock badges, and spot the AI. And more!",
+  "profile.delete_confirm": "Delete \"{name}\"? This will also delete their writings, profiles, and data.",
+  "profile.delete_profile_confirm": "Delete \"{name}\"?",
+  "profile.stats_empty": "Write something to see your stats here!",
+  "profile.public_label": "Public profile",
+  "profile.privacy_hint": "When enabled, your username links to your public writer profile from your writings.",
+  "profile.display_name_placeholder": "Display name",
+  "forgot.sending": "Sending...",
+  "forgot.send_link": "Send Reset Link",
+  "write.start_placeholder": "Start writing..."
 }

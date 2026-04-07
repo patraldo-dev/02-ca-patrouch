@@ -65,7 +65,7 @@
                 />
             </div>
             <button type="submit" disabled={isLoading}>
-                {isLoading ? 'Sending...' : 'Send Reset Link'}
+                {isLoading ? $t('forgot.sending') : $t('forgot.send_link')}
             </button>
         </form>
 

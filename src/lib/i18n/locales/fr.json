@@ -343,7 +343,7 @@
   "profile.cancel": "Annuler",
   "profile.create_new": "Créer un Nouveau Profil",
   "profile.name_placeholder": "Nom affiché",
-  "profile.bio_placeholder": "Courte biographie (facultatif)",
+  "profile.bio_placeholder": "Biographie (facultatif)",
   "profile.create": "Créer le Profil",
   "profile.created": "Profil créé !",
   "profile.updated": "Profil mis à jour !",
@@ -576,5 +576,14 @@
   "onboarding.back": "← Retour",
   "onboarding.next": "Suivant →",
   "onboarding.start_writing": "Commencer à Écrire →",
-  "badges.share_cta": "Rejoins-moi sur patrouch.ca — écris chaque jour, débloque des badges et repère l'IA."
+  "badges.share_cta": "Rejoins-moi sur patrouch.ca — écris chaque jour, débloque des badges et repère l'IA. Et bien plus!",
+  "profile.delete_confirm": "Supprimer « {name} » ? Cela supprimera aussi ses écrits, profils et données.",
+  "profile.delete_profile_confirm": "Supprimer « {name} » ?",
+  "profile.stats_empty": "Écris quelque chose pour voir tes statistiques ici !",
+  "profile.public_label": "Profil public",
+  "profile.privacy_hint": "Quand activé, ton nom d'utilisateur renvoie vers ton profil public d'écrivain depuis tes écrits.",
+  "profile.display_name_placeholder": "Nom d'affichage",
+  "forgot.sending": "Envoi en cours...",
+  "forgot.send_link": "Envoyer le lien de réinitialisation",
+  "write.start_placeholder": "Commence à écrire..."
 }

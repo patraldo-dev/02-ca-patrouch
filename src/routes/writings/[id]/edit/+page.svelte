@@ -117,7 +117,7 @@
         {:else}
             <textarea
                 bind:value={content}
-                placeholder="Start writing..."
+                placeholder={$t("write.start_placeholder")}
                 class="editor-textarea"
             ></textarea>
         {/if}

@@ -1,6 +1,7 @@
 <!-- src/routes/profile/+page.svelte -->
 <script>
     import { t } from '$lib/i18n';
+    import { get } from 'svelte/store';
     import { goto } from '$app/navigation';
     import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
     import WordMilestones from '$lib/components/WordMilestones.svelte';
@@ -92,7 +93,7 @@
     }
 
     async function deleteProfile(id, name) {
-        if (!confirm(`Delete "${name}"?`)) return;
+        if (!confirm(translate('profile.delete_profile_confirm').replace('{name}', name))) return;
         try {
             const res = await fetch(`/api/profiles/${id}`, { method: 'DELETE' });
             if (res.ok) {
@@ -127,12 +128,12 @@
     <section class="privacy-section">
         <h2>Privacy</h2>
         <label class="toggle-row">
-            <span>Public profile</span>
+            <span>{$t("profile.public_label")}</span>
             <button class="toggle-btn" class:active={showProfile} onclick={toggleProfileVisibility}>
                 <span class="toggle-knob"></span>
             </button>
         </label>
-        <p class="privacy-hint">When enabled, your username links to your public writer profile from your writings.</p>
+        <p class="privacy-hint">{$t('profile.privacy_hint')}</p>
     </section>
 
     <!-- Existing Profiles -->
@@ -157,13 +158,13 @@
 
                 {#if editingId === p.id}
                     <div class="profile-edit-form">
-                        <input bind:value={editName} placeholder="Display name" />
+                        <input bind:value={editName} placeholder={$t("profile.display_name_placeholder")} />
                         <select bind:value={editLocale}>
                             <option value="en">English</option>
                             <option value="es">Español</option>
                             <option value="fr">Français</option>
                         </select>
-                        <textarea bind:value={editBio} placeholder="Bio (optional)" rows="2"></textarea>
+                        <textarea bind:value={editBio} placeholder={$t("profile.bio_placeholder")} rows="2"></textarea>
                         <div class="edit-actions">
                             <button class="btn-save" onclick={() => saveEdit(p.id)}>{$t('profile.save')}</button>
                             <button class="btn-cancel" onclick={cancelEdit}>{$t('profile.cancel')}</button>
@@ -231,7 +232,7 @@
             {/if}
             <WordMilestones stats={data.stats} />
         {:else}
-            <p class="stats-empty">Write something to see your stats here!</p>
+            <p class="stats-empty">{$t('profile.stats_empty')}</p>
         {/if}
     </div>
     {/if}
