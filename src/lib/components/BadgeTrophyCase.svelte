@@ -1,5 +1,6 @@
 <script>
-    import { t, getLocale } from '$lib/i18n';
+    import { t } from '$lib/i18n';
+    import { getLocale } from '$lib/i18n';
     import { get } from 'svelte/store';
 
     let { badges = [] } = $props();
@@ -46,6 +47,18 @@
         const key = 'badges.' + badge.id + '_description';
         return translate(key) || badge.description;
     }
+
+    function shareBadge(badge) {
+        const name = badgeName(badge);
+        const desc = badgeDesc(badge);
+        const rarity = translate('badges.rarity_' + badge.rarity);
+        const text = `🏅 ${name} — ${desc} (${rarity})\n\n🏆 patrouch.ca`;
+        if (navigator.share) {
+            navigator.share({ title: name, text });
+        } else {
+            navigator.clipboard.writeText(text);
+        }
+    }
 </script>
 
 <div class="trophy-case">
@@ -76,8 +89,7 @@
                 class="badge-card"
                 class:unlocked={badge.unlocked}
                 class:locked={!badge.unlocked}
-                class:selected={selectedBadge?.id === badge.id}
-                onclick={() => selectedBadge = selectedBadge?.id === badge.id ? null : badge}
+                onclick={() => selectedBadge = badge}
             >
                 <span class="badge-icon">{badge.unlocked ? badge.icon : '🔒'}</span>
                 <span class="badge-name">{badge.unlocked ? badgeName(badge) : '???'}</span>
@@ -85,58 +97,78 @@
             </button>
         {/each}
     </div>
-
-    {#if selectedBadge}
-        <div class="badge-detail">
-            <div class="badge-detail-header">
-                <span class="detail-icon">{selectedBadge.unlocked ? selectedBadge.icon : '🔒'}</span>
-                <div>
-                    <h4>{selectedBadge.unlocked ? badgeName(selectedBadge) : $t('badges.locked')}</h4>
-                    <span class="detail-rarity {selectedBadge.rarity}">{$t('badges.rarity_' + selectedBadge.rarity)}</span>
-                </div>
-            </div>
-            <p class="detail-desc">{badgeDesc(selectedBadge)}</p>
-            {#if selectedBadge.unlocked && selectedBadge.unlockedAt}
-                <p class="detail-unlocked">
-                    {$t('badges.unlocked_on').replace('{date}', new Date(selectedBadge.unlockedAt.replace(' ', 'T')).toLocaleDateString(getLocale() || 'en', { month: 'long', day: 'numeric', year: 'numeric' }))}
-                </p>
-            {/if}
-        </div>
-    {/if}
 </div>
+
+{#if selectedBadge}
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div class="badge-modal-overlay" onclick={() => selectedBadge = null}>
+        <div class="badge-modal" onclick={e => e.stopPropagation()}>
+            <button class="badge-modal-close" onclick={() => selectedBadge = null}>×</button>
+
+            <div class="badge-modal-icon {selectedBadge.unlocked ? 'unlocked' : ''}">
+                {selectedBadge.unlocked ? selectedBadge.icon : '🔒'}
+            </div>
+
+            <div class="badge-modal-info">
+                <span class="badge-modal-rarity {selectedBadge.rarity}">
+                    {$t('badges.rarity_' + selectedBadge.rarity)}
+                </span>
+                <h3 class="badge-modal-name">
+                    {selectedBadge.unlocked ? badgeName(selectedBadge) : $t('badges.locked')}
+                </h3>
+                <p class="badge-modal-desc">
+                    {badgeDesc(selectedBadge)}
+                </p>
+                {#if selectedBadge.unlocked && selectedBadge.unlockedAt}
+                    <p class="badge-modal-date">
+                        {$t('badges.unlocked_on').replace('{date}', new Date(selectedBadge.unlockedAt.replace(' ', 'T')).toLocaleDateString(getLocale() || 'en', { month: 'long', day: 'numeric', year: 'numeric' }))}
+                    </p>
+                {:else if !selectedBadge.unlocked}
+                    <p class="badge-modal-hint">{$t('badges.locked_hint')}</p>
+                {/if}
+                {#if selectedBadge.unlocked}
+                    <button class="badge-share-btn" onclick={() => shareBadge(selectedBadge)}>
+                        {$t('badges.share')}
+                    </button>
+                {/if}
+            </div>
+        </div>
+    </div>
+{/if}
 
 <style>
     .trophy-case {
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 1.25rem;
+        padding: 1rem;
+        overflow: hidden;
     }
 
     .trophy-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
         margin-bottom: 0.75rem;
     }
 
     .trophy-header h3 {
         font-family: var(--font-heading);
-        color: var(--accent);
+        color: var(--text);
         font-size: 1rem;
         margin: 0;
     }
 
     .count {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: var(--text-muted);
     }
 
     .progress-bar {
-        height: 4px;
-        background: rgba(201, 168, 124, 0.1);
+        height: 3px;
+        background: var(--glass-bg);
         border-radius: 2px;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
         overflow: hidden;
     }
 
@@ -150,31 +182,28 @@
     .filters {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.4rem;
-        margin-bottom: 1rem;
+        gap: 0.35rem;
+        margin-bottom: 0.75rem;
     }
 
     .filter-btn {
-        font-size: 0.7rem;
-        padding: 0.3rem 0.6rem;
+        padding: 0.25rem 0.5rem;
         border: 1px solid var(--border);
         border-radius: 999px;
         background: transparent;
         color: var(--text-muted);
+        font-size: 0.65rem;
         cursor: pointer;
         transition: all 0.2s;
     }
 
-    .filter-btn:hover {
-        border-color: var(--accent);
+    .filter-btn.active {
+        background: var(--accent-bg);
+        border-color: var(--accent-border);
         color: var(--accent);
     }
 
-    .filter-btn.active {
-        background: var(--accent);
-        color: var(--bg);
-        border-color: var(--accent);
-    }
+    .filter-btn:hover { border-color: var(--accent); }
 
     .badge-grid {
         display: grid;
@@ -204,19 +233,9 @@
         transform: translateY(-2px);
     }
 
-    .badge-card.selected {
-        border-color: var(--accent);
-        background: rgba(201, 168, 124, 0.1);
-    }
+    .badge-card.locked { opacity: 0.4; }
 
-    .badge-card.locked {
-        opacity: 0.4;
-        cursor: default;
-    }
-
-    .badge-icon {
-        font-size: 1.5rem;
-    }
+    .badge-icon { font-size: 1.5rem; }
 
     .badge-name {
         font-size: 0.65rem;
@@ -230,62 +249,112 @@
     }
 
     .badge-rarity {
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        padding: 0.1rem 0.3rem;
-        border-radius: 3px;
+        color: var(--text-muted);
     }
 
-    .badge-rarity.common { color: #9ca3af; }
-    .badge-rarity.uncommon { color: #4ade80; }
-    .badge-rarity.rare { color: #60a5fa; }
-    .badge-rarity.legendary { color: #fbbf24; }
-
-    .badge-detail {
-        background: rgba(201, 168, 124, 0.05);
-        border: 1px solid rgba(201, 168, 124, 0.2);
-        border-radius: 8px;
+    /* Modal */
+    .badge-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
         padding: 1rem;
     }
 
-    .badge-detail-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 0.5rem;
+    .badge-modal {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 340px;
+        width: 100%;
+        text-align: center;
+        position: relative;
     }
 
-    .detail-icon {
-        font-size: 2rem;
+    .badge-modal-close {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.25rem;
+        cursor: pointer;
+        line-height: 1;
     }
 
-    .badge-detail h4 {
-        margin: 0;
-        color: var(--text);
-        font-size: 0.95rem;
+    .badge-modal-close:hover { color: var(--text); }
+
+    .badge-modal-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
     }
 
-    .detail-rarity {
+    .badge-modal-icon.unlocked { opacity: 1; }
+
+    .badge-modal-info { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .badge-modal-rarity {
         font-size: 0.65rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
     }
 
-    .detail-rarity.common { color: #9ca3af; }
-    .detail-rarity.uncommon { color: #4ade80; }
-    .detail-rarity.rare { color: #60a5fa; }
-    .detail-rarity.legendary { color: #fbbf24; }
+    .badge-modal-rarity.common { color: var(--text-muted); }
+    .badge-modal-rarity.uncommon { color: #4ade80; }
+    .badge-modal-rarity.rare { color: #60a5fa; }
+    .badge-modal-rarity.legendary { color: #fbbf24; }
 
-    .detail-desc {
+    .badge-modal-name {
+        font-family: var(--font-heading);
+        font-size: 1.25rem;
+        color: var(--text);
+        margin: 0;
+    }
+
+    .badge-modal-desc {
         color: var(--text-dim);
         font-size: 0.85rem;
-        margin: 0.5rem 0;
+        margin: 0;
+        line-height: 1.5;
     }
 
-    .detail-unlocked {
-        color: var(--accent);
+    .badge-modal-date {
         font-size: 0.75rem;
+        color: var(--accent);
         margin: 0;
+    }
+
+    .badge-modal-hint {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin: 0;
+        font-style: italic;
+    }
+
+    .badge-share-btn {
+        margin-top: 1rem;
+        padding: 0.5rem 1.25rem;
+        background: var(--accent-bg);
+        border: 1px solid var(--accent-border);
+        border-radius: 999px;
+        color: var(--accent);
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .badge-share-btn:hover {
+        background: var(--accent);
+        color: var(--bg);
     }
 </style>

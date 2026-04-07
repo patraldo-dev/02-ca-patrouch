@@ -559,5 +559,7 @@
   "write.view.feedback_unpublished": "Movido a borradores",
   "write.view.feedback_error": "Algo salió mal",
   "common.theme_light": "Claro",
-  "common.theme_dark": "Oscuro"
+  "common.theme_dark": "Oscuro",
+  "badges.locked_hint": "¡Sigue escribiendo para desbloquear esta insignia!",
+  "badges.share": "Compartir"
 }

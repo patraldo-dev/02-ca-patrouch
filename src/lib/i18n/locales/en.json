@@ -559,5 +559,7 @@
   "write.view.feedback_unpublished": "Moved to drafts",
   "write.view.feedback_error": "Something went wrong",
   "common.theme_light": "Light",
-  "common.theme_dark": "Dark"
+  "common.theme_dark": "Dark",
+  "badges.locked_hint": "Keep writing to unlock this badge!",
+  "badges.share": "Share"
 }
