@@ -1,7 +1,21 @@
 <script>
     import { t } from '$lib/i18n';
+    import { page } from '$app/stores';
 
     let { data } = $props();
+
+    let confirmMessage = $state('');
+    $effect(() => {
+        const params = $page.url.searchParams;
+        if (params.get('confirmed') === 'success') {
+            confirmMessage = $t('newsletter.confirmed_success');
+            // Clean URL
+            window.history.replaceState({}, '', '/');
+        } else if (params.get('confirmed') === 'already') {
+            confirmMessage = $t('newsletter.confirmed_already');
+            window.history.replaceState({}, '', '/');
+        }
+    });
 
     const categories = [
         { key: 'prompts', icon: '✨' },
@@ -107,6 +121,12 @@
 <svelte:head>
     <title>{$t('pages.home.title')}</title>
 </svelte:head>
+
+{#if confirmMessage}
+    <div class="confirm-toast">
+        <span>{confirmMessage}</span>
+    </div>
+{/if}
 
 <!-- HERO -->
 <section class="hero">
@@ -216,6 +236,25 @@
 </section>
 
 <style>
+    .confirm-toast {
+        position: fixed;
+        top: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent);
+        color: var(--bg);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        z-index: 9999;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateX(-50%) translateY(-1rem); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
     /* ── Hero ── */
     .hero {
         position: relative;

@@ -585,5 +585,7 @@
   "profile.display_name_placeholder": "Display name",
   "forgot.sending": "Sending...",
   "forgot.send_link": "Send Reset Link",
-  "write.start_placeholder": "Start writing..."
+  "write.start_placeholder": "Start writing...",
+  "newsletter.confirmed_success": "You're subscribed! Every Sunday at 9 AM CST, your Weekly Spark arrives in your inbox.",
+  "newsletter.confirmed_already": "You're already subscribed. Your Weekly Spark arrives every Sunday at 9 AM CST."
 }

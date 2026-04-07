@@ -585,5 +585,7 @@
   "profile.display_name_placeholder": "Nombre visible",
   "forgot.sending": "Enviando...",
   "forgot.send_link": "Enviar enlace de restablecimiento",
-  "write.start_placeholder": "Empieza a escribir..."
+  "write.start_placeholder": "Empieza a escribir...",
+  "newsletter.confirmed_success": "¡Estás suscrito! Cada domingo a las 9 AM CST, tu Chispa Semanal llega a tu bandeja.",
+  "newsletter.confirmed_already": "Ya estás suscrito. Tu Chispa Semanal llega cada domingo a las 9 AM CST."
 }

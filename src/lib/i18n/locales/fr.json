@@ -585,5 +585,7 @@
   "profile.display_name_placeholder": "Nom d'affichage",
   "forgot.sending": "Envoi en cours...",
   "forgot.send_link": "Envoyer le lien de réinitialisation",
-  "write.start_placeholder": "Commence à écrire..."
+  "write.start_placeholder": "Commence à écrire...",
+  "newsletter.confirmed_success": "Tu es abonné ! Chaque dimanche à 9h CST, ton Étincelle Hebdomadaire arrive dans ta boîte.",
+  "newsletter.confirmed_already": "Tu es déjà abonné. Ton Étincelle Hebdomadaire arrive chaque dimanche à 9h CST."
 }
