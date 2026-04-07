@@ -128,7 +128,7 @@
             onScroll();
             setTimeout(initObserver, 100);
             // Check onboarding for new users
-            if (data?.user && !data.user.onboarding_completed) {
+            if (data?.user && !data.onboarding_completed) {
                 showOnboarding = true;
             }
         }
