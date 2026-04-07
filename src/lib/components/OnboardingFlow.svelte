@@ -1,8 +1,7 @@
 <script>
-    import { goto } from '$app/navigation';
     import { t } from '$lib/i18n';
 
-    let { user, prompt } = $props();
+    let { user, prompt, onclose } = $props();
 
     let step = $state(0);
     let animating = $state(false);
@@ -62,7 +61,8 @@
         try {
             localStorage.setItem('onboarding_complete', 'true');
         } catch {}
-        goto('/write');
+        // Notify parent to close the overlay
+        onclose?.();
     }
 </script>
 

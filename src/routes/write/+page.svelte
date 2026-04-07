@@ -297,6 +297,13 @@
 
             <!-- Sidebar -->
             <aside class="write-sidebar">
+                {#if !showOnboarding}
+                    <button class="tour-link" onclick={() => { localStorage.removeItem('onboarding_complete'); showOnboarding = true; }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        Show tour
+                    </button>
+                {/if}
+
                 {#if stats}
                     <div class="stats-card">
                         <h3>{$t('write.dashboard.your_stats')}</h3>
@@ -398,7 +405,7 @@
 {/if}
 
 {#if showOnboarding}
-    <OnboardingFlow user={data.user} prompt={prompt} />
+    <OnboardingFlow user={data.user} prompt={prompt} onclose={() => showOnboarding = false} />
 {/if}
 
 <style>
@@ -786,6 +793,22 @@
     }
 
     .btn-glass:hover { border-color: var(--accent); color: var(--accent); }
+
+    .tour-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        cursor: pointer;
+        padding: 0.3rem 0;
+        margin-bottom: 1rem;
+        transition: color 0.2s;
+    }
+
+    .tour-link:hover { color: var(--accent); }
 
     /* Sidebar */
     .stats-card, .recent-card {
