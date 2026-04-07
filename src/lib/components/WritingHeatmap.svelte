@@ -19,8 +19,7 @@
 
     function buildGrid(data) {
         const today = new Date();
-        const startDate = new Date(today);
-        startDate.setDate(today.getDate() - 182); // 6 months, not 12
+        const startDate = new Date(today.getFullYear(), 3, 1); // April 1 of current year
         const dayOfWeek = startDate.getDay();
         const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         startDate.setDate(startDate.getDate() + mondayOffset);
