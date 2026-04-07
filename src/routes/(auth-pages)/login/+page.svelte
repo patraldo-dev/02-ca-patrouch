@@ -154,7 +154,7 @@
     .login-header h1 {
         font-size: 31px;
         font-weight: 700;
-        color: #ffffff;
+        color: var(--text);
         margin: 0 0 12px 0;
     }
     
@@ -219,7 +219,7 @@
         font-size: 16px;
         transition: border-color 0.2s, box-shadow 0.2s;
         background: #1c1c21;
-        color: #ffffff;
+        color: var(--text);
     }
     
     .form-group input:focus {
