@@ -38,11 +38,19 @@ export async function PUT({ request, locals, params }) {
     return json({ success: true, wordCount });
 }
 
-export async function DELETE({ request, locals, params }) {
+export async function DELETE({ request, locals, params, platform }) {
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
     await locals.db.prepare('DELETE FROM writings WHERE id = ? AND user_id = ?')
         .bind(params.id, locals.user.id).run();
+
+    // Remove from Vectorize
+    try {
+        const vectorize = platform?.env?.VECTORIZE;
+        if (vectorize) await vectorize.deleteByIds([params.id]);
+    } catch (e) {
+        console.error('Vectorize delete error:', e);
+    }
 
     return json({ success: true });
 }

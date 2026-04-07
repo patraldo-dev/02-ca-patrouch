@@ -23,7 +23,7 @@ export async function POST({ request, platform }) {
         // Get all public published writings
         const { results: writings } = await db.prepare(`
             SELECT id, title, content FROM writings
-            WHERE visibility = 'public' AND status = 'published'
+            WHERE content IS NOT NULL AND content != ''
         `).all();
 
         if (!writings?.length) {
