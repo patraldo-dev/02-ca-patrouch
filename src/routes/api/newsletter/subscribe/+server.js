@@ -1,67 +1,68 @@
 // src/routes/api/newsletter/subscribe/+server.js
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 
-// Function to generate a random token
 function generateToken() {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-/** @type {import('./$types').RequestHandler} */
 export async function POST({ request, platform }) {
     try {
-        const { email } = await request.json();
-        
+        const { email, type = 'daily-prompt' } = await request.json();
+
         if (!email) {
             return json({ error: 'Email is required' }, { status: 400 });
         }
-        
-        // Validate email format
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return json({ error: 'Invalid email format' }, { status: 400 });
         }
-        
+
         if (!platform?.env?.DB_book) {
             return json({ error: 'Database not available' }, { status: 500 });
         }
-        
+
         const db = platform.env.DB_book;
-        
-        // Check if email already exists in the 'subscribers' table
-        const existing = await db.prepare(`
-            SELECT id, confirmed FROM subscribers WHERE email = ? AND type = ?
-        `).bind(email, 'newsletter').first();
-        
+
+        // Check if already subscribed
+        const existing = await db.prepare(
+            'SELECT id, confirmed FROM subscribers WHERE email = ? AND type = ?'
+        ).bind(email, type).first();
+
         if (existing) {
             if (existing.confirmed) {
-                return json({ error: 'Email already subscribed and confirmed' }, { status: 400 });
+                return json({ error: 'Already subscribed' }, { status: 400 });
             } else {
-                return json({ error: 'Email already subscribed but not confirmed. Please check your email.' }, { status: 400 });
+                // Resend confirmation
+                const token = generateToken();
+                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                await db.prepare(
+                    'UPDATE subscribers SET confirmation_token = ?, token_expires_at = ? WHERE id = ?'
+                ).bind(token, expiresAt, existing.id).run();
+                return json({
+                    success: true,
+                    message: 'Confirmation resent. Check your email.',
+                    requiresConfirmation: true
+                });
             }
         }
-        
-        // Generate a confirmation token
+
         const token = generateToken();
-        
-        // Set expiration time (24 hours from now)
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-        
-        // Add new subscriber with confirmation token to the 'subscribers' table
-        await db.prepare(`
-            INSERT INTO subscribers (email, type, confirmation_token, token_expires_at, confirmed, created_at)
-            VALUES (?, ?, ?, ?, 0, ?)
-        `).bind(email, 'newsletter', token, expiresAt, new Date().toISOString()).run();
-        
-        // Return success with the confirmation URL
-        return json({ 
-            success: true, 
-            message: 'Subscription initiated. Please check your email to confirm.',
-            confirmationUrl: `/newsletter/confirm?token=${token}`
+
+        await db.prepare(
+            'INSERT INTO subscribers (email, type, confirmation_token, token_expires_at, confirmed, created_at) VALUES (?, ?, ?, ?, 0, ?)'
+        ).bind(email, type, token, expiresAt, new Date().toISOString()).run();
+
+        return json({
+            success: true,
+            message: 'Subscription initiated. Check your email to confirm.',
+            requiresConfirmation: true
         });
     } catch (error) {
-        console.error('Newsletter subscription error:', error);
+        console.error('Subscription error:', error);
         return json({ error: 'Internal server error' }, { status: 500 });
     }
 }
