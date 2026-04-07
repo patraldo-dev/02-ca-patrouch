@@ -1,6 +1,7 @@
 <!-- src/routes/(auth-pages)/forgot-password/+page.svelte -->
 <script>
     import { browser } from '$app/environment';
+    import { t } from '$lib/i18n';
 
     let email = '';
     let error = '';
@@ -65,7 +66,7 @@
                 />
             </div>
             <button type="submit" disabled={isLoading}>
-                {isLoading ? $t('forgot.sending') : $t('forgot.send_link')}
+                {isLoading ? t('forgot.sending') : t('forgot.send_link')}
             </button>
         </form>
 
