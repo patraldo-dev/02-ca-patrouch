@@ -14,6 +14,8 @@ export async function sendMailgunEmail(to, subject, html, text, env) {
     formData.append('subject', subject);
     formData.append('html', html);
     formData.append('text', text);
+    formData.append('o:tracking-clicks', 'no');
+    formData.append('o:tracking-opens', 'no');
 
     const response = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
         method: 'POST',
