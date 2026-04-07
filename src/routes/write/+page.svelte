@@ -1,6 +1,6 @@
 <script>
     import { page } from '$app/stores';
-    import { goto } from '$app/navigation';
+    import { goto, invalidateAll } from '$app/navigation';
     import { t, locale, getLocale } from '$lib/i18n';
     import { track } from '$lib/analytics';
     import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
@@ -10,7 +10,12 @@
     import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
     import { browser } from '$app/environment';
 
+    import { onMount } from 'svelte';
+
     let { data } = $props();
+
+    // Invalidate server data on mount to ensure fresh prompt/pass count
+    onMount(() => { invalidateAll(); });
 
     // Check if onboarding should be shown
     let showOnboarding = $state(false);
