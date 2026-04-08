@@ -616,5 +616,17 @@
   "signup.login_link": "Log in",
   "signup.success": "Account created! Check your email to verify your address.",
   "signup.failed": "Signup failed. Please try again.",
-  "signup.network_error": "Network error. Please try again."
+  "signup.network_error": "Network error. Please try again.",
+  "common.nav.evaluate": "Evaluate",
+  "evaluate.title": "AI Writing Evaluation",
+  "evaluate.description": "Paste your writing and get honest, constructive feedback from AI. Raw drafts welcome — this tool values originality and risk-taking over polish.",
+  "evaluate.placeholder": "Paste your writing here... (minimum 50 characters)",
+  "evaluate.submit": "Evaluate",
+  "evaluate.evaluating": "Evaluating...",
+  "evaluate.error_short": "Please enter at least 50 characters.",
+  "evaluate.error_generic": "Evaluation failed. Please try again.",
+  "evaluate.result_title": "Evaluation Results",
+  "evaluate.try_again": "Evaluate Another Text",
+  "evaluate.privacy_note": "Your text is evaluated privately on our servers. It is never shared, stored, or used for training.",
+  "evaluate.locale_label": "Evaluation language"
 }

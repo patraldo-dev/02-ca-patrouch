@@ -616,5 +616,17 @@
   "signup.login_link": "Connecte-toi",
   "signup.success": "Compte créé ! Vérifie ton e-mail pour confirmer ton adresse.",
   "signup.failed": "Inscription échouée. Réessaie.",
-  "signup.network_error": "Erreur réseau. Réessaie."
+  "signup.network_error": "Erreur réseau. Réessaie.",
+  "common.nav.evaluate": "Évaluer",
+  "evaluate.title": "Évaluation d'Écriture par IA",
+  "evaluate.description": "Colle ton texte et reçois des retours honnêtes et constructifs de l'IA. Les brouillons bruts sont les bienvenus — cet outil valorise l'originalité et la prise de risque plutôt que la perfection.",
+  "evaluate.placeholder": "Colle ton texte ici... (minimum 50 caractères)",
+  "evaluate.submit": "Évaluer",
+  "evaluate.evaluating": "Évaluation en cours...",
+  "evaluate.error_short": "Entre au moins 50 caractères.",
+  "evaluate.error_generic": "L'évaluation a échoué. Réessaie.",
+  "evaluate.result_title": "Résultats de l'Évaluation",
+  "evaluate.try_again": "Évaluer un Autre Texte",
+  "evaluate.privacy_note": "Ton texte est évalué privément sur nos serveurs. Il n'est jamais partagé, stocké ni utilisé pour l'entraînement.",
+  "evaluate.locale_label": "Langue d'évaluation"
 }

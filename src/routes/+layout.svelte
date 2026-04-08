@@ -160,6 +160,9 @@
                 <a href="/" class:active={$page.url.pathname === '/'}>{$t('common.nav.home')}</a>
                 <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
                 <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
+                {#if data?.user}
+                <a href="/evaluate" class:active={$page.url.pathname.startsWith('/evaluate')}>{$t('common.nav.evaluate')}</a>
+                {/if}
             </nav>
 
             <!-- Desktop: Lang + Auth -->
@@ -234,6 +237,9 @@
                 <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
                 <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
+                {#if data?.user}
+                <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
+                {/if}
                 <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
             </nav>
             <div class="mobile-lang">

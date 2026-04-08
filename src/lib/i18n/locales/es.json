@@ -616,5 +616,17 @@
   "signup.login_link": "Inicia sesión",
   "signup.success": "¡Cuenta creada! Revisa tu correo para verificar tu dirección.",
   "signup.failed": "El registro falló. Intenta de nuevo.",
-  "signup.network_error": "Error de red. Intenta de nuevo."
+  "signup.network_error": "Error de red. Intenta de nuevo.",
+  "common.nav.evaluate": "Evaluar",
+  "evaluate.title": "Evaluación de Escritura con IA",
+  "evaluate.description": "Pega tu texto y recibe retroalimentación honesta y constructiva de la IA. Los borradores crudos son bienvenidos — esta herramienta valora la originalidad y el riesgo sobre la perfección.",
+  "evaluate.placeholder": "Pega tu texto aquí... (mínimo 50 caracteres)",
+  "evaluate.submit": "Evaluar",
+  "evaluate.evaluating": "Evaluando...",
+  "evaluate.error_short": "Ingresa al menos 50 caracteres.",
+  "evaluate.error_generic": "La evaluación falló. Intenta de nuevo.",
+  "evaluate.result_title": "Resultados de la Evaluación",
+  "evaluate.try_again": "Evaluar Otro Texto",
+  "evaluate.privacy_note": "Tu texto se evalúa privadamente en nuestros servidores. Nunca se comparte, almacena ni se usa para entrenamiento.",
+  "evaluate.locale_label": "Idioma de evaluación"
 }
