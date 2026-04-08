@@ -44,6 +44,7 @@
     let activeDisplayName = $state(data.activeProfile?.display_name || data.user?.username || '');
     let profileLoading = $state(false);
     let showOnboarding = $state(false);
+    let onboardingDismissed = $state(false);
 
     async function loadProfiles() {
         try {
@@ -128,7 +129,7 @@
             onScroll();
             setTimeout(initObserver, 100);
             // Check onboarding for new users
-            if (data?.user && !data.onboarding_completed) {
+            if (data?.user && !data.onboarding_completed && !onboardingDismissed) {
                 showOnboarding = true;
             }
         }
@@ -279,6 +280,7 @@
         {#if showOnboarding}
             <OnboardingFlow user={data.user} onclose={async () => {
                 showOnboarding = false;
+                onboardingDismissed = true;
                 try { await fetch('/api/onboarding', { method: 'POST' }); } catch {}
             }} />
         {/if}
