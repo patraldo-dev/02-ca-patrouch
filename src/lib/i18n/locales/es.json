@@ -54,7 +54,7 @@
   "pages.home.works.comingSoon.desc": "Nuevos proyectos en desarrollo. Mantente atento a los anuncios.",
   "pages.home.about.label": "Acerca de",
   "pages.home.about.heading": "Sobre Este Espacio",
-  "pages.home.about.paragraph1": "Este es un lugar para todo el que quiera escribir. Ya seas un autor experimentado o tomes un bolígrafo por primera vez, encontrarás una semilla creativa diaria, un espacio tranquilo para trabajar y una comunidad con quien compartir tus palabras.",
+  "pages.home.about.paragraph1": "Este es un espacio creativo para escritores adultos. Seas un autor experimentado o estés encontrando tu voz por primera vez, encontrarás una chispa diaria, un lugar tranquilo para escribir y una comunidad con quien compartir tus palabras.",
   "pages.home.about.paragraph2": "Acepta el estímulo del día o pasa al siguiente. Escribe libremente o deja que el estímulo comunitario encienda algo inesperado. Tus estadísticas registran tu camino — rachas, palabras, crecimiento.",
   "pages.home.categories.label": "Explorar",
   "pages.home.categories.heading": "Categorías",
@@ -606,5 +606,15 @@
   "pages.home.explore.weekly_challenge": "Reto Semanal",
   "pages.home.explore.writer_of_week": "Escritor de la Semana",
   "pages.home.explore.sprints": "Sprints de Escritura",
-  "pages.home.explore.badges": "Insignias y Trofeos"
+  "pages.home.explore.badges": "Insignias y Trofeos",
+  "signup.adult_confirm": "Confirmo que tengo 18 años o más.",
+  "signup.age_required": "Debes tener 18 años o más para usar esta plataforma.",
+  "signup.password_mismatch": "Las contraseñas no coinciden.",
+  "signup.creating": "Creando cuenta...",
+  "signup.button": "Crear Cuenta",
+  "signup.have_account": "¿Ya tienes una cuenta?",
+  "signup.login_link": "Inicia sesión",
+  "signup.success": "¡Cuenta creada! Revisa tu correo para verificar tu dirección.",
+  "signup.failed": "El registro falló. Intenta de nuevo.",
+  "signup.network_error": "Error de red. Intenta de nuevo."
 }

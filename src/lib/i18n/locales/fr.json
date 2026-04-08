@@ -54,7 +54,7 @@
   "pages.home.works.comingSoon.desc": "Nouveaux projets en développement. Restez à l'écoute des annonces.",
   "pages.home.about.label": "À propos",
   "pages.home.about.heading": "À Propos de Cet Espace",
-  "pages.home.about.paragraph1": "C'est un lieu pour tous ceux qui veulent écrire. Que vous soyez un auteur chevronné ou que vous preniez un stylo pour la première fois, vous trouverez une graine créative quotidienne, un espace calme pour travailler et une communauté pour partager vos mots.",
+  "pages.home.about.paragraph1": "Ceci est un espace créatif pour écrivains adultes. Que tu sois un auteur chevronné ou que tu trouves ta voix pour la première fois, tu trouveras une étincelle quotidienne, un lieu tranquille pour écrire et une communauté pour partager tes mots.",
   "pages.home.about.paragraph2": "Acceptez la stimulation du jour ou passez à la suivante. Écrivez librement ou laissez la stimulation communautaire enflammer quelque chose d'inattendu. Vos statistiques suivent votre parcours — séries, mots, croissance.",
   "pages.home.categories.label": "Explorer",
   "pages.home.categories.heading": "Catégories",
@@ -606,5 +606,15 @@
   "pages.home.explore.weekly_challenge": "Défi Hebdomadaire",
   "pages.home.explore.writer_of_week": "Écrivain de la Semaine",
   "pages.home.explore.sprints": "Sprints d'Écriture",
-  "pages.home.explore.badges": "Badges et Trophées"
+  "pages.home.explore.badges": "Badges et Trophées",
+  "signup.adult_confirm": "Je confirme avoir 18 ans ou plus.",
+  "signup.age_required": "Tu dois avoir 18 ans ou plus pour utiliser cette plateforme.",
+  "signup.password_mismatch": "Les mots de passe ne correspondent pas.",
+  "signup.creating": "Création du compte...",
+  "signup.button": "Créer un Compte",
+  "signup.have_account": "Tu as déjà un compte ?",
+  "signup.login_link": "Connecte-toi",
+  "signup.success": "Compte créé ! Vérifie ton e-mail pour confirmer ton adresse.",
+  "signup.failed": "Inscription échouée. Réessaie.",
+  "signup.network_error": "Erreur réseau. Réessaie."
 }

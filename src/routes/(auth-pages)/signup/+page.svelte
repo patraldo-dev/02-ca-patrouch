@@ -1,7 +1,10 @@
 <!-- src/routes/(auth-pages)/signup/+page.svelte -->
 <script>
     import { browser } from '$app/environment';
+    import { t } from '$lib/i18n';
+    import { getLocale } from '$lib/i18n';
 
+    let isAdult = $state(false);
     let username = $state('');
     let email = $state('');
     let password = $state('');
@@ -11,8 +14,12 @@
     let isLoading = $state(false);
 
     async function handleSignup() {
+        if (!isAdult) {
+            error = $t('signup.age_required');
+            return;
+        }
         if (password !== confirmPassword) {
-            error = 'Passwords do not match';
+            error = $t('signup.password_mismatch');
             return;
         }
 
@@ -30,13 +37,13 @@
             const result = await response.json();
 
             if (response.ok) {
-                success = 'Account created! Please check your email to verify your address.';
+                success = $t('signup.success');
             } else {
-                error = result.error || 'Signup failed. Please try again.';
+                error = result.error || $t('signup.failed');
             }
         } catch (err) {
             console.error('Signup error:', err);
-            error = 'Network error. Please try again.';
+            error = $t('signup.network_error');
         } finally {
             isLoading = false;
         }
@@ -115,17 +122,22 @@ id="confirmPassword"
             />
         </div>
 
+        <div class="checkbox-group">
+            <input type="checkbox" id="adult" bind:checked={isAdult} required disabled={isLoading} />
+            <label for="adult">{$t('signup.adult_confirm')}</label>
+        </div>
+
         {#if error}
             <p style="color: red; margin-top: 1rem;">{error}</p>
         {/if}
 
         <button type="submit" disabled={isLoading}>
-            {isLoading ? 'Creating account...' : 'Sign Up'}
+            {isLoading ? $t('signup.creating') : $t('signup.button')}
         </button>
     </form>
 
     <p style="margin-top: 1rem;">
-        Already have an account? <a href="/login">Log in</a>
+        {$t('signup.have_account')} <a href="/login">{$t('signup.login_link')}</a>
     </p>
 </main>
 
@@ -157,6 +169,24 @@ id="confirmPassword"
         display: block;
         margin-bottom: 0.25rem;
         color: var(--text-dim);
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: auto;
+        accent-color: var(--accent);
+    }
+
+    .checkbox-group label {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        cursor: pointer;
     }
 
     input {
