@@ -17,10 +17,39 @@
         }
     });
 
-    const categories = [
-        { key: 'prompts', icon: '✨' },
-        { key: 'agora', icon: '🏛️' },
-        { key: 'writing', icon: '📝' }
+    const exploreGroups = [
+        {
+            key: 'genres',
+            icon: '📚',
+            items: [
+                { key: 'fiction', href: '/agora?category=fiction' },
+                { key: 'poetry', href: '/agora?category=poetry' },
+                { key: 'memoir', href: '/agora?category=memoir' },
+                { key: 'sci-fi', href: '/agora?category=sci-fi' },
+                { key: 'mystery', href: '/agora?category=mystery' },
+                { key: 'romance', href: '/agora?category=romance' },
+                { key: 'fantasy', href: '/agora?category=fantasy' },
+                { key: 'creative-nonfiction', href: '/agora?category=creative-non-fiction' }
+            ]
+        },
+        {
+            key: 'games',
+            icon: '🎮',
+            items: [
+                { key: 'find_the_ai', href: '/agora' },
+                { key: 'challenges', href: '/write' },
+                { key: 'weekly_challenge', href: '/write' }
+            ]
+        },
+        {
+            key: 'community',
+            icon: '🤝',
+            items: [
+                { key: 'writer_of_week', href: '/agora' },
+                { key: 'sprints', href: '/agora' },
+                { key: 'badges', href: '/profile' }
+            ]
+        }
     ];
 
     // Check reduced motion preference
@@ -188,21 +217,21 @@
         <h2 class="fade-in">{$t('pages.home.works.heading')}</h2>
         <p class="section-desc fade-in">{$t('pages.home.works.description')}</p>
         <div class="works-grid" bind:this={worksGridEl}>
-            <article class="glass-card">
+            <a href="/write" class="glass-card">
                 <span class="card-icon">✨</span>
                 <h3>{$t('pages.home.works.prompts')}</h3>
                 <p>{$t('pages.home.works.prompts.desc')}</p>
-            </article>
-            <article class="glass-card">
+            </a>
+            <a href="/agora" class="glass-card">
                 <span class="card-icon">🏛️</span>
                 <h3>{$t('pages.home.works.agora')}</h3>
                 <p>{$t('pages.home.works.agora.desc')}</p>
-            </article>
-            <article class="glass-card">
+            </a>
+            <a href="/profile" class="glass-card">
                 <span class="card-icon">📊</span>
                 <h3>{$t('pages.home.works.stats')}</h3>
                 <p>{$t('pages.home.works.stats.desc')}</p>
-            </article>
+            </a>
         </div>
     </div>
 </section>
@@ -219,16 +248,20 @@
     </div>
 </section>
 
-<!-- CATEGORIES -->
-<section class="section categories-section">
+<!-- EXPLORE -->
+<section class="section explore-section">
     <div class="container">
-        <div class="section-label fade-in">{$t('pages.home.categories.label')}</div>
-        <h2 class="fade-in">{$t('pages.home.categories.heading')}</h2>
-        <div class="categories-grid fade-in">
-            {#each categories as cat}
-                <div class="category-item">
-                    <span class="category-icon">{cat.icon}</span>
-                    <span class="category-name">{$t(`pages.home.categories.${cat.key}`)}</span>
+        <div class="section-label fade-in">{$t('pages.home.explore.label')}</div>
+        <h2 class="fade-in">{$t('pages.home.explore.heading')}</h2>
+        <div class="explore-grid fade-in">
+            {#each exploreGroups as group}
+                <div class="explore-group">
+                    <h3 class="explore-group-title"><span class="explore-group-icon">{group.icon}</span> {$t(`pages.home.explore.${group.key}`)}</h3>
+                    <div class="explore-tags">
+                        {#each group.items as item}
+                            <a href={item.href} class="explore-tag">{$t(`pages.home.explore.${item.key}`)}</a>
+                        {/each}
+                    </div>
                 </div>
             {/each}
         </div>
@@ -578,35 +611,54 @@
         margin-bottom: 1.5rem;
     }
 
-    /* ── Categories ── */
-    .categories-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
+    /* ── Explore ── */
+    .explore-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
         margin-top: 2rem;
     }
 
-    .category-item {
+    .explore-group-title {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 400;
+        color: var(--text);
+        margin: 0 0 1rem;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .explore-group-icon { font-size: 1.25rem; }
+
+    .explore-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .explore-tag {
+        display: inline-block;
+        padding: 0.5rem 1rem;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 100px;
-        padding: 0.75rem 1.5rem;
-        transition: border-color 0.2s;
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.2s;
     }
 
-    .category-item:hover {
+    .explore-tag:hover {
         border-color: var(--accent);
+        color: var(--accent);
     }
 
-    .category-icon {
-        font-size: 1.25rem;
+    /* ── Glass Cards (make links work) ── */
+    .glass-card {
+        text-decoration: none;
     }
-
-    .category-name {
-        font-size: 0.9rem;
         font-weight: 500;
         color: var(--text-dim);
     }
