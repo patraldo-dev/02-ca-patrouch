@@ -16,72 +16,32 @@ export async function POST({ request, platform, locals }) {
             return json({ error: 'Text must be at least 50 characters' }, { status: 400 });
         }
 
-        const prompts = {
-            en: `You are a literary editor reviewing a first draft written in stream-of-consciousness style. This is raw, unrevised prose — expect imperfections, run-on sentences, and apparent incoherence. Your job is NOT to judge the polish, but to find the moments where a genuine authorial voice emerges.
-
-For each moment you identify:
-1. Quote it exactly
-2. Explain what makes it work
-3. Rate its strength 1-10
-
-Then give:
-- Overall assessment: does the raw material justify revision?
-- What specific passages should the author prioritize?
-- A score for each dimension (1-10): Vocabulary richness, Structural intent, Emotional impact, Originality, Craft
-- Weighted overall score (1-100)
-
-Be honest but generous. This platform values risk-taking and originality over polish.
-
-TEXT TO EVALUATE:
----
-{text}`,
-
-            es: `Eres un editor literario revisando un primer borrador escrito en estilo de flujo de conciencia. Es prosa cruda, sin revisar — espera imperfecciones, oraciones largas e incoherencia aparente. Tu trabajo NO es juzgar la pulcritud, sino encontrar los momentos donde emerge una voz auténtica.
-
-Por cada momento que identifiques:
-1. Cítalo exactamente
-2. Explica qué lo hace funcionar
-3. Califícalo 1-10
-
-Luego da:
-- Evaluación general: ¿justifica el material en bruto una revisión?
-- ¿Qué pasajes específicos debería priorizar el autor?
-- Puntaje en cada dimensión (1-10): Riqueza de vocabulario, Intención estructural, Impacto emocional, Originalidad, Oficio
-- Puntaje global ponderado (1-100)
-
-Sé honesto pero generoso. Esta plataforma valora el riesgo y la originalidad sobre la perfección.
-
-TEXTO A EVALUAR:
----
-{text}`,
-
-            fr: `Tu es un éditeur littéraire qui révise un premier brouillon écrit en style de flux de conscience. C'est de la prose brute, non révisée — attends des imperfections, des phrases interminables et une incohérence apparente. Ton travail n'est PAS de juger la finesse, mais de trouver les moments où une véritable voix d'auteur émerge.
-
-Pour chaque moment que tu identifies :
-1. Cite-le exactement
-2. Explique ce qui fait qu'il fonctionne
-3. Note-le 1-10
-
-Puis donne :
-- Évaluation générale : le matériel brut justifie-t-il une révision ?
-- Quels passages spécifiques l'auteur devrait-il prioriser ?
-- Score pour chaque dimension (1-10) : Richesse du vocabulaire, Intention structurale, Impact émotionnel, Originalité, Métier
-- Score global pondéré (1-100)
-
-Sois honnête mais généreux. Cette plateforme valorise la prise de risque et l'originalité plutôt que la perfection.
-
-TEXTE À ÉVALUER :
----
-{text}`
+        const systems = {
+            en: `You are a literary editor. You MUST base your analysis ONLY on the text provided below. Do NOT invent, fabricate, or assume content that is not explicitly in the text. When quoting, copy the exact words from the text. This is raw, unrevised stream-of-consciousness prose — expect imperfections. Find the moments where a genuine authorial voice emerges. Quote each moment exactly, explain what works, rate 1-10. Then score: Vocabulary richness, Structural intent, Emotional impact, Originality, Craft (each 1-10). Give a weighted overall score 1-100. Be honest but generous — this platform values risk-taking over polish.`,
+            es: `Eres un editor literario. DEBES basar tu análisis SOLO en el texto proporcionado abajo. NO inventes, fabriques o asumas contenido que no esté explícitamente en el texto. Al citar, copia las palabras exactas del texto. Es prosa cruda de flujo de conciencia — espera imperfecciones. Encuentra los momentos donde emerge una voz auténtica. Cita cada momento exactamente, explica qué funciona, califica 1-10. Luego puntúa: Riqueza de vocabulario, Intención estructural, Impacto emocional, Originalidad, Oficio (cada uno 1-10). Da un puntaje global ponderado 1-100. Sé honesto pero generoso — esta plataforma valora el riesgo sobre la perfección.`,
+            fr: `Tu es un éditeur littéraire. Tu DOIS baser ton analyse UNIQUEMENT sur le texte fourni ci-dessous. N'invente PAS, ne fabrique PAS et n'assume PAS de contenu qui n'est pas explicitement dans le texte. En citant, copie les mots exacts du texte. C'est de la prose brute en flux de conscience — attends des imperfections. Trouve les moments où une véritable voix émerge. Cite chaque moment exactement, explique ce qui fonctionne, note 1-10. Puis score : Richesse du vocabulaire, Intention structurale, Impact émotionnel, Originalité, Métier (chacun 1-10). Donne un score global pondéré 1-100. Sois honnête mais généreux — cette plateforme valorise la prise de risque plutôt que la perfection.`
         };
 
-        const prompt = prompts[locale] || prompts.en;
+        const labels = {
+            en: 'TEXT TO EVALUATE',
+            es: 'TEXTO A EVALUAR',
+            fr: 'TEXTE À ÉVALUER'
+        };
+
+        const system = systems[locale] || systems.en;
+        const label = labels[locale] || labels.en;
+        const prompt = `${label}:
+---
+${text}`;
 
         const response = await platform.env.AI.run(
             '@cf/mistralai/mistral-small-3.1-24b-instruct',
             {
-                prompt,
-                max_tokens: 2000
+                messages: [
+                    { role: 'system', content: system },
+                    { role: 'user', content: prompt }
+                ],
+                max_tokens: 3000
             }
         );
 
