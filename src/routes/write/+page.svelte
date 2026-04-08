@@ -660,7 +660,7 @@
         background: var(--bg);
         border: 2px solid var(--border);
         border-radius: 8px;
-        color: var(--text-body, #e4e4e7);
+        color: var(--text);
         font-family: var(--font-body);
         font-size: 0.95rem;
         outline: none;
