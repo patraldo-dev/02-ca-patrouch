@@ -197,8 +197,11 @@
         {:else}
             <div class="result-section">
                 <div class="result-header">
-                    <h2>{$t('evaluate.result_title')}</h2>
-                    <span class="result-date">{new Date(currentResult.created_at).toLocaleString()}</span>
+                    <div>
+                        <h2>{$t('evaluate.result_title')}</h2>
+                        <span class="result-date">{new Date(currentResult.created_at).toLocaleString()}</span>
+                    </div>
+                    <button class="btn-icon" onclick={async () => { await navigator.clipboard.writeText(currentResult.evaluation); }} title="Copy">📋</button>
                 </div>
                 <div class="result-body">
                     {#each currentResult.evaluation.split('\n') as line}
@@ -455,10 +458,23 @@
 
     .result-header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         margin-bottom: 1.5rem;
     }
+
+    .result-header > div { display: flex; flex-direction: column; gap: 0.25rem; }
+
+    .btn-icon {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.4rem 0.6rem;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    .btn-icon:hover { border-color: var(--accent); }
 
     .result-section h2 {
         font-family: var(--font-heading);
