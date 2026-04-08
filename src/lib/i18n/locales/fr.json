@@ -628,7 +628,7 @@
   "evaluate.result_title": "Résultats de l'Évaluation",
   "evaluate.try_again": "Évaluer un Autre Texte",
   "evaluate.privacy_note": "Ton texte est évalué privément sur nos serveurs. Il n'est jamais partagé, stocké ni utilisé pour l'entraînement.",
-  "evaluate.locale_label": "Langue d'évaluation",
+  "evaluate.locale_label": "Langue de l'analyse",
   "evaluate.history": "Historique",
   "evaluate.history_title": "Historique des Évaluations",
   "evaluate.history_empty": "Pas encore d'évaluations. Envoie ton premier texte ci-dessus.",
