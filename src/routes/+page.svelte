@@ -659,9 +659,6 @@
     .glass-card {
         text-decoration: none;
     }
-        font-weight: 500;
-        color: var(--text-dim);
-    }
 
     @media (min-width: 640px) {
         .works-grid { grid-template-columns: repeat(2, 1fr); }
