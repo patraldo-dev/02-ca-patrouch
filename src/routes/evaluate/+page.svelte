@@ -166,10 +166,6 @@
                         <option value="en">English</option>
                         <option value="es">Español</option>
                         <option value="fr">Français</option>
-                        <option value="en-es">Bilingual: EN/ES</option>
-                        <option value="en-fr">Bilingual: EN/FR</option>
-                        <option value="es-fr">Bilingual: ES/FR</option>
-                        <option value="en-es-fr">Trilingual: EN/ES/FR</option>
                     </select>
                 </div>
 
