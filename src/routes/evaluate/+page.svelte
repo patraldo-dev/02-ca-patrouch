@@ -168,7 +168,7 @@
                         <option value="fr">Français</option>
                         <option value="en-es">Bilingual: EN/ES</option>
                         <option value="en-fr">Bilingual: EN/FR</option>
-                        <option value="es-fr">Bilingüe: ES/FR</option>
+                        <option value="es-fr">Bilingual: ES/FR</option>
                     </select>
                 </div>
 
