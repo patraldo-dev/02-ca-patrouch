@@ -628,5 +628,13 @@
   "evaluate.result_title": "Evaluation Results",
   "evaluate.try_again": "Evaluate Another Text",
   "evaluate.privacy_note": "Your text is evaluated privately on our servers. It is never shared, stored, or used for training.",
-  "evaluate.locale_label": "Evaluation language"
+  "evaluate.locale_label": "Evaluation language",
+  "evaluate.history": "History",
+  "evaluate.history_title": "Evaluation History",
+  "evaluate.history_empty": "No evaluations yet. Submit your first text above.",
+  "evaluate.back_to_form": "Back to Form",
+  "evaluate.view": "View",
+  "evaluate.delete": "Delete",
+  "evaluate.download": "Download",
+  "evaluate.share": "Share"
 }

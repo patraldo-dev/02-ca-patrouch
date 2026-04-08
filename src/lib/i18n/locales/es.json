@@ -628,5 +628,13 @@
   "evaluate.result_title": "Resultados de la Evaluación",
   "evaluate.try_again": "Evaluar Otro Texto",
   "evaluate.privacy_note": "Tu texto se evalúa privadamente en nuestros servidores. Nunca se comparte, almacena ni se usa para entrenamiento.",
-  "evaluate.locale_label": "Idioma de evaluación"
+  "evaluate.locale_label": "Idioma de evaluación",
+  "evaluate.history": "Historial",
+  "evaluate.history_title": "Historial de Evaluaciones",
+  "evaluate.history_empty": "Sin evaluaciones aún. Envía tu primer texto arriba.",
+  "evaluate.back_to_form": "Volver al Formulario",
+  "evaluate.view": "Ver",
+  "evaluate.delete": "Eliminar",
+  "evaluate.download": "Descargar",
+  "evaluate.share": "Compartir"
 }

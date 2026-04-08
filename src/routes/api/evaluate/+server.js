@@ -9,6 +9,8 @@ export async function POST({ request, platform, locals }) {
         return json({ error: 'AI not available' }, { status: 503 });
     }
 
+    const db = platform.env.DB_book;
+
     try {
         const { text, locale = 'en' } = await request.json();
 
@@ -30,9 +32,7 @@ export async function POST({ request, platform, locals }) {
 
         const system = systems[locale] || systems.en;
         const label = labels[locale] || labels.en;
-        const prompt = `${label}:
----
-${text}`;
+        const prompt = `${label}:\n---\n${text}`;
 
         const response = await platform.env.AI.run(
             '@cf/mistralai/mistral-small-3.1-24b-instruct',
@@ -45,13 +45,54 @@ ${text}`;
             }
         );
 
+        const id = crypto.randomUUID();
+        const textPreview = text.slice(0, 200) + (text.length > 200 ? '...' : '');
+
+        await db.prepare(
+            "INSERT INTO evaluations (id, user_id, text_preview, evaluation, locale, model) VALUES (?, ?, ?, ?, ?, ?)"
+        ).bind(id, user.id, textPreview, response.response, locale, 'mistral-small-3.1-24b').run();
+
         return json({
+            id,
             evaluation: response.response,
             model: 'mistral-small-3.1-24b',
-            locale
+            locale,
+            created_at: new Date().toISOString()
         });
     } catch (err) {
         console.error('Evaluation error:', err);
         return json({ error: 'Evaluation failed' }, { status: 500 });
     }
+}
+
+export async function GET({ platform, locals, url }) {
+    const user = locals.user;
+    if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+    const db = platform.env.DB_book;
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
+
+    const evaluations = await db.prepare(
+        'SELECT id, text_preview, evaluation, locale, model, created_at FROM evaluations WHERE user_id = ? ORDER BY created_at DESC LIMIT ?'
+    ).bind(user.id, limit).all();
+
+    return json({ evaluations: evaluations.results });
+}
+
+export async function DELETE({ platform, locals, request }) {
+    const user = locals.user;
+    if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+    const db = platform.env.DB_book;
+    const { id } = await request.json();
+
+    if (!id) return json({ error: 'Missing id' }, { status: 400 });
+
+    const result = await db.prepare('DELETE FROM evaluations WHERE id = ? AND user_id = ?').bind(id, user.id).run();
+
+    if (result.meta.changes === 0) {
+        return json({ error: 'Not found' }, { status: 404 });
+    }
+
+    return json({ success: true });
 }

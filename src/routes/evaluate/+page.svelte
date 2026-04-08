@@ -3,7 +3,6 @@
     import { t } from '$lib/i18n';
     import { getLocale } from '$lib/i18n';
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
 
     let { data } = $props();
 
@@ -13,13 +12,26 @@
 
     let text = $state('');
     let locale = $state(getLocale());
-    let result = $state('');
+    let currentResult = $state(null);
     let error = $state('');
     let isLoading = $state(false);
+    let history = $state([]);
+    let showHistory = $state(false);
+    let expandedHistoryId = $state(null);
+
+    async function loadHistory() {
+        try {
+            const res = await fetch('/api/evaluate?limit=20');
+            const data = await res.json();
+            history = data.evaluations || [];
+        } catch (err) {
+            console.error('Failed to load history');
+        }
+    }
 
     async function handleEvaluate() {
         error = '';
-        result = '';
+        currentResult = null;
 
         if (text.trim().length < 50) {
             error = $t('evaluate.error_short');
@@ -37,7 +49,8 @@
             const data = await res.json();
 
             if (res.ok) {
-                result = data.evaluation;
+                currentResult = data;
+                loadHistory();
             } else {
                 error = data.error || $t('evaluate.error_generic');
             }
@@ -50,17 +63,102 @@
 
     function reset() {
         text = '';
-        result = '';
+        currentResult = null;
         error = '';
     }
+
+    function downloadResult() {
+        if (!currentResult) return;
+        const content = [
+            `Patrouch — AI Writing Evaluation`,
+            `Date: ${new Date(currentResult.created_at).toLocaleString()}`,
+            `Model: ${currentResult.model}`,
+            `Locale: ${currentResult.locale}`,
+            ``,
+            `--- Text Preview ---`,
+            `${currentResult.text_preview || ''}`,
+            ``,
+            `--- Evaluation ---`,
+            currentResult.evaluation
+        ].join('\n');
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `patrouch-evaluation-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function shareResult() {
+        if (!currentResult) return;
+        const shareText = `AI Writing Evaluation — Patrouch\n\n${currentResult.evaluation.slice(0, 500)}`;
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'Patrouch Evaluation', text: shareText });
+            } catch (err) { /* user cancelled */ }
+        } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(shareText);
+        }
+    }
+
+    async function deleteEvaluation(id) {
+        await fetch('/api/evaluate', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        history = history.filter(h => h.id !== id);
+        if (currentResult?.id === id) currentResult = null;
+    }
+
+    function viewEvaluation(ev) {
+        currentResult = ev;
+        expandedHistoryId = ev.id;
+        showHistory = false;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Load history on mount
+    $effect(() => { loadHistory(); });
 </script>
 
 <main class="evaluate-page">
     <div class="container">
-        <h1>{$t('evaluate.title')}</h1>
+        <div class="page-header">
+            <h1>{$t('evaluate.title')}</h1>
+            <button class="btn-ghost" onclick={() => showHistory = !showHistory}>
+                {$t('evaluate.history')} ({history.length})
+            </button>
+        </div>
         <p class="evaluate-desc">{$t('evaluate.description')}</p>
 
-        {#if !result}
+        {#if showHistory}
+            <div class="history-section">
+                <h2>{$t('evaluate.history_title')}</h2>
+                {#if history.length === 0}
+                    <p class="history-empty">{$t('evaluate.history_empty')}</p>
+                {:else}
+                    <div class="history-list">
+                        {#each history as ev}
+                            <div class="history-item" class:expanded={expandedHistoryId === ev.id}>
+                                <div class="history-meta">
+                                    <span class="history-date">{new Date(ev.created_at).toLocaleDateString()}</span>
+                                    <span class="history-locale">{ev.locale.toUpperCase()}</span>
+                                </div>
+                                <p class="history-preview">{ev.text_preview}</p>
+                                <div class="history-actions">
+                                    <button class="btn-small" onclick={() => viewEvaluation(ev)}>{$t('evaluate.view')}</button>
+                                    <button class="btn-small btn-danger" onclick={() => deleteEvaluation(ev.id)}>{$t('evaluate.delete')}</button>
+                                </div>
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
+                <button class="btn-ghost" onclick={() => showHistory = false}>{$t('evaluate.back_to_form')}</button>
+            </div>
+        {:else if !currentResult}
             <form onsubmit={(e) => { e.preventDefault(); handleEvaluate(); }} class="evaluate-form">
                 <div class="field">
                     <label for="locale">{$t('evaluate.locale_label')}</label>
@@ -94,9 +192,12 @@
             </form>
         {:else}
             <div class="result-section">
-                <h2>{$t('evaluate.result_title')}</h2>
+                <div class="result-header">
+                    <h2>{$t('evaluate.result_title')}</h2>
+                    <span class="result-date">{new Date(currentResult.created_at).toLocaleString()}</span>
+                </div>
                 <div class="result-body">
-                    {#each result.split('\n') as line}
+                    {#each currentResult.evaluation.split('\n') as line}
                         {#if line.trim() === ''}
                             <br />
                         {:else if line.startsWith('###')}
@@ -116,7 +217,11 @@
                         {/if}
                     {/each}
                 </div>
-                <button onclick={reset} class="btn-secondary">{$t('evaluate.try_again')}</button>
+                <div class="result-actions">
+                    <button onclick={downloadResult} class="btn-secondary">{$t('evaluate.download')}</button>
+                    <button onclick={shareResult} class="btn-secondary">{$t('evaluate.share')}</button>
+                    <button onclick={reset} class="btn-secondary">{$t('evaluate.try_again')}</button>
+                </div>
             </div>
         {/if}
     </div>
@@ -129,12 +234,19 @@
         padding: 3rem 1.5rem 4rem;
     }
 
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
     h1 {
         font-family: var(--font-heading);
         font-size: 1.8rem;
         font-weight: 400;
         color: var(--text);
-        margin: 0 0 0.5rem;
+        margin: 0;
     }
 
     .evaluate-desc {
@@ -143,6 +255,31 @@
         line-height: 1.6;
         margin: 0 0 2rem;
     }
+
+    .btn-ghost {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-small {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 0.3rem 0.7rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    .btn-small:hover { border-color: var(--accent); }
+    .btn-danger { color: #ef4444; }
+    .btn-danger:hover { border-color: #ef4444; }
 
     .evaluate-form {
         display: grid;
@@ -156,9 +293,7 @@
         gap: 0.4rem;
     }
 
-    .field.full {
-        grid-column: 1 / -1;
-    }
+    .field.full { grid-column: 1 / -1; }
 
     .field label {
         font-size: 0.8rem;
@@ -213,14 +348,10 @@
     }
 
     button[type="submit"], .btn-secondary {
-        grid-column: 1 / -1;
-        padding: 0.75rem 2rem;
-        background: var(--accent);
-        color: var(--bg);
-        border: none;
+        padding: 0.7rem 1.5rem;
         border-radius: 8px;
         font-family: var(--font-body);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 600;
         cursor: pointer;
         transition: opacity 0.2s;
@@ -229,17 +360,85 @@
     button:hover { opacity: 0.85; }
     button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    button[type="submit"] {
+        grid-column: 1 / -1;
+        background: var(--accent);
+        color: var(--bg);
+        border: none;
+    }
+
     .btn-secondary {
         background: transparent;
         color: var(--accent);
         border: 2px solid var(--accent);
-        margin-top: 2rem;
     }
 
     .btn-secondary:hover {
         background: var(--accent);
         color: var(--bg);
         opacity: 1;
+    }
+
+    /* History */
+    .history-section h2 {
+        font-family: var(--font-heading);
+        font-size: 1.3rem;
+        font-weight: 400;
+        color: var(--text);
+        margin: 0 0 1rem;
+    }
+
+    .history-empty {
+        color: var(--text-dim);
+        font-size: 0.9rem;
+    }
+
+    .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .history-item {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .history-meta {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .history-date {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+    }
+
+    .history-locale {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.4rem;
+        background: var(--accent-bg, rgba(201,168,124,0.15));
+        color: var(--accent);
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .history-preview {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        margin: 0 0 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .history-actions {
+        display: flex;
+        gap: 0.5rem;
     }
 
     /* Results */
@@ -250,12 +449,24 @@
         border-radius: var(--radius);
     }
 
+    .result-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
     .result-section h2 {
         font-family: var(--font-heading);
         font-size: 1.3rem;
         font-weight: 400;
         color: var(--accent);
-        margin: 0 0 1.5rem;
+        margin: 0;
+    }
+
+    .result-date {
+        font-size: 0.8rem;
+        color: var(--text-dim);
     }
 
     .result-body h3 {
@@ -270,17 +481,16 @@
         font-size: 0.95rem;
     }
 
-    .result-line strong {
-        color: var(--text);
+    .result-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
     }
 
     @media (max-width: 640px) {
-        .evaluate-form {
-            grid-template-columns: 1fr;
-        }
-
-        .evaluate-page {
-            padding: 2rem 1rem 3rem;
-        }
+        .evaluate-form { grid-template-columns: 1fr; }
+        .evaluate-page { padding: 2rem 1rem 3rem; }
+        .result-actions { flex-direction: column; }
     }
 </style>
