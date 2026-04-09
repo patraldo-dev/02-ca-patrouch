@@ -1,3 +1,0 @@
-
-document.querySelector('.onboarding-overlay')?.style.display
-
