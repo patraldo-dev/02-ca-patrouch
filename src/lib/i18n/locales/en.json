@@ -652,5 +652,16 @@
   "audio.generate_btn": "Generate Audio",
   "audio.result": "Your Audio",
   "audio.download": "Download MP3",
-  "audio.provider": "Audio Provider"
+  "audio.provider": "Audio Provider",
+  "audio.key_title": "ElevenLabs API Key",
+  "audio.key_desc": "To use this feature, you need your own ElevenLabs API key. It is stored securely in your account and never shared.",
+  "audio.key_link": "Get a free API key →",
+  "audio.key_placeholder": "sk_...",
+  "audio.key_save": "Save",
+  "audio.key_saving": "Saving...",
+  "audio.key_invalid": "Invalid ElevenLabs API key",
+  "audio.key_saved": "API key saved successfully",
+  "audio.key_change": "Change",
+  "audio.key_required": "API key required",
+  "audio.key_network_error": "Could not validate API key"
 }

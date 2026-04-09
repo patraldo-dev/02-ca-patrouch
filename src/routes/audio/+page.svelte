@@ -126,7 +126,7 @@
             } else {
                 if (data.error === 'no_api_key') {
                     showKeySetup = true;
-                    error = 'API key required';
+                    error = $t('audio.key_required');
                 } else {
                     error = data.error || 'Audio generation failed';
                 }
@@ -153,23 +153,23 @@
         <p class="audio-desc">{$t('audio.description')}</p>
 
         {#if keySuccess}
-            <div class="key-success">API key saved successfully</div>
+            <div class="key-success">{$t('audio.key_saved')}</div>
         {/if}
 
         {#if showKeySetup}
             <div class="key-setup">
-                <h2>ElevenLabs API Key</h2>
-                <p>Para usar esta función, necesitás tu propia API key de ElevenLabs. Se guarda de forma segura en tu cuenta y nunca se comparte.</p>
-                <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">Obtener API key gratuita →</a>
+                <h2>{$t('audio.key_title')}</h2>
+                <p>{$t('audio.key_desc')}</p>
+                <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">{$t('audio.key_link')}</a>
                 <div class="key-form">
                     <input
                         type="password"
                         bind:value={apiKeyInput}
-                        placeholder="sk_..."
+                        placeholder={$t('audio.key_placeholder')}
                         disabled={keyLoading}
                     />
                     <button onclick={saveApiKey} disabled={keyLoading || apiKeyInput.length < 10}>
-                        {keyLoading ? 'Saving...' : 'Save'}
+                        {keyLoading ? $t('audio.key_saving') : $t('audio.key_save')}
                     </button>
                 </div>
                 {#if keyError}
@@ -257,7 +257,7 @@
         {#if hasKey && !showKeySetup}
             <div class="key-status">
                 <span>Key: {keyPreview}</span>
-                <button onclick={removeApiKey}>Change</button>
+                <button onclick={removeApiKey}>{$t('audio.key_change')}</button>
             </div>
         {/if}
     </div>

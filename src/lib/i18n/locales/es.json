@@ -652,5 +652,16 @@
   "audio.generate_btn": "Generar Audio",
   "audio.result": "Tu Audio",
   "audio.download": "Descargar MP3",
-  "audio.provider": "Proveedor de Audio"
+  "audio.provider": "Proveedor de Audio",
+  "audio.key_title": "Clave API de ElevenLabs",
+  "audio.key_desc": "Para usar esta función, necesitás tu propia clave API de ElevenLabs. Se guarda de forma segura en tu cuenta y nunca se comparte.",
+  "audio.key_link": "Obtener clave API gratuita →",
+  "audio.key_placeholder": "sk_...",
+  "audio.key_save": "Guardar",
+  "audio.key_saving": "Guardando...",
+  "audio.key_invalid": "Clave API de ElevenLabs inválida",
+  "audio.key_saved": "Clave API guardada correctamente",
+  "audio.key_change": "Cambiar",
+  "audio.key_required": "Clave API requerida",
+  "audio.key_network_error": "No se pudo validar la clave API"
 }
