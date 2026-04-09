@@ -636,5 +636,20 @@
   "evaluate.view": "Ver",
   "evaluate.delete": "Eliminar",
   "evaluate.download": "Descargar",
-  "evaluate.share": "Compartir"
+  "evaluate.share": "Compartir",
+  "common.nav.audio": "Audio",
+  "audio.title": "Texto a Audio",
+  "audio.description": "Convierte tu escritura en audio hablado. Opcionalmente usa IA para desarrollar tu texto crudo en un cuento pulido.",
+  "audio.voice": "Voz",
+  "audio.locale": "Idioma",
+  "audio.text_label": "Tu Texto",
+  "audio.placeholder": "Pega tu escritura aquí... (hasta 5000 caracteres)",
+  "audio.ai_develop": "Desarrollar con IA primero (refinar en un cuento)",
+  "audio.privacy": "Tu texto se procesa privadamente. El audio se genera en tiempo real y no se almacena.",
+  "audio.developing": "Desarrollando...",
+  "audio.develop_btn": "Desarrollar con IA",
+  "audio.generating": "Generando audio...",
+  "audio.generate_btn": "Generar Audio",
+  "audio.result": "Tu Audio",
+  "audio.download": "Descargar MP3"
 }

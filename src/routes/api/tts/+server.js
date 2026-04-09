@@ -1,0 +1,50 @@
+// src/routes/api/tts/+server.js
+import { json } from '@sveltejs/kit';
+
+export async function POST({ request, platform, locals }) {
+    const user = locals.user;
+    if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+    const apiKey = platform?.env?.ELEVENLABS_API_KEY;
+    if (!apiKey) {
+        return json({ error: 'TTS not configured' }, { status: 503 });
+    }
+
+    try {
+        const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', modelId = 'eleven_turbo_v2_5' } = await request.json();
+
+        if (!text || text.trim().length < 10) {
+            return json({ error: 'Text must be at least 10 characters' }, { status: 400 });
+        }
+
+        if (text.length > 5000) {
+            return json({ error: 'Text must be under 5000 characters for free tier' }, { status: 400 });
+        }
+
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: 'POST',
+            headers: {
+                'xi-api-key': apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text: text.trim(),
+                model_id: modelId,
+                voice_settings: { stability: 0.4, similarity_boost: 0.8 }
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            return json({ error: err.detail?.message || 'TTS generation failed' }, { status: response.status });
+        }
+
+        const audioBuffer = await response.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+
+        return json({ audio: base64, format: 'mp3' });
+    } catch (err) {
+        console.error('TTS error:', err);
+        return json({ error: 'TTS generation failed' }, { status: 500 });
+    }
+}

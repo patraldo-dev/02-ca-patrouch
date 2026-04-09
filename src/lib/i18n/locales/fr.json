@@ -636,5 +636,20 @@
   "evaluate.view": "Voir",
   "evaluate.delete": "Supprimer",
   "evaluate.download": "Télécharger",
-  "evaluate.share": "Partager"
+  "evaluate.share": "Partager",
+  "common.nav.audio": "Audio",
+  "audio.title": "Texte vers Audio",
+  "audio.description": "Convertis ton écriture en audio parlé. Tu peux utiliser l'IA pour développer ton texte brut en une histoire polie.",
+  "audio.voice": "Voix",
+  "audio.locale": "Langue",
+  "audio.text_label": "Ton Texte",
+  "audio.placeholder": "Colle ton texte ici... (jusqu'à 5000 caractères)",
+  "audio.ai_develop": "Développer avec l'IA d'abord (raffiner en histoire)",
+  "audio.privacy": "Ton texte est traité privément. L'audio est généré en temps réel et non stocké.",
+  "audio.developing": "Développement...",
+  "audio.develop_btn": "Développer avec l'IA",
+  "audio.generating": "Génération de l'audio...",
+  "audio.generate_btn": "Générer l'Audio",
+  "audio.result": "Ton Audio",
+  "audio.download": "Télécharger MP3"
 }

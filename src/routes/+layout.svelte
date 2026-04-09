@@ -163,6 +163,7 @@
                 <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
                 {#if data?.user}
                 <a href="/evaluate" class:active={$page.url.pathname.startsWith('/evaluate')}>{$t('common.nav.evaluate')}</a>
+                <a href="/audio" class:active={$page.url.pathname.startsWith('/audio')}>{$t('common.nav.audio')}</a>
                 {/if}
             </nav>
 
@@ -240,6 +241,7 @@
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
                 {#if data?.user}
                 <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
+                <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
                 {/if}
                 <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
             </nav>

@@ -636,5 +636,20 @@
   "evaluate.view": "View",
   "evaluate.delete": "Delete",
   "evaluate.download": "Download",
-  "evaluate.share": "Share"
+  "evaluate.share": "Share",
+  "common.nav.audio": "Audio",
+  "audio.title": "Text to Audio",
+  "audio.description": "Convert your writing to spoken audio. Optionally use AI to develop your raw text into a polished story first.",
+  "audio.voice": "Voice",
+  "audio.locale": "Language",
+  "audio.text_label": "Your Text",
+  "audio.placeholder": "Paste your writing here... (up to 5000 characters)",
+  "audio.ai_develop": "Develop with AI first (refine into a story)",
+  "audio.privacy": "Your text is processed privately. Audio is generated in real-time and not stored.",
+  "audio.developing": "Developing...",
+  "audio.develop_btn": "Develop with AI",
+  "audio.generating": "Generating audio...",
+  "audio.generate_btn": "Generate Audio",
+  "audio.result": "Your Audio",
+  "audio.download": "Download MP3"
 }
