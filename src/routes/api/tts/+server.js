@@ -6,7 +6,7 @@ export async function POST({ request, platform, locals }) {
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', modelId = 'eleven_turbo_v2_5', provider = 'elevenlabs' } = await request.json();
+        const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', modelId = 'eleven_turbo_v2_5', provider = 'elevenlabs', locale = 'en' } = await request.json();
 
         if (!text || text.trim().length < 10) {
             return json({ error: 'Text must be at least 10 characters' }, { status: 400 });
@@ -32,10 +32,12 @@ export async function POST({ request, platform, locals }) {
 
             const audioParts = [];
             for (const chunk of chunks) {
-                const resp = await platform.env.AI.run('@cf/myshell-ai/melotts', { text: chunk, voice: 'default' });
+                const resp = await platform.env.AI.run('@cf/myshell-ai/melotts', {
+                    prompt: chunk,
+                    lang: locale || 'en'
+                });
                 if (resp?.audio) {
-                    const wav = encodeWav(resp.audio, 24000);
-                    audioParts.push(wav);
+                    audioParts.push(resp.audio);
                 }
             }
 
@@ -47,22 +49,17 @@ export async function POST({ request, platform, locals }) {
             if (audioParts.length === 1) {
                 merged = audioParts[0];
             } else {
-                const pcmArrays = audioParts.map(w => w.slice(44));
-                const totalLen = pcmArrays.reduce((s, p) => s + p.length, 0);
-                const mergedPcm = new Uint8Array(totalLen);
+                const buffers = audioParts.map(b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0)));
+                const totalLen = buffers.reduce((s, b) => s + b.length, 0);
+                const mergedBytes = new Uint8Array(totalLen);
                 let off = 0;
-                for (const pcm of pcmArrays) { mergedPcm.set(pcm, off); off += pcm.length; }
-                const header = new Uint8Array(audioParts[0].slice(0, 44));
-                const dv = new DataView(header.buffer);
-                dv.setUint32(4, totalLen + 36, true);
-                dv.setUint32(40, totalLen, true);
-                merged = new Uint8Array(header.length + mergedPcm.length);
-                merged.set(header); merged.set(mergedPcm, header.length);
+                for (const buf of buffers) { mergedBytes.set(buf, off); off += buf.length; }
+                let binary = '';
+                for (let i = 0; i < mergedBytes.length; i++) binary += String.fromCharCode(mergedBytes[i]);
+                merged = btoa(binary);
             }
 
-            let binary = '';
-            for (let i = 0; i < merged.length; i++) binary += String.fromCharCode(merged[i]);
-            return json({ audio: btoa(binary), format: 'wav', provider: 'cloudflare' });
+            return json({ audio: merged, format: 'mp3', provider: 'cloudflare' });
         }
 
         // ElevenLabs TTS
