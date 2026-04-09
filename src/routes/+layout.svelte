@@ -129,6 +129,7 @@
             onScroll();
             setTimeout(initObserver, 100);
             // Check onboarding for new users
+            console.log('onboarding check:', data?.user?.username, data?.onboarding_completed);
             if (data?.user && !data.onboarding_completed && !onboardingDismissed) {
                 showOnboarding = true;
             }
