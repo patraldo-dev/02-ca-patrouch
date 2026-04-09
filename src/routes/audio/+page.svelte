@@ -18,6 +18,14 @@
     let isLoading = $state(false);
     let isAiLoading = $state(false);
     let error = $state('');
+    let hasKey = $state(false);
+    let keyPreview = $state(null);
+    let showKeySetup = $state(false);
+    let apiKeyInput = $state('');
+    let keyLoading = $state(false);
+    let keyError = $state('');
+    let keySuccess = $state(false);
+    let checkingKey = $state(true);
 
     const voices = [
         { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam' },
@@ -29,6 +37,56 @@
         { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold' },
         { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Sam' },
     ];
+
+    // Check if user has an API key on mount
+    async function checkKey() {
+        try {
+            const res = await fetch('/api/tts/api-key');
+            const data = await res.json();
+            hasKey = data.hasKey;
+            keyPreview = data.preview;
+            showKeySetup = !data.hasKey;
+        } catch (e) { /* ignore */ }
+        checkingKey = false;
+    }
+    checkKey();
+
+    async function saveApiKey() {
+        keyError = '';
+        keySuccess = false;
+        keyLoading = true;
+        try {
+            const res = await fetch('/api/tts/api-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey: apiKeyInput })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                hasKey = true;
+                keyPreview = '••••';
+                showKeySetup = false;
+                apiKeyInput = '';
+                keySuccess = true;
+                setTimeout(() => keySuccess = false, 3000);
+            } else {
+                keyError = data.error || 'Failed to save API key';
+            }
+        } catch (e) {
+            keyError = 'Network error';
+        } finally {
+            keyLoading = false;
+        }
+    }
+
+    async function removeApiKey() {
+        try {
+            await fetch('/api/tts/api-key', { method: 'DELETE' });
+            hasKey = false;
+            keyPreview = null;
+            showKeySetup = true;
+        } catch (e) { /* ignore */ }
+    }
 
     async function handleAiDevelop() {
         error = '';
@@ -66,7 +124,12 @@
             if (res.ok) {
                 audioUrl = `data:audio/${data.format};base64,${data.audio}`;
             } else {
-                error = data.error || 'Audio generation failed';
+                if (data.error === 'no_api_key') {
+                    showKeySetup = true;
+                    error = 'API key required';
+                } else {
+                    error = data.error || 'Audio generation failed';
+                }
             }
         } catch (err) {
             error = 'Network error';
@@ -88,6 +151,34 @@
     <div class="container">
         <h1>{$t('audio.title')}</h1>
         <p class="audio-desc">{$t('audio.description')}</p>
+
+        {#if keySuccess}
+            <div class="key-success">API key saved successfully</div>
+        {/if}
+
+        {#if showKeySetup}
+            <div class="key-setup">
+                <h2>ElevenLabs API Key</h2>
+                <p>Para usar esta función, necesitás tu propia API key de ElevenLabs. Se guarda de forma segura en tu cuenta y nunca se comparte.</p>
+                <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">Obtener API key gratuita →</a>
+                <div class="key-form">
+                    <input
+                        type="password"
+                        bind:value={apiKeyInput}
+                        placeholder="sk_..."
+                        disabled={keyLoading}
+                    />
+                    <button onclick={saveApiKey} disabled={keyLoading || apiKeyInput.length < 10}>
+                        {keyLoading ? 'Saving...' : 'Save'}
+                    </button>
+                </div>
+                {#if keyError}
+                    <p class="key-error">{keyError}</p>
+                {/if}
+            </div>
+        {/if}
+
+        {#if hasKey && !showKeySetup}
 
         <div class="audio-form">
             <div class="row">
@@ -159,6 +250,14 @@
                 <h2>{$t('audio.result')}</h2>
                 <audio controls src={audioUrl}></audio>
                 <button onclick={downloadAudio} class="btn-secondary">{$t('audio.download')}</button>
+            </div>
+        {/if}
+        {/if}
+
+        {#if hasKey && !showKeySetup}
+            <div class="key-status">
+                <span>Key: {keyPreview}</span>
+                <button onclick={removeApiKey}>Change</button>
             </div>
         {/if}
     </div>
@@ -359,5 +458,103 @@
         .row { grid-template-columns: 1fr; }
         .actions { flex-direction: column; }
         .audio-page { padding: 2rem 1rem 3rem; }
+    }
+
+    .key-setup {
+        padding: 1.5rem;
+        background: var(--surface);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .key-setup h2 {
+        font-family: var(--font-heading);
+        font-size: 1.3rem;
+        font-weight: 400;
+        color: var(--text);
+        margin: 0 0 0.5rem;
+    }
+
+    .key-setup p {
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0 0 0.75rem;
+    }
+
+    .key-setup a {
+        color: var(--accent);
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .key-setup a:hover { text-decoration: underline; }
+
+    .key-form {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .key-form input {
+        flex: 1;
+        padding: 0.6rem 0.75rem;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+    }
+
+    .key-form input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .key-form button {
+        padding: 0.6rem 1.5rem;
+        background: var(--accent);
+        color: var(--bg);
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .key-error { color: #ef4444; font-size: 0.85rem; margin: 0.5rem 0 0; }
+    .key-success {
+        padding: 0.75rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #22c55e;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .key-status {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        font-size: 0.8rem;
+        color: var(--text-dim);
+    }
+
+    .key-status button {
+        padding: 0.3rem 0.75rem;
+        background: transparent;
+        color: var(--text-dim);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+
+    .key-status button:hover {
+        border-color: var(--text-dim);
     }
 </style>

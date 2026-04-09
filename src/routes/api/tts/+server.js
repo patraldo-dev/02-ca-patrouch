@@ -16,10 +16,21 @@ export async function POST({ request, platform, locals }) {
             return json({ error: 'Cloudflare TTS coming soon — requires Workers paid plan' }, { status: 503 });
         }
 
-        // ElevenLabs TTS
-        const apiKey = platform?.env?.ELEVENLABS_API_KEY;
+        // ElevenLabs TTS — use user's key first, fallback to platform key
+        let apiKey = null;
+        const row = await locals.db.prepare('SELECT elevenlabs_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
+        if (row?.elevenlabs_key_encrypted) {
+            const encoder = new TextEncoder();
+            const keyBytes = encoder.encode('patrouch-tts-' + user.id);
+            const encrypted = new Uint8Array(row.elevenlabs_key_encrypted.match(/.{2}/g).map(b => parseInt(b, 16)));
+            const decrypted = new Uint8Array(encrypted.length);
+            for (let i = 0; i < encrypted.length; i++) decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+            apiKey = new TextDecoder().decode(decrypted);
+        } else {
+            apiKey = platform?.env?.ELEVENLABS_API_KEY;
+        }
         if (!apiKey) {
-            return json({ error: 'TTS not configured' }, { status: 503 });
+            return json({ error: 'no_api_key' }, { status: 503 });
         }
 
         if (text.length > 5000) {
