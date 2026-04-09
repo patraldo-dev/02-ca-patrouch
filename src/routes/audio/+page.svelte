@@ -98,7 +98,8 @@
                         <option value="cloudflare">Cloudflare (Free)</option>
                     </select>
                 </div>
-                <div class="field" class:hidden={!provider.startsWith('elevenlabs')}>
+                {#if provider === 'elevenlabs'}
+                <div class="field">
                     <label>{$t('audio.voice')}</label>
                     <select bind:value={voiceId} disabled={isLoading}>
                         {#each voices as v}
@@ -106,6 +107,7 @@
                         {/each}
                     </select>
                 </div>
+                {/if}
                 <div class="field">
                     <label>{$t('audio.locale')}</label>
                     <select bind:value={locale} disabled={isLoading}>
