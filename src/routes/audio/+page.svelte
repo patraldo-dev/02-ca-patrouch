@@ -178,8 +178,6 @@
             </div>
         {/if}
 
-        {#if hasKey && !showKeySetup}
-
         <div class="audio-form">
             <div class="row">
                 <div class="field">
@@ -251,7 +249,6 @@
                 <audio controls src={audioUrl}></audio>
                 <button onclick={downloadAudio} class="btn-secondary">{$t('audio.download')}</button>
             </div>
-        {/if}
         {/if}
 
         {#if hasKey && !showKeySetup}
