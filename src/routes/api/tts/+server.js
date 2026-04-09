@@ -5,16 +5,70 @@ export async function POST({ request, platform, locals }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const apiKey = platform?.env?.ELEVENLABS_API_KEY;
-    if (!apiKey) {
-        return json({ error: 'TTS not configured' }, { status: 503 });
-    }
-
     try {
-        const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', modelId = 'eleven_turbo_v2_5' } = await request.json();
+        const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', modelId = 'eleven_turbo_v2_5', provider = 'elevenlabs' } = await request.json();
 
         if (!text || text.trim().length < 10) {
             return json({ error: 'Text must be at least 10 characters' }, { status: 400 });
+        }
+
+        if (provider === 'cloudflare') {
+            // Cloudflare TTS
+            if (!platform?.env?.AI) {
+                return json({ error: 'AI not available' }, { status: 503 });
+            }
+
+            const maxLen = 1024;
+            const chunks = [];
+            let remaining = text.trim();
+            while (remaining.length > 0) {
+                if (remaining.length <= maxLen) { chunks.push(remaining); break; }
+                let idx = remaining.lastIndexOf('.', maxLen);
+                if (idx < maxLen / 2) idx = remaining.lastIndexOf(' ', maxLen);
+                if (idx < maxLen / 2) idx = maxLen;
+                chunks.push(remaining.slice(0, idx + 1));
+                remaining = remaining.slice(idx + 1).trim();
+            }
+
+            const audioParts = [];
+            for (const chunk of chunks) {
+                const resp = await platform.env.AI.run('@cf/myshell/multilingual-tts', { text: chunk, voice: 'default' });
+                if (resp?.audio) {
+                    const wav = encodeWav(resp.audio, 24000);
+                    audioParts.push(wav);
+                }
+            }
+
+            if (audioParts.length === 0) {
+                return json({ error: 'No audio generated' }, { status: 500 });
+            }
+
+            let merged;
+            if (audioParts.length === 1) {
+                merged = audioParts[0];
+            } else {
+                const pcmArrays = audioParts.map(w => w.slice(44));
+                const totalLen = pcmArrays.reduce((s, p) => s + p.length, 0);
+                const mergedPcm = new Uint8Array(totalLen);
+                let off = 0;
+                for (const pcm of pcmArrays) { mergedPcm.set(pcm, off); off += pcm.length; }
+                const header = new Uint8Array(audioParts[0].slice(0, 44));
+                const dv = new DataView(header.buffer);
+                dv.setUint32(4, totalLen + 36, true);
+                dv.setUint32(40, totalLen, true);
+                merged = new Uint8Array(header.length + mergedPcm.length);
+                merged.set(header); merged.set(mergedPcm, header.length);
+            }
+
+            let binary = '';
+            for (let i = 0; i < merged.length; i++) binary += String.fromCharCode(merged[i]);
+            return json({ audio: btoa(binary), format: 'wav', provider: 'cloudflare' });
+        }
+
+        // ElevenLabs TTS
+        const apiKey = platform?.env?.ELEVENLABS_API_KEY;
+        if (!apiKey) {
+            return json({ error: 'TTS not configured' }, { status: 503 });
         }
 
         if (text.length > 5000) {
@@ -23,15 +77,8 @@ export async function POST({ request, platform, locals }) {
 
         const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
             method: 'POST',
-            headers: {
-                'xi-api-key': apiKey,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                text: text.trim(),
-                model_id: modelId,
-                voice_settings: { stability: 0.4, similarity_boost: 0.8 }
-            })
+            headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text.trim(), model_id: modelId, voice_settings: { stability: 0.4, similarity_boost: 0.8 } })
         });
 
         if (!response.ok) {
@@ -41,10 +88,31 @@ export async function POST({ request, platform, locals }) {
 
         const audioBuffer = await response.arrayBuffer();
         const base64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
-
-        return json({ audio: base64, format: 'mp3' });
+        return json({ audio: base64, format: 'mp3', provider: 'elevenlabs' });
     } catch (err) {
         console.error('TTS error:', err);
         return json({ error: 'TTS generation failed' }, { status: 500 });
     }
+}
+
+function encodeWav(samples, sampleRate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+    const ws = (v, o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+    ws(view, 0, 'RIFF');
+    view.setUint32(4, 36 + samples.length * 2, true);
+    ws(view, 8, 'WAVE');
+    ws(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    ws(view, 36, 'data');
+    view.setUint32(40, samples.length * 2, true);
+    let offset = 44;
+    for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        offset += 2;
+    }
+    return new Uint8Array(buffer);
 }

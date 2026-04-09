@@ -651,5 +651,6 @@
   "audio.generating": "Generando audio...",
   "audio.generate_btn": "Generar Audio",
   "audio.result": "Tu Audio",
-  "audio.download": "Descargar MP3"
+  "audio.download": "Descargar MP3",
+  "audio.provider": "Proveedor de Audio"
 }

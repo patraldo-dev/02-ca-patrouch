@@ -12,6 +12,7 @@
     let text = $state('');
     let locale = $state('en');
     let voiceId = $state('pNInz6obpgDQGcFmaJgB');
+    let provider = $state('elevenlabs');
     let useAiDevelop = $state(false);
     let audioUrl = $state('');
     let isLoading = $state(false);
@@ -59,11 +60,11 @@
             const res = await fetch('/api/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, voiceId })
+                body: JSON.stringify({ text, voiceId, provider })
             });
             const data = await res.json();
             if (res.ok) {
-                audioUrl = `data:audio/mp3;base64,${data.audio}`;
+                audioUrl = `data:audio/${data.format};base64,${data.audio}`;
             } else {
                 error = data.error || 'Audio generation failed';
             }
@@ -91,6 +92,13 @@
         <div class="audio-form">
             <div class="row">
                 <div class="field">
+                    <label>{$t('audio.provider')}</label>
+                    <select bind:value={provider} disabled={isLoading}>
+                        <option value="elevenlabs">ElevenLabs</option>
+                        <option value="cloudflare">Cloudflare (Free)</option>
+                    </select>
+                </div>
+                <div class="field" class:hidden={!provider.startsWith('elevenlabs')}>
                     <label>{$t('audio.voice')}</label>
                     <select bind:value={voiceId} disabled={isLoading}>
                         {#each voices as v}
