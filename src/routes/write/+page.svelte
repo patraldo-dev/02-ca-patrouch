@@ -914,6 +914,9 @@
     .write-sidebar {
         min-width: 0;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
 
     /* Responsive */
