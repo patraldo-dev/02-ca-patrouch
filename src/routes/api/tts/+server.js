@@ -16,22 +16,17 @@ export async function POST({ request, platform, locals }) {
             return json({ error: 'Cloudflare TTS coming soon — requires Workers paid plan' }, { status: 503 });
         }
 
-        // ElevenLabs TTS — use user's key first, fallback to platform key
-        let apiKey = null;
+        // ElevenLabs TTS — use user's own key
         const row = await locals.db.prepare('SELECT elevenlabs_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
-        if (row?.elevenlabs_key_encrypted) {
-            const encoder = new TextEncoder();
-            const keyBytes = encoder.encode('patrouch-tts-' + user.id);
-            const encrypted = new Uint8Array(row.elevenlabs_key_encrypted.match(/.{2}/g).map(b => parseInt(b, 16)));
-            const decrypted = new Uint8Array(encrypted.length);
-            for (let i = 0; i < encrypted.length; i++) decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
-            apiKey = new TextDecoder().decode(decrypted);
-        } else {
-            apiKey = platform?.env?.ELEVENLABS_API_KEY;
-        }
-        if (!apiKey) {
+        if (!row?.elevenlabs_key_encrypted) {
             return json({ error: 'no_api_key' }, { status: 503 });
         }
+        const encoder = new TextEncoder();
+        const keyBytes = encoder.encode('patrouch-tts-' + user.id);
+        const encrypted = new Uint8Array(row.elevenlabs_key_encrypted.match(/.{2}/g).map(b => parseInt(b, 16)));
+        const decrypted = new Uint8Array(encrypted.length);
+        for (let i = 0; i < encrypted.length; i++) decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+        const apiKey = new TextDecoder().decode(decrypted);
 
         if (text.length > 5000) {
             return json({ error: 'Text must be under 5000 characters for free tier' }, { status: 400 });
