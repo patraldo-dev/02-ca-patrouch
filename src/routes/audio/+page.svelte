@@ -95,7 +95,7 @@
                     <label>{$t('audio.provider')}</label>
                     <select bind:value={provider} disabled={isLoading}>
                         <option value="elevenlabs">ElevenLabs</option>
-                        <option value="cloudflare">Cloudflare (Free)</option>
+                        <option value="cloudflare">Cloudflare (coming soon)</option>
                     </select>
                 </div>
                 {#if provider === 'elevenlabs'}
