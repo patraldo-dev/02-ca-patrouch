@@ -32,7 +32,7 @@ export async function POST({ request, platform, locals }) {
 
             const audioParts = [];
             for (const chunk of chunks) {
-                const resp = await platform.env.AI.run('@cf/myshell-ai/melotts', {
+                const resp = await platform.env.AI.run('@cf/deepgram/aura-1', {
                     prompt: chunk,
                     lang: locale || 'en'
                 });
