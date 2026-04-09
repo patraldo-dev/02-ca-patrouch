@@ -17,15 +17,11 @@
     // Invalidate server data on mount to ensure fresh prompt/pass count
     onMount(() => { invalidateAll(); });
 
-    // Check if onboarding should be shown
+    // Onboarding is handled by layout
     let showOnboarding = $state(false);
     let showMilestones = $state(false);
     let showHeatmap = $state(false);
     let showBadges = $state(false);
-    if (browser) {
-        const onboarded = localStorage.getItem('onboarding_complete');
-        showOnboarding = !onboarded && !!data.user;
-    }
 
     // Initialize from server-side load
     let prompt = $state(data.prompt || null);
