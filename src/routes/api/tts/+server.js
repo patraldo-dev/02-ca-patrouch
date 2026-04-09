@@ -32,7 +32,7 @@ export async function POST({ request, platform, locals }) {
 
             const audioParts = [];
             for (const chunk of chunks) {
-                const resp = await platform.env.AI.run('@cf/myshell/melotts', { text: chunk, voice: 'default' });
+                const resp = await platform.env.AI.run('@cf/deepgram/aura-1', { text: chunk, voice: 'default' });
                 if (resp?.audio) {
                     const wav = encodeWav(resp.audio, 24000);
                     audioParts.push(wav);
