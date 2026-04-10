@@ -338,11 +338,11 @@
                 <button onclick={removeApiKey}>{$t('audio.key_change')}</button>
             </div>
         {/if}
-        {#if hasCfKey && !showCfKeySetup}
-            <div class="key-status">
-                <span>CF: {accountId}</span>
-                <button onclick={removeCfApiKey}>{$t('audio.key_change')}</button>
-            </div>
+        {#if provider === 'cloudflare'}
+        <div class="key-status">
+            <span>{hasCfKey ? 'CF: configured' : 'CF: not configured'}</span>
+            <button onclick={() => { hasCfKey ? removeCfApiKey() : (showCfKeySetup = true); }}>{$t('audio.key_change')}</button>
+        </div>
         {/if}
     </div>
 </main>
