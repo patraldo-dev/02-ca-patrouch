@@ -1,6 +1,6 @@
 <!-- src/routes/audio/+page.svelte -->
 <script>
-    import { t } from '$lib/i18n';
+    import { t, locale, getLocale } from '$lib/i18n';
     import { goto } from '$app/navigation';
 
     let { data } = $props();
@@ -10,7 +10,7 @@
     }
 
     let text = $state('');
-    let locale = $state('en');
+    let selectedLocale = $state(getLocale());
     let voiceId = $state('pNInz6obpgDQGcFmaJgB');
     let provider = $state('cloudflare');
     $effect(() => {
@@ -152,7 +152,7 @@
             const res = await fetch('/api/evaluate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, locale })
+                body: JSON.stringify({ text, locale: selectedLocale })
             });
             const data = await res.json();
             if (res.ok) {
@@ -280,7 +280,7 @@
                 {/if}
                 <div class="field">
                     <label>{$t('audio.locale')}</label>
-                    <select bind:value={locale} disabled={isLoading}>
+                    <select bind:value={selectedLocale} disabled={isLoading}>
                         <option value="en">English</option>
                         <option value="es">Español</option>
                         <option value="fr">Français</option>
