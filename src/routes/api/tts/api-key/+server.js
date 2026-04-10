@@ -50,18 +50,6 @@ export async function POST({ request, locals }) {
         return json({ error: 'Invalid API key' }, { status: 400 });
     }
 
-    // Validate the key against ElevenLabs
-    try {
-        const resp = await fetch('https://api.elevenlabs.io/v1/voices', {
-            headers: { 'xi-api-key': apiKey.trim() }
-        });
-        if (!resp.ok) {
-            return json({ error: 'Invalid ElevenLabs API key' }, { status: 400 });
-        }
-    } catch (e) {
-        return json({ error: 'Could not validate API key' }, { status: 503 });
-    }
-
     const encrypted = encrypt(apiKey.trim(), user.id);
 
     await locals.db.prepare('UPDATE users SET elevenlabs_key_encrypted = ? WHERE id = ?').bind(encrypted, user.id).run();
