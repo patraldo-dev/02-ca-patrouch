@@ -296,7 +296,10 @@
                     rows="14"
                     disabled={isLoading || isAiLoading}
                 ></textarea>
-                <span class="char-count">{text.length} / 5000 <button class="copy-btn" onclick={() => navigator.clipboard.writeText(text)}>{$t('audio.copy')}</button></span>
+                <div class="textarea-footer">
+                    <span class="char-count">{text.length} / 5000</span>
+                    <button class="copy-btn" onclick={() => navigator.clipboard.writeText(text)}>{$t('audio.copy')}</button>
+                </div>
             </div>
 
             <div class="options-row">
