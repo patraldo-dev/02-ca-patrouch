@@ -178,6 +178,10 @@
                         rows="16"
                         disabled={isLoading}
                     ></textarea>
+                    <div class="textarea-footer">
+                        <span class="char-count">{text.length} {$t('evaluate.words') || 'chars'}</span>
+                        <button class="copy-btn" onclick={() => navigator.clipboard.writeText(text)}>{$t('audio.copy')}</button>
+                    </div>
                 </div>
 
                 <p class="privacy-note">🔒 {$t('evaluate.privacy_note')}</p>
