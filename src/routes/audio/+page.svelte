@@ -336,6 +336,7 @@
                 <h2>{$t('audio.result')}</h2>
                 <audio controls src={audioUrl}></audio>
                 <button onclick={downloadAudio} class="btn-secondary">{$t('audio.download')}</button>
+                <button onclick={() => { audioUrl = ''; audioBlob = null; }} class="btn-secondary" style="margin-left:0.5rem;">{$t('audio.delete') || 'Delete'}</button>
             </div>
         {/if}
 

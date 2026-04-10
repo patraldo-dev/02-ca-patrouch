@@ -664,5 +664,6 @@
   "audio.key_change": "Cambiar",
   "audio.key_required": "Clave API requerida",
   "audio.key_network_error": "No se pudo validar la clave API",
-  "audio.copy": "Copiar"
+  "audio.copy": "Copiar",
+  "audio.delete": "Eliminar"
 }
