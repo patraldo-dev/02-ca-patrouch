@@ -52,7 +52,7 @@ export async function POST({ request, locals }) {
 
     // Validate the key against ElevenLabs
     try {
-        const resp = await fetch('https://api.elevenlabs.io/v1/user/subscription', {
+        const resp = await fetch('https://api.elevenlabs.io/v1/voices', {
             headers: { 'xi-api-key': apiKey.trim() }
         });
         if (!resp.ok) {
