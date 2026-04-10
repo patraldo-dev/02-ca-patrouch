@@ -37,23 +37,6 @@ export async function POST({ request, locals }) {
         return json({ error: 'Invalid Account ID' }, { status: 400 });
     }
 
-    // Validate the key against CF API
-    try {
-        const resp = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId.trim()}/ai/run/@cf/myshell-ai/melotts`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey.trim()}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ prompt: 'test' })
-        });
-        if (!resp.ok) {
-            return json({ error: 'Invalid Cloudflare API key or Account ID' }, { status: 400 });
-        }
-    } catch (e) {
-        return json({ error: 'Could not validate credentials' }, { status: 503 });
-    }
-
     const encrypted = encrypt(apiKey.trim(), user.id);
 
     await locals.db.prepare('UPDATE users SET cf_api_key_encrypted = ?, cf_account_id = ? WHERE id = ?').bind(encrypted, accountId.trim(), user.id).run();

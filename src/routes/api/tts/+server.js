@@ -40,7 +40,6 @@ export async function POST({ request, locals }) {
             });
 
             const result = await resp.json().catch(() => ({}));
-            console.log('CF TTS response:', resp.status, JSON.stringify(result));
 
             if (!resp.ok) {
                 return json({ error: result.errors?.[0]?.message || `Cloudflare TTS failed (${resp.status})` }, { status: resp.status });
