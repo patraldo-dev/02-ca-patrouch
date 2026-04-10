@@ -15,7 +15,7 @@ export async function POST({ request, locals }) {
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', modelId = 'eleven_turbo_v2_5', provider = 'elevenlabs' } = await request.json();
+        const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', modelId = 'eleven_turbo_v2_5', provider = 'elevenlabs', locale = 'en' } = await request.json();
 
         if (!text || text.trim().length < 10) {
             return json({ error: 'Text must be at least 10 characters' }, { status: 400 });
@@ -36,7 +36,7 @@ export async function POST({ request, locals }) {
                     'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ prompt: text.trim() })
+                body: JSON.stringify({ prompt: text.trim(), lang: locale === 'fr' ? 'fr' : locale === 'es' ? 'es' : 'en' })
             });
 
             const result = await resp.json().catch(() => ({}));
