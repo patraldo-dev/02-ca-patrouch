@@ -45,8 +45,8 @@ export async function POST({ request, locals }) {
                 return json({ error: result.errors?.[0]?.message || `Cloudflare TTS failed (${resp.status})` }, { status: resp.status });
             }
 
-            if (result?.audio) {
-                return json({ audio: result.audio, format: 'mp3', provider: 'cloudflare' });
+            if (result?.result?.audio) {
+                return json({ audio: result.result.audio, format: 'mp3', provider: 'cloudflare' });
             }
             console.log('CF TTS unexpected response:', JSON.stringify(result).slice(0, 500));
             return json({ error: 'No audio generated' }, { status: 500 });
