@@ -1,7 +1,16 @@
 // src/routes/api/tts/+server.js
 import { json } from '@sveltejs/kit';
 
-export async function POST({ request, platform, locals }) {
+function decryptUserKey(hex, userId) {
+    const encoder = new TextEncoder();
+    const keyBytes = encoder.encode('patrouch-tts-' + userId);
+    const encrypted = new Uint8Array(hex.match(/.{2}/g).map(b => parseInt(b, 16)));
+    const decrypted = new Uint8Array(encrypted.length);
+    for (let i = 0; i < encrypted.length; i++) decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+    return new TextDecoder().decode(decrypted);
+}
+
+export async function POST({ request, locals }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -13,7 +22,33 @@ export async function POST({ request, platform, locals }) {
         }
 
         if (provider === 'cloudflare') {
-            return json({ error: 'Cloudflare TTS coming soon — requires Workers paid plan' }, { status: 503 });
+            const row = await locals.db.prepare('SELECT cf_api_key_encrypted, cf_account_id FROM users WHERE id = ?').bind(user.id).first();
+            if (!row?.cf_api_key_encrypted || !row?.cf_account_id) {
+                return json({ error: 'no_cf_key' }, { status: 503 });
+            }
+            const apiKey = decryptUserKey(row.cf_api_key_encrypted, user.id);
+            const accountId = row.cf_account_id;
+
+            // Use CF REST API — runs on CF infrastructure, not on Worker
+            const resp = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/myshell-ai/melotts`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt: text.trim(), lang: 'es' })
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                return json({ error: err.errors?.[0]?.message || 'Cloudflare TTS failed' }, { status: resp.status });
+            }
+
+            const data = await resp.json();
+            if (data?.audio) {
+                return json({ audio: data.audio, format: 'mp3', provider: 'cloudflare' });
+            }
+            return json({ error: 'No audio generated' }, { status: 500 });
         }
 
         // ElevenLabs TTS — use user's own key
@@ -21,12 +56,7 @@ export async function POST({ request, platform, locals }) {
         if (!row?.elevenlabs_key_encrypted) {
             return json({ error: 'no_api_key' }, { status: 503 });
         }
-        const encoder = new TextEncoder();
-        const keyBytes = encoder.encode('patrouch-tts-' + user.id);
-        const encrypted = new Uint8Array(row.elevenlabs_key_encrypted.match(/.{2}/g).map(b => parseInt(b, 16)));
-        const decrypted = new Uint8Array(encrypted.length);
-        for (let i = 0; i < encrypted.length; i++) decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
-        const apiKey = new TextDecoder().decode(decrypted);
+        const apiKey = decryptUserKey(row.elevenlabs_key_encrypted, user.id);
 
         if (text.length > 5000) {
             return json({ error: 'Text must be under 5000 characters for free tier' }, { status: 400 });

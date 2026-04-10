@@ -25,6 +25,13 @@
     let keyLoading = $state(false);
     let keyError = $state('');
     let keySuccess = $state(false);
+    let hasCfKey = $state(false);
+    let showCfKeySetup = $state(false);
+    let cfApiKeyInput = $state('');
+    let cfAccountIdInput = $state('');
+    let cfKeyLoading = $state(false);
+    let cfKeyError = $state('');
+    let cfKeySuccess = $state(false);
     let checkingKey = $state(true);
 
     const voices = [
@@ -88,6 +95,52 @@
         } catch (e) { /* ignore */ }
     }
 
+    async function checkCfKey() {
+        try {
+            const res = await fetch('/api/tts/cf-api-key');
+            const data = await res.json();
+            hasCfKey = data.hasKey;
+            if (provider === 'cloudflare' && !data.hasKey) showCfKeySetup = true;
+        } catch (e) { /* ignore */ }
+    }
+    checkCfKey();
+
+    async function saveCfApiKey() {
+        cfKeyError = '';
+        cfKeySuccess = false;
+        cfKeyLoading = true;
+        try {
+            const res = await fetch('/api/tts/cf-api-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey: cfApiKeyInput, accountId: cfAccountIdInput })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                hasCfKey = true;
+                showCfKeySetup = false;
+                cfApiKeyInput = '';
+                cfAccountIdInput = '';
+                cfKeySuccess = true;
+                setTimeout(() => cfKeySuccess = false, 3000);
+            } else {
+                cfKeyError = data.error || 'Failed to save';
+            }
+        } catch (e) {
+            cfKeyError = 'Network error';
+        } finally {
+            cfKeyLoading = false;
+        }
+    }
+
+    async function removeCfApiKey() {
+        try {
+            await fetch('/api/tts/cf-api-key', { method: 'DELETE' });
+            hasCfKey = false;
+            showCfKeySetup = true;
+        } catch (e) { /* ignore */ }
+    }
+
     async function handleAiDevelop() {
         error = '';
         isAiLoading = true;
@@ -127,6 +180,9 @@
                 if (data.error === 'no_api_key') {
                     showKeySetup = true;
                     error = $t('audio.key_required');
+                } else if (data.error === 'no_cf_key') {
+                    showCfKeySetup = true;
+                    error = 'CF key required';
                 } else {
                     error = data.error || 'Audio generation failed';
                 }
@@ -178,13 +234,34 @@
             </div>
         {/if}
 
+        {#if cfKeySuccess}
+            <div class="key-success">CF API key saved</div>
+        {/if}
+
+        {#if showCfKeySetup}
+            <div class="key-setup">
+                <h2>Cloudflare Workers AI</h2>
+                <p>Requires a Cloudflare paid plan. Enter your CF API token and Account ID.</p>
+                <div class="key-form" style="flex-direction:column;gap:0.5rem;">
+                    <input type="text" bind:value={cfAccountIdInput} placeholder="CF Account ID" disabled={cfKeyLoading} />
+                    <input type="password" bind:value={cfApiKeyInput} placeholder="CF API Token" disabled={cfKeyLoading} />
+                    <button onclick={saveCfApiKey} disabled={cfKeyLoading || cfApiKeyInput.length < 10 || cfAccountIdInput.length < 10}>
+                        {cfKeyLoading ? 'Saving...' : 'Save'}
+                    </button>
+                </div>
+                {#if cfKeyError}
+                    <p class="key-error">{cfKeyError}</p>
+                {/if}
+            </div>
+        {/if}
+
         <div class="audio-form">
             <div class="row">
                 <div class="field">
                     <label>{$t('audio.provider')}</label>
                     <select bind:value={provider} disabled={isLoading}>
                         <option value="elevenlabs">ElevenLabs</option>
-                        <option value="cloudflare">Cloudflare (coming soon)</option>
+                        <option value="cloudflare">Cloudflare Workers AI</option>
                     </select>
                 </div>
                 {#if provider === 'elevenlabs'}
