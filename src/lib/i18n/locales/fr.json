@@ -663,5 +663,10 @@
   "audio.key_saved": "Clé API enregistrée avec succès",
   "audio.key_change": "Modifier",
   "audio.key_required": "Clé API requise",
-  "audio.key_network_error": "Impossible de valider la clé API"
+  "audio.key_network_error": "Impossible de valider la clé API",
+  "audio.copy": {
+    "en": "Copy",
+    "es": "Copiar",
+    "fr": "Copier"
+  }
 }

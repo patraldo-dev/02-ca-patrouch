@@ -12,7 +12,7 @@
     let text = $state('');
     let locale = $state('en');
     let voiceId = $state('pNInz6obpgDQGcFmaJgB');
-    let provider = $state('elevenlabs');
+    let provider = $state('cloudflare');
     $effect(() => {
         if (provider === 'cloudflare' && !hasCfKey) showCfKeySetup = true;
         else if (provider === 'elevenlabs' && !hasKey) showKeySetup = true;
@@ -296,7 +296,7 @@
                     rows="14"
                     disabled={isLoading || isAiLoading}
                 ></textarea>
-                <span class="char-count">{text.length} / 5000</span>
+                <span class="char-count">{text.length} / 5000 <button class="copy-btn" onclick={() => navigator.clipboard.writeText(text)}>{$t('audio.copy')}</button></span>
             </div>
 
             <div class="options-row">

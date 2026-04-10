@@ -270,3 +270,14 @@ input::placeholder, textarea::placeholder {
 @media (min-width: 768px) {
   .container { max-width: 1400px; }
 }
+
+.copy-btn {
+    padding: 2px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+}
