@@ -38,16 +38,28 @@
     let cfKeySuccess = $state(false);
     let checkingKey = $state(true);
 
-    const voices = [
-        { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam' },
-        { id: 'AZnzlk1XvdvUeBnXmlld', name: 'Domi' },
-        { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella' },
-        { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni' },
-        { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli' },
-        { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh' },
-        { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold' },
-        { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Sam' },
+    const elevenlabsVoices = [
+        { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam (EN)' },
+        { id: 'AZnzlk1XvdvUeBnXmlld', name: 'Domi (PL)' },
+        { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella (ES)' },
+        { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni (EN)' },
+        { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli (EN)' },
+        { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh (EN)' },
+        { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold (EN)' },
+        { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Sam (EN)' },
     ];
+
+    const cfVoices = [
+        { id: 'default', name: 'Default' },
+        { id: 'female_en', name: 'Female (EN)' },
+        { id: 'male_en', name: 'Male (EN)' },
+        { id: 'female_es', name: 'Female (ES)' },
+        { id: 'male_es', name: 'Male (ES)' },
+        { id: 'female_fr', name: 'Female (FR)' },
+        { id: 'male_fr', name: 'Male (FR)' },
+    ];
+
+    let voices = $derived(provider === 'elevenlabs' ? elevenlabsVoices : cfVoices);
 
     // Check if user has an API key on mount
     async function checkKey() {
@@ -268,22 +280,12 @@
                         <option value="cloudflare">Cloudflare Workers AI</option>
                     </select>
                 </div>
-                {#if provider === 'elevenlabs'}
                 <div class="field">
                     <label>{$t('audio.voice')}</label>
                     <select bind:value={voiceId} disabled={isLoading}>
                         {#each voices as v}
                             <option value={v.id}>{v.name}</option>
                         {/each}
-                    </select>
-                </div>
-                {/if}
-                <div class="field">
-                    <label>{$t('audio.locale')}</label>
-                    <select bind:value={selectedLocale} disabled={isLoading}>
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                        <option value="fr">Français</option>
                     </select>
                 </div>
             </div>

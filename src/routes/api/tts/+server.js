@@ -36,7 +36,7 @@ export async function POST({ request, locals }) {
                     'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ prompt: text.trim(), lang: locale === 'fr' ? 'fr' : locale === 'es' ? 'es' : 'en' })
+                body: JSON.stringify({ prompt: text.trim(), voice: voiceId })
             });
 
             const result = await resp.json().catch(() => ({}));
