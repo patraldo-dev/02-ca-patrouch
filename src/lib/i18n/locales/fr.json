@@ -665,5 +665,6 @@
   "audio.key_required": "Clé API requise",
   "audio.key_network_error": "Impossible de valider la clé API",
   "audio.copy": "Copier",
-  "audio.delete": "Supprimer"
+  "audio.delete": "Supprimer",
+  "audio.chars": "caractères"
 }
