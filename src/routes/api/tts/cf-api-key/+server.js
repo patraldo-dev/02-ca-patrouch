@@ -45,7 +45,7 @@ export async function POST({ request, locals }) {
                 'Authorization': `Bearer ${apiKey.trim()}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ prompt: 'test', lang: 'en' })
+            body: JSON.stringify({ prompt: 'test' })
         });
         if (!resp.ok) {
             return json({ error: 'Invalid Cloudflare API key or Account ID' }, { status: 400 });

@@ -36,7 +36,7 @@ export async function POST({ request, locals }) {
                     'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ prompt: text.trim(), lang: 'es' })
+                body: JSON.stringify({ prompt: text.trim() })
             });
 
             if (!resp.ok) {
