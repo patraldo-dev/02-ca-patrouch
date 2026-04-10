@@ -664,9 +664,5 @@
   "audio.key_change": "Change",
   "audio.key_required": "API key required",
   "audio.key_network_error": "Could not validate API key",
-  "audio.copy": {
-    "en": "Copy",
-    "es": "Copiar",
-    "fr": "Copier"
-  }
+  "audio.copy": "Copy"
 }
