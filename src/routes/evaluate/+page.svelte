@@ -169,7 +169,7 @@
                     </select>
                 </div>
 
-                <div class="field full">
+                <div class="field full" style="position:relative;">
                     <label for="text">{$t('evaluate.title')}</label>
                     <textarea
                         id="text"
@@ -178,9 +178,11 @@
                         rows="16"
                         disabled={isLoading}
                     ></textarea>
+                    <button class="copy-inline" onclick={() => navigator.clipboard.writeText(text)} title="{$t('audio.copy')}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    </button>
                     <div class="textarea-footer">
                         <span class="char-count">{text.length} {$t('evaluate.words') || 'chars'}</span>
-                        <button class="copy-btn" onclick={() => navigator.clipboard.writeText(text)}>{$t('audio.copy')}</button>
                     </div>
                 </div>
 

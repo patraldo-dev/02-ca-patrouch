@@ -287,3 +287,17 @@ input::placeholder, textarea::placeholder {
     align-items: center;
     margin-top: 0.25rem;
 }
+.copy-inline {
+    position: absolute;
+    top: 2.2rem;
+    right: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text-dim);
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+.copy-inline:hover { opacity: 1; color: var(--accent); }
