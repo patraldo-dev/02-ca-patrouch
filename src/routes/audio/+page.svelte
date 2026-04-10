@@ -338,6 +338,12 @@
                 <button onclick={removeApiKey}>{$t('audio.key_change')}</button>
             </div>
         {/if}
+        {#if hasCfKey && !showCfKeySetup}
+            <div class="key-status">
+                <span>CF: {accountId}</span>
+                <button onclick={removeCfApiKey}>{$t('audio.key_change')}</button>
+            </div>
+        {/if}
     </div>
 </main>
 
