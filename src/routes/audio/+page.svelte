@@ -13,6 +13,10 @@
     let locale = $state('en');
     let voiceId = $state('pNInz6obpgDQGcFmaJgB');
     let provider = $state('elevenlabs');
+    $effect(() => {
+        if (provider === 'cloudflare' && !hasCfKey) showCfKeySetup = true;
+        else if (provider === 'elevenlabs' && !hasKey) showKeySetup = true;
+    });
     let useAiDevelop = $state(false);
     let audioUrl = $state('');
     let isLoading = $state(false);
