@@ -45,9 +45,8 @@ export async function POST({ request, locals }) {
                 return json({ error: result.errors?.[0]?.message || `Cloudflare TTS failed (${resp.status})` }, { status: resp.status });
             }
 
-            const data = await resp.json();
-            if (data?.audio) {
-                return json({ audio: data.audio, format: 'mp3', provider: 'cloudflare' });
+            if (result?.audio) {
+                return json({ audio: result.audio, format: 'mp3', provider: 'cloudflare' });
             }
             return json({ error: 'No audio generated' }, { status: 500 });
         }
