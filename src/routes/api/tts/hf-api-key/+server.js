@@ -1,4 +1,4 @@
-// src/routes/api/tts/hf-api-key/+server.js
+// src/routes/api/tts/deepinfra-api-key/+server.js
 import { json } from '@sveltejs/kit';
 
 function encrypt(text, userId) {
@@ -16,9 +16,9 @@ export async function GET({ locals }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const row = await locals.db.prepare('SELECT hf_api_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
+    const row = await locals.db.prepare('SELECT deepinfra_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
 
-    return json({ hasKey: !!row?.hf_api_key_encrypted });
+    return json({ hasKey: !!row?.deepinfra_key_encrypted });
 }
 
 export async function POST({ request, locals }) {
@@ -33,7 +33,7 @@ export async function POST({ request, locals }) {
 
     const encrypted = encrypt(apiKey.trim(), user.id);
 
-    await locals.db.prepare('UPDATE users SET hf_api_key_encrypted = ? WHERE id = ?').bind(encrypted, user.id).run();
+    await locals.db.prepare('UPDATE users SET deepinfra_key_encrypted = ? WHERE id = ?').bind(encrypted, user.id).run();
 
     return json({ success: true });
 }
@@ -42,7 +42,7 @@ export async function DELETE({ locals }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    await locals.db.prepare('UPDATE users SET hf_api_key_encrypted = NULL WHERE id = ?').bind(user.id).run();
+    await locals.db.prepare('UPDATE users SET deepinfra_key_encrypted = NULL WHERE id = ?').bind(user.id).run();
 
     return json({ success: true });
 }

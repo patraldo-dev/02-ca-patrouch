@@ -54,11 +54,11 @@ export async function POST({ request, locals }) {
 
         // Kokoro TTS — via DeepInfra Inference API
         if (provider === 'kokoro') {
-            const row = await locals.db.prepare('SELECT hf_api_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
-            if (!row?.hf_api_key_encrypted) {
+            const row = await locals.db.prepare('SELECT deepinfra_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
+            if (!row?.deepinfra_key_encrypted) {
                 return json({ error: 'no_hf_key' }, { status: 503 });
             }
-            const hfKey = decryptUserKey(row.hf_api_key_encrypted, user.id);
+            const hfKey = decryptUserKey(row.deepinfra_key_encrypted, user.id);
 
             const resp = await fetch('https://api.deepinfra.com/v1/audio/speech', {
                 method: 'POST',

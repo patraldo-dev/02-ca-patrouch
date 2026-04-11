@@ -141,7 +141,7 @@
 
     async function checkHfKey() {
         try {
-            const res = await fetch('/api/tts/hf-api-key');
+            const res = await fetch('/api/tts/deepinfra-api-key');
             const data = await res.json();
             hasHfKey = data.hasKey;
             if (provider === 'kokoro' && !data.hasKey) showHfKeySetup = true;
@@ -188,7 +188,7 @@
     async function saveHfApiKey() {
         if (!hfApiKeyInput.trim()) return;
         try {
-            const res = await fetch('/api/tts/hf-api-key', {
+            const res = await fetch('/api/tts/deepinfra-api-key', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ apiKey: hfApiKeyInput.trim() })
@@ -204,7 +204,7 @@
 
     async function removeHfApiKey() {
         try {
-            await fetch('/api/tts/hf-api-key', { method: 'DELETE' });
+            await fetch('/api/tts/deepinfra-api-key', { method: 'DELETE' });
             hasHfKey = false;
             showHfKeySetup = true;
         } catch (e) { /* ignore */ }
@@ -337,7 +337,7 @@
                 <h2>Kokoro TTS (DeepInfra)</h2>
                 <p>Enter your DeepInfra API token (free at huggingface.co/settings/tokens).</p>
                 <div class="key-form" style="flex-direction:column;gap:0.5rem;">
-                    <input type="password" bind:value={hfApiKeyInput} placeholder="HF API Token" disabled={isLoading} />
+                    <input type="password" bind:value={hfApiKeyInput} placeholder="DeepInfra API Key" disabled={isLoading} />
                     <button onclick={saveHfApiKey} disabled={isLoading || hfApiKeyInput.length < 10}>
                         {$t('audio.key_save') || 'Save'}
                     </button>
