@@ -666,5 +666,10 @@
   "audio.key_network_error": "Could not validate API key",
   "audio.copy": "Copy",
   "audio.delete": "Delete",
-  "audio.chars": "characters"
+  "audio.chars": "characters",
+  "audio.provider_free_limited": {
+    "en": "Cloudflare (Free, limited)",
+    "es": "Cloudflare (Gratis, limitado)",
+    "fr": "Cloudflare (Gratuit, limité)"
+  }
 }

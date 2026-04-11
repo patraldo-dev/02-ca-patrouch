@@ -359,7 +359,7 @@
                     <select bind:value={provider} disabled={isLoading}>
                         <option value="elevenlabs">ElevenLabs</option>
                         <option value="kokoro">Kokoro</option>
-                        <option value="cloudflare">Cloudflare (Free)</option>
+                        <option value="cloudflare">{$t("audio.provider_free_limited")}</option>
                     </select>
                 </div>
                 <div class="field">
