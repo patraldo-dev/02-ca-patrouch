@@ -667,9 +667,5 @@
   "audio.copy": "Copier",
   "audio.delete": "Supprimer",
   "audio.chars": "caractères",
-  "audio.provider_free_limited": {
-    "en": "Cloudflare (Free, limited)",
-    "es": "Cloudflare (Gratis, limitado)",
-    "fr": "Cloudflare (Gratuit, limité)"
-  }
+  "audio.provider_free_limited": "Cloudflare (Gratuit, limité)"
 }
