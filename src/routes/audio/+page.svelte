@@ -335,7 +335,7 @@
         {#if showHfKeySetup}
             <div class="key-setup">
                 <h2>Kokoro TTS (DeepInfra)</h2>
-                <p>Enter your DeepInfra API token (free at huggingface.co/settings/tokens).</p>
+                <p>Enter your DeepInfra API key (requires card at deepinfra.com).</p>
                 <div class="key-form" style="flex-direction:column;gap:0.5rem;">
                     <input type="password" bind:value={hfApiKeyInput} placeholder="DeepInfra API Key" disabled={isLoading} />
                     <button onclick={saveHfApiKey} disabled={isLoading || hfApiKeyInput.length < 10}>
