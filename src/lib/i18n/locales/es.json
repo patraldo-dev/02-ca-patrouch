@@ -667,5 +667,75 @@
   "audio.copy": "Copiar",
   "audio.delete": "Eliminar",
   "audio.chars": "caracteres",
-  "audio.provider_free_limited": "Cloudflare (Gratis, limitado)"
+  "audio.provider_free_limited": "Cloudflare (Gratis, limitado)",
+  "common.help": {
+    "en": "Help",
+    "es": "Ayuda",
+    "fr": "Aide"
+  },
+  "help.title": {
+    "en": "How Patrouch Works",
+    "es": "Cómo Funciona Patrouch",
+    "fr": "Comment Fonctionne Patrouch"
+  },
+  "help.write_title": {
+    "en": "Write",
+    "es": "Escribir",
+    "fr": "Écrire"
+  },
+  "help.write_desc": {
+    "en": "Get a daily creative spark. Write in any language — open writing or inspired by visual art from Antoine Patraldo. Save drafts, publish to the Agora, track your streaks.",
+    "es": "Recibe una chispa creativa diaria. Escribe en cualquier idioma — escritura abierta o inspirada en arte visual de Antoine Patraldo. Guarda borradores, publica en la Agora, sigue tu racha.",
+    "fr": "Recevez une étincelle créative quotidienne. Écrivez dans la langue de votre choix — écriture libre ou inspirée par l'art visuel d'Antoine Patraldo."
+  },
+  "help.evaluate_title": {
+    "en": "Evaluate",
+    "es": "Evaluar",
+    "fr": "Évaluer"
+  },
+  "help.evaluate_desc": {
+    "en": "Get AI-powered writing feedback. Craft analysis focused on voice, originality, and emotional impact — not grammar. Private and stays on Cloudflare infrastructure.",
+    "es": "Recibe retroalimentación de escritura con IA. Análisis enfocado en voz, originalidad e impacto emocional — no gramática. Privado, se queda en infraestructura de Cloudflare.",
+    "fr": "Obtenez un retour sur votre écriture alimenté par l'IA. Analyse axée sur la voix, l'originalité et l'impact émotionnel."
+  },
+  "help.audio_title": {
+    "en": "Audio",
+    "es": "Audio",
+    "fr": "Audio"
+  },
+  "help.audio_desc": {
+    "en": "Convert your writing to speech. Free via Cloudflare melotts, or use ElevenLabs / Kokoro for higher quality. You provide your own API key.",
+    "es": "Convierte tu escritura a voz. Gratis con Cloudflare melotts, o usa ElevenLabs / Kokoro para mayor calidad. Tú proporcionas tu propia API key.",
+    "fr": "Convertissez votre texte en parole. Gratuit via Cloudflare melotts, ou utilisez ElevenLabs / Kokoro pour une meilleure qualité."
+  },
+  "help.findai_title": {
+    "en": "Find the AI",
+    "es": "Encuentra la IA",
+    "fr": "Trouvez l'IA"
+  },
+  "help.findai_desc": {
+    "en": "Read writings in the Agora and guess which ones were written by humans and which by AI. Test your instincts!",
+    "es": "Lee escritos en la Agora y adivina cuáles fueron escritos por humanos y cuáles por IA. Pon a prueba tus instintos.",
+    "fr": "Lisez les textes de l'Agora et devinez lesquels ont été écrits par des humains et lesquels par l'IA."
+  },
+  "help.agora_title": {
+    "en": "Agora",
+    "es": "Agora",
+    "fr": "Agora"
+  },
+  "help.agora_desc": {
+    "en": "The public gallery. Browse writings from the community, filter by human/AI, and discover new voices.",
+    "es": "La galería pública. Explora escritos de la comunidad, filtra por humano/IA, y descubre nuevas voces.",
+    "fr": "La galerie publique. Parcourez les textes de la communauté, filtrez par humain/IA."
+  },
+  "help.profile_title": {
+    "en": "Profile",
+    "es": "Perfil",
+    "fr": "Profil"
+  },
+  "help.profile_desc": {
+    "en": "Manage your pen names, view stats, badges, writing heatmap, and milestones.",
+    "es": "Administra tus seudónimos, ve estadísticas, insignias, mapa de escritura y logros.",
+    "fr": "Gérez vos pseudonymes, consultez les stats, badges, heatmap et jalons."
+  }
 }
