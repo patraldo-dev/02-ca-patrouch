@@ -222,12 +222,20 @@
         }
     }
 
+    let showCopyToast = $state(false);
+    function showToast(msg) {
+        error = '';
+        showCopyToast = true;
+        setTimeout(() => showCopyToast = false, 2500);
+    }
+
     function downloadAudio() {
         if (!audioUrl) return;
         const a = document.createElement('a');
         a.href = audioUrl;
         a.download = `patrouch-audio-${Date.now()}.mp3`;
         a.click();
+        showToast('Downloaded!');
     }
 </script>
 
@@ -311,7 +319,7 @@
                     rows="14"
                     disabled={isLoading || isAiLoading}
                 ></textarea>
-                <button class="copy-inline" onclick={() => navigator.clipboard.writeText(text)} title="{$t('audio.copy')}">
+                <button class="copy-inline" onclick={() => { navigator.clipboard.writeText(text); showToast('Copied!'); }} title="{$t('audio.copy')}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                 </button>
                 <div class="textarea-footer">
@@ -366,6 +374,9 @@
         </div>
         {/if}
     </div>
+    {#if showCopyToast}
+        <div class="toast">{showCopyToast === true ? '✓' : showCopyToast}</div>
+    {/if}
 </main>
 
 <style>

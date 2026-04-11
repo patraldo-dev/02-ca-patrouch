@@ -301,3 +301,18 @@ input::placeholder, textarea::placeholder {
     transition: opacity 0.2s;
 }
 .copy-inline:hover { opacity: 1; color: var(--accent); }
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #000;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: var(--font-body);
+    z-index: 1000;
+    animation: toastIn 0.3s ease;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } }
