@@ -16,7 +16,10 @@
     $effect(() => {
         if (provider === 'cloudflare' && !hasCfKey) showCfKeySetup = true;
         else if (provider === 'elevenlabs' && !hasKey) showKeySetup = true;
-        else if (provider === 'kokoro') voiceId = 'af_heart';
+        else if (provider === 'kokoro' && !hasHfKey) showHfKeySetup = true;
+        else if (provider !== 'kokoro') showHfKeySetup = false;
+        else if (provider !== 'cloudflare') showCfKeySetup = false;
+        else if (provider !== 'elevenlabs') showKeySetup = false;
     });
     let useAiDevelop = $state(false);
     let audioUrl = $state('');
@@ -34,6 +37,9 @@
     let showCfKeySetup = $state(false);
     let cfApiKeyInput = $state('');
     let cfAccountIdInput = $state('');
+    let hasHfKey = $state(false);
+    let showHfKeySetup = $state(false);
+    let hfApiKeyInput = $state('');
     let cfKeyLoading = $state(false);
     let cfKeyError = $state('');
     let cfKeySuccess = $state(false);
@@ -133,6 +139,16 @@
     }
     checkCfKey();
 
+    async function checkHfKey() {
+        try {
+            const res = await fetch('/api/tts/hf-api-key');
+            const data = await res.json();
+            hasHfKey = data.hasKey;
+            if (provider === 'kokoro' && !data.hasKey) showHfKeySetup = true;
+        } catch (e) { /* ignore */ }
+    }
+    checkHfKey();
+
     async function saveCfApiKey() {
         cfKeyError = '';
         cfKeySuccess = false;
@@ -166,6 +182,31 @@
             await fetch('/api/tts/cf-api-key', { method: 'DELETE' });
             hasCfKey = false;
             showCfKeySetup = true;
+        } catch (e) { /* ignore */ }
+    }
+
+    async function saveHfApiKey() {
+        if (!hfApiKeyInput.trim()) return;
+        try {
+            const res = await fetch('/api/tts/hf-api-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey: hfApiKeyInput.trim() })
+            });
+            if (res.ok) {
+                hasHfKey = true;
+                showHfKeySetup = false;
+                hfApiKeyInput = '';
+                showToast('HF API key saved!');
+            }
+        } catch (e) { error = 'Failed to save HF key'; }
+    }
+
+    async function removeHfApiKey() {
+        try {
+            await fetch('/api/tts/hf-api-key', { method: 'DELETE' });
+            hasHfKey = false;
+            showHfKeySetup = true;
         } catch (e) { /* ignore */ }
     }
 
@@ -288,6 +329,26 @@
                 {#if cfKeyError}
                     <p class="key-error">{cfKeyError}</p>
                 {/if}
+            </div>
+        {/if}
+
+        {#if showHfKeySetup}
+            <div class="key-setup">
+                <h2>Kokoro TTS (HuggingFace)</h2>
+                <p>Enter your HuggingFace API token (free at huggingface.co/settings/tokens).</p>
+                <div class="key-form" style="flex-direction:column;gap:0.5rem;">
+                    <input type="password" bind:value={hfApiKeyInput} placeholder="HF API Token" disabled={isLoading} />
+                    <button onclick={saveHfApiKey} disabled={isLoading || hfApiKeyInput.length < 10}>
+                        {$t('audio.key_save') || 'Save'}
+                    </button>
+                </div>
+            </div>
+        {/if}
+
+        {#if hasHfKey && !showHfKeySetup && provider === 'kokoro'}
+            <div class="key-status">
+                <span>HF: configured</span>
+                <button onclick={removeHfApiKey}>{$t('audio.key_change')}</button>
             </div>
         {/if}
 

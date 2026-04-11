@@ -52,40 +52,31 @@ export async function POST({ request, locals }) {
             return json({ error: 'No audio generated' }, { status: 500 });
         }
 
-        // Kokoro TTS — free, via HuggingFace Spaces Gradio API
+        // Kokoro TTS — via HuggingFace Inference API
         if (provider === 'kokoro') {
-            const resp = await fetch('https://hexgrad-kokoro-tts.hf.space/gradio_api/call/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [text.trim().slice(0, 5000), voiceId || 'af_heart', false, 1.0] })
-            });
-            if (!resp.ok) {
-                return json({ error: `Kokoro queue failed (${resp.status})` }, { status: resp.status });
+            const row = await locals.db.prepare('SELECT hf_api_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
+            if (!row?.hf_api_key_encrypted) {
+                return json({ error: 'no_hf_key' }, { status: 503 });
             }
-            const { event_id } = await resp.json();
+            const hfKey = decryptUserKey(row.hf_api_key_encrypted, user.id);
 
-            // Poll for result (up to 60s)
-            let audioBase64 = null;
-            for (let i = 0; i < 120; i++) {
-                await new Promise(r => setTimeout(r, 500));
-                const poll = await fetch(`https://hexgrad-kokoro-tts.hf.space/gradio_api/call/predict/${event_id}`);
-                const pollData = await poll.json();
-                if (pollData.status === 'complete' && pollData.data?.[0]) {
-                    // data[0] is the audio file object { url, path, ... }
-                    const audioUrl = pollData.data[0].url;
-                    const audioResp = await fetch(audioUrl);
-                    const buf = await audioResp.arrayBuffer();
-                    audioBase64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-                    break;
-                }
-                if (pollData.status === 'error') {
-                    return json({ error: 'Kokoro generation failed' }, { status: 500 });
-                }
+            const resp = await fetch('https://api-inference.huggingface.co/models/hexgrad/Kokoro-82M', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${hfKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ inputs: text.trim().slice(0, 5000) })
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                return json({ error: err.error || `Kokoro TTS failed (${resp.status})` }, { status: resp.status });
             }
-            if (audioBase64) {
-                return json({ audio: audioBase64, format: 'wav', provider: 'kokoro' });
-            }
-            return json({ error: 'Kokoro timeout' }, { status: 504 });
+
+            const audioBuffer = await resp.arrayBuffer();
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+            return json({ audio: base64, format: 'wav', provider: 'kokoro' });
         }
 
         // ElevenLabs TTS — use user's own key
