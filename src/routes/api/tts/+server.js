@@ -60,7 +60,7 @@ export async function POST({ request, locals }) {
             }
             const hfKey = decryptUserKey(row.hf_api_key_encrypted, user.id);
 
-            const resp = await fetch('https://api-inference.huggingface.co/models/hexgrad/Kokoro-82M', {
+            const resp = await fetch('https://router.huggingface.co/models/hexgrad/Kokoro-82M', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${hfKey}`,
