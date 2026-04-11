@@ -52,6 +52,42 @@ export async function POST({ request, locals }) {
             return json({ error: 'No audio generated' }, { status: 500 });
         }
 
+        // Kokoro TTS — free, via HuggingFace Spaces Gradio API
+        if (provider === 'kokoro') {
+            const resp = await fetch('https://hexgrad-kokoro-tts.hf.space/gradio_api/call/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: [text.trim().slice(0, 5000), voiceId || 'af_heart', false, 1.0] })
+            });
+            if (!resp.ok) {
+                return json({ error: `Kokoro queue failed (${resp.status})` }, { status: resp.status });
+            }
+            const { event_id } = await resp.json();
+
+            // Poll for result (up to 60s)
+            let audioBase64 = null;
+            for (let i = 0; i < 120; i++) {
+                await new Promise(r => setTimeout(r, 500));
+                const poll = await fetch(`https://hexgrad-kokoro-tts.hf.space/gradio_api/call/predict/${event_id}`);
+                const pollData = await poll.json();
+                if (pollData.status === 'complete' && pollData.data?.[0]) {
+                    // data[0] is the audio file object { url, path, ... }
+                    const audioUrl = pollData.data[0].url;
+                    const audioResp = await fetch(audioUrl);
+                    const buf = await audioResp.arrayBuffer();
+                    audioBase64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+                    break;
+                }
+                if (pollData.status === 'error') {
+                    return json({ error: 'Kokoro generation failed' }, { status: 500 });
+                }
+            }
+            if (audioBase64) {
+                return json({ audio: audioBase64, format: 'wav', provider: 'kokoro' });
+            }
+            return json({ error: 'Kokoro timeout' }, { status: 504 });
+        }
+
         // ElevenLabs TTS — use user's own key
         const row = await locals.db.prepare('SELECT elevenlabs_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
         if (!row?.elevenlabs_key_encrypted) {

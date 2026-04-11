@@ -16,6 +16,7 @@
     $effect(() => {
         if (provider === 'cloudflare' && !hasCfKey) showCfKeySetup = true;
         else if (provider === 'elevenlabs' && !hasKey) showKeySetup = true;
+        else if (provider === 'kokoro') voiceId = 'af_heart';
     });
     let useAiDevelop = $state(false);
     let audioUrl = $state('');
@@ -51,15 +52,26 @@
 
     const cfVoices = [
         { id: 'default', name: 'Default' },
-        { id: 'female_en', name: 'Female (EN)' },
-        { id: 'male_en', name: 'Male (EN)' },
-        { id: 'female_es', name: 'Female (ES)' },
-        { id: 'male_es', name: 'Male (ES)' },
-        { id: 'female_fr', name: 'Female (FR)' },
-        { id: 'male_fr', name: 'Male (FR)' },
     ];
 
-    let voices = $derived(provider === 'elevenlabs' ? elevenlabsVoices : cfVoices);
+    const kokoroVoices = [
+        { id: 'af_heart', name: 'Heart (EN)' },
+        { id: 'af_bella', name: 'Bella (EN)' },
+        { id: 'af_nicole', name: 'Nicole (EN)' },
+        { id: 'af_sarah', name: 'Sarah (EN)' },
+        { id: 'af_nova', name: 'Nova (EN)' },
+        { id: 'af_sky', name: 'Sky (EN)' },
+        { id: 'af_alloy', name: 'Alloy (EN)' },
+        { id: 'am_adam', name: 'Adam (EN)' },
+        { id: 'am_michael', name: 'Michael (EN)' },
+        { id: 'am_fenrir', name: 'Fenrir (EN)' },
+        { id: 'bf_emma', name: 'Emma (UK)' },
+        { id: 'bf_isabella', name: 'Isabella (UK)' },
+        { id: 'bm_george', name: 'George (UK)' },
+        { id: 'bm_lewis', name: 'Lewis (UK)' },
+    ];
+
+    let voices = $derived(provider === 'kokoro' ? kokoroVoices : provider === 'elevenlabs' ? elevenlabsVoices : cfVoices);
 
     // Check if user has an API key on mount
     async function checkKey() {
@@ -277,6 +289,7 @@
                     <label>{$t('audio.provider')}</label>
                     <select bind:value={provider} disabled={isLoading}>
                         <option value="elevenlabs">ElevenLabs</option>
+                        <option value="kokoro">Kokoro (Open)</option>
                         <option value="cloudflare">Cloudflare Workers AI</option>
                     </select>
                 </div>
