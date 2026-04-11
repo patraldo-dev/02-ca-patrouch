@@ -358,7 +358,7 @@
                     <label>{$t('audio.provider')}</label>
                     <select bind:value={provider} disabled={isLoading}>
                         <option value="elevenlabs">ElevenLabs</option>
-                        <option value="kokoro">Kokoro (Open)</option>
+                        <option value="kokoro">Kokoro (Paid)</option>
                         <option value="cloudflare">Cloudflare Workers AI</option>
                     </select>
                 </div>
