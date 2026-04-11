@@ -17,6 +17,9 @@
         showCfKeySetup = provider === 'cloudflare' && !hasCfKey;
         showKeySetup = provider === 'elevenlabs' && !hasKey;
         showHfKeySetup = provider === 'kokoro' && !hasHfKey;
+        if (provider === 'cloudflare') voiceId = 'default';
+        else if (provider === 'kokoro') voiceId = 'af_heart';
+        else voiceId = 'pNInz6obpgDQGcFmaJgB';
     });
     let useAiDevelop = $state(false);
     let audioUrl = $state('');
