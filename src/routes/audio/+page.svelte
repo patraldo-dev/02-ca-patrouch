@@ -14,12 +14,9 @@
     let voiceId = $state('pNInz6obpgDQGcFmaJgB');
     let provider = $state('cloudflare');
     $effect(() => {
-        if (provider === 'cloudflare' && !hasCfKey) showCfKeySetup = true;
-        else if (provider === 'elevenlabs' && !hasKey) showKeySetup = true;
-        else if (provider === 'kokoro' && !hasHfKey) showHfKeySetup = true;
-        else if (provider !== 'kokoro') showHfKeySetup = false;
-        else if (provider !== 'cloudflare') showCfKeySetup = false;
-        else if (provider !== 'elevenlabs') showKeySetup = false;
+        showCfKeySetup = provider === 'cloudflare' && !hasCfKey;
+        showKeySetup = provider === 'elevenlabs' && !hasKey;
+        showHfKeySetup = provider === 'kokoro' && !hasHfKey;
     });
     let useAiDevelop = $state(false);
     let audioUrl = $state('');
