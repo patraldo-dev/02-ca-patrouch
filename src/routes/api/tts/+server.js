@@ -52,7 +52,7 @@ export async function POST({ request, locals }) {
             return json({ error: 'No audio generated' }, { status: 500 });
         }
 
-        // Kokoro TTS — via HuggingFace Inference API
+        // Kokoro TTS — via DeepInfra Inference API
         if (provider === 'kokoro') {
             const row = await locals.db.prepare('SELECT hf_api_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
             if (!row?.hf_api_key_encrypted) {
@@ -60,13 +60,13 @@ export async function POST({ request, locals }) {
             }
             const hfKey = decryptUserKey(row.hf_api_key_encrypted, user.id);
 
-            const resp = await fetch('https://router.huggingface.co/models/hexgrad/Kokoro-82M', {
+            const resp = await fetch('https://api.deepinfra.com/v1/audio/speech', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${hfKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ inputs: text.trim().slice(0, 5000) })
+                body: JSON.stringify({ model: 'hexgrad/Kokoro-82M', input: text.trim().slice(0, 5000) })
             });
 
             if (!resp.ok) {
