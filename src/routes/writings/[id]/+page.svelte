@@ -4,6 +4,7 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     import { marked } from 'marked';
+    import CommentSection from '$lib/components/CommentSection.svelte';
 
     let { data } = $props();
     let w = $state(data.writing);
@@ -121,6 +122,16 @@
     <a href={gameMode ? '/agora?author=both' : '/write'} class="back-link">← {gameMode ? $t('agora.game.back_to_agora') : $t('write.editor.back')}</a>
 
     <article class="writing-view">
+        {#if w.status === 'published'}
+            <CommentSection
+                writingId={w.id}
+                writingAuthorId={w.user_id}
+                allowComments={w.allow_comments}
+                user={data.user}
+                isAdmin={data.user?.role === 'admin'}
+                isAuthor={data.user?.id === w.user_id}
+            />
+        {/if}
         <header class="writing-header">
             <h1>{w.title}</h1>
             <div class="writing-meta">
