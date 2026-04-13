@@ -13,6 +13,7 @@
     <nav class="admin-nav">
         <a href="/admin" class:active={$page.url.pathname === '/admin'}>{$t('pages.admin.layout.dashboard')}</a>
         <a href="/admin/users" class:active={$page.url.pathname.startsWith('/admin/users')}>{$t('pages.admin.layout.users')}</a>
+        <a href="/admin/invitations" class:active={$page.url.pathname.startsWith('/admin/invitations')}>📨 {$t('pages.admin.layout.invitations')}</a>
         <a href="/admin/analytics" class:active={$page.url.pathname.startsWith('/admin/analytics')}>📊 Analytics</a>
     </nav>
 

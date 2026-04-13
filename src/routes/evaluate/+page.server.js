@@ -1,12 +1,14 @@
-// src/routes/evaluate/+page.server.js
-import { redirect } from '@sveltejs/kit';
+import { redirect, error } from '@sveltejs/kit';
 
 export async function load({ locals }) {
     if (!locals.user) {
         throw redirect(302, '/login');
     }
 
-    return {
-        user: locals.user
-    };
+    const user = locals.user;
+    if (user.role !== 'member' && user.role !== 'admin') {
+        throw error(403, 'Member access required');
+    }
+
+    return { user };
 }
