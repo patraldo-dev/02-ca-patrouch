@@ -1,22 +1,22 @@
 import { getPublicWritings } from '$lib/server/writing-stats.js';
 
 export async function load({ url, locals }) {
-  const page = parseInt(url.searchParams.get('page')) || 1;
   const locale = url.searchParams.get('locale') || null;
   const category = url.searchParams.get('category') || null;
   const author = url.searchParams.get('author') || null;
 
-  const { writings, total, pages } = await getPublicWritings(locals.db, {
-    page,
+  // No pagination — show 12 writings, rotate daily
+  const { writings, total } = await getPublicWritings(locals.db, {
+    page: 1,
+    limit: 12,
     locale: ['en', 'es', 'fr'].includes(locale) ? locale : null,
     category: category || null,
-    author: ['agents', 'humans'].includes(author) ? author : null
+    author: ['agents', 'humans', 'both'].includes(author) ? author : null
   });
 
   return {
     user: locals.user || null,
     writings,
-    pagination: { page, total, pages },
     filters: { locale, category, author }
   };
 }

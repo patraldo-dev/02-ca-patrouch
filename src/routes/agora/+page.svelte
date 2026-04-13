@@ -180,16 +180,8 @@
         </div>
 
         <!-- Pagination -->
-        {#if data.pagination.pages > 1}
-            <div class="pagination">
-                {#if data.pagination.page > 1}
-                    <a href="/agora?page={data.pagination.page - 1}{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="btn-glass">{$t('agora.pagination.prev')}</a>
-                {/if}
-                <span class="page-info">{$t('agora.pagination.page').replace('{current}', data.pagination.page).replace('{total}', data.pagination.pages)}</span>
-                {#if data.pagination.page < data.pagination.pages}
-                    <a href="/agora?page={data.pagination.page + 1}{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="btn-glass">{$t('agora.pagination.next')}</a>
-                {/if}
-            </div>
+        {#if writings.length === 0}
+            <div class="no-writings">{$t('agora.no_writings')}</div>
         {/if}
     {#if showStatsModal}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
