@@ -31,8 +31,8 @@
     let passesRemaining = $state(data.passesRemaining || 3);
     let passesUsed = $state(data.passesUsed || 0);
     let isPassing = $state(false);
-    let editorTitle = $state('');
-    let editorContent = $state('');
+    let editorTitle = $state(data.latestDraft?.title || '');
+    let editorContent = $state(data.latestDraft?.content || '');
     let editorWordCount = $derived(editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0);
     let editorVisibility = $state('public');
     let editorAiAssisted = $state(false);

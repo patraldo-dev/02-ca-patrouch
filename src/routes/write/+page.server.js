@@ -57,6 +57,17 @@ export async function load({ locals, url }) {
     userBadges = await getAllBadgesWithStatus(db, locals.user.id);
   } catch (e) {}
 
+  // Get latest draft for today (if any)
+  let latestDraft = null;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    latestDraft = await db.prepare(
+      `SELECT w.id, w.title, w.content, w.visibility FROM writings w 
+       WHERE w.user_id = ? AND w.status = 'draft' AND w.created_at >= ? 
+       ORDER BY w.updated_at DESC, w.created_at DESC LIMIT 1`
+    ).bind(locals.user.id, today).first();
+  } catch (e) {}
+
   return {
     user: locals.user,
     prompt: todayData.prompt,
@@ -71,6 +82,7 @@ export async function load({ locals, url }) {
     artwork: getDailyArtwork(),
     heatmapData,
     writerOfTheWeek,
-    userBadges
+    userBadges,
+    latestDraft
   };
 }
