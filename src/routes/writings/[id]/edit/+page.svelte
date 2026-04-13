@@ -26,14 +26,14 @@
         const text = content || '';
         wordCount = text.trim().split(/\s+/).filter(Boolean).length;
         if (showPreview && browser) {
-            marked.parse(text).then(html => { previewHtml = html; });
+            previewHtml = marked.parse(text, { async: false });
         }
     });
 
     function togglePreview() {
         showPreview = !showPreview;
         if (showPreview && browser) {
-            marked.parse(content || '').then(html => { previewHtml = html; });
+            previewHtml = marked.parse(content || '', { async: false });
         }
     }
 
