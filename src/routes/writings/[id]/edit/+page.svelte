@@ -154,26 +154,26 @@
     .editor-field input {
         width: 100%; padding: 0.6rem 0.75rem; background: var(--surface, #141417);
         border: 2px solid var(--border, rgba(255,255,255,0.1)); border-radius: var(--radius, 8px);
-        color: var(--text-body, #e4e4e7); font-family: var(--font-heading, 'Playfair Display', serif);
+        color: var(--text); font-family: var(--font-heading, 'Playfair Display', serif);
         font-size: 1.25rem; outline: none; transition: border-color 0.2s; box-sizing: border-box;
     }
     .editor-field input:focus { border-color: var(--accent, #c9a87c); }
 
     .editor-toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-    .toolbar-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-body); padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; font-family: var(--font-body); }
+    .toolbar-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; font-family: var(--font-body); }
     .toolbar-btn:hover { border-color: var(--accent); }
     .toolbar-spacer { flex: 1; }
     .visibility-label { font-size: 0.8rem; color: var(--text-dim); }
-    .editor-toolbar select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-body); padding: 0.35rem 0.5rem; font-size: 0.8rem; cursor: pointer; }
+    .editor-toolbar select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 0.35rem 0.5rem; font-size: 0.8rem; cursor: pointer; }
 
     .editor-body { min-height: 400px; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius, 8px); overflow: hidden; }
     .editor-textarea {
         width: 100%; min-height: 400px; padding: 1.25rem; background: transparent; border: none;
-        color: var(--text-body, #e4e4e7); font-family: var(--font-body); font-size: 1rem;
+        color: var(--text); font-family: var(--font-body); font-size: 1rem;
         line-height: 1.8; resize: vertical; outline: none; box-sizing: border-box;
     }
     .preview-pane { padding: 1.25rem; max-height: 600px; overflow-y: auto; }
-    .preview-content { color: var(--text-body); line-height: 1.8; font-size: 1rem; }
+    .preview-content { color: var(--text); line-height: 1.8; font-size: 1rem; }
     .preview-content :global(h1), .preview-content :global(h2), .preview-content :global(h3) { font-family: var(--font-heading, 'Playfair Display', serif); color: var(--text); margin: 1.5rem 0 0.75rem; }
     .preview-content :global(h1) { font-size: 1.5rem; }
     .preview-content :global(h2) { font-size: 1.25rem; }
@@ -188,7 +188,7 @@
     .toast.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
     .toast.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
     .btn-save, .btn-publish { padding: 0.6rem 1.25rem; border: none; border-radius: var(--radius, 8px); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-    .btn-save { background: rgba(255,255,255,0.08); color: var(--text-body); border: 1px solid var(--border); }
+    .btn-save { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid var(--border); }
     .btn-save:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
     .btn-publish { background: var(--accent, #c9a87c); color: var(--bg); }
     .btn-publish:hover:not(:disabled) { opacity: 0.9; }
