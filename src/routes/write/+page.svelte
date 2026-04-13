@@ -248,7 +248,7 @@
 
                 <!-- Inline Editor - always visible -->
                 <div class="inline-editor">
-                    <h2 class="editor-heading">{$t('write.editor.heading')}</h2>
+                    <h2 class="editor-heading">{editorContent ? $t('write.editor.heading_continue') : $t('write.editor.heading')}</h2>
                     {#if prompt && promptId && promptMode === 'text'}
                         <div class="editor-prompt-ref">
                             <span>{$t('write.editor.from_prompt')}:</span> {prompt.prompt_text?.slice(0, 80)}{prompt.prompt_text?.length > 80 ? '…' : ''}

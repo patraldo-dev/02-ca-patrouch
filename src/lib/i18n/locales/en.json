@@ -731,5 +731,6 @@
   "comments.max_chars": "1500",
   "comments.loading": "Loading comments…",
   "comments.no_comments": "No comments yet. Be the first to share your thoughts.",
-  "comments.error_moderation": "Your comment was not approved by our moderation filter."
+  "comments.error_moderation": "Your comment was not approved by our moderation filter.",
+  "write.editor.heading_continue": "Continue Writing"
 }

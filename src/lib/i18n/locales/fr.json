@@ -731,5 +731,6 @@
   "comments.max_chars": "1500",
   "comments.loading": "Chargement des commentaires…",
   "comments.no_comments": "Pas encore de commentaires. Soyez le premier à partager vos pensées.",
-  "comments.error_moderation": "Votre commentaire n’a pas été approuvé par notre filtre de modération."
+  "comments.error_moderation": "Votre commentaire n’a pas été approuvé par notre filtre de modération.",
+  "write.editor.heading_continue": "Continuer l'Écriture"
 }
