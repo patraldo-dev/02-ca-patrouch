@@ -1,113 +1,133 @@
 <!-- src/lib/components/CommentForm.svelte -->
 <script>
-    import { enhance } from '$app/forms';
-    import { t } from '$lib/i18n'; 
+    import { t } from '$lib/i18n';
 
-    export let reviewId;
-    export let onCommentPosted;
+    let { writingId, parentId = null, onCommentPosted, userRole = 'user' } = $props();
 
-    let content = '';
-    let error = '';
-    let loading = false;
+    let content = $state('');
+    let error = $state('');
+    let loading = $state(false);
 
     async function handleSubmit(e) {
         e.preventDefault();
         if (!content.trim()) return;
 
-        loading = true;
-        error = '';
-
-        const res = await fetch('/api/comments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                review_id: reviewId,
-                content: content.trim()
-            })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            error = data.error || $t('common.commentForm.error.failedToPost');
-            loading = false;
+        if (parentId && userRole === 'user') {
+            error = 'Only members can reply';
             return;
         }
 
-        // Reset form
-        content = '';
-        loading = false;
+        loading = true;
+        error = '';
 
-        // Notify parent
-        if (onCommentPosted) {
-            onCommentPosted(data.comment);
+        try {
+            const res = await fetch(`/api/writings/${writingId}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: content.trim().slice(0, 1500),
+                    parent_id: parentId
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                error = data.error || 'Failed to post comment';
+                loading = false;
+                return;
+            }
+
+            content = '';
+            loading = false;
+
+            if (onCommentPosted) {
+                onCommentPosted(data.comment);
+            }
+        } catch (err) {
+            error = 'Failed to post comment';
+            loading = false;
         }
     }
 </script>
 
 <div class="comment-form">
-    <h3>{$t('common.commentForm.title')}</h3>
-    {#if error}
-        <div class="alert error">{error}</div>
-    {/if}
-    <form on:submit|preventDefault={handleSubmit} use:enhance>
+    {#if parentId}
         <textarea
             bind:value={content}
-            placeholder={$t('common.commentForm.placeholder')}
+            placeholder="Write a reply..."
             rows="3"
-            required
-            maxlength="1000"
+            disabled={loading}
+            maxlength="1500"
         ></textarea>
-        <button type="submit" disabled={loading || !content.trim()}>
-            {loading ? $t('common.commentForm.button.posting') : $t('common.commentForm.button.post')}
+    {:else}
+        <textarea
+            bind:value={content}
+            placeholder="Share your thoughts on this piece..."
+            rows="4"
+            disabled={loading}
+            maxlength="1500"
+        ></textarea>
+    {/if}
+    <div class="comment-form-footer">
+        <span class="char-count">{content.length}/1500</span>
+        <button onclick={handleSubmit} disabled={loading || content.trim().length < 3}>
+            {loading ? '...' : parentId ? 'Reply' : 'Post Comment'}
         </button>
-    </form>
+    </div>
+    {#if error}
+        <p class="comment-error">{error}</p>
+    {/if}
 </div>
 
 <style>
     .comment-form {
-        background: #f8fafc;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 2rem 0;
+        margin-bottom: 1rem;
     }
-    h3 {
-        margin: 0 0 1rem 0;
-        color: #333;
-        font-size: 1.2rem;
-    }
-    textarea {
+    .comment-form textarea {
         width: 100%;
         padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 1rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
         resize: vertical;
-        min-height: 80px;
+        min-height: 60px;
+        box-sizing: border-box;
     }
-    button {
-        margin-top: 1rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--primary-color);
-        color: white;
+    .comment-form textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    .comment-form-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+    .char-count {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+    }
+    .comment-form button {
+        padding: 0.5rem 1.25rem;
+        background: var(--accent);
+        color: #000;
         border: none;
         border-radius: 6px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-    }
-    button:disabled {
-        background: #9ca3af;
-        cursor: not-allowed;
-    }
-    .alert {
-        padding: 0.75rem;
-        border-radius: 6px;
-        margin-bottom: 1rem;
+        font-family: var(--font-body);
         font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
     }
-    .error {
-        background: #fee2e2;
-        color: #991b1b;
+    .comment-form button:hover { opacity: 0.85; }
+    .comment-form button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .comment-error {
+        color: #e74c3c;
+        font-size: 0.85rem;
+        margin-top: 0.35rem;
     }
 </style>
