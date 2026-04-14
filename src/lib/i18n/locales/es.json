@@ -741,5 +741,8 @@
   "write.timer.words_in": "palabras en",
   "write.editor.ai_tooltip": "Solo un reconocimiento. Esta marca se muestra en tu escrito como insignia de transparencia. No afecta insignias, puntuaciones del juego ni visibilidad en la Ágora.",
   "write.art.error": "No se pudo generar el estímulo visual. El modelo de visión IA puede no estar disponible.",
-  "write.art.retry": "Reintentar"
+  "write.art.retry": "Reintentar",
+  "write.art.3d_drag": "🖱️ Arrastra para rotar",
+  "write.art.3d_zoom": "🔍 Desplaza para zoom",
+  "write.art.3d_pan": "✋ Clic derecho para mover"
 }

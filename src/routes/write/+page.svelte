@@ -8,6 +8,7 @@
     import BadgeTrophyCase from '$lib/components/BadgeTrophyCase.svelte';
     import WriterOfTheWeek from '$lib/components/WriterOfTheWeek.svelte';
     import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
+    import Image3DManipulator from '$lib/components/Image3DManipulator.svelte';
     import { browser } from '$app/environment';
 
     import { onMount } from 'svelte';
@@ -278,7 +279,9 @@
                                 <button class="btn-glass" onclick={loadVisualPrompt}>{$t('write.art.retry')}</button>
                             </div>
                         {:else if visualPrompt}
-                            <img src={visualPrompt.artwork.imageUrl} alt={visualPrompt.artwork.title} class="art-image" loading="lazy" />
+                            <div class="art-3d-wrapper">
+                                <Image3DManipulator imageUrl={visualPrompt.artwork.imageUrl} />
+                            </div>
                             {#if visualPrompt.prompt}
                                 <div class="art-prompt-text">
                                     <p>{visualPrompt.prompt}</p>
@@ -289,7 +292,9 @@
                                 <span class="art-credit">{visualPrompt.artwork.credit}</span>
                             </div>
                         {:else if data.artwork}
-                            <img src={data.artwork.imageUrl} alt={data.artwork.title} class="art-image" loading="lazy" />
+                            <div class="art-3d-wrapper">
+                                <Image3DManipulator imageUrl={data.artwork.imageUrl} />
+                            </div>
                             <div class="art-meta">
                                 <span class="art-title">{data.artwork.title}</span>
                                 <span class="art-credit">{data.artwork.credit}</span>
@@ -1059,6 +1064,8 @@
     }
     .visual-error { text-align: center; padding: 2rem; color: var(--text-dim); }
     .visual-error p { margin-bottom: 1rem; font-size: 0.9rem; }
+    .art-3d-wrapper { height: 320px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 1rem; }
+    @media (max-width: 768px) { .art-3d-wrapper { height: 250px; } }
     .art-image {
         max-width: 300px;
         width: 100%;

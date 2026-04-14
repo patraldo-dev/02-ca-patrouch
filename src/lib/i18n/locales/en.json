@@ -741,5 +741,8 @@
   "write.timer.words_in": "words in",
   "write.editor.ai_tooltip": "Acknowledgment only. This flag is displayed on your published writing as a transparency badge. It does not affect badges, game scores, or visibility in the Agora.",
   "write.art.error": "Could not generate visual prompt. The AI vision model may be unavailable.",
-  "write.art.retry": "Retry"
+  "write.art.retry": "Retry",
+  "write.art.3d_drag": "🖱️ Drag to rotate",
+  "write.art.3d_zoom": "🔍 Scroll to zoom",
+  "write.art.3d_pan": "✋ Right-click to pan"
 }
