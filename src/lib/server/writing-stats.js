@@ -368,7 +368,12 @@ export async function getPublicWritings(db, options = {}) {
   }
   // 'both' means no filter (default)
 
-  const countResult = await db.prepare(query.replace('SELECT w.id', 'SELECT COUNT(*) as total')).bind(...binds).first();
+  const countResult = await db.prepare(
+    `SELECT COUNT(*) as total FROM writings w JOIN users u ON w.user_id = u.id WHERE w.visibility = 'public' AND w.status = 'published'`
+      + (locale ? ' AND w.locale = ?' : '')
+      + (category ? ' AND w.category = ?' : '')
+      + (author === 'agents' ? " AND u.role = 'agent'" : author === 'humans' ? " AND u.role != 'agent'" : '')
+  ).bind(...binds).first();
   const total = countResult?.total || 0;
 
   query += ' ORDER BY w.created_at DESC LIMIT ? OFFSET ?';
