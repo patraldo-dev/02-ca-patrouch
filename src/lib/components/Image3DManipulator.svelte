@@ -113,13 +113,14 @@
   }
   
   function onMouseDown(event) {
+    // Double-click to reset
+    if (event.detail === 2) {
+      resetTransform();
+      isDragging = false;
+      return;
+    }
     isDragging = true;
     previousMousePosition = { x: event.clientX, y: event.clientY };
-    
-    // Check if right-click for panning
-    if (event.button === 2) {
-      event.preventDefault();
-    }
   }
 
   function onMouseMove(event) {
@@ -252,10 +253,19 @@
     previousMousePosition = { x: event.touches[0].clientX, y: event.touches[0].clientY };
   }
   
+  let lastTapTime = 0;
+
   function onTouchEnd() {
     isDragging = false;
     isPinching = false;
     lastTouchDistance = 0;
+
+    // Double-tap to reset
+    const now = Date.now();
+    if (now - lastTapTime < 300) {
+      resetTransform();
+    }
+    lastTapTime = now;
   }
   
   // FIXED: Prevents slider jumping
