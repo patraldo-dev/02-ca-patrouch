@@ -739,5 +739,7 @@
   "write.timer.stop": "Stop",
   "write.timer.dismiss": "✕",
   "write.timer.words_in": "words in",
-  "write.editor.ai_tooltip": "Acknowledgment only. This flag is displayed on your published writing as a transparency badge. It does not affect badges, game scores, or visibility in the Agora."
+  "write.editor.ai_tooltip": "Acknowledgment only. This flag is displayed on your published writing as a transparency badge. It does not affect badges, game scores, or visibility in the Agora.",
+  "write.art.error": "Could not generate visual prompt. The AI vision model may be unavailable.",
+  "write.art.retry": "Retry"
 }

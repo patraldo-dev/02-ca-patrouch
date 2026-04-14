@@ -739,5 +739,7 @@
   "write.timer.stop": "Arrêter",
   "write.timer.dismiss": "✕",
   "write.timer.words_in": "mots en",
-  "write.editor.ai_tooltip": "Simple reconnaissance. Ce marque est affiché sur votre texte publié comme badge de transparence. Il n'affecte pas les badges, les scores du jeu ni la visibilité dans l'Agora."
+  "write.editor.ai_tooltip": "Simple reconnaissance. Ce marque est affiché sur votre texte publié comme badge de transparence. Il n'affecte pas les badges, les scores du jeu ni la visibilité dans l'Agora.",
+  "write.art.error": "Impossible de générer le stimulus visuel. Le modèle de vision IA peut être indisponible.",
+  "write.art.retry": "Réessayer"
 }

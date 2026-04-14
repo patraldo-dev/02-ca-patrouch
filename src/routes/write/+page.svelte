@@ -51,24 +51,31 @@
     let promptMode = $state('text'); // 'text' | 'visual'
     let visualPrompt = $state(null);
     let visualLoading = $state(false);
+    let visualError = $state(null);
 
     function catLabel(key) {
         return $t('write.category.' + key) || key;
     }
 
     async function loadVisualPrompt() {
-        if (visualPrompt) return;
         visualLoading = true;
+        visualError = null;
+        visualPrompt = null;
         try {
             const loc = getLocale() || 'en';
             const res = await fetch(`/api/write/art-prompt?locale=${loc}`);
             if (res.ok) {
-                visualPrompt = await res.json();
+                const d = await res.json();
+                if (d.error) {
+                    visualError = d.error;
+                } else {
+                    visualPrompt = d;
+                }
             } else {
-                console.error('Art prompt API error:', res.status);
+                visualError = 'server_' + res.status;
             }
         } catch (err) {
-            console.error('Art prompt fetch error:', err);
+            visualError = 'network';
         }
         visualLoading = false;
     }
@@ -264,6 +271,11 @@
                             <div class="art-loading">
                                 <div class="spinner-small"></div>
                                 <span>{$t('write.art.generating')}</span>
+                            </div>
+                        {:else if visualError}
+                            <div class="visual-error">
+                                <p>{$t('write.art.error')}</p>
+                                <button class="btn-glass" onclick={loadVisualPrompt}>{$t('write.art.retry')}</button>
                             </div>
                         {:else if visualPrompt}
                             <img src={visualPrompt.artwork.imageUrl} alt={visualPrompt.artwork.title} class="art-image" loading="lazy" />
@@ -1045,6 +1057,8 @@
         animation: spin 0.6s linear infinite;
         display: inline-block;
     }
+    .visual-error { text-align: center; padding: 2rem; color: var(--text-dim); }
+    .visual-error p { margin-bottom: 1rem; font-size: 0.9rem; }
     .art-image {
         max-width: 300px;
         width: 100%;
