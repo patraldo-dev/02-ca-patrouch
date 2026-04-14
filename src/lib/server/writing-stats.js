@@ -287,7 +287,11 @@ export async function getUserWritings(db, userId, options = {}) {
     binds.push(visibility);
   }
 
-  const countResult = await db.prepare(query.replace('SELECT w.*', 'SELECT COUNT(*) as total')).bind(...binds).first();
+  const countBinds = [...binds];
+  const countResult = await db.prepare(
+    `SELECT COUNT(*) as total FROM writings w LEFT JOIN writing_prompts wp ON w.prompt_id = wp.id WHERE w.user_id = ?`
+      + (visibility ? ' AND w.visibility = ?' : '')
+  ).bind(...countBinds).first();
   const total = countResult?.total || 0;
 
   query += ' ORDER BY w.created_at DESC LIMIT ? OFFSET ?';
