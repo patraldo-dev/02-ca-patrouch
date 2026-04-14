@@ -732,5 +732,11 @@
   "comments.loading": "Cargando comentarios…",
   "comments.no_comments": "Aún no hay comentarios. Sé el primero en compartir tus pensamientos.",
   "comments.error_moderation": "Tu comentario no fue aprobado por nuestro filtro de moderación.",
-  "write.editor.heading_continue": "Continuar Escrito"
+  "write.editor.heading_continue": "Continuar Escrito",
+  "write.timer.start_btn": "Escritura Cronometrada",
+  "write.timer.minutes": "min",
+  "write.timer.go": "¡Listo, Ya!",
+  "write.timer.stop": "Detener",
+  "write.timer.dismiss": "✕",
+  "write.timer.words_in": "palabras en"
 }

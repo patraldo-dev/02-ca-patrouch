@@ -732,5 +732,11 @@
   "comments.loading": "Loading comments…",
   "comments.no_comments": "No comments yet. Be the first to share your thoughts.",
   "comments.error_moderation": "Your comment was not approved by our moderation filter.",
-  "write.editor.heading_continue": "Continue Writing"
+  "write.editor.heading_continue": "Continue Writing",
+  "write.timer.start_btn": "Timed Writing",
+  "write.timer.minutes": "min",
+  "write.timer.go": "Ready, Go!",
+  "write.timer.stop": "Stop",
+  "write.timer.dismiss": "✕",
+  "write.timer.words_in": "words in"
 }

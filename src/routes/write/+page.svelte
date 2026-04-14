@@ -36,6 +36,13 @@
     let editorContent = $state(data.latestDraft?.content || '');
     let editorWordCount = $derived(editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0);
     let editorVisibility = $state('public');
+    let timedMode = $state(false);
+    let timerDuration = $state(15);
+    let timerSeconds = $state(0);
+    let timerRunning = $state(false);
+    let timerFinished = $state(false);
+    let timerInterval = null;
+    let timerWordsAtStart = $state(0);
     let editorAiAssisted = $state(false);
     let editorSaving = $state(false);
     let editorMessage = $state('');
@@ -107,6 +114,40 @@
     }
 
     function viewWriting(id) { goto('/writings/' + id); }
+
+    function startTimer() {
+        timerSeconds = timerDuration * 60;
+        timerRunning = true;
+        timerFinished = false;
+        timerWordsAtStart = editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0;
+        timerInterval = setInterval(() => {
+            timerSeconds--;
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                timerFinished = true;
+                timedMode = false;
+            }
+        }, 1000);
+    }
+    function stopTimer() {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerFinished = true;
+        timedMode = false;
+    }
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerFinished = false;
+        timedMode = false;
+        timerSeconds = 0;
+    }
+    let timerWordsWritten = $derived(Math.max(0, editorWordCount - timerWordsAtStart));
+    let timerDisplay = $derived({
+        min: Math.floor(timerSeconds / 60).toString().padStart(2, '0'),
+        sec: (timerSeconds % 60).toString().padStart(2, '0')
+    });
 
     async function handleSave() {
         if (!editorTitle.trim() || !editorContent.trim()) return;
@@ -284,6 +325,38 @@
                         </div>
                         {#if editorMessage}
                             <div class="save-toast">{editorMessage}</div>
+                        {/if}
+                        {#if timerRunning}
+                            <div class="timer-bar">
+                                <div class="timer-display">{timerDisplay.min}:{timerDisplay.sec}</div>
+                                <div class="timer-progress"><div class="timer-fill" style="width: {((timerDuration * 60 - timerSeconds) / (timerDuration * 60)) * 100}%"></div></div>
+                                <span class="timer-words">+{timerWordsWritten} {$t('write.editor.words')}</span>
+                                <button class="timer-stop" onclick={stopTimer}>{$t('write.timer.stop')}</button>
+                            </div>
+                        {/if}
+                        {#if timerFinished && !timerRunning}
+                            <div class="timer-done">
+                                <span>⏱ {timerWordsWritten} {$t('write.timer.words_in')} {timerDuration} {$t('write.timer.minutes')}</span>
+                                <button class="timer-dismiss" onclick={resetTimer}>{$t('write.timer.dismiss')}</button>
+                            </div>
+                        {/if}
+                        {#if !timerRunning && !timerFinished && !timedMode}
+                            <button class="btn-timer" onclick={() => timedMode = true}>⏱ {$t('write.timer.start_btn')}</button>
+                        {/if}
+                        {#if timedMode && !timerRunning}
+                            <div class="timer-setup">
+                                <select bind:value={timerDuration}>
+                                    <option value={5}>5 {$t('write.timer.minutes')}</option>
+                                    <option value={10}>10 {$t('write.timer.minutes')}</option>
+                                    <option value={15}>15 {$t('write.timer.minutes')}</option>
+                                    <option value={20}>20 {$t('write.timer.minutes')}</option>
+                                    <option value={30}>30 {$t('write.timer.minutes')}</option>
+                                    <option value={45}>45 {$t('write.timer.minutes')}</option>
+                                    <option value={60}>60 {$t('write.timer.minutes')}</option>
+                                </select>
+                                <button class="btn-timer-go" onclick={startTimer}>{$t('write.timer.go')}</button>
+                                <button class="timer-cancel" onclick={() => timedMode = false}>✕</button>
+                            </div>
                         {/if}
                         <div class="editor-actions">
                             <button type="button" class="btn-save" onclick={handleSave} disabled={editorSaving}>{$t('write.editor.save_draft')}</button>
@@ -1081,4 +1154,22 @@
     .modal-close:hover {
         color: var(--text);
     }
+
+    /* Timer */
+    .timer-bar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; padding: 0.6rem 0.75rem; background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; }
+    .timer-display { font-family: 'Inter', monospace; font-size: 1.2rem; font-weight: 600; color: var(--accent); min-width: 3.5rem; }
+    .timer-progress { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .timer-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 1s linear; }
+    .timer-words { font-size: 0.8rem; color: var(--text-dim); white-space: nowrap; }
+    .timer-stop { background: none; border: 1px solid rgba(248,113,113,0.3); color: #f87171; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer; font-family: var(--font-body); }
+    .timer-stop:hover { border-color: #f87171; }
+    .timer-done { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(201,168,124,0.1); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 0.95rem; font-weight: 500; }
+    .timer-dismiss { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 0.2rem 0.4rem; }
+    .btn-timer { background: none; border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; font-family: var(--font-body); margin-bottom: 0.75rem; transition: all 0.2s; }
+    .btn-timer:hover { border-color: var(--accent); color: var(--accent); }
+    .timer-setup { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .timer-setup select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 0.4rem 0.5rem; font-size: 0.85rem; font-family: var(--font-body); }
+    .btn-timer-go { background: var(--accent); color: var(--bg); border: none; border-radius: 6px; padding: 0.4rem 1.2rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
+    .btn-timer-go:hover { opacity: 0.85; }
+    .timer-cancel { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 0.2rem 0.4rem; }
 </style>
