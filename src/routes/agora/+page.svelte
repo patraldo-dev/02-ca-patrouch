@@ -180,7 +180,7 @@
         </div>
 
         <!-- Pagination -->
-        {#if writings.length === 0}
+        {#if data.writings?.length === 0}
             <div class="no-writings">{$t('agora.no_writings')}</div>
         {/if}
     {#if showStatsModal}
