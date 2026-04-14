@@ -10,6 +10,7 @@
   ];
 
   function switchLanguage(lang) {
+    document.documentElement.classList.add('lang-switching');
     if (!browser) return;
     // Use GET redirect — server sets cookie, then redirects back
     // This is the most reliable way to ensure cookie is set before page loads

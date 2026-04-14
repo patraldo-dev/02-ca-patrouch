@@ -12,6 +12,7 @@
   let activeLocale = $state(serverLocale || 'es');
 
   function switchLanguage(lang) {
+    document.documentElement.classList.add('lang-switching');
     if (!browser) return;
     window.location.href = `/api/locale?lang=${lang}&redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   }

@@ -372,3 +372,36 @@ input::placeholder, textarea::placeholder {
     color: var(--text-dim);
     line-height: 1.5;
 }
+
+/* Language switch loading overlay */
+html.lang-switching::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--bg, #09090b);
+  z-index: 99999;
+  animation: langSpin 1s linear infinite;
+}
+@keyframes langSpin {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 1; }
+}
+html.lang-switching::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border: 3px solid var(--border, rgba(255,255,255,0.1));
+  border-top-color: var(--accent, #c9a87c);
+  border-radius: 50%;
+  z-index: 100000;
+  animation: spinnerRotate 0.6s linear infinite;
+}
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}
