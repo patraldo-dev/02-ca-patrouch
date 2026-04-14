@@ -45,12 +45,14 @@ export async function generatePromptFromImage(ai, imageUrl, locale = 'en') {
         const imgRes = await fetch(imageUrl);
         if (!imgRes.ok) throw new Error('Failed to fetch image');
         const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        const imgType = allowedTypes.includes(contentType) ? contentType : 'image/jpeg';
         const imgBuf = await imgRes.arrayBuffer();
         const bytes = new Uint8Array(imgBuf);
         let binary = '';
         for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
         const b64 = btoa(binary);
-        const dataUrl = 'data:' + contentType + ';base64,' + b64;
+        const dataUrl = 'data:' + imgType + ';base64,' + b64;
 
         const response = await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', {
             messages: [
