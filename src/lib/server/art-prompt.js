@@ -48,6 +48,12 @@ export async function generatePromptFromImage(ai, imageUrl, locale = 'en') {
         const b64 = btoa(String.fromCharCode(...new Uint8Array(imgBuf)));
         const dataUrl = `data:image/jpeg;base64,${b64}`;
 
+        // First call to accept Llama license, then actual request
+        await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', {
+            messages: [{ role: 'user', content: 'agree' }],
+            max_tokens: 1,
+        });
+
         const response = await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', {
             messages: [
                 { role: 'system', content: systemPrompt },
