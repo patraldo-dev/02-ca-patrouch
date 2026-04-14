@@ -2,10 +2,10 @@
 <script>
     import { t } from '$lib/i18n';
 
-    let email = '';
-    let type = 'book-updates';
-    let message = '';
-    let loading = false;
+    let email = $state('');
+    let type = $state('book-updates');
+    let message = $state('');
+    let loading = $state(false);
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -31,7 +31,7 @@
     }
 </script>
 
-<form on:submit|preventDefault={handleSubmit} class="subscribe-form">
+<form onsubmit={handleSubmit} class="subscribe-form">
     <h3>{$t('common.subscribeForm.title')}</h3>
     <input
         type="email"
