@@ -176,6 +176,17 @@
                     <p>{w.prompt_text}</p>
                 </div>
             {/if}
+            {#if w.visual_prompt_text}
+                <div class="prompt-ref visual-prompt-ref">
+                    {#if w.visual_artwork_url}
+                        <img src={w.visual_artwork_url} alt="Visual prompt artwork" class="visual-prompt-thumb" />
+                    {/if}
+                    <div>
+                        <span class="prompt-tag">{$t('write.view.from_visual_prompt')}</span>
+                        <p>{w.visual_prompt_text}</p>
+                    </div>
+                </div>
+            {/if}
         </header>
 
         <div class="writing-content">
@@ -361,6 +372,9 @@
         color: var(--text-dim);
         margin: 0.35rem 0 0 0;
     }
+    .visual-prompt-ref { display: flex; gap: 1rem; align-items: flex-start; }
+    .visual-prompt-thumb { width: 80px; height: 120px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    @media (max-width: 600px) { .visual-prompt-ref { flex-direction: column; align-items: center; } .visual-prompt-thumb { width: 60px; height: 90px; } }
 
     .writing-content {
         font-size: 1.05rem;

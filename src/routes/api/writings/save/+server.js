@@ -8,7 +8,7 @@ export async function POST({ request, locals }) {
     const db = locals.db;
     if (!db) return json({ error: 'No database' }, { status: 503 });
 
-    const { title, content, promptId, aiAssisted, visibility = 'private' } = await request.json();
+    const { title, content, promptId, aiAssisted, visibility = 'private', visualPromptText, visualArtworkUrl } = await request.json();
 
     if (!title?.trim() || !content?.trim()) {
         return json({ error: 'Title and content required' }, { status: 400 });
@@ -26,8 +26,8 @@ export async function POST({ request, locals }) {
         // If publishing, update status and visibility
         if (status === 'published') {
             await db.prepare(
-                "UPDATE writings SET status = 'published', visibility = 'public', updated_at = datetime('now') WHERE id = ?"
-            ).bind(result.id).run();
+                "UPDATE writings SET status = 'published', visibility = 'public', visual_prompt_text = ?, visual_artwork_url = ?, updated_at = datetime('now') WHERE id = ?"
+            ).bind(visualPromptText || null, visualArtworkUrl || null, result.id).run();
         }
 
         // Index into Vectorize (both drafts and published)

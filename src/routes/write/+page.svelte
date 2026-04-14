@@ -192,7 +192,7 @@
             const res = await fetch('/api/writings/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted })
+                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
             });
             if (res.ok) {
                 editorMessage = $t('write.editor.saved');
@@ -211,7 +211,7 @@
             const res = await fetch('/api/writings/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, visibility: editorVisibility })
+                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, visibility: editorVisibility, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
             });
             if (res.ok) {
                 const d = await res.json();

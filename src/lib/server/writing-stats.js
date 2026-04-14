@@ -324,14 +324,14 @@ export async function publishWriting(db, userId, { title, content, promptId, aiA
   return { id, wordCount };
 }
 
-export async function saveDraft(db, userId, { title, content, promptId, aiAssisted }) {
+export async function saveDraft(db, userId, { title, content, promptId, aiAssisted, visualPromptText, visualArtworkUrl }) {
   const id = crypto.randomUUID();
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
 
   await db.prepare(
-    `INSERT INTO writings (id, user_id, prompt_id, title, content, word_count, ai_assisted, visibility, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'private', 'draft', datetime('now'), datetime('now'))`
-  ).bind(id, userId, promptId || null, title, content, wordCount, aiAssisted ? 1 : 0).run();
+    `INSERT INTO writings (id, user_id, prompt_id, title, content, word_count, ai_assisted, visibility, status, visual_prompt_text, visual_artwork_url, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'private', 'draft', ?, ?, datetime('now'), datetime('now'))`
+  ).bind(id, userId, promptId || null, title, content, wordCount, aiAssisted ? 1 : 0, visualPromptText || null, visualArtworkUrl || null).run();
 
   await updateStats(db, userId, 'written', wordCount);
 

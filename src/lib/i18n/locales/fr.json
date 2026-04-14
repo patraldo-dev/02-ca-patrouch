@@ -744,5 +744,6 @@
   "write.art.retry": "Réessayer",
   "write.art.3d_drag": "🖱️ Glissez pour pivoter",
   "write.art.3d_zoom": "🔍 Défilez pour zoomer",
-  "write.art.3d_pan": "✋ Clic droit pour déplacer"
+  "write.art.3d_pan": "✋ Clic droit pour déplacer",
+  "write.view.from_visual_prompt": "Stimulus Visuel"
 }
