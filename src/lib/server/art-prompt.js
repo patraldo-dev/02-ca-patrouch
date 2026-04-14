@@ -41,15 +41,10 @@ export async function generatePromptFromImage(ai, imageUrl, locale = 'en') {
     const systemPrompt = `You are a creative writing prompt generator. Look at this artwork and craft a single, evocative writing prompt inspired by it. The prompt should be 1-2 sentences, open-ended, and invite the writer to explore emotions, stories, or perspectives suggested by the image. ${localeInstructions[locale] || localeInstructions.en}`;
 
     try {
-        // Workers AI can't reach imagedelivery.net — fetch image and send as base64
-        const imgRes = await fetch(imageUrl);
-        if (!imgRes.ok) throw new Error('Failed to fetch image');
-        const imgBuf = await imgRes.arrayBuffer();
-        const b64 = btoa(String.fromCharCode(...new Uint8Array(imgBuf)));
-        const dataUrl = `data:image/jpeg;base64,${b64}`;
-
-        // Accept Llama 3.2 license via prompt format
-        await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', { prompt: 'agree' });
+        // Accept Llama 3.2 license (only needed once per account)
+        try {
+            await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', { prompt: 'agree' });
+        } catch {}
 
         const response = await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', {
             messages: [
@@ -57,7 +52,7 @@ export async function generatePromptFromImage(ai, imageUrl, locale = 'en') {
                 {
                     role: 'user',
                     content: [
-                        { type: 'image', image: [{ url: dataUrl }] },
+                        { type: 'image_url', image_url: { url: imageUrl } },
                         { type: 'text', text: 'Generate a creative writing prompt inspired by this artwork.' }
                     ]
                 }
