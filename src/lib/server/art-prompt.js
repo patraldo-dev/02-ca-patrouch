@@ -14,6 +14,11 @@ export function getImageUrl(imageId, variant = 'gallery') {
     return `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/${variant}`;
 }
 
+// Small variant for AI vision (faster, less data)
+export function getVisionUrl(imageId) {
+    return `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/thumbnail`;
+}
+
 export function getDailyArtwork() {
     const today = new Date();
     const cst = new Date(today.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
@@ -41,8 +46,9 @@ export async function generatePromptFromImage(ai, imageUrl, locale = 'en') {
     const systemPrompt = `You are a creative writing prompt generator. Look at this artwork and craft a single, evocative writing prompt inspired by it. The prompt should be 1-2 sentences, open-ended, and invite the writer to explore emotions, stories, or perspectives suggested by the image. ${localeInstructions[locale] || localeInstructions.en}`;
 
     try {
-        // Fetch image and convert to base64 data URI
-        const imgRes = await fetch(imageUrl);
+        // Use thumbnail (200x300) for AI vision — faster, less data
+        const visionUrl = imageUrl.replace(/\/gallery$/, '/thumbnail').replace(/\/mobile$/, '/thumbnail').replace(/\/cover$/, '/thumbnail');
+        const imgRes = await fetch(visionUrl);
         if (!imgRes.ok) throw new Error('Failed to fetch image');
         const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
