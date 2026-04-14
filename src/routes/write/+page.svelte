@@ -318,9 +318,9 @@
                                     <option value="public">{$t('write.editor.public')}</option>
                                 </select>
                             </div>
-                            <label class="toggle-label">
+                            <label class="toggle-label" title={$t('write.editor.ai_tooltip')}>
                                 <input type="checkbox" bind:checked={editorAiAssisted} />
-                                <span>{$t('write.editor.ai_assisted')}</span>
+                                <span>{$t('write.editor.ai_assisted')} <span class="info-icon" title={$t('write.editor.ai_tooltip')}>ⓘ</span></span>
                             </label>
                         </div>
                         {#if editorMessage}
@@ -778,6 +778,7 @@
         font-size: 0.85rem;
         cursor: pointer;
     }
+    .info-icon { color: var(--text-dim); opacity: 0.5; font-size: 0.75rem; cursor: help; }
     .inline-editor .word-count {
         color: var(--text-muted);
         font-size: 0.75rem;

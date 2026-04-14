@@ -738,5 +738,6 @@
   "write.timer.go": "¡Listo, Ya!",
   "write.timer.stop": "Detener",
   "write.timer.dismiss": "✕",
-  "write.timer.words_in": "palabras en"
+  "write.timer.words_in": "palabras en",
+  "write.editor.ai_tooltip": "Solo un reconocimiento. Esta marca se muestra en tu escrito como insignia de transparencia. No afecta insignias, puntuaciones del juego ni visibilidad en la Ágora."
 }

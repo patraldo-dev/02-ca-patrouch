@@ -97,9 +97,9 @@
                 <option value="public">{$t('write.editor.public')}</option>
             </select>
         </div>
-        <label class="toggle-label">
+        <label class="toggle-label" title={$t('write.editor.ai_tooltip')}>
             <input type="checkbox" bind:checked={aiAssisted} />
-            <span>{$t('write.editor.ai_assisted')}</span>
+            <span>{$t('write.editor.ai_assisted')} <span class="info-icon" title={$t('write.editor.ai_tooltip')}>ⓘ</span></span>
         </label>
     </div>
 
