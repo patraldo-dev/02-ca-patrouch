@@ -371,10 +371,8 @@ export async function getPublicWritings(db, options = {}) {
   const countResult = await db.prepare(query.replace('SELECT w.id', 'SELECT COUNT(*) as total')).bind(...binds).first();
   const total = countResult?.total || 0;
 
-  // Daily rotation: deterministic order based on writing id + day
-  const daySeed = new Date().toISOString().slice(0, 10);
-  query += ' ORDER BY (w.id || ?) LIMIT ? OFFSET ?';
-  binds.push(daySeed, limit, offset);
+  query += ' ORDER BY w.created_at DESC LIMIT ? OFFSET ?';
+  binds.push(limit, offset);
 
   const { results } = await db.prepare(query).bind(...binds).all();
 
