@@ -31,6 +31,7 @@
     let passesRemaining = $state(data.passesRemaining || 3);
     let passesUsed = $state(data.passesUsed || 0);
     let isPassing = $state(false);
+    let isAccepting = $state(false);
     let editorTitle = $state(data.latestDraft?.title || '');
     let editorContent = $state(data.latestDraft?.content || '');
     let editorWordCount = $derived(editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0);
@@ -66,6 +67,7 @@
     }
 
     async function handleAction(action) {
+        isAccepting = true;
         if (action === 'passed') isPassing = true;
         try {
             const res = await fetch('/api/write/today/action', {
@@ -100,6 +102,7 @@
             error = $t('write.dashboard.error_generic');
         } finally {
             isPassing = false;
+            isAccepting = false;
         }
     }
 
@@ -200,7 +203,7 @@
                         <p class="prompt-text">{prompt.prompt_text}</p>
                         {#if !acceptedToday && !completedToday}
                             <div class="prompt-actions">
-                                <button class="btn-accept" onclick={() => handleAction('accepted')}>{$t('write.dashboard.accept')}</button>
+                                <button class="btn-accept" onclick={() => handleAction('accepted')} disabled={isAccepting}>{isAccepting ? '…' : $t('write.dashboard.accept')}</button>
                                 {#if !exhaustedPasses}
                                     <button class="btn-pass" onclick={() => handleAction('passed')} disabled={isPassing}>
                                         {isPassing ? $t('write.dashboard.passing') : $t('write.dashboard.pass')}
