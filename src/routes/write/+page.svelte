@@ -85,13 +85,12 @@
                     loadStats();
                     track('pass_prompt', prompt?.id);
                 } else if (action === 'accepted') {
-                    console.log('✅ ACCEPT response:', JSON.stringify(d));
-                    console.log('✅ promptId from response:', d.promptId);
-                    console.log('✅ navigating to:', `/write/new?promptId=${d.promptId}`);
                     userAction = 'accepted';
+                    promptId = d.promptId;
+                    editorTitle = '';
+                    editorContent = '';
                     loadStats();
                     track('accept_prompt', d.promptId);
-                    goto(`/write/new?promptId=${d.promptId}`);
                 } else if (action === 'completed') {
                     userAction = 'completed';
                     loadStats();
