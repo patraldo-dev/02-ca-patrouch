@@ -67,21 +67,47 @@ export async function getOrCreateCommunityPrompt(db, ai, dateStr, locale = 'en')
 export async function generatePromptWithAI(ai, category, locale = 'en') {
   const lang = LOCALE_LANGUAGES[locale] || 'English';
   const isCommunity = category === 'daily-community';
-  const genreDesc = isCommunity ? 'a genre of your choosing (vary it — fiction, poetry, memoir, sci-fi, etc.)' : `the "${category}" genre`;
-  const systemPrompt = `You are a creative writing prompt generator. Generate a single, inspiring writing prompt for ${genreDesc}. The prompt should be 1-3 sentences, vivid, and thought-provoking. You MUST output the prompt in ${lang} ONLY. Do NOT include any translation, parenthetical translation, or bilingual text. Output ONLY the prompt text, nothing else.`;
+
+  // Variation pools for maximum diversity
+  const perspectives = ['first person', 'second person', 'third person limited', 'third person omniscient', 'epistolary (letters/diary)', 'unreliable narrator', 'stream of consciousness', 'reverse chronological'];
+  const tones = ['darkly comic', 'melancholic', 'hopeful', 'unsettling', 'wistful', 'absurdist', 'tender', 'surreal', 'gritty', 'whimsical', 'ironic', 'lyrical', 'matter-of-fact'];
+  const constraints = ['under 500 words', 'using only dialogue', 'without using the letter "e"', 'as a single paragraph', 'ending mid-sentence', 'as a list', 'starting with the last word', 'without any dialogue', 'as a series of questions', 'in exactly three sentences', 'starting in medias res', 'from the perspective of an inanimate object'];
+  const themes = ['memory and forgetting', 'a secret kept too long', 'an unexpected inheritance', 'a conversation overheard', 'something found in an old coat pocket', 'the last day of a job', 'a neighbor nobody talks to', 'a tradition nobody remembers starting', 'a sound that triggers a memory', 'the smell of a specific place', 'a door that should not be opened', 'a recipe with a hidden ingredient', 'a photograph nobody can explain', 'a promise made to a stranger', 'the thing you said at the wrong moment', 'an animal that appears at a critical moment', 'a map to somewhere that no longer exists', 'a language only two people speak', 'the difference between leaving and escaping', 'something borrowed and never returned'];
+  const genres = isCommunity ? ['fiction', 'poetry', 'memoir', 'sci-fi', 'mystery', 'romance', 'fantasy', 'horror', 'thriller', 'literary fiction', 'speculative fiction', 'historical fiction', 'magical realism', 'creative non-fiction', 'flash fiction'] : [category];
+
+  // Seed variation from date to ensure daily uniqueness
+  const today = new Date().toISOString().slice(0, 10);
+  let seed = 0;
+  for (let i = 0; i < today.length; i++) seed += today.charCodeAt(i);
+
+  const pick = (arr) => arr[(seed + Math.floor(Math.random() * arr.length)) % arr.length];
+  const genre = pick(genres);
+  const perspective = pick(perspectives);
+  const tone = pick(tones);
+  const theme = pick(themes);
+  const hasConstraint = Math.random() > 0.4;
+  const constraint = hasConstraint ? pick(constraints) : null;
+
+  let userPrompt = `Give me a creative writing prompt in the ${genre} genre.`;
+  userPrompt += ` Write it ${perspective}.`;
+  userPrompt += ` The tone should be ${tone}.`;
+  userPrompt += ` The theme or starting point is: ${theme}.`;
+  if (constraint) userPrompt += ` Additional challenge: write it ${constraint}.`;
+  userPrompt += ` Reply in ${lang} only. Output ONLY the prompt text, nothing else.`;
+
+  const systemPrompt = `You are a creative writing prompt generator for an adult literary community. Generate ONE vivid, original writing prompt (1-3 sentences). Each prompt must feel fresh and specific — avoid generic "write about X" formulas. Instead, create a concrete scene, situation, or constraint that sparks a unique story. You MUST output in ${lang} ONLY. No translations, no parenthetical translations, no bilingual text. Output ONLY the prompt text.`;
 
   try {
     const response = await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Give me a creative writing prompt in the ${category} genre. Reply in ${lang} only. Do not include any translation.` }
+        { role: 'user', content: userPrompt }
       ],
-      max_tokens: 150,
-      temperature: 0.9
+      max_tokens: 200,
+      temperature: 1.2
     });
 
     let text = response.response?.trim() || getFallback(category, locale);
-    // Strip parenthetical translations: remove anything in () at end
     text = text.replace(/\s*\([^)]*\)\s*$/, '').trim();
     return text;
   } catch (err) {
