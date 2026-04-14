@@ -135,6 +135,7 @@
                 timerRunning = false;
                 timerFinished = true;
                 timedMode = false;
+                playAlarm();
             }
         }, 1000);
     }
@@ -156,6 +157,32 @@
         min: Math.floor(timerSeconds / 60).toString().padStart(2, '0'),
         sec: (timerSeconds % 60).toString().padStart(2, '0')
     });
+
+    function playAlarm() {
+        try {
+            const ctx = new AudioContext();
+            const playBeep = (time) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.3, ctx.currentTime + time);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + 0.3);
+                osc.start(ctx.currentTime + time);
+                osc.stop(ctx.currentTime + time + 0.3);
+            };
+            playBeep(0);
+            playBeep(0.4);
+            playBeep(0.8);
+            playBeep(1.2);
+            playBeep(1.6);
+            playBeep(2.0);
+            playBeep(2.4);
+            setTimeout(() => ctx.close(), 4000);
+        } catch {}
+    }
 
     async function handleSave() {
         if (!editorTitle.trim() || !editorContent.trim()) return;
