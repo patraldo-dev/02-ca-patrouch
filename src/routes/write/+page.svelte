@@ -364,7 +364,8 @@
                             </div>
                             <label class="toggle-label">
                                 <input type="checkbox" bind:checked={editorAiAssisted} />
-                                <span>{$t('write.editor.ai_assisted')} <span class="info-icon" title={$t('write.editor.ai_tooltip')}>ⓘ</span></span>
+                                <span>{$t('write.editor.ai_assisted')}</span>
+                                <span class="info-icon" title={$t('write.editor.ai_tooltip')} onclick={(e) => e.preventDefault()} onmousedown={(e) => e.preventDefault()} ontouchstart={(e) => e.preventDefault()}>ⓘ</span>
                             </label>
                         </div>
                         {#if editorMessage}
@@ -822,7 +823,7 @@
         font-size: 0.85rem;
         cursor: pointer;
     }
-    .info-icon { color: var(--text-dim); opacity: 0.5; font-size: 0.75rem; cursor: help; }
+    .info-icon { color: var(--text-dim); opacity: 0.5; font-size: 0.75rem; cursor: help; display: inline-block; pointer-events: auto; }
     .inline-editor .word-count {
         color: var(--text-muted);
         font-size: 0.75rem;
