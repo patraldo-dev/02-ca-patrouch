@@ -8,6 +8,7 @@
     let { data } = $props();
     let title = $state(data.writing.title);
     let content = $state(data.writing.content);
+    let isPublished = $state(data.writing.status === 'published');
     let visibility = $state(data.writing.visibility || 'public');
     let wordCount = $state(data.writing.word_count || 0);
     let showPreview = $state(false);
@@ -62,7 +63,7 @@
             } else {
                 wordCount = result.wordCount;
                 if (status === 'published') {
-                    showToast('success', 'Published!');
+                    showToast('success', isPublished ? 'Republished!' : 'Published!');
                     setTimeout(() => goto('/writings/' + data.writing.id), 800);
                 } else {
                     showToast('success', 'Draft saved');
@@ -133,7 +134,7 @@
             {saving ? 'Saving...' : '💾 Save Draft'}
         </button>
         <button onclick={() => save('published')} class="btn-publish" disabled={saving}>
-            🚀 Publish
+            🚀 {isPublished ? 'Republish' : 'Publish'}
         </button>
     </div>
 </div>
