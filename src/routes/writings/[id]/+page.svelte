@@ -90,11 +90,11 @@
             });
             if (res.ok) {
                 goto('/evaluate?from=writing');
-            } else {
-                const d = await res.json();
-                feedback = d.error || 'Error';
+                return;
             }
-        } catch { feedback = 'Error'; }
+            feedback = 'error';
+            setTimeout(() => feedback = '', 3000);
+        } catch { feedback = 'error'; setTimeout(() => feedback = '', 3000); }
         isEvaluating = false;
     }
 
@@ -108,17 +108,12 @@
                 body: JSON.stringify({ text: w.content, locale })
             });
             if (res.ok) {
-                const d = await res.json();
-                if (d.audioUrl) {
-                    goto('/audio');
-                } else {
-                    feedback = 'No API key configured';
-                }
-            } else {
-                const d = await res.json();
-                feedback = d.error || 'Error';
+                goto('/audio');
+                return;
             }
-        } catch { feedback = 'Error'; }
+            feedback = 'error';
+            setTimeout(() => feedback = '', 3000);
+        } catch { feedback = 'error'; setTimeout(() => feedback = '', 3000); }
         isAudioLoading = false;
     }
 

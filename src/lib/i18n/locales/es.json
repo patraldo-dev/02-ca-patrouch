@@ -745,5 +745,7 @@
   "write.art.3d_drag": "🖱️ Arrastra para rotar",
   "write.art.3d_zoom": "🔍 Desplaza para zoom",
   "write.art.3d_pan": "✋ Clic derecho para mover",
-  "write.view.from_visual_prompt": "Estímulo Visual"
+  "write.view.from_visual_prompt": "Estímulo Visual",
+  "write.view.evaluate": "Evaluar",
+  "write.view.audio": "Generar Audio"
 }
