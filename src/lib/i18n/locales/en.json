@@ -747,5 +747,6 @@
   "write.art.3d_pan": "✋ Right-click to pan",
   "write.view.from_visual_prompt": "Visual Prompt",
   "write.view.evaluate": "Evaluate",
-  "write.view.audio": "Generate Audio"
+  "write.view.audio": "Generate Audio",
+  "evaluate.words": "characters"
 }

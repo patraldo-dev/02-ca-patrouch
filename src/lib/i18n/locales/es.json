@@ -747,5 +747,6 @@
   "write.art.3d_pan": "✋ Clic derecho para mover",
   "write.view.from_visual_prompt": "Estímulo Visual",
   "write.view.evaluate": "Evaluar",
-  "write.view.audio": "Generar Audio"
+  "write.view.audio": "Generar Audio",
+  "evaluate.words": "caracteres"
 }
