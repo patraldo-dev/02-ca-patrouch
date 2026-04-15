@@ -261,7 +261,7 @@
             </div>
             <div class="mobile-auth">
                 {#if data?.user}
-                    <p class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></p>
+                    <a href="/profile" onclick={toggleMobileMenu} class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></a>
                     <a href="/profile" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
                     {#if data.user?.role === 'admin'}
                     <a href="/admin" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
@@ -634,6 +634,7 @@
         display: flex;
         flex-direction: column;
         padding: 2rem 1.5rem;
+        padding-bottom: 4rem;
         gap: 2rem;
         overflow-y: auto;
     }
@@ -691,7 +692,10 @@
         font-size: 0.9rem;
         text-align: center;
         padding: 1rem 0;
+        text-decoration: none;
+        cursor: pointer;
     }
+    .welcome-mobile:active { color: var(--accent); }
 
     /* ── Footer ── */
     .site-footer {
