@@ -773,5 +773,14 @@
   "refine.privacy_note": "Your text stays on Cloudflare's private infrastructure",
   "refine.characters": "characters",
   "refine.locale_label": "Output language",
-  "write.view.refine": "Refine"
+  "write.view.refine": "Refine",
+  "profile.user.tab": "Profile",
+  "profile.user.display_name": "Display Name",
+  "profile.user.display_name_placeholder": "How should we call you?",
+  "profile.user.bio": "Bio",
+  "profile.user.bio_placeholder": "Tell us about yourself...",
+  "profile.user.save": "Save Profile",
+  "profile.user.saved": "Profile saved",
+  "profile.user.member_since": "Member since",
+  "profile.user.avatar_label": "Avatar"
 }

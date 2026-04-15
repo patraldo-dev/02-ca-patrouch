@@ -10,7 +10,8 @@
 
     let { data } = $props();
 
-    let activeTab = $state('profile');
+    let isAdmin = $derived(data.user?.role === 'admin');
+    let activeTab = $state('user-profile');
     let profiles = $state(data.profiles || []);
     let newName = $state('');
     let newLocale = $state('en');
@@ -23,6 +24,43 @@
     let message = $state('');
     let messageError = $state(false);
     let showProfile = $state(data.showProfile ?? 1);
+
+    // User profile form state
+    let userDisplayName = $state(data.profile?.display_name || '');
+    let userBio = $state(data.profile?.bio || '');
+    let savingProfile = $state(false);
+    let toastMessage = $state('');
+    let toastTimeout = $state(null);
+
+    function showToast(msg) {
+        toastMessage = msg;
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => { toastMessage = ''; }, 3000);
+    }
+
+    async function saveUserProfile() {
+        savingProfile = true;
+        try {
+            const res = await fetch('/api/user/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ display_name: userDisplayName, bio: userBio })
+            });
+            if (res.ok) {
+                showToast($t('profile.user.saved'));
+            } else {
+                const err = await res.json();
+                flash(err.error || 'Error', true);
+            }
+        } catch { flash('Network error', true); }
+        finally { savingProfile = false; }
+    }
+
+    let memberSince = $derived(() => {
+        const d = data.profile?.created_at;
+        if (!d) return '';
+        return new Date(d.replace ? d.replace(' ', 'T') : d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    });
 
     async function toggleProfileVisibility() {
         const newVal = showProfile ? 0 : 1;
@@ -120,9 +158,38 @@
     {/if}
 
     <div class="tab-bar">
+        <button class="tab-btn" class:active={activeTab === 'user-profile'} onclick={() => activeTab = 'user-profile'}>{$t('profile.user.tab')}</button>
+        {#if isAdmin}
         <button class="tab-btn" class:active={activeTab === 'profile'} onclick={() => activeTab = 'profile'}>{$t('profile.tab_profile')}</button>
         <button class="tab-btn" class:active={activeTab === 'stats'} onclick={() => activeTab = 'stats'}>{$t('profile.tab_stats')}</button>
+        {/if}
     </div>
+
+    {#if toastMessage}
+        <div class="toast">{toastMessage}</div>
+    {/if}
+
+    {#if activeTab === 'user-profile'}
+    <section class="user-profile-section">
+        <div class="user-profile-avatar-large">
+            {(userDisplayName || data.user?.username || '?')[0].toUpperCase()}
+        </div>
+        <p class="user-profile-avatar-label">{$t('profile.user.avatar_label')}</p>
+        <div class="user-profile-form">
+            <div class="form-group">
+                <label>{$t('profile.user.display_name')}</label>
+                <input bind:value={userDisplayName} placeholder={$t('profile.user.display_name_placeholder')} maxlength="50" />
+            </div>
+            <div class="form-group">
+                <label>{$t('profile.user.bio')}</label>
+                <textarea bind:value={userBio} placeholder={$t('profile.user.bio_placeholder')} maxlength="500" rows="4"></textarea>
+                <span class="bio-counter">{userBio.length}/500</span>
+            </div>
+            <div class="member-since">{$t('profile.user.member_since')} {memberSince}</div>
+            <button class="btn-save-user" onclick={saveUserProfile} disabled={savingProfile}>{savingProfile ? '...' : $t('profile.user.save')}</button>
+        </div>
+    </section>
+    {/if}
 
     {#if activeTab === 'profile'}
     <section class="privacy-section">
@@ -222,7 +289,7 @@
     {/if}
     {/if}
 
-    {#if activeTab === 'stats'}
+    {#if isAdmin && activeTab === 'stats'}
     <div class="stats-tab">
         {#if data.stats}
             <WritingHeatmap heatmapData={data.heatmapData || {}} />
@@ -406,6 +473,93 @@
     }
     .tab-btn:hover { border-color: var(--accent); color: var(--text); }
     .tab-btn.active { background: rgba(201, 168, 124, 0.1); border-color: var(--accent); color: var(--accent); }
+    .toast {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent);
+        color: var(--bg);
+        padding: 0.75rem 1.5rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        z-index: 9999;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    .user-profile-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .user-profile-avatar-large {
+        width: 80px; height: 80px; border-radius: 50%; background: var(--accent);
+        color: var(--bg); display: flex; align-items: center; justify-content: center;
+        font-size: 2rem; font-weight: 700;
+    }
+    .user-profile-avatar-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .user-profile-form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .user-profile-form .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+    .user-profile-form label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+    }
+    .user-profile-form input, .user-profile-form textarea {
+        width: 100%; padding: 0.6rem 0.75rem; background: var(--bg);
+        border: 2px solid var(--border); border-radius: 8px; color: var(--text);
+        font-family: var(--font-body); font-size: 0.9rem; outline: none; box-sizing: border-box;
+    }
+    .user-profile-form input:focus, .user-profile-form textarea:focus {
+        border-color: var(--accent);
+    }
+    .bio-counter {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-align: right;
+    }
+    .member-since {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        text-align: center;
+    }
+    .btn-save-user {
+        padding: 0.6rem 2rem;
+        background: var(--accent);
+        color: var(--bg);
+        border: none;
+        border-radius: 8px;
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.15s;
+    }
+    .btn-save-user:hover { opacity: 0.9; }
+    .btn-save-user:disabled { opacity: 0.4; cursor: not-allowed; }
     .stats-tab { display: flex; flex-direction: column; gap: 1.5rem; }
     .stats-empty { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2rem; }
 </style>

@@ -420,7 +420,7 @@ export async function getCommunityResponses(db, options = {}) {
     ).bind(dateStr).first();
 
     let responseQuery = `
-      SELECT w.id, w.title, w.content, w.word_count, w.ai_assisted, w.created_at, u.username
+      SELECT w.id, w.title, w.content, w.word_count, w.ai_assisted, w.created_at, u.username, u.display_name
       FROM writings w
       JOIN writing_prompts wp ON w.prompt_id = wp.id
       JOIN users u ON w.user_id = u.id

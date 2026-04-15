@@ -209,7 +209,10 @@
                             {/if}
                         </div>
                         {:else}
-                        <span class="profile-name">{data.user.username}</span>
+                        <a href="/profile" class="profile-trigger">
+                            <span class="profile-avatar">{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}</span>
+                            <span class="profile-name">{data.user.display_name || data.user.username}</span>
+                        </a>
                         {/if}
                         <button onclick={handleLogout} class="btn-glass">{$t('common.nav.logout')}</button>
                     {:else}
@@ -260,7 +263,7 @@
             </div>
             <div class="mobile-auth">
                 {#if data?.user}
-                    <p class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></p>
+                    <a href="/profile" onclick={toggleMobileMenu} class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.display_name || data.user.username}</strong></a>
                     {#if data.user?.role === 'admin'}
                     <a href="/profile" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
                     <a href="/admin" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>

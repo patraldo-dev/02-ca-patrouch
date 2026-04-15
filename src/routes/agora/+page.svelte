@@ -163,7 +163,10 @@
                         {#if showGame && !revealed[w.id]}
                             <span class="writing-author mystery">?</span>
                         {:else}
-                            <span class="writing-author" onclick={(e) => { e.preventDefault(); e.stopPropagation(); goto('/write/' + w.username); }}>{w.username}</span>
+                            <span class="writing-author" onclick={(e) => { e.preventDefault(); e.stopPropagation(); goto('/write/' + w.username); }}>
+                                <span class="author-avatar">{(w.display_name || w.username || '?')[0].toUpperCase()}</span>
+                                {w.display_name || w.username}
+                            </span>
                             {#if showGame && revealed[w.id]}
                                 <span class="reveal-inline" class:ai-badge-inline={w.role === 'agent'} class:human-badge-inline={w.role !== 'agent'}>
                                     {w.role === 'agent' ? $t('agora.game.ai') : $t('agora.game.human')}
@@ -479,7 +482,12 @@
         flex-wrap: wrap;
     }
 
-    .writing-author { color: var(--accent); cursor: pointer; text-decoration: none; }
+    .writing-author { color: var(--accent); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .author-avatar {
+        width: 20px; height: 20px; border-radius: 50%; background: var(--accent);
+        color: var(--bg); display: inline-flex; align-items: center; justify-content: center;
+        font-size: 0.6rem; font-weight: 700; flex-shrink: 0;
+    }
     .writing-author:hover { text-decoration: underline; }
     .writing-sep { opacity: 0.4; }
 
