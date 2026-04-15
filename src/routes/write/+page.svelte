@@ -55,7 +55,9 @@
     let visualError = $state(null);
 
     function catLabel(key) {
-        return $t('write.category.' + key) || key;
+        const k = 'write.category.' + key;
+        const label = $t(k);
+        return label !== k ? label : key.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     }
 
     async function loadVisualPrompt() {
@@ -112,7 +114,11 @@
                     loadStats();
                 }
             } else {
-                console.error('Action error:', res.status, await res.text());
+                const errData = await res.json().catch(() => ({}));
+                console.error('Action error:', res.status, errData);
+                if (res.status === 429) {
+                    passesRemaining = 0;
+                }
             }
         } catch (e) {
             error = $t('write.dashboard.error_generic');
