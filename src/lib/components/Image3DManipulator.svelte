@@ -57,8 +57,7 @@
     
     scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 
-    const gridHelper = new THREE.GridHelper(10, 10, 0x333333, 0x222222);
-    scene.add(gridHelper);
+    // No grid/axis — clean background
   }
   
   function loadTexture(url) {
