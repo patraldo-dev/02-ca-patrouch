@@ -104,7 +104,7 @@ export async function generatePromptWithAI(ai, category, locale = 'en') {
         { role: 'user', content: userPrompt }
       ],
       max_tokens: 200,
-      temperature: 0.9
+      temperature: 0.7
     });
 
     let text = response.response?.trim() || getFallback(category, locale);
@@ -113,11 +113,29 @@ export async function generatePromptWithAI(ai, category, locale = 'en') {
     // Strip quotes wrapping the entire text
     if (text.startsWith('"') && text.endsWith('"')) text = text.slice(1, -1);
     if (text.startsWith("'") && text.endsWith("'")) text = text.slice(1, -1);
+    // Language validation — reject if contains non-target scripts
+    if (!isValidScript(text, locale)) {
+      console.error(`Language mismatch: locale=${locale}, text=${text.substring(0, 80)}`);
+      return getFallback(category, locale);
+    }
     return text;
   } catch (err) {
     console.error('AI prompt generation failed:', err);
     return getFallback(category, locale);
   }
+}
+
+function isValidScript(text, locale) {
+  const latin = /^[A-Za-zÀ-ÖØ-öø-ÿ\s\p{P}\p{N}]+$/u;
+  const arabic = /[\u0600-\u06FF]/;
+  const cjk = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]/;
+  const cyrillic = /[\u0400-\u04FF]/;
+  const devanagari = /[\u0900-\u097F]/;
+  
+  if (locale === 'en' || locale === 'es' || locale === 'fr') {
+    if (arabic.test(text) || cjk.test(text) || cyrillic.test(text) || devanagari.test(text)) return false;
+  }
+  return true;
 }
 
 function getFallback(category, locale = 'en') {
