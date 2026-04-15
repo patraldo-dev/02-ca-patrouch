@@ -80,23 +80,8 @@
     }
 
     async function evaluateWriting() {
-        isEvaluating = true;
-        try {
-            const locale = getLocale() || 'es';
-            const res = await fetch('/api/evaluate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: w.content, locale })
-            });
-            if (res.ok) {
-                sessionStorage.setItem('evaluate_text', w.content);
-                goto('/evaluate');
-                return;
-            }
-            feedback = 'error';
-            setTimeout(() => feedback = '', 3000);
-        } catch { feedback = 'error'; setTimeout(() => feedback = '', 3000); }
-        isEvaluating = false;
+        sessionStorage.setItem('evaluate_text', w.content);
+        goto('/evaluate');
     }
 
     async function generateAudio() {
