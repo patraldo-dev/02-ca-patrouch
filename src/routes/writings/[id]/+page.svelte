@@ -100,22 +100,8 @@
     }
 
     async function generateAudio() {
-        isAudioLoading = true;
-        try {
-            const locale = getLocale() || 'es';
-            const res = await fetch('/api/tts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: w.content, locale })
-            });
-            if (res.ok) {
-                goto('/audio');
-                return;
-            }
-            feedback = 'error';
-            setTimeout(() => feedback = '', 3000);
-        } catch { feedback = 'error'; setTimeout(() => feedback = '', 3000); }
-        isAudioLoading = false;
+        sessionStorage.setItem('tts_text', w.content);
+        goto('/audio');
     }
 
     async function publishWriting() {

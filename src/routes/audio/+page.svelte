@@ -2,6 +2,8 @@
 <script>
     import { t, locale, getLocale } from '$lib/i18n';
     import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
+    import { browser } from '$app/environment';
 
     let { data } = $props();
 
@@ -12,6 +14,16 @@
     let text = $state('');
     let selectedLocale = $state(getLocale());
     let voiceId = $state('pNInz6obpgDQGcFmaJgB');
+
+    onMount(() => {
+        if (browser) {
+            const saved = sessionStorage.getItem('tts_text');
+            if (saved) {
+                text = saved;
+                sessionStorage.removeItem('tts_text');
+            }
+        }
+    });
     let provider = $state('cloudflare');
     $effect(() => {
         showCfKeySetup = provider === 'cloudflare' && !hasCfKey;
