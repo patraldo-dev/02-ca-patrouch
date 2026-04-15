@@ -17,13 +17,13 @@ export async function GET({ locals, params }) {
     const invitation = results[0];
     const now = Math.floor(Date.now() / 1000);
 
-    // Upgrade user role to member
-    await locals.db.prepare(`UPDATE users SET role = 'member' WHERE id = ?`).bind(locals.user.id).run();
+    // Upgrade user role
+    await locals.db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(invitation.role || 'member', locals.user.id).run();
 
     // Mark invitation as used
     await locals.db.prepare(`
         UPDATE invitations SET used = 1, accepted_at = ? WHERE id = ?
     `).bind(now, invitation.id).run();
 
-    return json({ success: true, role: 'member' });
+    return json({ success: true, role: invitation.role || 'member' });
 }

@@ -5,6 +5,7 @@
 
     let invitations = $state([]);
     let email = $state('');
+    let role = $state('member');
     let creating = $state(false);
     let newToken = $state(null);
     let copied = $state(false);
@@ -22,7 +23,7 @@
             const res = await fetch('/api/admin/invite', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email || null })
+                body: JSON.stringify({ email: email || null, role })
             });
             if (res.ok) {
                 const data = await res.json();
@@ -63,6 +64,10 @@
                 bind:value={email}
                 placeholder={$t('admin.invitations.email_placeholder')}
             />
+            <select bind:value={role}>
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+            </select>
             <button type="submit" disabled={creating}>
                 {creating ? $t('admin.invitations.creating') : $t('admin.invitations.create_button')}
             </button>
@@ -144,6 +149,7 @@
         border-radius: 8px;
         font-size: 0.9rem;
     }
+    .create-section select { padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; background: var(--surface); color: var(--text); font-size: 0.9rem; }
     .create-section button {
         padding: 0.6rem 1.25rem;
         background: #1e293b;
