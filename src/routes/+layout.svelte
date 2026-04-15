@@ -181,13 +181,12 @@
                 <LanguageSwitcherDesktop serverLocale={data.serverLocale} />
                 <div class="auth-actions">
                     {#if data?.user}
+                        {#if data.user?.role === 'admin'}
                         <div class="profile-switcher">
                             <button class="profile-trigger" onclick={() => profilesOpen = !profilesOpen}>
                                 <span class="profile-avatar">{(activeDisplayName || '?')[0].toUpperCase()}</span>
                                 <span class="profile-name">{activeDisplayName}</span>
-                                {#if data.user?.role === 'admin'}
-                                    <span class="admin-badge">admin</span>
-                                {/if}
+                                <span class="admin-badge">admin</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                             </button>
                             {#if profilesOpen}
@@ -209,8 +208,8 @@
                                 </div>
                             {/if}
                         </div>
-                        {#if data.user?.role === 'admin'}
-                        <a href="/admin" class="btn-glass">{$t('common.nav.admin')}</a>
+                        {:else}
+                        <span class="profile-name">{data.user.username}</span>
                         {/if}
                         <button onclick={handleLogout} class="btn-glass">{$t('common.nav.logout')}</button>
                     {:else}
@@ -261,9 +260,9 @@
             </div>
             <div class="mobile-auth">
                 {#if data?.user}
-                    <a href="/profile" onclick={toggleMobileMenu} class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></a>
-                    <a href="/profile" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
+                    <p class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.username}</strong></p>
                     {#if data.user?.role === 'admin'}
+                    <a href="/profile" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
                     <a href="/admin" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
                     {/if}
                     <button onclick={() => { toggleMobileMenu(); handleLogout(); }} class="btn-glass block">{$t('common.nav.logout')}</button>
