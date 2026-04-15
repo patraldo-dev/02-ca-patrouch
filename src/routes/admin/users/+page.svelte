@@ -78,7 +78,7 @@ import { get } from 'svelte/store';
                             <td class="email-cell">{user.email}</td>
                             <td class="role-cell">
                                 <span class="role-badge role-{user.role}">
-                                    {user.role === 'admin' ? $t('pages.admin.sections.users.roles.admin') : user.role === 'agent' ? 'Agent' : $t('pages.admin.sections.users.roles.user')}
+                                    {user.role === 'admin' ? $t('pages.admin.sections.users.roles.admin') : user.role === 'member' ? $t('pages.admin.sections.users.roles.member') : user.role === 'agent' ? 'Agent' : $t('pages.admin.sections.users.roles.user')}
                                 </span>
                             </td>
                             <td class="actions-cell">
@@ -195,6 +195,7 @@ import { get } from 'svelte/store';
         font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
     }
     .role-admin { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+    .role-member { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
     .role-user { background: rgba(74, 222, 128, 0.1); color: #4ade80; }
     .role-agent { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
     .actions-column { width: 60px; text-align: center; }

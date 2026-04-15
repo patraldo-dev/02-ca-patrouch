@@ -748,5 +748,6 @@
   "write.view.from_visual_prompt": "Visual Prompt",
   "write.view.evaluate": "Evaluate",
   "write.view.audio": "Generate Audio",
-  "evaluate.words": "characters"
+  "evaluate.words": "characters",
+  "pages.admin.sections.users.roles.member": "Member"
 }

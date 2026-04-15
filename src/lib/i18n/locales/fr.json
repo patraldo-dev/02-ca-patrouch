@@ -748,5 +748,6 @@
   "write.view.from_visual_prompt": "Stimulus Visuel",
   "write.view.evaluate": "Évaluer",
   "write.view.audio": "Générer l'Audio",
-  "evaluate.words": "caractères"
+  "evaluate.words": "caractères",
+  "pages.admin.sections.users.roles.member": "Membre"
 }

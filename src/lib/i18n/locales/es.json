@@ -748,5 +748,6 @@
   "write.view.from_visual_prompt": "Estímulo Visual",
   "write.view.evaluate": "Evaluar",
   "write.view.audio": "Generar Audio",
-  "evaluate.words": "caracteres"
+  "evaluate.words": "caracteres",
+  "pages.admin.sections.users.roles.member": "Miembro"
 }
