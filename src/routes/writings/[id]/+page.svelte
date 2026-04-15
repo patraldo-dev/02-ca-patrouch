@@ -89,7 +89,8 @@
                 body: JSON.stringify({ text: w.content, locale })
             });
             if (res.ok) {
-                goto('/evaluate?from=writing');
+                sessionStorage.setItem('evaluate_text', w.content);
+                goto('/evaluate');
                 return;
             }
             feedback = 'error';

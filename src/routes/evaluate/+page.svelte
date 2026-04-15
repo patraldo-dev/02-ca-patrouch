@@ -3,6 +3,8 @@
     import { t } from '$lib/i18n';
     import { getLocale } from '$lib/i18n';
     import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
+    import { browser } from '$app/environment';
 
     let { data } = $props();
 
@@ -18,6 +20,16 @@
     let history = $state([]);
     let showHistory = $state(false);
     let expandedHistoryId = $state(null);
+
+    onMount(() => {
+        if (browser) {
+            const saved = sessionStorage.getItem('evaluate_text');
+            if (saved) {
+                text = saved;
+                sessionStorage.removeItem('evaluate_text');
+            }
+        }
+    });
 
     async function loadHistory() {
         try {
