@@ -8,6 +8,8 @@
 
     let { data } = $props();
     let w = $state(data.writing);
+    let isEvaluating = $state(false);
+    let isAudioLoading = $state(false);
     let renderedContent = $state('');
     let isPublishing = $state(false);
     let feedback = $state('');
@@ -75,6 +77,49 @@
                 goto('/write');
             }
         } catch {}
+    }
+
+    async function evaluateWriting() {
+        isEvaluating = true;
+        try {
+            const locale = getLocale() || 'es';
+            const res = await fetch('/api/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: w.content, locale })
+            });
+            if (res.ok) {
+                goto('/evaluate?from=writing');
+            } else {
+                const d = await res.json();
+                feedback = d.error || 'Error';
+            }
+        } catch { feedback = 'Error'; }
+        isEvaluating = false;
+    }
+
+    async function generateAudio() {
+        isAudioLoading = true;
+        try {
+            const locale = getLocale() || 'es';
+            const res = await fetch('/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: w.content, locale })
+            });
+            if (res.ok) {
+                const d = await res.json();
+                if (d.audioUrl) {
+                    goto('/audio');
+                } else {
+                    feedback = 'No API key configured';
+                }
+            } else {
+                const d = await res.json();
+                feedback = d.error || 'Error';
+            }
+        } catch { feedback = 'Error'; }
+        isAudioLoading = false;
     }
 
     async function publishWriting() {
@@ -192,6 +237,17 @@
         <div class="writing-content">
             {@html renderedContent}
         </div>
+
+        {#if data.user?.id === w.user_id && w.status === 'published'}
+            <div class="writing-pipeline">
+                <button class="btn-pipeline" onclick={evaluateWriting} disabled={isEvaluating}>
+                    {isEvaluating ? '…' : '✦'} {$t('write.view.evaluate')}
+                </button>
+                <button class="btn-pipeline" onclick={generateAudio} disabled={isAudioLoading}>
+                    {isAudioLoading ? '…' : '♪'} {$t('write.view.audio')}
+                </button>
+            </div>
+        {/if}
 
         <footer class="writing-footer">
             <div class="footer-actions">
@@ -390,6 +446,10 @@
         margin-bottom: 0;
     }
 
+    .writing-pipeline { display: flex; gap: 0.75rem; justify-content: center; margin: 2rem 0; }
+    .btn-pipeline { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text-dim); font-family: var(--font-body); font-size: 0.85rem; padding: 0.5rem 1.25rem; cursor: pointer; transition: all 0.2s; }
+    .btn-pipeline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-pipeline:disabled { opacity: 0.5; cursor: not-allowed; }
     .writing-footer {
         margin-top: 2rem;
         padding-top: 1.5rem;
