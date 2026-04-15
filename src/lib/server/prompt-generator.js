@@ -104,7 +104,7 @@ export async function generatePromptWithAI(ai, category, locale = 'en') {
         { role: 'user', content: userPrompt }
       ],
       max_tokens: 200,
-      temperature: 1.2
+      temperature: 0.9
     });
 
     let text = response.response?.trim() || getFallback(category, locale);
