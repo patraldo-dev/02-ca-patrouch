@@ -98,7 +98,6 @@
                     passesRemaining = d.passesRemaining;
                     passesUsed = d.passesUsed;
                     userAction = null;
-                    // Reload stats
                     loadStats();
                     track('pass_prompt', prompt?.id);
                 } else if (action === 'accepted') {
@@ -112,6 +111,8 @@
                     userAction = 'completed';
                     loadStats();
                 }
+            } else {
+                console.error('Action error:', res.status, await res.text());
             }
         } catch (e) {
             error = $t('write.dashboard.error_generic');
