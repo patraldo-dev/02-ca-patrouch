@@ -89,6 +89,11 @@
         goto('/audio');
     }
 
+    function refineWriting() {
+        sessionStorage.setItem('refine_text', w.content);
+        goto('/refine');
+    }
+
     async function publishWriting() {
         isPublishing = true;
         feedback = '';
@@ -212,6 +217,9 @@
                 </button>
                 <button class="btn-pipeline" onclick={generateAudio} disabled={isAudioLoading}>
                     {isAudioLoading ? '…' : '♪'} {$t('write.view.audio')}
+                </button>
+                <button class="btn-pipeline" onclick={refineWriting}>
+                    ✦ {$t('write.view.refine')}
                 </button>
             </div>
         {/if}
