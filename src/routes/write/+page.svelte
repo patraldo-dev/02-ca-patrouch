@@ -86,11 +86,14 @@
     async function handleAction(action) {
         isAccepting = true;
         if (action === 'passed') isPassing = true;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
         try {
             const res = await fetch('/api/write/today/action', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, locale: getLocale() })
+                body: JSON.stringify({ action, locale: getLocale() }),
+                signal: controller.signal
             });
             if (res.ok) {
                 const d = await res.json();
@@ -121,8 +124,13 @@
                 }
             }
         } catch (e) {
-            error = $t('write.dashboard.error_generic');
+            if (e.name === 'AbortError') {
+                error = 'Request timed out';
+            } else {
+                error = $t('write.dashboard.error_generic');
+            }
         } finally {
+            clearTimeout(timeout);
             isPassing = false;
             isAccepting = false;
         }
