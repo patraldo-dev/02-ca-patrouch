@@ -43,6 +43,11 @@
         return String.fromCodePoint(...code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0)));
     }
 
+    function friendlyEvent(type) {
+        const labels = { page_view: 'Page View', view_writing: 'View Writing', accept_prompt: 'Accept Prompt', pass_prompt: 'Pass Prompt' };
+        return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
 
     function getMaxVisitors() {
@@ -110,7 +115,7 @@
                     <tbody>
                         {#each analytics.byType as row}
                             <tr>
-                                <td><code>{row.event_type}</code></td>
+                                <td>{friendlyEvent(row.event_type)}</td>
                                 <td>{fmtNum(row.count)}</td>
                                 <td>{fmtNum(row.unique_visitors)}</td>
                             </tr>
