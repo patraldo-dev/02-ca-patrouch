@@ -108,7 +108,11 @@ export async function generatePromptWithAI(ai, category, locale = 'en') {
     });
 
     let text = response.response?.trim() || getFallback(category, locale);
-    text = text.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    // Strip parenthetical translations (any language)
+    text = text.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+    // Strip quotes wrapping the entire text
+    if (text.startsWith('"') && text.endsWith('"')) text = text.slice(1, -1);
+    if (text.startsWith("'") && text.endsWith("'")) text = text.slice(1, -1);
     return text;
   } catch (err) {
     console.error('AI prompt generation failed:', err);

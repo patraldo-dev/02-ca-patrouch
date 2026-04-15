@@ -402,6 +402,8 @@
         font-style: italic;
         color: var(--text-dim);
         margin: 0.35rem 0 0 0;
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
     .visual-prompt-ref { display: flex; gap: 1rem; align-items: flex-start; }
     .visual-prompt-thumb { width: 80px; height: 120px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }

@@ -656,6 +656,8 @@
         line-height: 1.6;
         color: var(--text);
         margin-bottom: 1.5rem;
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
 
     .prompt-actions {
@@ -1108,6 +1110,8 @@
         text-align: center;
         font-style: italic;
         margin-bottom: 0.75rem;
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
     .art-meta {
         display: flex; justify-content: space-between; align-items: center;
