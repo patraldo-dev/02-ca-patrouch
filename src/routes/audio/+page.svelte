@@ -222,26 +222,9 @@
         } catch (e) { /* ignore */ }
     }
 
-    async function handleAiDevelop() {
-        error = '';
-        isAiLoading = true;
-        try {
-            const res = await fetch('/api/evaluate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, locale: selectedLocale })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                text = data.evaluation;
-            } else {
-                error = data.error || 'AI development failed';
-            }
-        } catch (err) {
-            error = 'Network error';
-        } finally {
-            isAiLoading = false;
-        }
+    function handleAiDevelop() {
+        sessionStorage.setItem('refine_text', text);
+        goto('/refine');
     }
 
     async function handleGenerate() {
@@ -415,8 +398,8 @@
 
             <div class="actions">
                 {#if useAiDevelop}
-                    <button onclick={handleAiDevelop} disabled={isLoading || isAiLoading || text.length < 50}>
-                        {isAiLoading ? $t('audio.developing') : $t('audio.develop_btn')}
+                    <button onclick={handleAiDevelop} disabled={isLoading || text.length < 50}>
+                        {$t('audio.develop_btn')}
                     </button>
                 {/if}
                 <button class="btn-primary" onclick={handleGenerate} disabled={isLoading || isAiLoading || text.length < 10}>
