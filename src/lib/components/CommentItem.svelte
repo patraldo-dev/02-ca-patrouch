@@ -79,7 +79,7 @@
             const res = await fetch(`/api/comments/${comment.id}/pick`, { method: 'POST' });
             if (res.ok) {
                 const data = await res.json();
-                onPick(comment.id, data.is_nyt_pick);
+                onPick(comment.id, data.is_featured);
             }
         } catch {}
     }
@@ -97,7 +97,7 @@
         <span>{$t('comments.deleted')}</span>
     </div>
 {:else}
-    <div class="comment-item" class:is-pick={comment.is_nyt_pick}>
+    <div class="comment-item" class:is-featured={comment.is_featured}>
         <div class="comment-avatar">{avatar}</div>
         <div class="comment-body">
             <div class="comment-header">
@@ -105,8 +105,8 @@
                 {#if comment.parent_username}
                     <span class="reply-indicator">↳ {$t('comments.reply_to')} @{comment.parent_username}</span>
                 {/if}
-                {#if comment.is_nyt_pick}
-                    <span class="nyt-pick-badge">{$t('comments.picks_badge')}</span>
+                {#if comment.is_featured}
+                    <span class="featured-badge">{$t('comments.picks_badge')}</span>
                 {/if}
                 <span class="comment-time">{formatTimestamp(comment.created_at)}</span>
             </div>
@@ -145,8 +145,8 @@
                     </button>
                 {/if}
                 {#if isAdmin}
-                    <button class="action-btn pick-btn" class:picked={comment.is_nyt_pick} onclick={handlePick} title={$t('comments.picks_badge')}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill={comment.is_nyt_pick ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button class="action-btn pick-btn" class:picked={comment.is_featured} onclick={handlePick} title={$t('comments.picks_badge')}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill={comment.is_featured ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
                     </button>
@@ -172,7 +172,7 @@
         transition: background 0.15s;
     }
     .comment-item:last-child { border-bottom: none; }
-    .comment-item.is-pick {
+    .comment-item.is-featured {
         background: var(--accent-bg);
         margin: 0 -0.75rem;
         padding-left: 0.75rem;
@@ -225,7 +225,7 @@
         color: var(--text-muted);
         margin-left: auto;
     }
-    .nyt-pick-badge {
+    .featured-badge {
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;

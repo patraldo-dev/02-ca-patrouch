@@ -8,15 +8,15 @@ export async function POST({ locals, params }) {
     const commentId = params.id;
 
     const comment = await db.prepare(
-        'SELECT id, is_nyt_pick FROM comments WHERE id = ?'
+        'SELECT id, is_featured FROM comments WHERE id = ?'
     ).bind(commentId).first();
 
     if (!comment) return json({ error: 'Not found' }, { status: 404 });
 
-    const newPick = comment.is_nyt_pick ? 0 : 1;
+    const newPick = comment.is_featured ? 0 : 1;
     await db.prepare(
-        'UPDATE comments SET is_nyt_pick = ?, updated_at = datetime(\'now\') WHERE id = ?'
+        'UPDATE comments SET is_featured = ?, updated_at = datetime(\'now\') WHERE id = ?'
     ).bind(newPick, commentId).run();
 
-    return json({ is_nyt_pick: newPick });
+    return json({ is_featured: newPick });
 }

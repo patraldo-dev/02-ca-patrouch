@@ -104,9 +104,9 @@
         } catch {}
     }
 
-    async function handlePick(commentId, is_nyt_pick) {
+    async function handlePick(commentId, is_featured) {
         comments = comments.map(c =>
-            c.id === commentId ? { ...c, is_nyt_pick } : c
+            c.id === commentId ? { ...c, is_featured } : c
         );
     }
 

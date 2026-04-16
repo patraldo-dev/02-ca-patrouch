@@ -23,7 +23,7 @@ export async function GET({ locals, params, url }) {
     let orderClause = 'ORDER BY c.created_at DESC';
     if (sort === 'oldest') orderClause = 'ORDER BY c.created_at ASC';
     else if (sort === 'liked') orderClause = 'ORDER BY c.likes_count DESC, c.created_at DESC';
-    else if (sort === 'picks') orderClause = 'ORDER BY c.is_nyt_pick DESC, c.created_at DESC';
+    else if (sort === 'picks') orderClause = 'ORDER BY c.is_featured DESC, c.created_at DESC';
 
     // Get current user's likes for this writing's comments
     const userLikes = await db.prepare(
@@ -33,7 +33,7 @@ export async function GET({ locals, params, url }) {
     const likedSet = new Set(userLikes.results?.map(r => r.comment_id) || []);
 
     const { results } = await db.prepare(`
-        SELECT c.id, c.content, c.status, c.is_nyt_pick, c.likes_count, c.created_at,
+        SELECT c.id, c.content, c.status, c.is_featured, c.likes_count, c.created_at,
                c.parent_id, c.user_id, u.username, u.role as user_role
         FROM comments c
         JOIN users u ON c.user_id = u.id
@@ -130,7 +130,7 @@ export async function POST({ locals, params, request, platform }) {
 
     // Fetch the new comment with user info
     const newComment = await db.prepare(`
-        SELECT c.id, c.content, c.status, c.is_nyt_pick, c.likes_count, c.created_at,
+        SELECT c.id, c.content, c.status, c.is_featured, c.likes_count, c.created_at,
                c.parent_id, c.user_id, u.username, u.role as user_role
         FROM comments c
         JOIN users u ON c.user_id = u.id
