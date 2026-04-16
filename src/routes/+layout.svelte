@@ -357,7 +357,7 @@
                     <span class="footer-sep">·</span>
                     <a href="/terms">{$t('common.footer.terms')}</a>
                     <span class="footer-sep">·</span>
-                    <a href="mailto:ismael@patrouch.ca">{$t('common.footer.contact')}</a>
+                    <a href="mailto:ishmael@patrouch.ca">{$t('common.footer.contact')}</a>
                 </p>
             </div>
         </div>
