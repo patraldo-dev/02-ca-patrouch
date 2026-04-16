@@ -786,5 +786,6 @@
   "common.nav.refine": "Refine",
   "common.nav.taller": "Workshop",
   "help.refine_title": "Refine",
-  "help.refine_desc": "AI-powered text refinement. Polish your writing while preserving your voice."
+  "help.refine_desc": "AI-powered text refinement. Polish your writing while preserving your voice.",
+  "common.footer.contact": "Contact"
 }
