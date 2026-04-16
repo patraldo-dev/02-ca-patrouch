@@ -357,6 +357,17 @@ input::placeholder, textarea::placeholder {
     margin-bottom: 1.5rem;
     color: var(--text);
 }
+.help-sections { display: flex; flex-direction: column; gap: 1.5rem; }
+.help-tier { }
+.tier-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
 .help-section {
     margin-bottom: 1.25rem;
     padding-bottom: 1.25rem;

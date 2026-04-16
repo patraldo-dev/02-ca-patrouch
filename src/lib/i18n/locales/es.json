@@ -787,5 +787,7 @@
   "common.nav.taller": "Taller",
   "help.refine_title": "Refinar",
   "help.refine_desc": "Refinamiento de texto con IA. Pule tu escritura preservando tu voz.",
-  "common.footer.contact": "Contacto"
+  "common.footer.contact": "Contacto",
+  "help.tier_free": "✦ Todos",
+  "help.tier_member": "⬥ Taller — Miembros"
 }

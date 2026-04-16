@@ -308,33 +308,39 @@
                 <button class="modal-close" onclick={() => helpOpen = false}>✕</button>
                 <h2>{$t('help.title')}</h2>
                 <div class="help-sections">
-                    <div class="help-section">
-                        <h3>{$t('help.write_title')}</h3>
-                        <p>{$t('help.write_desc')}</p>
+                    <div class="help-tier">
+                        <h3 class="tier-label">{$t('help.tier_free')}</h3>
+                        <div class="help-section">
+                            <h3>{$t('help.write_title')}</h3>
+                            <p>{$t('help.write_desc')}</p>
+                        </div>
+                        <div class="help-section">
+                            <h3>{$t('help.findai_title')}</h3>
+                            <p>{$t('help.findai_desc')}</p>
+                        </div>
+                        <div class="help-section">
+                            <h3>{$t('help.agora_title')}</h3>
+                            <p>{$t('help.agora_desc')}</p>
+                        </div>
+                        <div class="help-section">
+                            <h3>{$t('help.profile_title')}</h3>
+                            <p>{$t('help.profile_desc')}</p>
+                        </div>
                     </div>
-                    <div class="help-section">
-                        <h3>{$t('help.refine_title')}</h3>
-                        <p>{$t('help.refine_desc')}</p>
-                    </div>
-                    <div class="help-section">
-                        <h3>{$t('help.evaluate_title')}</h3>
-                        <p>{$t('help.evaluate_desc')}</p>
-                    </div>
-                    <div class="help-section">
-                        <h3>{$t('help.audio_title')}</h3>
-                        <p>{$t('help.audio_desc')}</p>
-                    </div>
-                    <div class="help-section">
-                        <h3>{$t('help.findai_title')}</h3>
-                        <p>{$t('help.findai_desc')}</p>
-                    </div>
-                    <div class="help-section">
-                        <h3>{$t('help.agora_title')}</h3>
-                        <p>{$t('help.agora_desc')}</p>
-                    </div>
-                    <div class="help-section">
-                        <h3>{$t('help.profile_title')}</h3>
-                        <p>{$t('help.profile_desc')}</p>
+                    <div class="help-tier">
+                        <h3 class="tier-label">{$t('help.tier_member')}</h3>
+                        <div class="help-section">
+                            <h3>{$t('help.refine_title')}</h3>
+                            <p>{$t('help.refine_desc')}</p>
+                        </div>
+                        <div class="help-section">
+                            <h3>{$t('help.evaluate_title')}</h3>
+                            <p>{$t('help.evaluate_desc')}</p>
+                        </div>
+                        <div class="help-section">
+                            <h3>{$t('help.audio_title')}</h3>
+                            <p>{$t('help.audio_desc')}</p>
+                        </div>
                     </div>
                 </div>
             </div>

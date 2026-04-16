@@ -787,5 +787,7 @@
   "common.nav.taller": "Workshop",
   "help.refine_title": "Refine",
   "help.refine_desc": "AI-powered text refinement. Polish your writing while preserving your voice.",
-  "common.footer.contact": "Contact"
+  "common.footer.contact": "Contact",
+  "help.tier_free": "✦ Everyone",
+  "help.tier_member": "⬥ Taller — Members"
 }

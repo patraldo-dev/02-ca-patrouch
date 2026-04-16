@@ -787,5 +787,7 @@
   "common.nav.taller": "Atelier",
   "help.refine_title": "Affiner",
   "help.refine_desc": "Affinage de texte par l'IA. Affinez votre écriture en préservant votre voix.",
-  "common.footer.contact": "Contact"
+  "common.footer.contact": "Contact",
+  "help.tier_free": "✦ Tous",
+  "help.tier_member": "⬥ Taller — Membres"
 }
