@@ -782,5 +782,9 @@
   "profile.user.save": "Save Profile",
   "profile.user.saved": "Profile saved",
   "profile.user.member_since": "Member since",
-  "profile.user.avatar_label": "Avatar"
+  "profile.user.avatar_label": "Avatar",
+  "common.nav.refine": "Refine",
+  "common.nav.taller": "Workshop",
+  "help.refine_title": "Refine",
+  "help.refine_desc": "AI-powered text refinement. Polish your writing while preserving your voice."
 }
