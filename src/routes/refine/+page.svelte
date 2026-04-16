@@ -104,7 +104,9 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `patrouch-refined-${Date.now()}.txt`;
+        const preview = (currentResult.originalText || '').substring(0, 40).replace(/[^\w\s-]/g, '').trim();
+        const slug = preview ? preview.replace(/\s+/g, '-').toLowerCase() : 'text';
+        a.download = `patrouch-refined-${slug}.txt`;
         a.click();
         URL.revokeObjectURL(url);
         showToast($t('refine.download'));
