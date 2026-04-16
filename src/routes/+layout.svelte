@@ -27,7 +27,7 @@
     /** @type {import('./$types').LayoutData} */
     let { data, children } = $props();
 
-    beforeNavigate(() => { mobileMenuOpen = false; });
+    beforeNavigate(() => { mobileMenuOpen = false; tallerOpen = false; });
 
     let mobileMenuOpen = $state(false);
     let currentTheme = $state(getTheme());
@@ -39,6 +39,7 @@
     }
     let searchOpen = $state(false);
     let profilesOpen = $state(false);
+    let tallerOpen = $state(false);
     let helpOpen = $state(false);
     let profiles = $state([]);
     let activeProfileId = $state(data.activeProfile?.id || null);
@@ -163,9 +164,16 @@
                 <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
                 <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
                 {#if data?.user}
-                <a href="/evaluate" class:active={$page.url.pathname.startsWith('/evaluate')}>{$t('common.nav.evaluate')}</a>
-                <a href="/refine" class:active={$page.url.pathname.startsWith('/refine')}>{$t('common.nav.refine')}</a>
-                <a href="/audio" class:active={$page.url.pathname.startsWith('/audio')}>{$t('common.nav.audio')}</a>
+                <div class="taller-dropdown">
+                    <button class="taller-trigger" onclick={() => tallerOpen = !tallerOpen}>{$t('common.nav.taller')}</button>
+                    {#if tallerOpen}
+                    <div class="taller-menu">
+                        <a href="/evaluate" onclick={() => tallerOpen = false}>{$t('common.nav.evaluate')}</a>
+                        <a href="/refine" onclick={() => tallerOpen = false}>{$t('common.nav.refine')}</a>
+                        <a href="/audio" onclick={() => tallerOpen = false}>{$t('common.nav.audio')}</a>
+                    </div>
+                    {/if}
+                </div>
                 {/if}
             </nav>
 
@@ -245,6 +253,7 @@
                 <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
                 {#if data?.user}
+                <span class="mobile-taller-label">{$t('common.nav.taller')}</span>
                 <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
                 <a href="/refine" onclick={toggleMobileMenu}>{$t('common.nav.refine')}</a>
                 <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
@@ -432,6 +441,57 @@
     .desktop-nav a.active {
         color: var(--accent);
         border-bottom-color: var(--accent);
+    }
+
+    .taller-dropdown {
+        position: relative;
+    }
+    .taller-trigger {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-size: 0.95rem;
+        cursor: pointer;
+        padding: 0.5rem 0;
+        border-bottom: 2px solid transparent;
+        transition: border-color 0.2s;
+        font-family: var(--font-body);
+    }
+    .taller-trigger:hover {
+        border-bottom-color: var(--accent);
+    }
+    .taller-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0;
+        min-width: 160px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        z-index: calc(var(--z-nav) + 1);
+    }
+    .taller-menu a {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: var(--text);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+    }
+    .taller-menu a:hover {
+        color: var(--accent);
+    }
+    .taller-menu a.active {
+        color: var(--accent);
+    }
+    .mobile-taller-label {
+        color: var(--accent);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 0.75rem 0 0.25rem;
     }
 
     .nav-actions {
