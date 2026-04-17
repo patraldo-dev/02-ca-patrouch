@@ -92,6 +92,13 @@
         openingId = null;
     }
 
+    // Expandable row
+    let expandedBottle = $state(null);
+
+    function toggleExpand(bottleId) {
+        expandedBottle = expandedBottle === bottleId ? null : bottleId;
+    }
+
     function statusClass(s) {
         return 'status-badge status-' + (s || 'unknown');
     }
@@ -168,12 +175,22 @@
             }).addTo(mapInstance);
 
             const author = bottle.display_name || bottle.username || '?';
+            const catLabel = contentTypeLabel(bottle.content_type);
+            const launchDate = bottle.launched_at ? formatDate(bottle.launched_at) : '';
+            const launchCoords = bottle.launch_lat ? formatCoords(bottle.launch_lat, bottle.launch_lon) : '';
+            const currentCoords = bottle.current_lat ? formatCoords(bottle.current_lat, bottle.current_lon) : '';
+            const dist = bottle.distance_km ? bottle.distance_km.toFixed(0) + ' km' : '';
             marker.bindPopup(`
-                <div style="color:#09090b;font-family:Inter,sans-serif;min-width:160px">
-                    <strong style="font-family:Playfair Display,serif">${bottle.title || '🫙'}</strong><br>
-                    <span style="font-size:0.85em">${author}</span><br>
-                    <span style="text-transform:capitalize;font-size:0.85em">${bottle.status}</span>
-                    ${bottle.distance_km ? `<br><span style="color:#666">${bottle.distance_km.toFixed(1)} km</span>` : ''}
+                <div style="color:#09090b;font-family:Inter,sans-serif;min-width:200px">
+                    <strong style="font-family:Playfair Display,serif;font-size:1.05em">${bottle.title || '🫙'}</strong><br>
+                    <div style="font-size:0.85em;margin-top:4px;color:#555">
+                        <div><b>${author}</b> · <span style="background:#f0ebe3;padding:1px 6px;border-radius:4px;font-size:0.8em;color:#7a6538">${catLabel}</span></div>
+                        ${launchDate ? `<div style="margin-top:3px">📅 ${launchDate}</div>` : ''}
+                        ${launchCoords ? `<div>📍 ${launchCoords}</div>` : ''}
+                        ${currentCoords && currentCoords !== launchCoords ? `<div>➜ ${currentCoords}</div>` : ''}
+                        ${dist ? `<div>📏 ${dist}</div>` : ''}
+                        <div style="margin-top:3px;text-transform:capitalize;font-weight:600;color:#333">${bottle.status}</div>
+                    </div>
                 </div>
             `);
         }
@@ -257,14 +274,14 @@
                         </thead>
                         <tbody>
                             {#each myBottles as bottle}
-                                <tr>
+                                <tr class="tr-clickable" onclick={() => toggleExpand(bottle.id)}>
                                     <td class="td-title">{bottle.title || $t('bottles.untitled')}</td>
                                     <td><span class="type-tag">{contentTypeLabel(bottle.content_type)}</span></td>
                                     <td class="td-date">{formatDate(bottle.launched_at)}</td>
                                     <td class="td-coords">{bottle.current_lat ? formatCoords(bottle.current_lat, bottle.current_lon) : '—'}</td>
                                     <td class="td-action">
                                         {#if bottle.status === 'preparing'}
-                                            <button class="btn btn-sm btn-accent" onclick={() => launchBottle(bottle.id)} disabled={launching === bottle.id}>
+                                            <button class="btn btn-sm btn-accent" onclick={(e) => { e.stopPropagation(); launchBottle(bottle.id); }} disabled={launching === bottle.id}>
                                                 {launching === bottle.id ? '...' : $t('bottles.launch')}
                                             </button>
                                         {:else}
@@ -272,6 +289,56 @@
                                         {/if}
                                     </td>
                                 </tr>
+                                {#if expandedBottle === bottle.id}
+                                <tr class="tr-detail">
+                                    <td colspan="5">
+                                        <div class="detail-grid">
+                                            <div class="detail-item">
+                                                <span class="detail-label">ID</span>
+                                                <span class="detail-value mono">{bottle.id.substring(0, 8)}…</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label">{$t('bottles.content_type')}</span>
+                                                <span class="detail-value">{contentTypeLabel(bottle.content_type)}</span>
+                                            </div>
+                                            {#if bottle.launched_at}
+                                            <div class="detail-item">
+                                                <span class="detail-label">{$t('bottles.launched_on')}</span>
+                                                <span class="detail-value">{formatDate(bottle.launched_at)}</span>
+                                            </div>
+                                            {/if}
+                                            {#if bottle.launch_lat}
+                                            <div class="detail-item">
+                                                <span class="detail-label">📍 {$t('bottles.map_title')}</span>
+                                                <span class="detail-value mono">{formatCoords(bottle.launch_lat, bottle.launch_lon)}</span>
+                                            </div>
+                                            {/if}
+                                            {#if bottle.current_lat && (bottle.current_lat !== bottle.launch_lat || bottle.current_lon !== bottle.launch_lon)}
+                                            <div class="detail-item">
+                                                <span class="detail-label">➜ {$t('bottles.map_title')}</span>
+                                                <span class="detail-value mono">{formatCoords(bottle.current_lat, bottle.current_lon)}</span>
+                                            </div>
+                                            {/if}
+                                            {#if bottle.distance_km}
+                                            <div class="detail-item">
+                                                <span class="detail-label">📏</span>
+                                                <span class="detail-value">{bottle.distance_km.toFixed(1)} km</span>
+                                            </div>
+                                            {/if}
+                                            <div class="detail-item">
+                                                <span class="detail-label">Status</span>
+                                                <span class="detail-value"><span class={statusClass(bottle.status)}>{statusLabel(bottle.status)}</span></span>
+                                            </div>
+                                            {#if bottle.content && !bottle.content_hidden}
+                                            <div class="detail-item detail-full">
+                                                <span class="detail-label">Message</span>
+                                                <div class="detail-preview">{bottle.content}</div>
+                                            </div>
+                                            {/if}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {/if}
                             {/each}
                         </tbody>
                     </table>
@@ -374,6 +441,16 @@
     .bottles-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     .bottles-table th { text-align: left; padding: 0.6rem 0.75rem; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
     .bottles-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--fg); }
+    .tr-clickable { cursor: pointer; transition: background 0.15s; }
+    .tr-clickable:hover { background: rgba(201,168,124,0.05); }
+    .tr-detail td { padding: 0; border-bottom: 1px solid var(--border); }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; padding: 1rem 0.75rem; }
+    .detail-item { display: flex; flex-direction: column; gap: 0.15rem; }
+    .detail-item.detail-full { grid-column: 1 / -1; }
+    .detail-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .detail-value { font-size: 0.9rem; color: var(--fg); }
+    .detail-value.mono { font-family: monospace; font-size: 0.82rem; }
+    .detail-preview { font-style: italic; font-size: 0.85rem; color: var(--text-dim); white-space: pre-wrap; max-height: 80px; overflow-y: auto; padding: 0.5rem; background: var(--bg); border-radius: 6px; border-left: 3px solid var(--accent); }
     .td-title { font-weight: 500; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .td-date { white-space: nowrap; color: var(--muted); font-size: 0.85rem; }
     .td-coords { white-space: nowrap; color: var(--muted); font-size: 0.85rem; font-family: monospace; }
