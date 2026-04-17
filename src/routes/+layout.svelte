@@ -777,7 +777,7 @@
         position: fixed;
         inset: 0;
         background: var(--bg);
-        z-index: var(--z-nav);
+        z-index: 10000;
         display: flex;
         flex-direction: column;
         padding: 2rem 1.5rem;
