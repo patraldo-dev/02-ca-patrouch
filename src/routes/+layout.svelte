@@ -132,6 +132,9 @@
     import { onMount } from 'svelte';
     onMount(() => {
         if (browser) {
+            // Clean up language switch overlay after hydration
+            document.documentElement.classList.remove('lang-switching');
+            localStorage.removeItem('lang_switching');
             window.addEventListener('scroll', onScroll, { passive: true });
             onScroll();
             setTimeout(initObserver, 100);
