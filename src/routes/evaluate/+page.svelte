@@ -104,8 +104,8 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const preview = (currentResult.text_preview || '').substring(0, 40).replace(/[^\w\s-]/g, '').trim();
-        const slug = preview ? preview.replace(/\s+/g, '-').toLowerCase() : 'text';
+        const preview = (currentResult.text_preview || '').substring(0, 50).trim();
+        const slug = preview ? preview.replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-').toLowerCase() : 'text';
         a.download = `patrouch-evaluation-${slug}.txt`;
         a.click();
         URL.revokeObjectURL(url);
