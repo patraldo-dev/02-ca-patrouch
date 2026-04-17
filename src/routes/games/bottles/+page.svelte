@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
-    import { t, get } from '$lib/i18n';
+    import { t } from '$lib/i18n';
+    import { get } from 'svelte/store';
     import { browser } from '$app/environment';
     import L from 'leaflet';
 
