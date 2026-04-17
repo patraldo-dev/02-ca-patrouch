@@ -20,6 +20,8 @@
     let showHistory = $state(false);
     let expandedHistoryId = $state(null);
     let toast = $state('');
+    let promptVisible = $state(false);
+    let systemPrompts = $state(null);
     let toastTimeout = $state(null);
 
     function showToast(msg) {
@@ -28,13 +30,17 @@
         toastTimeout = setTimeout(() => toast = '', 2500);
     }
 
-    onMount(() => {
+    onMount(async () => {
         if (browser) {
             const saved = sessionStorage.getItem('refine_text');
             if (saved) {
                 text = saved;
                 sessionStorage.removeItem('refine_text');
             }
+            try {
+                const res = await fetch('/api/taller/prompts');
+                if (res.ok) systemPrompts = await res.json();
+            } catch {}
         }
     });
 
@@ -256,6 +262,17 @@
                 </div>
             </div>
         {/if}
+        <div class="prompt-inspector">
+            <button class="prompt-toggle" onclick={() => promptVisible = !promptVisible}>
+                {promptVisible ? $t('taller.hide_prompt') : $t('taller.show_prompt')}
+            </button>
+            {#if promptVisible && systemPrompts}
+                <div class="prompt-box">
+                    <h4>{$t('taller.refine_prompt_label')}</h4>
+                    <pre>{systemPrompts.refine}</pre>
+                </div>
+            {/if}
+        </div>
     </div>
 </main>
 

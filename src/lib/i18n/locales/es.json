@@ -789,5 +789,10 @@
   "help.refine_desc": "Refinamiento de texto con IA. Pule tu escritura preservando tu voz.",
   "common.footer.contact": "Contacto",
   "help.tier_free": "✦ Todos",
-  "help.tier_member": "⬥ Taller — Miembros"
+  "help.tier_member": "⬥ Taller — Miembros",
+  "taller.show_prompt": "Ver Prompt del Sistema",
+  "taller.hide_prompt": "Ocultar Prompt del Sistema",
+  "taller.system_prompt": "Prompt del Sistema",
+  "taller.evaluate_prompt_label": "Evaluar — Prompt del Sistema",
+  "taller.refine_prompt_label": "Refinar — Prompt del Sistema"
 }

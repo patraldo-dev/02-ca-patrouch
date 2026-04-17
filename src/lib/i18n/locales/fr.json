@@ -789,5 +789,10 @@
   "help.refine_desc": "Affinage de texte par l'IA. Affinez votre écriture en préservant votre voix.",
   "common.footer.contact": "Contact",
   "help.tier_free": "✦ Tous",
-  "help.tier_member": "⬥ Taller — Membres"
+  "help.tier_member": "⬥ Taller — Membres",
+  "taller.show_prompt": "Voir le Prompt Système",
+  "taller.hide_prompt": "Masquer le Prompt Système",
+  "taller.system_prompt": "Prompt Système",
+  "taller.evaluate_prompt_label": "Évaluer — Prompt Système",
+  "taller.refine_prompt_label": "Affiner — Prompt Système"
 }

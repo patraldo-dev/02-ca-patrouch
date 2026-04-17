@@ -313,6 +313,47 @@ input::placeholder, textarea::placeholder {
     transition: opacity 0.2s;
 }
 .copy-inline:hover { opacity: 1; color: var(--accent); }
+.prompt-inspector {
+    margin-top: 2rem;
+    text-align: center;
+}
+.prompt-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.prompt-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.prompt-box {
+    margin-top: 1rem;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.prompt-box h4 {
+    color: var(--accent);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+.prompt-box pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    font-family: var(--font-body);
+}
 .toast {
     position: fixed;
     bottom: 2rem;

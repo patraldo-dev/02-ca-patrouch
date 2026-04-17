@@ -18,16 +18,22 @@
     let error = $state('');
     let isLoading = $state(false);
     let history = $state([]);
+    let promptVisible = $state(false);
+    let systemPrompts = $state(null);
     let showHistory = $state(false);
     let expandedHistoryId = $state(null);
 
-    onMount(() => {
+    onMount(async () => {
         if (browser) {
             const saved = sessionStorage.getItem('evaluate_text');
             if (saved) {
                 text = saved;
                 sessionStorage.removeItem('evaluate_text');
             }
+            try {
+                const res = await fetch('/api/taller/prompts');
+                if (res.ok) systemPrompts = await res.json();
+            } catch {}
         }
     });
 
@@ -247,6 +253,20 @@
                 </div>
             </div>
         {/if}
+
+        <div class="prompt-inspector">
+            <button class="prompt-toggle" onclick={() => promptVisible = !promptVisible}>
+                {promptVisible ? $t('taller.hide_prompt') : $t('taller.show_prompt')}
+            </button>
+            {#if promptVisible}
+                {#if systemPrompts}
+                <div class="prompt-box">
+                    <h4>{$t('taller.evaluate_prompt_label')}</h4>
+                    <pre>{systemPrompts.evaluate[locale || 'en']}</pre>
+                </div>
+                {/if}
+            {/if}
+        </div>
     </div>
 </main>
 

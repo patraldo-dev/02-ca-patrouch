@@ -789,5 +789,10 @@
   "help.refine_desc": "AI-powered text refinement. Polish your writing while preserving your voice.",
   "common.footer.contact": "Contact",
   "help.tier_free": "✦ Everyone",
-  "help.tier_member": "⬥ Taller — Members"
+  "help.tier_member": "⬥ Taller — Members",
+  "taller.show_prompt": "View System Prompt",
+  "taller.hide_prompt": "Hide System Prompt",
+  "taller.system_prompt": "System Prompt",
+  "taller.evaluate_prompt_label": "Evaluate — System Prompt",
+  "taller.refine_prompt_label": "Refine — System Prompt"
 }
