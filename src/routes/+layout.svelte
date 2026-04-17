@@ -413,7 +413,7 @@
     .navbar {
         position: sticky;
         top: 0;
-        z-index: var(--z-nav);
+        z-index: 10001;
         padding: 1rem 0;
         transition: background 0.3s, backdrop-filter 0.3s, border-color 0.3s;
         border-bottom: 1px solid transparent;
