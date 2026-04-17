@@ -135,7 +135,7 @@
     let mapInstance = $state(null);
 
     onMount(async () => {
-        if (!browser || !data.bottles.length) return;
+        if (!browser) return;
 
         mapInstance = L.map(mapEl, {
             center: [15, -115],
