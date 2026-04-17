@@ -232,6 +232,11 @@
                 <h3>{$t('pages.home.works.stats')}</h3>
                 <p>{$t('pages.home.works.stats.desc')}</p>
             </a>
+            <a href="/games" class="glass-card">
+                <span class="card-icon">🎮</span>
+                <h3>{$t('pages.home.works.games')}</h3>
+                <p>{$t('pages.home.works.games.desc')}</p>
+            </a>
         </div>
     </div>
 </section>

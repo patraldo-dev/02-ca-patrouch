@@ -827,5 +827,15 @@
   "bottles.save": "Guardar Botella",
   "bottles.saved": "Botella guardada",
   "bottles.launched": "¡Botella lanzada al mar!",
-  "bottles.content_revealed": "Mensaje revelado"
+  "bottles.content_revealed": "Mensaje revelado",
+  "bottles.untitled": "Sin título",
+  "bottles.seal_notice": "Tu mensaje será sellado — solo se revela cuando alguien lo encuentre en la orilla",
+  "bottles.opened": "¡Botella abierta!",
+  "bottles.washed_up": "Varadas en la Orilla",
+  "bottles.open_btn": "Abrir Botella",
+  "bottles.launched_on": "Lanzada",
+  "bottles.message_revealed": "Mensaje revelado de la botella",
+  "bottles.already_opened": "Esta botella ya fue encontrada",
+  "pages.home.works.games": "Juegos",
+  "pages.home.works.games.desc": "Encuentra la IA, lanza botellas al océano"
 }

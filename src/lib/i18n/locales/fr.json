@@ -827,5 +827,15 @@
   "bottles.save": "Sauvegarder",
   "bottles.saved": "Bouteille sauvegardée",
   "bottles.launched": "Bouteille lancée !",
-  "bottles.content_revealed": "Message révélé"
+  "bottles.content_revealed": "Message révélé",
+  "bottles.untitled": "Sans titre",
+  "bottles.seal_notice": "Votre message sera scellé — révélé uniquement quand quelqu'un le trouve sur le rivage",
+  "bottles.opened": "Bouteille ouverte !",
+  "bottles.washed_up": "Échouées sur le Rivage",
+  "bottles.open_btn": "Ouvrir la Bouteille",
+  "bottles.launched_on": "Lancée",
+  "bottles.message_revealed": "Message révélé de la bouteille",
+  "bottles.already_opened": "Cette bouteille a déjà été trouvée",
+  "pages.home.works.games": "Jeux",
+  "pages.home.works.games.desc": "Trouvez l'IA, lancez des bouteilles dans l'océan"
 }

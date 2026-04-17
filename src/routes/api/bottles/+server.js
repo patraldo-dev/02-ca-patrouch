@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { xorEncrypt, xorDecrypt } from '$lib/server/bottle-crypto.js';
 
 export async function GET({ platform, url, locals }) {
   const db = platform?.env?.DB_book;
@@ -22,17 +23,38 @@ export async function GET({ platform, url, locals }) {
 
   try {
     const { results } = await db.prepare(`
-      SELECT b.* FROM bottles b WHERE 1=1${where} ORDER BY b.created_at DESC
+      SELECT b.*, u.username, u.display_name FROM bottles b
+      LEFT JOIN users u ON u.id = b.user_id
+      WHERE 1=1${where} ORDER BY b.created_at DESC
     `).bind(...params).all();
 
-    // Attach position trails
-    if (includePositions && results.length > 0) {
+    // Attach position trails and handle decryption
+    if (results.length > 0) {
       for (const bottle of results) {
         const pos = await db.prepare(`
           SELECT lat, lon, heading, speed_knots, recorded_at
           FROM bottle_positions WHERE bottle_id = ? ORDER BY recorded_at ASC
         `).bind(bottle.id).all();
         bottle.positions = pos.results || [];
+
+        // Decrypt content only for owner or if already opened
+        const isOwner = locals.user && bottle.user_id === locals.user.id;
+        const isOpened = bottle.opened_by !== null;
+        if ((isOwner || isOpened) && bottle.content && bottle.bottle_key) {
+          try {
+            bottle.content = xorDecrypt(bottle.content, bottle.bottle_key);
+          } catch {
+            bottle.content = '';
+          }
+        } else {
+          // Hide content from others — show metadata only
+          bottle.content_hidden = true;
+          delete bottle.content;
+          delete bottle.bottle_key;
+        }
+
+        // Always strip bottle_key from response (only needed server-side)
+        delete bottle.bottle_key;
       }
     }
 
@@ -55,12 +77,16 @@ export async function POST({ platform, locals, request }) {
 
   if (!content?.trim()) return json({ error: 'Content is required' }, { status: 400 });
 
+  // Generate encryption key and encrypt message
+  const bottleKey = crypto.randomUUID().replace(/-/g, '');
+  const encrypted = xorEncrypt(content.trim(), bottleKey);
+
   const id = crypto.randomUUID();
   try {
     await db.prepare(`
-      INSERT INTO bottles (id, user_id, content, content_type, title, status, bottle_type)
-      VALUES (?, ?, ?, ?, ?, 'preparing', ?)
-    `).bind(id, user.id, content.trim(), content_type, title.trim(), bottle_type).run();
+      INSERT INTO bottles (id, user_id, content, content_type, title, status, bottle_type, bottle_key)
+      VALUES (?, ?, ?, ?, ?, 'preparing', ?, ?)
+    `).bind(id, user.id, encrypted, content_type, title.trim(), bottle_type, bottleKey).run();
 
     return json({ id, status: 'preparing' }, { status: 201 });
   } catch (e) {

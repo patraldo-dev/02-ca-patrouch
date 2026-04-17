@@ -3,6 +3,7 @@
     import { t } from '$lib/i18n';
     import { get } from 'svelte/store';
     import { browser } from '$app/environment';
+    import { invalidateAll } from '$app/navigation';
     import L from 'leaflet';
 
     let { data } = $props();
@@ -15,18 +16,15 @@
     let formBottleType = $state('glass');
     let saving = $state(false);
     let launching = $state(null);
-    let message = $state('');
+    let toastMsg = $state('');
 
     // User's bottles
     let myBottles = $state([]);
 
     async function loadMyBottles() {
         try {
-            const res = await fetch('/api/bottles?user_id=' + (data.user?.id || '') + '&status=preparing');
-            const r = await res.json();
-            // Also get all user bottles for the list
-            const allRes = await fetch('/api/bottles?user_id=' + (data.user?.id || ''));
-            myBottles = await allRes.json();
+            const res = await fetch('/api/bottles?user_id=' + (data.user?.id || ''));
+            myBottles = await res.json();
         } catch {}
     }
 
@@ -48,9 +46,9 @@
                 formContent = '';
                 formTitle = '';
                 showForm = false;
-                message = get(t)('bottles.saved');
+                toastMsg = get(t)('bottles.saved');
                 loadMyBottles();
-                setTimeout(() => message = '', 3000);
+                setTimeout(() => toastMsg = '', 3000);
             }
         } catch {}
         saving = false;
@@ -65,7 +63,7 @@
                 body: JSON.stringify({ status: 'launched' })
             });
             if (res.ok) {
-                message = get(t)('bottles.launched');
+                toastMsg = get(t)('bottles.launched');
                 loadMyBottles();
                 setTimeout(() => location.reload(), 1500);
             }
@@ -73,13 +71,57 @@
         launching = null;
     }
 
-    let revealedBottle = $state(null);
-    function openBottle(bottle) {
-        revealedBottle = revealedBottle === bottle.id ? null : bottle.id;
+    // Open a beached bottle (reveal sealed message)
+    let openingId = $state(null);
+    let openedBottle = $state(null);
+
+    async function openBottle(bottle) {
+        openingId = bottle.id;
+        try {
+            const res = await fetch('/api/bottles/' + bottle.id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'open' })
+            });
+            if (res.ok) {
+                const opened = await res.json();
+                openedBottle = opened;
+                toastMsg = get(t)('bottles.opened');
+                invalidateAll();
+                setTimeout(() => toastMsg = '', 3000);
+            }
+        } catch {}
+        openingId = null;
     }
 
     function statusClass(s) {
         return 'status-badge status-' + (s || 'unknown');
+    }
+
+    function statusLabel(s) {
+        return get(t)('bottles.status.' + (s || 'unknown'));
+    }
+
+    function bottleTypeLabel(type) {
+        return get(t)('bottles.bottle.' + (type || 'glass'));
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '';
+        return new Date(iso).toLocaleDateString(get(t)('_meta.locale') || 'es', {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    function formatCoords(lat, lon) {
+        if (lat == null || lon == null) return '';
+        return `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+    }
+
+    function driftDays(launchedAt) {
+        if (!launchedAt) return '';
+        const days = Math.floor((Date.now() - new Date(launchedAt).getTime()) / 86400000);
+        return days + (days === 1 ? ' día' : ' días');
     }
 
     // Map
@@ -105,31 +147,28 @@
         for (const bottle of data.bottles) {
             if (!bottle.current_lat || !bottle.current_lon) continue;
 
-            // Trail
             if (bottle.positions?.length > 1) {
                 const coords = bottle.positions.map(p => [p.lat, p.lon]);
                 L.polyline(coords, { color: '#c9a87c', weight: 2, opacity: 0.4 }).addTo(mapInstance);
             }
 
-            // Marker
             const marker = L.circleMarker([bottle.current_lat, bottle.current_lon], {
                 radius: 8,
-                fillColor: bottle.status === 'beached' ? '#e74c3c' : '#c9a87c',
+                fillColor: bottle.status === 'beached' ? '#f59e0b' : bottle.status === 'found' ? '#c084fc' : '#c9a87c',
                 fillOpacity: 0.9,
                 color: '#fff',
                 weight: 2
             }).addTo(mapInstance);
 
             marker.bindPopup(`
-                <div style="color:#09090b;font-family:Inter,sans-serif;min-width:150px">
+                <div style="color:#09090b;font-family:Inter,sans-serif;min-width:160px">
                     <strong style="font-family:Playfair Display,serif">${bottle.title || '🫙'}</strong><br>
-                    <span style="text-transform:capitalize;font-size:0.85em">${bottle.status}</span><br>
-                    <span style="color:#666">${(bottle.distance_km || 0).toFixed(1)} km</span>
+                    <span style="text-transform:capitalize;font-size:0.85em">${bottle.status}</span>
+                    ${bottle.distance_km ? `<br><span style="color:#666">${bottle.distance_km.toFixed(1)} km</span>` : ''}
                 </div>
             `);
         }
 
-        // Fit bounds if bottles exist
         const launchedBottles = data.bottles.filter(b => b.current_lat);
         if (launchedBottles.length) {
             const bounds = L.latLngBounds(launchedBottles.map(b => [b.current_lat, b.current_lon]));
@@ -149,8 +188,8 @@
     <h1 class="page-title">{$t('games.find_the_bottle')}</h1>
     <p class="page-subtitle">{$t('games.find_the_bottle_desc')}</p>
 
-    {#if message}
-        <div class="toast">{message}</div>
+    {#if toastMsg}
+        <div class="toast">{toastMsg}</div>
     {/if}
 
     <!-- My Bottles -->
@@ -178,6 +217,7 @@
                             <option value="cork">{$t('bottles.bottle.cork')}</option>
                         </select>
                     </div>
+                    <p class="seal-notice">🔒 {$t('bottles.seal_notice')}</p>
                     <button class="btn btn-accent" onclick={saveBottle} disabled={saving}>
                         {saving ? '...' : $t('bottles.save')}
                     </button>
@@ -188,12 +228,30 @@
                 <div class="bottles-list">
                     {#each myBottles as bottle}
                         <div class="bottle-item">
-                            <span class="bottle-title">{bottle.title || '🫙'}</span>
-                            <span class={statusClass(bottle.status)}>{$t('bottles.status.' + bottle.status)}</span>
+                            <div class="bottle-item-main">
+                                <span class="bottle-emoji">🫙</span>
+                                <div class="bottle-item-info">
+                                    <span class="bottle-title">{bottle.title || $t('bottles.untitled')}</span>
+                                    <div class="bottle-meta">
+                                        <span class={statusClass(bottle.status)}>{statusLabel(bottle.status)}</span>
+                                        <span class="meta-sep">·</span>
+                                        <span>{bottleTypeLabel(bottle.bottle_type)}</span>
+                                        {#if bottle.launched_at}
+                                            <span class="meta-sep">·</span>
+                                            <span>{formatDate(bottle.launched_at)}</span>
+                                            <span class="meta-sep">·</span>
+                                            <span>{formatCoords(bottle.current_lat, bottle.current_lon)}</span>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
                             {#if bottle.status === 'preparing'}
-                                <button class="btn btn-sm" onclick={() => launchBottle(bottle.id)} disabled={launching === bottle.id}>
+                                <button class="btn btn-sm btn-accent" onclick={() => launchBottle(bottle.id)} disabled={launching === bottle.id}>
                                     {launching === bottle.id ? '...' : $t('bottles.launch')}
                                 </button>
+                            {/if}
+                            {#if bottle.content && !bottle.content_hidden}
+                                <div class="owner-preview">{bottle.content}</div>
                             {/if}
                         </div>
                     {/each}
@@ -208,24 +266,65 @@
         <div class="map-container" bind:this={mapEl}></div>
     </div>
 
-    <!-- Beached bottles -->
-    {#if data.bottles.some(b => b.status === 'beached')}
+    <!-- Beached / Found bottles (public) -->
+    {#if data.bottles.filter(b => b.status === 'beached' || b.status === 'found').length}
         <div class="section">
-            <h2>{$t('bottles.open_bottle')}</h2>
-            {#each data.bottles.filter(b => b.status === 'beached') as bottle}
+            <h2>{$t('bottles.washed_up')}</h2>
+            {#each data.bottles.filter(b => b.status === 'beached' || b.status === 'found') as bottle}
                 <div class="beached-item">
-                    <span>🫙</span>
-                    <div>
-                        <strong>{bottle.title || 'Unknown'}</strong>
-                        <small class="muted">— {(bottle.distance_km || 0).toFixed(0)} km {$t('bottles.distance').replace('{km}', '')}</small>
+                    <div class="beached-icon">
+                        {bottle.status === 'found' ? '📬' : '🫙'}
                     </div>
-                    <button class="btn btn-sm" onclick={() => openBottle(bottle)}>
-                        {revealedBottle === bottle.id ? '✕' : $t('bottles.open_bottle')}
-                    </button>
-                    {#if revealedBottle === bottle.id}
-                        <div class="revealed-content">{bottle.content}</div>
+                    <div class="beached-info">
+                        <strong>{bottle.display_name || bottle.username || 'Anónimo'}</strong>
+                        <div class="beached-meta">
+                            <span>{bottleTypeLabel(bottle.bottle_type)}</span>
+                            {#if bottle.launched_at}
+                                <span class="meta-sep">·</span>
+                                <span>{$t('bottles.launched_on')}: {formatDate(bottle.launched_at)}</span>
+                                <span class="meta-sep">·</span>
+                                <span>{formatCoords(bottle.launch_lat, bottle.launch_lon)}</span>
+                            {/if}
+                            {#if bottle.current_lat}
+                                <span class="meta-sep">→</span>
+                                <span>{formatCoords(bottle.current_lat, bottle.current_lon)}</span>
+                            {/if}
+                            {#if bottle.launched_at}
+                                <span class="meta-sep">·</span>
+                                <span>{driftDays(bottle.launched_at)}</span>
+                            {/if}
+                            {#if bottle.distance_km}
+                                <span class="meta-sep">·</span>
+                                <span>{bottle.distance_km.toFixed(0)} km</span>
+                            {/if}
+                        </div>
+                        <span class={statusClass(bottle.status)}>{statusLabel(bottle.status)}</span>
+                    </div>
+                    {#if bottle.status === 'beached' && !bottle.opened_by}
+                        <button class="btn btn-sm btn-accent" onclick={() => openBottle(bottle)} disabled={openingId === bottle.id}>
+                            {openingId === bottle.id ? '...' : $t('bottles.open_btn')}
+                        </button>
                     {/if}
                 </div>
+                <!-- Revealed content -->
+                {#if openedBottle?.id === bottle.id && openedBottle.content}
+                    <div class="revealed-content">
+                        <div class="revealed-header">
+                            <span class="revealed-icon">🔓</span>
+                            <span>{$t('bottles.message_revealed')}</span>
+                        </div>
+                        <div class="revealed-text">{openedBottle.content}</div>
+                    </div>
+                {/if}
+                {#if bottle.status === 'found' && bottle.content && !bottle.content_hidden}
+                    <div class="revealed-content already-opened">
+                        <div class="revealed-header">
+                            <span>📬</span>
+                            <span>{$t('bottles.already_opened')}</span>
+                        </div>
+                        <div class="revealed-text">{bottle.content}</div>
+                    </div>
+                {/if}
             {/each}
         </div>
     {/if}
@@ -249,9 +348,7 @@
         margin-bottom: 2.5rem;
         font-style: italic;
     }
-    .section {
-        margin-bottom: 3rem;
-    }
+    .section { margin-bottom: 3rem; }
     .section h2 {
         font-family: var(--font-heading);
         font-size: 1.5rem;
@@ -284,11 +381,13 @@
         font-family: var(--font-body);
         font-size: 0.95rem;
     }
-    .form-row {
-        display: flex;
-        gap: 0.75rem;
-    }
+    .form-row { display: flex; gap: 0.75rem; }
     .form-row select { flex: 1; }
+    .seal-notice {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-style: italic;
+    }
     .btn {
         background: var(--accent);
         color: var(--bg);
@@ -302,31 +401,47 @@
     }
     .btn:hover { opacity: 0.85; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-sm {
-        font-size: 0.8rem;
-        padding: 0.35rem 0.8rem;
-    }
-    .bottles-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
+    .btn-sm { font-size: 0.8rem; padding: 0.35rem 0.8rem; }
+    .btn-accent { background: var(--accent); color: var(--bg); }
+    .bottles-list { display: flex; flex-direction: column; gap: 0.75rem; }
     .bottle-item {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 0.75rem 1rem;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 10px;
+        padding: 1rem;
     }
+    .bottle-item-main { display: flex; align-items: center; gap: 0.75rem; }
+    .bottle-emoji { font-size: 1.5rem; flex-shrink: 0; }
+    .bottle-item-info { flex: 1; min-width: 0; }
     .bottle-title {
-        flex: 1;
+        display: block;
         font-weight: 500;
+        color: var(--fg);
+        margin-bottom: 0.25rem;
+    }
+    .bottle-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+        flex-wrap: wrap;
+    }
+    .meta-sep { color: var(--border); }
+    .owner-preview {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: var(--bg);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: var(--text-dim);
+        font-style: italic;
+        white-space: pre-wrap;
+        border-left: 3px solid var(--accent);
     }
     .status-badge {
-        font-size: 0.75rem;
-        padding: 0.2rem 0.6rem;
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
         border-radius: 99px;
         font-weight: 600;
         text-transform: uppercase;
@@ -348,25 +463,51 @@
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 10px;
-        padding: 1rem;
+        padding: 1.25rem;
         margin-bottom: 0.75rem;
         display: flex;
         align-items: center;
         gap: 1rem;
+    }
+    .beached-icon { font-size: 2rem; flex-shrink: 0; }
+    .beached-info { flex: 1; min-width: 0; }
+    .beached-info strong { color: var(--accent); display: block; margin-bottom: 0.3rem; }
+    .beached-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.82rem;
+        color: var(--muted);
         flex-wrap: wrap;
     }
-    .beached-item strong { color: var(--accent); }
-    .muted { color: var(--muted); }
     .revealed-content {
-        width: 100%;
-        margin-top: 0.75rem;
-        padding: 1rem;
-        background: var(--bg);
-        border-radius: 8px;
+        background: var(--surface);
+        border: 1px solid var(--accent);
+        border-radius: 10px;
+        padding: 1.25rem;
+        margin-bottom: 0.75rem;
+        animation: revealFade 0.5s ease;
+    }
+    .already-opened { border-color: var(--border); }
+    .revealed-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        color: var(--accent);
+        font-weight: 600;
+    }
+    .revealed-icon { font-size: 1.2rem; }
+    .revealed-text {
         font-style: italic;
-        line-height: 1.6;
+        line-height: 1.7;
         color: var(--fg);
         white-space: pre-wrap;
+    }
+    @keyframes revealFade {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     .toast {
         position: fixed;
@@ -383,5 +524,10 @@
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 640px) {
+        .beached-item { flex-wrap: wrap; }
+        .beached-meta { font-size: 0.75rem; }
+        .bottle-meta { font-size: 0.75rem; }
     }
 </style>

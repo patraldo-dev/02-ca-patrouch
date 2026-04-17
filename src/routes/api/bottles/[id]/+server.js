@@ -1,11 +1,16 @@
 import { json } from '@sveltejs/kit';
+import { xorDecrypt } from '$lib/server/bottle-crypto.js';
 
 export async function GET({ platform, params, locals }) {
   const db = platform?.env?.DB_book;
   if (!db) return json({ error: 'Database not available' }, { status: 500 });
 
   try {
-    const bottle = await db.prepare('SELECT * FROM bottles WHERE id = ?').bind(params.id).first();
+    const bottle = await db.prepare(`
+      SELECT b.*, u.username, u.display_name FROM bottles b
+      LEFT JOIN users u ON u.id = b.user_id
+      WHERE b.id = ?
+    `).bind(params.id).first();
     if (!bottle) return json({ error: 'Not found' }, { status: 404 });
 
     const pos = await db.prepare(`
@@ -13,6 +18,21 @@ export async function GET({ platform, params, locals }) {
       FROM bottle_positions WHERE bottle_id = ? ORDER BY recorded_at ASC
     `).bind(params.id).all();
     bottle.positions = pos.results || [];
+
+    // Decrypt content only for owner or if already opened
+    const isOwner = locals.user && bottle.user_id === locals.user.id;
+    const isOpened = bottle.opened_by !== null;
+    if ((isOwner || isOpened) && bottle.content && bottle.bottle_key) {
+      try {
+        bottle.content = xorDecrypt(bottle.content, bottle.bottle_key);
+      } catch {
+        bottle.content = '';
+      }
+    } else {
+      bottle.content_hidden = true;
+      delete bottle.content;
+    }
+    delete bottle.bottle_key;
 
     return json(bottle);
   } catch (e) {
@@ -29,10 +49,27 @@ export async function PUT({ platform, params, locals, request }) {
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
-  const { content, content_type, title, bottle_type, status, launch_lat, launch_lon } = body;
+  const { content, content_type, title, bottle_type, status, launch_lat, launch_lon, action } = body;
 
   const existing = await db.prepare('SELECT * FROM bottles WHERE id = ?').bind(params.id).first();
   if (!existing) return json({ error: 'Not found' }, { status: 404 });
+
+  // Handle "open" action — anyone can open a beached bottle once
+  if (action === 'open' && existing.status === 'beached' && !existing.opened_by) {
+    await db.prepare(`
+      UPDATE bottles SET opened_by = ?, opened_at = datetime('now'), status = 'found', updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(user.id, params.id).run();
+
+    const opened = await db.prepare('SELECT * FROM bottles WHERE id = ?').bind(params.id).first();
+    try {
+      opened.content = xorDecrypt(opened.content, opened.bottle_key);
+    } catch {
+      opened.content = '';
+    }
+    delete opened.bottle_key;
+    return json(opened);
+  }
 
   // Only owner or admin can update
   if (existing.user_id !== user.id && user.role !== 'admin') {
@@ -42,7 +79,7 @@ export async function PUT({ platform, params, locals, request }) {
   try {
     // Handle launch
     if (status === 'launched' && existing.status === 'preparing') {
-      const lat = launch_lat || 20.6534; // Puerto Vallarta
+      const lat = launch_lat || 20.6534;
       const lon = launch_lon || -105.2253;
       const now = new Date().toISOString();
 
@@ -59,10 +96,9 @@ export async function PUT({ platform, params, locals, request }) {
       return json({ status: 'launched' });
     }
 
-    // Regular update
+    // Regular update (only non-encrypted fields)
     const updates = [];
     const values = [];
-    if (content !== undefined) { updates.push('content = ?'); values.push(content); }
     if (content_type !== undefined) { updates.push('content_type = ?'); values.push(content_type); }
     if (title !== undefined) { updates.push('title = ?'); values.push(title); }
     if (bottle_type !== undefined) { updates.push('bottle_type = ?'); values.push(bottle_type); }

@@ -827,5 +827,15 @@
   "bottles.save": "Save Bottle",
   "bottles.saved": "Bottle saved",
   "bottles.launched": "Bottle launched!",
-  "bottles.content_revealed": "Message revealed"
+  "bottles.content_revealed": "Message revealed",
+  "bottles.untitled": "Untitled",
+  "bottles.seal_notice": "Your message will be sealed — only revealed when someone finds it on the shore",
+  "bottles.opened": "Bottle opened!",
+  "bottles.washed_up": "Washed Ashore",
+  "bottles.open_btn": "Open Bottle",
+  "bottles.launched_on": "Launched",
+  "bottles.message_revealed": "Message revealed from the bottle",
+  "bottles.already_opened": "This bottle was already found",
+  "pages.home.works.games": "Games",
+  "pages.home.works.games.desc": "Find the AI, launch bottles into the ocean"
 }
