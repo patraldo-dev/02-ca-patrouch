@@ -4,7 +4,6 @@
     import { get } from 'svelte/store';
     import { browser } from '$app/environment';
     import { invalidateAll } from '$app/navigation';
-    import L from 'leaflet';
 
     let { data } = $props();
 
@@ -136,6 +135,8 @@
 
     onMount(async () => {
         if (!browser) return;
+
+        const L = (await import('leaflet')).default;
 
         mapInstance = L.map(mapEl, {
             center: [15, -115],
