@@ -758,6 +758,7 @@
         border: none;
         cursor: pointer;
         padding: 0.5rem;
+        touch-action: manipulation;
     }
 
     .hamburger {
