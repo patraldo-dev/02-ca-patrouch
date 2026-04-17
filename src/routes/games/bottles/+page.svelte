@@ -145,7 +145,7 @@
             attributionControl: false
         });
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
             maxZoom: 18
         }).addTo(mapInstance);
 
@@ -409,7 +409,7 @@
     @keyframes revealFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Toast */
-    .toast { position: fixed; top: 1.5rem; right: 1.5rem; background: var(--accent); color: var(--bg); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; z-index: 9999; animation: fadeIn 0.3s ease; }
+    .toast { position: fixed; top: 1.5rem; right: 1.5rem; background: var(--accent); color: var(--bg); padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; z-index: 9999; animation: fadeIn 0.3s ease; max-width: 85vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
     @media (max-width: 640px) {
