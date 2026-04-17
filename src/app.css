@@ -387,6 +387,30 @@ input::placeholder, textarea::placeholder {
 }
 .help-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    line-height: 1;
+}
+.modal-close:hover { color: var(--fg); }
+
 .help-modal {
     position: fixed;
     top: 50%;

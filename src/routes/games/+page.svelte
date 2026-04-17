@@ -26,7 +26,7 @@
             </div>
         </button>
         <button class="game-card" onclick={() => goTo('/games/bottles')}>
-            <span class="game-card-icon">🫙</span>
+            <span class="game-card-icon">🍾</span>
             <div class="game-card-body">
                 <h2>{$t('games.find_the_bottle')}</h2>
                 <p>{$t('games.find_the_bottle_desc')}</p>

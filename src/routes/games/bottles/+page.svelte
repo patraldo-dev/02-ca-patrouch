@@ -187,7 +187,7 @@
             const dist = bottle.distance_km ? bottle.distance_km.toFixed(0) + ' km' : '';
             marker.bindPopup(`
                 <div style="color:#09090b;font-family:Inter,sans-serif;min-width:200px">
-                    <strong style="font-family:Playfair Display,serif;font-size:1.05em">${bottle.title || '🫙'}</strong><br>
+                    <strong style="font-family:Playfair Display,serif;font-size:1.05em">${bottle.title || '🍾'}</strong><br>
                     <div style="font-size:0.85em;margin-top:4px;color:#555">
                         <div><b>${author}</b> · <span style="background:#f0ebe3;padding:1px 6px;border-radius:4px;font-size:0.8em;color:#7a6538">${catLabel}</span></div>
                         ${launchDate ? `<div style="margin-top:3px">📅 ${launchDate}</div>` : ''}
@@ -363,7 +363,7 @@
             <h2>{$t('bottles.washed_up')}</h2>
             {#each data.bottles.filter(b => b.status === 'beached' || b.status === 'found') as bottle}
                 <div class="beached-item">
-                    <div class="beached-icon">{bottle.status === 'found' ? '📬' : '🫙'}</div>
+                    <div class="beached-icon">{bottle.status === 'found' ? '📬' : '🍾'}</div>
                     <div class="beached-info">
                         <strong>{bottle.display_name || bottle.username || 'Anónimo'}</strong>
                         <div class="beached-meta">
