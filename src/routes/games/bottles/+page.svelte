@@ -144,6 +144,11 @@
         if (!browser) return;
 
         const L = (await import('leaflet')).default;
+        // Load Leaflet CSS dynamically to avoid global style conflicts
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(css);
 
         mapInstance = L.map(mapEl, {
             center: [15, -115],
@@ -206,7 +211,6 @@
 </script>
 
 <svelte:head>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <title>{$t('games.find_the_bottle')} — Patrouch</title>
 </svelte:head>
 

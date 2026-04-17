@@ -413,7 +413,7 @@
     .navbar {
         position: sticky;
         top: 0;
-        z-index: 10001;
+        z-index: var(--z-nav);
         padding: 1rem 0;
         transition: background 0.3s, backdrop-filter 0.3s, border-color 0.3s;
         border-bottom: 1px solid transparent;
@@ -781,7 +781,7 @@
         position: fixed;
         inset: 0;
         background: var(--bg);
-        z-index: 10000;
+        z-index: var(--z-nav);
         display: flex;
         flex-direction: column;
         padding: 2rem 1.5rem;
