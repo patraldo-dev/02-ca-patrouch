@@ -837,5 +837,7 @@
   "bottles.message_revealed": "Message révélé de la bouteille",
   "bottles.already_opened": "Cette bouteille a déjà été trouvée",
   "pages.home.works.games": "Jeux",
-  "pages.home.works.games.desc": "Trouvez l'IA, lancez des bouteilles dans l'océan"
+  "pages.home.works.games.desc": "Trouvez l'IA, lancez des bouteilles dans l'océan",
+  "pages.home.explore.bottle_quest": "Bottle Quest",
+  "pages.home.explore.bottle_quest_desc": "Scellez vos mots et lancez-les dans l'océan"
 }

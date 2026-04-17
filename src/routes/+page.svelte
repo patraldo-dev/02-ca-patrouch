@@ -36,7 +36,8 @@
             key: 'games',
             icon: '🎮',
             items: [
-                { key: 'find_the_ai', href: '/agora' },
+                { key: 'find_the_ai', href: '/agora?author=both' + (data.serverLocale ? '&locale=' + data.serverLocale : '') },
+                { key: 'bottle_quest', href: '/games/bottles' },
                 { key: 'challenges', href: '/write' },
                 { key: 'weekly_challenge', href: '/write' }
             ]
