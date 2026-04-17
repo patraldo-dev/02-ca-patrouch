@@ -173,6 +173,7 @@
                 <a href="/" class:active={$page.url.pathname === '/'}>{$t('common.nav.home')}</a>
                 <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
                 <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
+                <a href="/games" class:active={$page.url.pathname.startsWith('/games')}>{$t('common.nav.games')}</a>
                 {#if data?.user?.role === 'admin' || data?.user?.role === 'member'}
                 <div class="taller-dropdown">
                     <button class="taller-trigger" onclick={() => tallerOpen = !tallerOpen}>{$t('common.nav.taller')}</button>
@@ -189,7 +190,6 @@
                 <span class="taller-teaser" title={tallerOpen ? '' : 'Members only'} onclick={() => tallerOpen = !tallerOpen}>{$t('common.nav.taller')}</span>
                 {#if tallerOpen}
                 <div class="taller-teaser-menu">
-                    <a href="/games" onclick={() => tallerOpen = false}>{$t('common.nav.games')}</a>
                     <span class="taller-coming-soon">{$t('common.nav.evaluate')} ✦</span>
                     <span class="taller-coming-soon">{$t('common.nav.refine')} ✦</span>
                     <span class="taller-coming-soon">{$t('common.nav.audio')} ✦</span>
@@ -273,6 +273,7 @@
                 <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
                 <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
+                <a href="/games" onclick={toggleMobileMenu}>{$t('common.nav.games')}</a>
                 {#if data?.user?.role === 'admin' || data?.user?.role === 'member'}
                 <span class="mobile-taller-label">{$t('common.nav.taller')}</span>
                 <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
@@ -281,7 +282,6 @@
                 {/if}
                 {#if data?.user && data.user.role !== 'admin' && data.user.role !== 'member'}
                 <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>
-                <a href="/games" onclick={toggleMobileMenu}>{$t('common.nav.games')}</a>
                 <span class="mobile-taller-coming">{$t('common.nav.evaluate')} ✦</span>
                 <span class="mobile-taller-coming">{$t('common.nav.refine')} ✦</span>
                 <span class="mobile-taller-coming">{$t('common.nav.audio')} ✦</span>
