@@ -7,6 +7,7 @@
     import SearchModal from '$lib/components/SearchModal.svelte';
     import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
     import { page } from '$app/stores';
+    import { getSeoMeta } from '$lib/seo';
     import { track } from '$lib/analytics';
     import NewsletterForm from '$lib/components/NewsletterForm.svelte';
     import LanguageSwitcherDesktop from '$lib/components/LanguageSwitcherDesktop.svelte';
@@ -142,8 +143,17 @@
 </script>
 
 <svelte:head>
-    <title>Christophe R Patraldo — patrouch.ca</title>
+    <title>Patrouch</title>
     <html lang={$locale || 'en'} />
+    <meta name="description" content={getSeoMeta($page.url.pathname, $locale || 'en').description} />
+    <link rel="canonical" href={"https://patrouch.ca" + $page.url.pathname} />
+    <meta property="og:title" content="Patrouch — A Space for Writing" />
+    <meta property="og:description" content={getSeoMeta($page.url.pathname, $locale || 'en').description} />
+    <meta property="og:url" content={"https://patrouch.ca" + $page.url.pathname} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content={$locale === 'es' ? 'es_MX' : $locale === 'fr' ? 'fr_FR' : 'en_US'} />
+    <meta property="og:site_name" content="Patrouch" />
+    <meta name="twitter:card" content="summary" />
 </svelte:head>
 
 <!-- Scroll Progress Bar -->
