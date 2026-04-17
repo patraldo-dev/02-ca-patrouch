@@ -185,6 +185,17 @@
                     {/if}
                 </div>
                 {/if}
+                {#if data?.user && data.user.role !== 'admin' && data.user.role !== 'member'}
+                <span class="taller-teaser" title={tallerOpen ? '' : 'Members only'} onclick={() => tallerOpen = !tallerOpen}>{$t('common.nav.taller')}</span>
+                {#if tallerOpen}
+                <div class="taller-teaser-menu">
+                    <a href="/games" onclick={() => tallerOpen = false}>{$t('common.nav.games')}</a>
+                    <span class="taller-coming-soon">{$t('common.nav.evaluate')} ✦</span>
+                    <span class="taller-coming-soon">{$t('common.nav.refine')} ✦</span>
+                    <span class="taller-coming-soon">{$t('common.nav.audio')} ✦</span>
+                </div>
+                {/if}
+                {/if}
             </nav>
 
             <!-- Desktop: Lang + Auth -->
@@ -267,6 +278,13 @@
                 <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
                 <a href="/refine" onclick={toggleMobileMenu}>{$t('common.nav.refine')}</a>
                 <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
+                {/if}
+                {#if data?.user && data.user.role !== 'admin' && data.user.role !== 'member'}
+                <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>
+                <a href="/games" onclick={toggleMobileMenu}>{$t('common.nav.games')}</a>
+                <span class="mobile-taller-coming">{$t('common.nav.evaluate')} ✦</span>
+                <span class="mobile-taller-coming">{$t('common.nav.refine')} ✦</span>
+                <span class="mobile-taller-coming">{$t('common.nav.audio')} ✦</span>
                 {/if}
                 <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
             </nav>
@@ -504,6 +522,49 @@
     .taller-menu a.active {
         color: var(--accent);
     }
+    .taller-teaser {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-size: 0.95rem;
+        cursor: pointer;
+        padding: 0.5rem 0;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        font-family: var(--font-body);
+        opacity: 0.6;
+    }
+    .taller-teaser:hover { opacity: 1; }
+    .taller-teaser-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0;
+        min-width: 160px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        z-index: calc(var(--z-nav) + 1);
+    }
+    .taller-teaser-menu a {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: var(--text);
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    .taller-teaser-menu a:hover { color: var(--accent); }
+    .taller-coming-soon {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        opacity: 0.5;
+    }
+    .mobile-taller-teaser { opacity: 0.5; }
+    .mobile-taller-teaser small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
+    .mobile-taller-coming { display: block; color: var(--text-dim); opacity: 0.4; padding: 0.25rem 0; font-size: 0.9rem; }
     .mobile-taller-label {
         color: var(--accent);
         font-size: 0.75rem;

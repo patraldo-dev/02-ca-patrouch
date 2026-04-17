@@ -794,5 +794,6 @@
   "taller.hide_prompt": "Hide System Prompt",
   "taller.system_prompt": "System Prompt",
   "taller.evaluate_prompt_label": "Evaluate — System Prompt",
-  "taller.refine_prompt_label": "Refine — System Prompt"
+  "taller.refine_prompt_label": "Refine — System Prompt",
+  "common.nav.games": "Games"
 }

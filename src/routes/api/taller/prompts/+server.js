@@ -13,11 +13,11 @@ export async function GET({ locals }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const isAdmin = user.role === 'admin';
+    const isMember = user.role === 'admin' || user.role === 'member';
 
     return json({
         evaluate: evaluatePrompts,
         refine: refinePrompt,
-        editable: isAdmin
+        editable: isMember
     });
 }

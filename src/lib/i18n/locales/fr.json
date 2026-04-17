@@ -794,5 +794,6 @@
   "taller.hide_prompt": "Masquer le Prompt Système",
   "taller.system_prompt": "Prompt Système",
   "taller.evaluate_prompt_label": "Évaluer — Prompt Système",
-  "taller.refine_prompt_label": "Affiner — Prompt Système"
+  "taller.refine_prompt_label": "Affiner — Prompt Système",
+  "common.nav.games": "Jeux"
 }
