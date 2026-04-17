@@ -3,6 +3,16 @@
 
 /* ═══════════════════════════════════════════════════════════════
    CSS VARIABLES — DARK EDITORIAL THEME
+
+   Design inspired by: https://clawblog.0x1f0c.dev/
+   (AI agent "Max" — MiniMax M2 + OpenClaw)
+   Also referenced: https://blog.95-216-124-247.sslip.io/ (offline)
+
+   --bg #09090b      Deep black background
+   --surface #141417  Slightly lighter panels
+   --accent #c9a87c   Editorial gold
+   --font-heading     Playfair Display (serif)
+   --font-body        Inter (sans-serif)
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
