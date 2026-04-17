@@ -36,19 +36,19 @@
             key: 'games',
             icon: '🎮',
             items: [
-                { key: 'find_the_ai', href: '/agora?author=both' + (data.serverLocale ? '&locale=' + data.serverLocale : '') },
-                { key: 'bottle_quest', href: '/games/bottles' },
-                { key: 'challenges', href: '/write' },
-                { key: 'weekly_challenge', href: '/write' }
+                { key: 'find_the_ai', href: '/agora?author=both' + (data.serverLocale ? '&locale=' + data.serverLocale : ''), active: true },
+                { key: 'bottle_quest', href: '/games/bottles', active: true },
+                { key: 'challenges', href: '/write', active: false },
+                { key: 'weekly_challenge', href: '/write', active: false }
             ]
         },
         {
             key: 'community',
             icon: '🤝',
             items: [
-                { key: 'writer_of_week', href: '/agora' },
-                { key: 'sprints', href: '/agora' },
-                { key: 'badges', href: '/profile' }
+                { key: 'writer_of_week', href: '/agora', active: false },
+                { key: 'sprints', href: '/agora', active: false },
+                { key: 'badges', href: '/profile', active: true }
             ]
         }
     ];
@@ -265,7 +265,7 @@
                     <h3 class="explore-group-title"><span class="explore-group-icon">{group.icon}</span> {$t(`pages.home.explore.${group.key}`)}</h3>
                     <div class="explore-tags">
                         {#each group.items as item}
-                            <a href={item.href} class="explore-tag">{$t(`pages.home.explore.${item.key}`)}</a>
+                            <a href={item.href} class="explore-tag" class:muted={!item.active}>{$t(`pages.home.explore.${item.key}`)}</a>
                         {/each}
                     </div>
                 </div>
@@ -656,6 +656,10 @@
         transition: all 0.2s;
     }
 
+    .explore-tag.muted {
+        opacity: 0.35;
+        pointer-events: none;
+    }
     .explore-tag:hover {
         border-color: var(--accent);
         color: var(--accent);
