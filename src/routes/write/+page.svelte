@@ -364,7 +364,7 @@
                         </div>
                         <div class="editor-field full" style="position:relative;">
                             <label>{$t('write.editor.content')} <span class="word-count">{editorWordCount} {$t('write.editor.words')}</span></label>
-                            <textarea bind:value={editorContent} placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
+                            <textarea bind:value={editorContent} lang={data.serverLocale || 'en'} spellcheck="true" placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
                             <button class="copy-inline" onclick={() => navigator.clipboard.writeText(editorContent)} title="Copy">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                             </button>

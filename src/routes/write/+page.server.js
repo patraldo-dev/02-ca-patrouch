@@ -86,6 +86,7 @@ export async function load({ locals, url }) {
     heatmapData,
     writerOfTheWeek,
     userBadges,
-    latestDraft
+    latestDraft,
+    serverLocale: locals.locale || 'es'
   };
 }
