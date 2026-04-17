@@ -194,6 +194,8 @@
                     <textarea
                         id="text"
                         bind:value={text}
+                        lang={data.serverLocale || 'en'}
+                        spellcheck="true"
                         placeholder={$t('evaluate.placeholder')}
                         rows="16"
                         disabled={isLoading}

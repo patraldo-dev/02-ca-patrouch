@@ -10,5 +10,5 @@ export async function load({ locals }) {
         throw error(403, 'Member access required');
     }
 
-    return { user };
+    return { user, serverLocale: locals.locale || 'es' };
 }

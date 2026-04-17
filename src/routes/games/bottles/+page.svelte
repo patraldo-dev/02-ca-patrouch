@@ -203,7 +203,7 @@
             {#if showForm}
                 <div class="form-card">
                     <input type="text" bind:value={formTitle} placeholder={$t('bottles.title')} />
-                    <textarea bind:value={formContent} placeholder={$t('bottles.content')} rows="4"></textarea>
+                    <textarea bind:value={formContent} lang={data.serverLocale || 'en'} spellcheck="true" placeholder={$t('bottles.content')} rows="4"></textarea>
                     <div class="form-row">
                         <select bind:value={formContentType}>
                             <option value="story">{$t('bottles.type.story')}</option>

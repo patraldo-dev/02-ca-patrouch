@@ -23,6 +23,7 @@ export async function load({ locals, url }) {
   }
 
   return {
+    serverLocale: locals.locale || "es",
     user: locals.user || null,
     bottles
   };

@@ -371,6 +371,8 @@
                 <label>{$t('audio.text_label')}</label>
                 <textarea
                     bind:value={text}
+                    lang={data.serverLocale || 'en'}
+                    spellcheck="true"
                     placeholder={$t('audio.placeholder')}
                     rows="14"
                     disabled={isLoading || isAiLoading}
