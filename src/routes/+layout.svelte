@@ -85,6 +85,10 @@
 
     function toggleMobileMenu() {
         mobileMenuOpen = !mobileMenuOpen;
+        // Disable Leaflet map interactions when menu is open
+        document.querySelectorAll('.leaflet-container').forEach(el => {
+            el.style.pointerEvents = mobileMenuOpen ? 'none' : '';
+        });
     }
 
     function switchLanguage(lang) {
