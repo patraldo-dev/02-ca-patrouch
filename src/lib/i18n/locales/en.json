@@ -852,5 +852,7 @@
   "bottles.total_launched": "Total Launched",
   "bottles.total_beached": "Total Beached",
   "bottles.total_found": "Total Found",
-  "bottles.by_user": "By User"
+  "bottles.by_user": "By User",
+  "help.games_title": "Games",
+  "help.games_desc": "Fun challenges — Find the AI in the Agora, or launch a Bottle into the Pacific Ocean and track its drift."
 }

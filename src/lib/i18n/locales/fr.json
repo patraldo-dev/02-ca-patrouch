@@ -852,5 +852,7 @@
   "bottles.total_launched": "Total Lancées",
   "bottles.total_beached": "Total Échouées",
   "bottles.total_found": "Total Trouvées",
-  "bottles.by_user": "Par Utilisateur"
+  "bottles.by_user": "Par Utilisateur",
+  "help.games_title": "Jeux",
+  "help.games_desc": "Des défis amusants — Trouvez l'IA dans l'Agora, ou lancez une Bouteille dans l'Océan Pacifique et suivez sa dérive."
 }

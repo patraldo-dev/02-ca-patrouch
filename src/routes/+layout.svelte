@@ -361,6 +361,10 @@
                             <h3>{$t('help.profile_title')}</h3>
                             <p>{$t('help.profile_desc')}</p>
                         </div>
+                        <div class="help-section">
+                            <h3>{$t('help.games_title')}</h3>
+                            <p>{$t('help.games_desc')}</p>
+                        </div>
                     </div>
                     <div class="help-tier">
                         <h3 class="tier-label">{$t('help.tier_member')}</h3>

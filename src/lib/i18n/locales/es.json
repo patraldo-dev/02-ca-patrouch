@@ -852,5 +852,7 @@
   "bottles.total_launched": "Total Lanzadas",
   "bottles.total_beached": "Total Varadas",
   "bottles.total_found": "Total Encontradas",
-  "bottles.by_user": "Por Usuario"
+  "bottles.by_user": "Por Usuario",
+  "help.games_title": "Juegos",
+  "help.games_desc": "Desafíos divertidos — Encuentra la IA en la Agora, o lanza una Botella al Océano Pacífico y sigue su deriva."
 }
