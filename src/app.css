@@ -444,7 +444,7 @@ html.lang-switching::after {
   inset: 0;
   background: #09090b;
   z-index: 99999;
-  animation: langSpin 1s linear infinite;
+  animation: langSpin 0.3s ease forwards;
 }
 html[data-theme="light"].lang-switching::after {
   background: #faf9f7;
