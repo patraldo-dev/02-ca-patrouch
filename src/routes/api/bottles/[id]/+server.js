@@ -79,8 +79,8 @@ export async function PUT({ platform, params, locals, request }) {
   try {
     // Handle launch
     if (status === 'launched' && existing.status === 'preparing') {
-      const lat = launch_lat || 20.6534;
-      const lon = launch_lon || -105.2253;
+      const lat = launch_lat || 20.6134;
+      const lon = launch_lon || -105.3113;
       const now = new Date().toISOString();
 
       await db.prepare(`
