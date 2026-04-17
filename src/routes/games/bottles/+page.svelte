@@ -12,11 +12,12 @@
     let showForm = $state(false);
     let formTitle = $state('');
     let formContent = $state('');
-    let formContentType = $state('message');
-    let formBottleType = $state('glass');
+    let formContentType = $state('short_story');
     let saving = $state(false);
     let launching = $state(null);
     let toastMsg = $state('');
+
+    const contentTypes = ['short_story', 'poem', 'screenplay', 'video', 'song', 'lyrics', 'audiobook', 'fanzine', 'illustrated_book'];
 
     // User's bottles
     let myBottles = $state([]);
@@ -38,8 +39,7 @@
                 body: JSON.stringify({
                     content: formContent,
                     title: formTitle,
-                    content_type: formContentType,
-                    bottle_type: formBottleType
+                    content_type: formContentType
                 })
             });
             if (res.ok) {
@@ -71,7 +71,7 @@
         launching = null;
     }
 
-    // Open a beached bottle (reveal sealed message)
+    // Open a beached bottle
     let openingId = $state(null);
     let openedBottle = $state(null);
 
@@ -84,8 +84,7 @@
                 body: JSON.stringify({ action: 'open' })
             });
             if (res.ok) {
-                const opened = await res.json();
-                openedBottle = opened;
+                openedBottle = await res.json();
                 toastMsg = get(t)('bottles.opened');
                 invalidateAll();
                 setTimeout(() => toastMsg = '', 3000);
@@ -102,14 +101,16 @@
         return get(t)('bottles.status.' + (s || 'unknown'));
     }
 
-    function bottleTypeLabel(type) {
-        return get(t)('bottles.bottle.' + (type || 'glass'));
+    function contentTypeLabel(type) {
+        const key = 'bottles.type.' + (type || 'short_story');
+        const label = get(t)(key);
+        return label !== key ? label : type;
     }
 
     function formatDate(iso) {
         if (!iso) return '';
         return new Date(iso).toLocaleDateString(get(t)('_meta.locale') || 'es', {
-            year: 'numeric', month: 'short', day: 'numeric'
+            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
     }
 
@@ -123,6 +124,11 @@
         const days = Math.floor((Date.now() - new Date(launchedAt).getTime()) / 86400000);
         return days + (days === 1 ? ' día' : ' días');
     }
+
+    // Stats
+    let totalLaunched = $derived(data.bottles.filter(b => b.status === 'launched' || b.status === 'sailing' || b.status === 'beached' || b.status === 'found').length);
+    let totalBeached = $derived(data.bottles.filter(b => b.status === 'beached').length);
+    let totalFound = $derived(data.bottles.filter(b => b.status === 'found').length);
 
     // Map
     let mapEl = $state(null);
@@ -160,9 +166,11 @@
                 weight: 2
             }).addTo(mapInstance);
 
+            const author = bottle.display_name || bottle.username || '?';
             marker.bindPopup(`
                 <div style="color:#09090b;font-family:Inter,sans-serif;min-width:160px">
                     <strong style="font-family:Playfair Display,serif">${bottle.title || '🫙'}</strong><br>
+                    <span style="font-size:0.85em">${author}</span><br>
                     <span style="text-transform:capitalize;font-size:0.85em">${bottle.status}</span>
                     ${bottle.distance_km ? `<br><span style="color:#666">${bottle.distance_km.toFixed(1)} km</span>` : ''}
                 </div>
@@ -192,6 +200,22 @@
         <div class="toast">{toastMsg}</div>
     {/if}
 
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-num">{totalLaunched}</span>
+            <span class="stat-label">{$t('bottles.total_launched')}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-num">{totalBeached}</span>
+            <span class="stat-label">{$t('bottles.total_beached')}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-num">{totalFound}</span>
+            <span class="stat-label">{$t('bottles.total_found')}</span>
+        </div>
+    </div>
+
     <!-- My Bottles -->
     {#if data.user}
         <div class="section">
@@ -206,15 +230,9 @@
                     <textarea bind:value={formContent} lang={data.serverLocale || 'en'} spellcheck="true" placeholder={$t('bottles.content')} rows="4"></textarea>
                     <div class="form-row">
                         <select bind:value={formContentType}>
-                            <option value="story">{$t('bottles.type.story')}</option>
-                            <option value="poem">{$t('bottles.type.poem')}</option>
-                            <option value="script">{$t('bottles.type.script')}</option>
-                            <option value="message">{$t('bottles.type.message')}</option>
-                        </select>
-                        <select bind:value={formBottleType}>
-                            <option value="glass">{$t('bottles.bottle.glass')}</option>
-                            <option value="plastic">{$t('bottles.bottle.plastic')}</option>
-                            <option value="cork">{$t('bottles.bottle.cork')}</option>
+                            {#each contentTypes as ct}
+                                <option value={ct}>{contentTypeLabel(ct)}</option>
+                            {/each}
                         </select>
                     </div>
                     <p class="seal-notice">🔒 {$t('bottles.seal_notice')}</p>
@@ -225,36 +243,37 @@
             {/if}
 
             {#if myBottles.length}
-                <div class="bottles-list">
-                    {#each myBottles as bottle}
-                        <div class="bottle-item">
-                            <div class="bottle-item-main">
-                                <span class="bottle-emoji">🫙</span>
-                                <div class="bottle-item-info">
-                                    <span class="bottle-title">{bottle.title || $t('bottles.untitled')}</span>
-                                    <div class="bottle-meta">
-                                        <span class={statusClass(bottle.status)}>{statusLabel(bottle.status)}</span>
-                                        <span class="meta-sep">·</span>
-                                        <span>{bottleTypeLabel(bottle.bottle_type)}</span>
-                                        {#if bottle.launched_at}
-                                            <span class="meta-sep">·</span>
-                                            <span>{formatDate(bottle.launched_at)}</span>
-                                            <span class="meta-sep">·</span>
-                                            <span>{formatCoords(bottle.current_lat, bottle.current_lon)}</span>
+                <div class="bottles-table-wrap">
+                    <table class="bottles-table">
+                        <thead>
+                            <tr>
+                                <th>{$t('bottles.title')}</th>
+                                <th>{$t('bottles.content_type')}</th>
+                                <th>{$t('bottles.status.launched')}</th>
+                                <th>Lat/Lng</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each myBottles as bottle}
+                                <tr>
+                                    <td class="td-title">{bottle.title || $t('bottles.untitled')}</td>
+                                    <td><span class="type-tag">{contentTypeLabel(bottle.content_type)}</span></td>
+                                    <td class="td-date">{formatDate(bottle.launched_at)}</td>
+                                    <td class="td-coords">{bottle.current_lat ? formatCoords(bottle.current_lat, bottle.current_lon) : '—'}</td>
+                                    <td class="td-action">
+                                        {#if bottle.status === 'preparing'}
+                                            <button class="btn btn-sm btn-accent" onclick={() => launchBottle(bottle.id)} disabled={launching === bottle.id}>
+                                                {launching === bottle.id ? '...' : $t('bottles.launch')}
+                                            </button>
+                                        {:else}
+                                            <span class={statusClass(bottle.status)}>{statusLabel(bottle.status)}</span>
                                         {/if}
-                                    </div>
-                                </div>
-                            </div>
-                            {#if bottle.status === 'preparing'}
-                                <button class="btn btn-sm btn-accent" onclick={() => launchBottle(bottle.id)} disabled={launching === bottle.id}>
-                                    {launching === bottle.id ? '...' : $t('bottles.launch')}
-                                </button>
-                            {/if}
-                            {#if bottle.content && !bottle.content_hidden}
-                                <div class="owner-preview">{bottle.content}</div>
-                            {/if}
-                        </div>
-                    {/each}
+                                    </td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
                 </div>
             {/if}
         </div>
@@ -272,26 +291,20 @@
             <h2>{$t('bottles.washed_up')}</h2>
             {#each data.bottles.filter(b => b.status === 'beached' || b.status === 'found') as bottle}
                 <div class="beached-item">
-                    <div class="beached-icon">
-                        {bottle.status === 'found' ? '📬' : '🫙'}
-                    </div>
+                    <div class="beached-icon">{bottle.status === 'found' ? '📬' : '🫙'}</div>
                     <div class="beached-info">
                         <strong>{bottle.display_name || bottle.username || 'Anónimo'}</strong>
                         <div class="beached-meta">
-                            <span>{bottleTypeLabel(bottle.bottle_type)}</span>
+                            <span class="type-tag">{contentTypeLabel(bottle.content_type)}</span>
                             {#if bottle.launched_at}
                                 <span class="meta-sep">·</span>
-                                <span>{$t('bottles.launched_on')}: {formatDate(bottle.launched_at)}</span>
+                                <span>{formatDate(bottle.launched_at)}</span>
                                 <span class="meta-sep">·</span>
                                 <span>{formatCoords(bottle.launch_lat, bottle.launch_lon)}</span>
                             {/if}
                             {#if bottle.current_lat}
                                 <span class="meta-sep">→</span>
                                 <span>{formatCoords(bottle.current_lat, bottle.current_lon)}</span>
-                            {/if}
-                            {#if bottle.launched_at}
-                                <span class="meta-sep">·</span>
-                                <span>{driftDays(bottle.launched_at)}</span>
                             {/if}
                             {#if bottle.distance_km}
                                 <span class="meta-sep">·</span>
@@ -306,7 +319,6 @@
                         </button>
                     {/if}
                 </div>
-                <!-- Revealed content -->
                 {#if openedBottle?.id === bottle.id && openedBottle.content}
                     <div class="revealed-content">
                         <div class="revealed-header">
@@ -318,10 +330,7 @@
                 {/if}
                 {#if bottle.status === 'found' && bottle.content && !bottle.content_hidden}
                     <div class="revealed-content already-opened">
-                        <div class="revealed-header">
-                            <span>📬</span>
-                            <span>{$t('bottles.already_opened')}</span>
-                        </div>
+                        <div class="revealed-header"><span>📬</span><span>{$t('bottles.already_opened')}</span></div>
                         <div class="revealed-text">{bottle.content}</div>
                     </div>
                 {/if}
@@ -331,203 +340,80 @@
 </section>
 
 <style>
-    .bottles-page {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 3rem 1.5rem 6rem;
-    }
-    .page-title {
-        font-family: var(--font-heading);
-        font-size: 3rem;
-        color: var(--fg);
-        margin-bottom: 0.5rem;
-    }
-    .page-subtitle {
-        color: var(--muted);
-        font-size: 1.1rem;
-        margin-bottom: 2.5rem;
-        font-style: italic;
-    }
+    .bottles-page { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+    .page-title { font-family: var(--font-heading); font-size: 3rem; color: var(--fg); margin-bottom: 0.5rem; }
+    .page-subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; font-style: italic; }
     .section { margin-bottom: 3rem; }
-    .section h2 {
-        font-family: var(--font-heading);
-        font-size: 1.5rem;
-        color: var(--accent);
-        margin-bottom: 1rem;
-    }
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
+    .section h2 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--accent); margin-bottom: 1rem; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
     .section-header h2 { margin-bottom: 0; }
-    .form-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    .form-card input, .form-card textarea, .form-card select {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 0.6rem 0.8rem;
-        color: var(--fg);
-        font-family: var(--font-body);
-        font-size: 0.95rem;
-    }
+
+    /* Stats bar */
+    .stats-bar { display: flex; gap: 2rem; margin-bottom: 2.5rem; padding: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+    .stat-item { text-align: center; flex: 1; }
+    .stat-num { display: block; font-family: var(--font-heading); font-size: 2rem; color: var(--accent); font-weight: 700; }
+    .stat-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Form */
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .form-card input, .form-card textarea, .form-card select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; color: var(--fg); font-family: var(--font-body); font-size: 0.95rem; }
     .form-row { display: flex; gap: 0.75rem; }
     .form-row select { flex: 1; }
-    .seal-notice {
-        font-size: 0.85rem;
-        color: var(--muted);
-        font-style: italic;
-    }
-    .btn {
-        background: var(--accent);
-        color: var(--bg);
-        border: none;
-        border-radius: 8px;
-        padding: 0.6rem 1.2rem;
-        font-family: var(--font-body);
-        font-weight: 600;
-        cursor: pointer;
-        transition: opacity 0.2s;
-    }
+    .seal-notice { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+
+    /* Buttons */
+    .btn { background: var(--accent); color: var(--bg); border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-family: var(--font-body); font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
     .btn:hover { opacity: 0.85; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-sm { font-size: 0.8rem; padding: 0.35rem 0.8rem; }
     .btn-accent { background: var(--accent); color: var(--bg); }
-    .bottles-list { display: flex; flex-direction: column; gap: 0.75rem; }
-    .bottle-item {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 1rem;
-    }
-    .bottle-item-main { display: flex; align-items: center; gap: 0.75rem; }
-    .bottle-emoji { font-size: 1.5rem; flex-shrink: 0; }
-    .bottle-item-info { flex: 1; min-width: 0; }
-    .bottle-title {
-        display: block;
-        font-weight: 500;
-        color: var(--fg);
-        margin-bottom: 0.25rem;
-    }
-    .bottle-meta {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.8rem;
-        color: var(--muted);
-        flex-wrap: wrap;
-    }
-    .meta-sep { color: var(--border); }
-    .owner-preview {
-        margin-top: 0.75rem;
-        padding: 0.75rem;
-        background: var(--bg);
-        border-radius: 8px;
-        font-size: 0.9rem;
-        color: var(--text-dim);
-        font-style: italic;
-        white-space: pre-wrap;
-        border-left: 3px solid var(--accent);
-    }
-    .status-badge {
-        font-size: 0.7rem;
-        padding: 0.15rem 0.5rem;
-        border-radius: 99px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
+
+    /* Table */
+    .bottles-table-wrap { overflow-x: auto; }
+    .bottles-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .bottles-table th { text-align: left; padding: 0.6rem 0.75rem; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    .bottles-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--fg); }
+    .td-title { font-weight: 500; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .td-date { white-space: nowrap; color: var(--muted); font-size: 0.85rem; }
+    .td-coords { white-space: nowrap; color: var(--muted); font-size: 0.85rem; font-family: monospace; }
+    .td-action { white-space: nowrap; }
+    .type-tag { display: inline-block; padding: 0.15rem 0.5rem; background: rgba(201,168,124,0.1); color: var(--accent); border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+
+    /* Status badges */
+    .status-badge { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 99px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
     .status-preparing { background: #1a1a2e; color: #888; }
     .status-launched { background: #1a2e1a; color: #4ade80; }
     .status-sailing { background: #1a2e2e; color: #22d3ee; }
     .status-beached { background: #2e2a1a; color: #f59e0b; }
     .status-found { background: #2e1a2e; color: #c084fc; }
     .status-sunk { background: #2e1a1a; color: #ef4444; }
-    .map-container {
-        height: 450px;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--border);
-    }
-    .beached-item {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 1.25rem;
-        margin-bottom: 0.75rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
+
+    /* Map */
+    .map-container { height: 450px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+
+    /* Beached items */
+    .beached-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
     .beached-icon { font-size: 2rem; flex-shrink: 0; }
     .beached-info { flex: 1; min-width: 0; }
     .beached-info strong { color: var(--accent); display: block; margin-bottom: 0.3rem; }
-    .beached-meta {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.82rem;
-        color: var(--muted);
-        flex-wrap: wrap;
-    }
-    .revealed-content {
-        background: var(--surface);
-        border: 1px solid var(--accent);
-        border-radius: 10px;
-        padding: 1.25rem;
-        margin-bottom: 0.75rem;
-        animation: revealFade 0.5s ease;
-    }
+    .beached-meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--muted); flex-wrap: wrap; }
+    .meta-sep { color: var(--border); }
+
+    /* Revealed content */
+    .revealed-content { background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; padding: 1.25rem; margin-bottom: 0.75rem; animation: revealFade 0.5s ease; }
     .already-opened { border-color: var(--border); }
-    .revealed-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-        font-size: 0.85rem;
-        color: var(--accent);
-        font-weight: 600;
-    }
+    .revealed-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--accent); font-weight: 600; }
     .revealed-icon { font-size: 1.2rem; }
-    .revealed-text {
-        font-style: italic;
-        line-height: 1.7;
-        color: var(--fg);
-        white-space: pre-wrap;
-    }
-    @keyframes revealFade {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .toast {
-        position: fixed;
-        top: 1.5rem;
-        right: 1.5rem;
-        background: var(--accent);
-        color: var(--bg);
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        z-index: 9999;
-        animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    .revealed-text { font-style: italic; line-height: 1.7; color: var(--fg); white-space: pre-wrap; }
+    @keyframes revealFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Toast */
+    .toast { position: fixed; top: 1.5rem; right: 1.5rem; background: var(--accent); color: var(--bg); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; z-index: 9999; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
     @media (max-width: 640px) {
+        .stats-bar { gap: 1rem; padding: 1rem; }
+        .stat-num { font-size: 1.5rem; }
         .beached-item { flex-wrap: wrap; }
-        .beached-meta { font-size: 0.75rem; }
-        .bottle-meta { font-size: 0.75rem; }
     }
 </style>

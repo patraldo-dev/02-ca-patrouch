@@ -805,7 +805,7 @@
   "bottles.create": "New Bottle",
   "bottles.content": "Your message",
   "bottles.title": "Title",
-  "bottles.content_type": "Content type",
+  "bottles.content_type": "Category",
   "bottles.type.story": "Story",
   "bottles.type.poem": "Poem",
   "bottles.type.script": "Script",
@@ -839,5 +839,18 @@
   "pages.home.works.games": "Games",
   "pages.home.works.games.desc": "Find the AI, launch bottles into the ocean",
   "pages.home.explore.bottle_quest": "Bottle Quest",
-  "pages.home.explore.bottle_quest_desc": "Seal your words and launch them into the ocean"
+  "pages.home.explore.bottle_quest_desc": "Seal your words and launch them into the ocean",
+  "bottles.type.audiobook": "Audiobook",
+  "bottles.type.screenplay": "Screenplay",
+  "bottles.type.video": "Video",
+  "bottles.type.fanzine": "Fanzine",
+  "bottles.type.illustrated_book": "Illustrated Book",
+  "bottles.type.short_story": "Short Story",
+  "bottles.type.song": "Song",
+  "bottles.type.lyrics": "Lyrics",
+  "bottles.stats_title": "Bottle Stats",
+  "bottles.total_launched": "Total Launched",
+  "bottles.total_beached": "Total Beached",
+  "bottles.total_found": "Total Found",
+  "bottles.by_user": "By User"
 }

@@ -805,7 +805,7 @@
   "bottles.create": "Nouvelle Bouteille",
   "bottles.content": "Votre message",
   "bottles.title": "Titre",
-  "bottles.content_type": "Type de contenu",
+  "bottles.content_type": "Catégorie",
   "bottles.type.story": "Histoire",
   "bottles.type.poem": "Poème",
   "bottles.type.script": "Scénario",
@@ -839,5 +839,18 @@
   "pages.home.works.games": "Jeux",
   "pages.home.works.games.desc": "Trouvez l'IA, lancez des bouteilles dans l'océan",
   "pages.home.explore.bottle_quest": "Bottle Quest",
-  "pages.home.explore.bottle_quest_desc": "Scellez vos mots et lancez-les dans l'océan"
+  "pages.home.explore.bottle_quest_desc": "Scellez vos mots et lancez-les dans l'océan",
+  "bottles.type.audiobook": "Livre audio",
+  "bottles.type.screenplay": "Scénario",
+  "bottles.type.video": "Vidéo",
+  "bottles.type.fanzine": "Fanzine",
+  "bottles.type.illustrated_book": "Livre illustré",
+  "bottles.type.short_story": "Nouvelle",
+  "bottles.type.song": "Chanson",
+  "bottles.type.lyrics": "Paroles",
+  "bottles.stats_title": "Statistiques",
+  "bottles.total_launched": "Total Lancées",
+  "bottles.total_beached": "Total Échouées",
+  "bottles.total_found": "Total Trouvées",
+  "bottles.by_user": "Par Utilisateur"
 }
