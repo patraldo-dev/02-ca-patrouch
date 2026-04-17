@@ -4,8 +4,15 @@
 		<script>
 			(function() {
 				try {
+					// Theme: cookie > localStorage > dark
 					const theme = document.cookie.match(/(?:^|; )theme=([^;]+)/)?.pop() || localStorage.getItem('theme') || 'dark';
 					document.documentElement.setAttribute('data-theme', theme);
+
+					// Language switch: if flag is set, show dark overlay immediately
+					if (localStorage.getItem('lang_switching') === '1') {
+						document.documentElement.classList.add('lang-switching');
+						localStorage.removeItem('lang_switching');
+					}
 				} catch(e) {}
 			})();
 		</script>

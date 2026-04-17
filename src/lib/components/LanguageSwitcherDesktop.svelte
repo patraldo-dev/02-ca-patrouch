@@ -10,10 +10,9 @@
   ];
 
   function switchLanguage(lang) {
+    localStorage.setItem('lang_switching', '1');
     document.documentElement.classList.add('lang-switching');
     if (!browser) return;
-    // Use GET redirect — server sets cookie, then redirects back
-    // This is the most reliable way to ensure cookie is set before page loads
     const currentPath = window.location.pathname + window.location.search;
     window.location.href = `/api/locale?lang=${lang}&redirect=${encodeURIComponent(currentPath)}`;
   }
