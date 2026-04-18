@@ -32,6 +32,13 @@
         }
       ],
 
+	"r2_buckets": [
+		{
+			"binding": "ASSETS",
+			"bucket_name": "patrouch-ca-assets"
+		}
+	],
+
 	"images": {
 		"binding": "IMAGES"
 	},

@@ -306,6 +306,9 @@
                                             </button>
                                         {:else}
                                             <span class={statusClass(bottle.status)}>{statusLabel(bottle.status)}</span>
+                                            {#if bottle.current_lat && mapInstance}
+                                                <button class="btn btn-sm btn-zoom" onclick={(e) => { e.stopPropagation(); mapInstance.flyTo([bottle.current_lat, bottle.current_lon], 8, { duration: 1 }); }} title="Zoom to bottle">📍</button>
+                                            {/if}
                                         {/if}
                                     </td>
                                 </tr>
@@ -455,6 +458,8 @@
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-sm { font-size: 0.8rem; padding: 0.35rem 0.8rem; }
     .btn-accent { background: var(--accent); color: var(--bg); }
+    .btn-zoom { background: none; border: 1px solid var(--border); color: var(--fg); cursor: pointer; border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.9rem; margin-left: 0.4rem; vertical-align: middle; }
+    .btn-zoom:hover { border-color: var(--accent); color: var(--accent); }
 
     /* Table */
     .bottles-table-wrap { overflow-x: auto; }
