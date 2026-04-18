@@ -1,30 +1,45 @@
 export async function load({ locals, url, platform }) {
-  // Fetch all launched bottles (public)
+  const db = platform?.env?.DB_book;
   let bottles = [];
-  try {
-    const db = platform?.env?.DB_book;
-    if (db) {
+  let players = [];
+
+  if (db) {
+    try {
       const { results } = await db.prepare(`
         SELECT b.* FROM bottles b WHERE b.status IN ('launched', 'sailing', 'beached', 'found')
         ORDER BY b.created_at DESC
       `).all();
       bottles = results || [];
 
-      // Attach positions for trails
       for (const bottle of bottles) {
         const pos = await db.prepare(`
           SELECT lat, lon, recorded_at FROM bottle_positions WHERE bottle_id = ? ORDER BY recorded_at ASC
         `).bind(bottle.id).all();
         bottle.positions = pos.results || [];
       }
+    } catch (e) {
+      console.error('Bottles page load error:', e);
     }
-  } catch (e) {
-    console.error('Bottles page load error:', e);
+
+    // Players
+    try {
+      const { results: pr } = await db.prepare(`
+        SELECT p.id, p.username, p.display_name, p.lat, p.lon, p.port_id,
+               t.name as team_name, t.color as team_color, pt.name as port_name
+        FROM bq_players p
+        LEFT JOIN bq_teams t ON p.team_id = t.id
+        LEFT JOIN bq_ports pt ON p.port_id = pt.id
+      `).all();
+      players = pr || [];
+    } catch (e) {
+      console.error('Players load error:', e);
+    }
   }
 
   return {
     serverLocale: locals.locale || "es",
     user: locals.user || null,
-    bottles
+    bottles,
+    players
   };
 }

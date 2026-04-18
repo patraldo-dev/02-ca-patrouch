@@ -201,9 +201,25 @@
         }
 
         const launchedBottles = data.bottles.filter(b => b.current_lat);
-        if (launchedBottles.length) {
-            const bounds = L.latLngBounds(launchedBottles.map(b => [b.current_lat, b.current_lon]));
-            mapInstance.fitBounds(bounds.pad(0.3));
+        // Player markers
+        const playerPts = [];
+        for (const player of (data.players || [])) {
+            playerPts.push([player.lat, player.lon]);
+            const icon = L.divIcon({
+                className: 'player-marker',
+                html: `<div style="background:${player.team_color || '#c9a87c'};color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)">${player.team_id === 'team-alpha' ? '🧭' : '🐧'}</div>`,
+                iconSize: [30, 30], iconAnchor: [15, 15]
+            });
+            const pm = L.marker([player.lat, player.lon], { icon }).addTo(mapInstance);
+            pm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${player.display_name || player.username}</strong><br><span style="color:#555;font-size:0.85em"><b>${player.team_name || ''}</b><br>📍 ${player.port_name || ''}</span></div>`);
+            pm.bindTooltip(player.display_name || player.username, {
+                permanent: true, direction: 'top', offset: [0, -14], className: 'player-label'
+            });
+        }
+
+        const allPts = [...launchedBottles.map(b => [b.current_lat, b.current_lon]), ...playerPts];
+        if (allPts.length) {
+            mapInstance.fitBounds(L.latLngBounds(allPts).pad(0.3));
         }
     });
 
