@@ -104,6 +104,12 @@ export async function POST({ request, locals }) {
                         if (isHuman && !isAuthor) {
                             matchedHumanIds.add(p.player_id);
                             totalHumanBonus += decayed;
+                            // Contributor gets DOUBLE — track separately
+                            if (p.player_id !== writing.user_id) {
+                                await db.prepare(
+                                    `UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`
+                                ).bind(decayed * 2, decayed, p.player_id).run();
+                            }
                         } else if (!isHuman) {
                             await db.prepare(
                                 `UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`
@@ -111,7 +117,7 @@ export async function POST({ request, locals }) {
                         }
                     }
 
-                    // ALL humans share the cooperative bonus
+                    // ALL humans get base cooperative bonus (contributor already got 2x above)
                     if (totalHumanBonus > 0) {
                         const { results: humans } = await db.prepare(`SELECT id FROM bq_players WHERE type = 'human'`).all();
                         if (humans?.length) {
