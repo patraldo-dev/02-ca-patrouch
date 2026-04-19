@@ -104,7 +104,7 @@ export async function POST({ request, locals }) {
                         if (isHuman && !isAuthor) {
                             matchedHumanIds.add(p.player_id);
                             totalHumanBonus += decayed;
-                            // Contributor gets DOUBLE — track separately
+                            // Contributor gets DOUBLE (always, even solo)
                             if (p.player_id !== writing.user_id) {
                                 await db.prepare(
                                     `UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`
@@ -117,11 +117,11 @@ export async function POST({ request, locals }) {
                         }
                     }
 
-                    // ALL humans get base cooperative bonus (contributor already got 2x above)
+                    // Cooperative bonus: only TEAM players (solo = 0)
                     if (totalHumanBonus > 0) {
-                        const { results: humans } = await db.prepare(`SELECT id FROM bq_players WHERE type = 'human'`).all();
-                        if (humans?.length) {
-                            for (const h of humans) {
+                        const { results: teamHumans } = await db.prepare(`SELECT id FROM bq_players WHERE type = 'human' AND solo = 0`).all();
+                        if (teamHumans?.length) {
+                            for (const h of teamHumans) {
                                 await db.prepare(`UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`)
                                     .bind(totalHumanBonus, Math.floor(totalHumanBonus / 2), h.id).run();
                             }
@@ -131,6 +131,7 @@ export async function POST({ request, locals }) {
             } catch (matchErr) {
                 console.error('Keyword matching error:', matchErr);
             }
+        } // end if published
 
         return json({ id: result.id, wordCount: result.wordCount, status });
     } catch (err) {
