@@ -855,5 +855,8 @@
   "bottles.by_user": "Par Utilisateur",
   "help.games_title": "Jeux",
   "help.games_desc": "Des défis amusants — Trouvez l'IA dans l'Agora, ou lancez une Bouteille dans l'Océan Pacifique et suivez sa dérive.",
-  "profile.booty_hint": "Quand activé, vos textes publiés contribuent automatiquement des mots-clés à Bottle Booty. Pas besoin de jouer — vos mots deviennent des armes."
+  "profile.booty_hint": "Quand activé, vos textes publiés contribuent automatiquement des mots-clés à Bottle Booty. Pas besoin de jouer — vos mots deviennent des armes.",
+  "write.view.choose_keyword": "Choisir un Mot",
+  "write.view.keyword_instruction": "Cliquez sur un mot (4+ lettres) de votre texte pour le déployer comme mot-clé dans Bottle Booty.",
+  "write.view.cancel": "Annuler"
 }

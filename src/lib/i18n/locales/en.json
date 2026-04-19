@@ -855,5 +855,8 @@
   "bottles.by_user": "By User",
   "help.games_title": "Games",
   "help.games_desc": "Fun challenges — Find the AI in the Agora, or launch a Bottle into the Pacific Ocean and track its drift.",
-  "profile.booty_hint": "When enabled, your published writings automatically contribute keywords to Bottle Booty. No need to play the game — your words become weapons."
+  "profile.booty_hint": "When enabled, your published writings automatically contribute keywords to Bottle Booty. No need to play the game — your words become weapons.",
+  "write.view.choose_keyword": "Choose Keyword",
+  "write.view.keyword_instruction": "Click a word (4+ letters) from your writing to deploy it as a keyword in Bottle Booty.",
+  "write.view.cancel": "Cancel"
 }

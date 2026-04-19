@@ -10,6 +10,9 @@
     let w = $state(data.writing);
     let isEvaluating = $state(false);
     let isAudioLoading = $state(false);
+    let keywordSelectMode = $state(false);
+    let keywordMsg = $state('');
+    let keywordOk = $state(false);
     let renderedContent = $state('');
     let isPublishing = $state(false);
     let feedback = $state('');
@@ -93,6 +96,44 @@
         sessionStorage.setItem('refine_text', w.content);
         goto('/refine');
     }
+
+    function startKeywordSelect() {
+        keywordSelectMode = true;
+        keywordMsg = '';
+    }
+
+    function makeWordsClickable(html) {
+        return html.replace(/\b(\p{L}{4,})\b/gu, (match) => {
+            return `<span class="kw-clickable" onclick="window.__selectKeyword('${match}')" role="button" tabindex="0">${match}</span>`;
+        });
+    }
+
+    // Global click handler for keyword selection
+    $effect(() => {
+        if (!keywordSelectMode) return;
+        window.__selectKeyword = async (word) => {
+            try {
+                const res = await fetch('/api/booty-keywords/propose', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word, writing_id: w.id })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    keywordMsg = `🔑 "${data.word}" deployed! (+${data.points} pts)`;
+                    keywordOk = true;
+                    keywordSelectMode = false;
+                } else {
+                    keywordMsg = data.error;
+                    keywordOk = false;
+                }
+            } catch {
+                keywordMsg = 'Error submitting keyword';
+                keywordOk = false;
+            }
+        };
+        return () => { delete window.__selectKeyword; };
+    });
 
     async function publishWriting() {
         isPublishing = true;
@@ -207,7 +248,11 @@
         </header>
 
         <div class="writing-content">
-            {@html renderedContent}
+            {#if keywordSelectMode}
+                {@html makeWordsClickable(renderedContent)}
+            {:else}
+                {@html renderedContent}
+            {/if}
         </div>
 
         {#if data.user?.id === w.user_id && w.status === 'published'}
@@ -221,7 +266,21 @@
                 <button class="btn-pipeline" onclick={refineWriting}>
                     ✦ {$t('write.view.refine')}
                 </button>
+                {#if !keywordSelectMode}
+                    <button class="btn-pipeline btn-keyword" onclick={startKeywordSelect}>
+                        🔑 {$t('write.view.choose_keyword')}
+                    </button>
+                {/if}
             </div>
+            {#if keywordSelectMode}
+                <div class="keyword-select-bar">
+                    <p>{$t('write.view.keyword_instruction')}</p>
+                    <button class="btn-cancel" onclick={() => keywordSelectMode = false}>✕ {$t('write.view.cancel')}</button>
+                </div>
+            {/if}
+            {#if keywordMsg}
+                <p class="keyword-msg" class:kw-success={keywordOk}>{keywordMsg}</p>
+            {/if}
         {/if}
 
         <footer class="writing-footer">
@@ -427,6 +486,14 @@
     .btn-pipeline { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text-dim); font-family: var(--font-body); font-size: 0.85rem; padding: 0.5rem 1.25rem; cursor: pointer; transition: all 0.2s; }
     .btn-pipeline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
     .btn-pipeline:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-keyword { border-color: var(--accent); color: var(--accent); }
+    .keyword-select-bar { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px dashed var(--accent); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; color: var(--muted); }
+    .btn-cancel { background: none; border: none; color: var(--text-dim); cursor: pointer; font-family: var(--font-body); font-size: 0.85rem; }
+    .btn-cancel:hover { color: var(--accent); }
+    :global(.kw-clickable) { cursor: pointer; border-radius: 3px; padding: 0 2px; transition: background 0.15s, color 0.15s; }
+    :global(.kw-clickable:hover) { background: var(--accent); color: #fff; }
+    .keyword-msg { font-size: 0.85rem; text-align: center; margin-bottom: 0.5rem; }
+    .kw-success { color: #4ade80; }
     .writing-footer {
         margin-top: 2rem;
         padding-top: 1.5rem;

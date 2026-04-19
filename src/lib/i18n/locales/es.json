@@ -855,5 +855,8 @@
   "bottles.by_user": "Por Usuario",
   "help.games_title": "Juegos",
   "help.games_desc": "Desafíos divertidos — Encuentra la IA en la Agora, o lanza una Botella al Océano Pacífico y sigue su deriva.",
-  "profile.booty_hint": "Al activarlo, tus escrituras publicadas contribuyen automáticamente keywords a Bottle Booty. No necesitas jugar — tus palabras se convierten en armas."
+  "profile.booty_hint": "Al activarlo, tus escrituras publicadas contribuyen automáticamente keywords a Bottle Booty. No necesitas jugar — tus palabras se convierten en armas.",
+  "write.view.choose_keyword": "Elegir Palabra",
+  "write.view.keyword_instruction": "Haz clic en una palabra (4+ letras) de tu escritura para desplegarla como palabra clave en Bottle Booty.",
+  "write.view.cancel": "Cancelar"
 }
