@@ -28,7 +28,7 @@ const descriptions = {
 export function getSeoMeta(pathname, lang) {
     const localeDescriptions = descriptions[lang] || descriptions['en'];
     const desc = localeDescriptions[pathname] || localeDescriptions['/'];
-    const title = 'Patrouch — A Space for Writing';
+    const title = 'Patrouch.ca — A Playful Space for Serious Writing';
     const ogImage = 'https://patrouch.ca/og-image.png';
 
     return {
