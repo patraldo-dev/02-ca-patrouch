@@ -47,9 +47,23 @@ export async function POST({ request, locals }) {
             return json({ error: `Insufficient fuel. You have ${sender.fuel}` }, { status: 400 });
         }
 
-        // Execute transfer
+        // Execute transfer with 3% bot bank commission
+        const fee = Math.ceil(amount * 0.03);
+        const received = amount - fee;
+
         await db.prepare(`UPDATE bq_players SET fuel = fuel - ? WHERE id = ?`).bind(amount, sender.id).run();
-        await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(amount, to_player_id).run();
+        await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(received, to_player_id).run();
+
+        // Commission goes to bot players (split equally)
+        const { results: bots } = await db.prepare(`SELECT id FROM bq_players WHERE type = 'ai'`).all();
+        const botShare = bots?.length ? Math.ceil(fee / bots.length) : fee;
+        for (const bot of bots) {
+            await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(botShare, bot.id).run();
+        }
+
+        // Track total fees collected
+        await db.prepare(`UPDATE bq_bank SET total_fees_collected = total_fees_collected + ?, last_updated = datetime('now') WHERE id = 'the-bank'`).bind(fee).run();
+
         await db.prepare(
             `INSERT INTO bq_transfers (id, from_player_id, to_player_id, amount, note) VALUES (?, ?, ?, ?, ?)`
         ).bind(crypto.randomUUID(), sender.id, to_player_id, amount, (note || '').slice(0, 100)).run();
@@ -58,10 +72,12 @@ export async function POST({ request, locals }) {
         const updated = await db.prepare(`SELECT fuel FROM bq_players WHERE id = ?`).bind(sender.id).first();
 
         return json({
-            message: `Transferred ${amount} fuel`,
+            message: `Transferred ${received} fuel (fee: ${fee})`,
             remaining_fuel: updated?.fuel || 0,
             daily_used: todayTotal + amount,
-            daily_max: maxTransfer
+            daily_max: maxTransfer,
+            fee,
+            received
         });
 
     } catch (e) {
