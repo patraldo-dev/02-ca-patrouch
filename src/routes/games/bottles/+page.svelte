@@ -233,6 +233,7 @@
 <section class="bottles-page">
     <h1 class="page-title">{$t('games.find_the_bottle')}</h1>
     <p class="page-subtitle">{$t('games.find_the_bottle_desc')}</p>
+    <p class="bq-link"><a href="https://bottlequest.patrouch.ca" target="_blank" rel="noopener">🎮 Bottlequest.patrouch.ca →</a></p>
 
     {#if toastMsg}
         <div class="toast">{toastMsg}</div>
@@ -433,7 +434,10 @@
 <style>
     .bottles-page { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
     .page-title { font-family: var(--font-heading); font-size: 3rem; color: var(--fg); margin-bottom: 0.5rem; }
-    .page-subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; font-style: italic; }
+    .page-subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 0.5rem; font-style: italic; }
+    .bq-link { margin-bottom: 2rem; }
+    .bq-link a { color: var(--accent); font-weight: 600; font-size: 0.95rem; text-decoration: none; }
+    .bq-link a:hover { text-decoration: underline; }
     .section { margin-bottom: 3rem; }
     .section h2 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--accent); margin-bottom: 1rem; }
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
