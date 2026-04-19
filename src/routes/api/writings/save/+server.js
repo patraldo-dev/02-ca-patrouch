@@ -125,6 +125,61 @@ export async function POST({ request, locals }) {
             } catch (matchErr) {
                 console.error('Keyword matching error:', matchErr);
             }
+
+            // Auto-propose keyword from opt-in writer's text
+            try {
+                const user = await db.prepare(`SELECT booty_keywords_opt_in FROM users WHERE id = ?`).bind(result.user_id).first();
+                if (user?.booty_keywords_opt_in && result.content) {
+                    const text = ((result.title || '') + ' ' + result.content).toLowerCase();
+                    const words = text.match(/\p{L}{4,}/gu) || [];
+                    const freq = {};
+                    for (const w of words) {
+                        if (STOP_WORDS.has(w)) continue;
+                        freq[w] = (freq[w] || 0) + 1;
+                    }
+                    // Pick the most interesting word (frequency 2+, prefer unique/rare)
+                    const candidates = Object.entries(freq).filter(([, c]) => c >= 2).sort((a, b) => {
+                        // Prefer words with unusual letters (more complex)
+                        const scoreA = a[0].length + (a[0].match(/[xjqzvkw]/gi)?.length || 0) * 3;
+                        const scoreB = b[0].length + (b[0].match(/[xjqzvkw]/gi)?.length || 0) * 3;
+                        return scoreB - scoreA;
+                    });
+
+                    if (candidates.length > 0) {
+                        const chosen = candidates[0][0];
+                        const today = new Date().toISOString().split('T')[0];
+                        // Check not already proposed today
+                        const exists = await db.prepare(
+                            `SELECT id FROM bq_keyword_proposals WHERE player_id = ? AND proposal_date = ?`
+                        ).bind(result.user_id, today).first();
+                        // Check word not already active
+                        const wordActive = await db.prepare(
+                            `SELECT id FROM bq_keyword_proposals WHERE word = ? AND status = 'pending'`
+                        ).bind(chosen).first();
+
+                        if (!exists && !wordActive) {
+                            // Weight the keyword
+                            const prompt = await db.prepare(
+                                `SELECT prompt_text FROM prompts WHERE category = 'daily-community' AND locale = 'en' ORDER BY created_at DESC LIMIT 1`
+                            ).first();
+                            let pts = 5 + Math.min(chosen.length - 3, 8);
+                            if (prompt) {
+                                const pWords = new Set(prompt.prompt_text.toLowerCase().match(/\p{L}{3,}/gu) || []);
+                                for (const pw of pWords) {
+                                    if (chosen.slice(0, 3) === pw.slice(0, 3)) { pts += 3; break; }
+                                }
+                            }
+                            pts = Math.min(pts, 30);
+
+                            await db.prepare(
+                                `INSERT INTO bq_keyword_proposals (player_id, word, points_earned) VALUES (?, ?, ?)`
+                            ).bind(result.user_id, chosen, pts).run();
+                        }
+                    }
+                }
+            } catch (autoErr) {
+                console.error('Auto-keyword error:', autoErr);
+            }
         }
 
         return json({ id: result.id, wordCount: result.wordCount, status });
