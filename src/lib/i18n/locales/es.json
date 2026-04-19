@@ -854,5 +854,6 @@
   "bottles.total_found": "Total Encontradas",
   "bottles.by_user": "Por Usuario",
   "help.games_title": "Juegos",
-  "help.games_desc": "Desafíos divertidos — Encuentra la IA en la Agora, o lanza una Botella al Océano Pacífico y sigue su deriva."
+  "help.games_desc": "Desafíos divertidos — Encuentra la IA en la Agora, o lanza una Botella al Océano Pacífico y sigue su deriva.",
+  "profile.booty_hint": "Al activarlo, tus escrituras publicadas contribuyen automáticamente keywords a Bottle Booty. No necesitas jugar — tus palabras se convierten en armas."
 }

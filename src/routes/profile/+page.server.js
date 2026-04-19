@@ -68,5 +68,6 @@ export async function load({ locals }) {
         stats.longest_streak = maxStreak;
     } catch (e) { console.error('Stats error:', e); }
 
-    return { user, profile: userProfile, profiles: results || [], writings: writings || [], showProfile: vis?.show_profile ?? 1, heatmapData, writerOfTheWeek, userBadges, stats };
+    const booty = await db.prepare(`SELECT booty_keywords_opt_in FROM users WHERE id = ?`).bind(user.id).first();
+    return { user, profile: userProfile, profiles: results || [], writings: writings || [], showProfile: vis?.show_profile ?? 1, bootyOptIn: booty?.booty_keywords_opt_in ?? 0, heatmapData, writerOfTheWeek, userBadges, stats };
 }

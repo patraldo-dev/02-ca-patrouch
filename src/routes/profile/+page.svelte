@@ -24,6 +24,7 @@
     let message = $state('');
     let messageError = $state(false);
     let showProfile = $state(data.showProfile ?? 1);
+    let bootyOptIn = $state(data.bootyOptIn ?? 0);
 
     // User profile form state
     let userDisplayName = $state(data.profile?.display_name || '');
@@ -70,6 +71,16 @@
             body: JSON.stringify({ show_profile: newVal })
         });
         if (res.ok) showProfile = newVal;
+    }
+
+    async function toggleBootyKeywords() {
+        const newVal = bootyOptIn ? 0 : 1;
+        const res = await fetch('/api/booty-keywords', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ opt_in: !!newVal })
+        });
+        if (res.ok) bootyOptIn = newVal;
     }
 
     function flash(msg, isError = false) {
@@ -201,6 +212,14 @@
             </button>
         </label>
         <p class="privacy-hint">{$t('profile.privacy_hint')}</p>
+
+        <label class="toggle-row" style="margin-top: 1rem;">
+            <span>🏴‍☠️ Bottle Booty Keywords</span>
+            <button class="toggle-btn" class:active={bootyOptIn} onclick={toggleBootyKeywords}>
+                <span class="toggle-knob"></span>
+            </button>
+        </label>
+        <p class="privacy-hint">{$t('profile.booty_hint')}</p>
     </section>
 
     <!-- Existing Profiles -->
