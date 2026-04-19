@@ -70,34 +70,52 @@ export async function POST({ request, locals }) {
         // Auto-extract keywords for Bottle Quest when publishing
         if (status === 'published' && result.content) {
             // Check if any pending keyword proposals match this writing
+            // Rules: no self-points, expire on first match, humans share cooperatively
             try {
                 const text = ((result.title || '') + ' ' + result.content).toLowerCase();
                 const textWords = new Set(text.match(/\p{L}{4,}/gu) || []);
 
                 const { results: proposals } = await db.prepare(`
-                    SELECT id, word, player_id FROM bq_keyword_proposals
+                    SELECT id, word, player_id, points_earned FROM bq_keyword_proposals
                     WHERE status = 'pending' AND proposal_date >= date('now', '-3 days')
                 `).all();
 
                 if (proposals?.length) {
-                    let matchedCount = 0;
+                    const matchedHumanIds = new Set();
+                    let totalHumanBonus = 0;
+
                     for (const p of proposals) {
                         const kw = p.word.toLowerCase();
-                        if (textWords.has(kw)) {
-                            const points = kw.length >= 7 ? 15 : 10;
+                        if (!textWords.has(kw)) continue;
+
+                        // Expiry: mark matched immediately (first match only)
+                        await db.prepare(
+                            `UPDATE bq_keyword_proposals SET status = 'matched', matched_writing_id = ? WHERE id = ?`
+                        ).bind(result.id, p.id).run();
+
+                        // Check if proposer is human
+                        const player = await db.prepare(`SELECT type FROM bq_players WHERE id = ?`).bind(p.player_id).first();
+                        const isHuman = player?.type === 'human';
+                        const isAuthor = p.player_id === result.user_id; // self-match
+
+                        if (isHuman && !isAuthor) {
+                            matchedHumanIds.add(p.player_id);
+                            totalHumanBonus += p.points_earned || 10;
+                        } else if (!isHuman) {
+                            // AI gets own points only
                             await db.prepare(
-                                `UPDATE bq_keyword_proposals SET status = 'matched', matched_writing_id = ?, points_earned = ? WHERE id = ?`
-                            ).bind(result.id, points, p.id).run();
-                            matchedCount++;
+                                `UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`
+                            ).bind(p.points_earned || 10, Math.floor((p.points_earned || 10) / 2), p.player_id).run();
                         }
                     }
-                    if (matchedCount > 0) {
-                        // Award ALL human players (cooperative model)
+
+                    // ALL humans share the cooperative bonus
+                    if (totalHumanBonus > 0) {
                         const { results: humans } = await db.prepare(`SELECT id FROM bq_players WHERE type = 'human'`).all();
                         if (humans?.length) {
                             for (const h of humans) {
                                 await db.prepare(`UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`)
-                                    .bind(matchedCount * 10, matchedCount * 5, h.id).run();
+                                    .bind(totalHumanBonus, Math.floor(totalHumanBonus / 2), h.id).run();
                             }
                         }
                     }
