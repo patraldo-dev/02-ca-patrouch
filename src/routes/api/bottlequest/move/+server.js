@@ -128,6 +128,31 @@ export async function POST({ request, locals, platform }) {
                         await db.prepare(`UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`)
                             .bind(captureBonus, captureBonus, player.id).run();
                         captured = { bottle_id: bottle.id, title: bottle.title, bonus: captureBonus };
+
+                        // Resolve all bets on this bottle
+                        try {
+                            const { results: openBets } = await db.prepare(
+                                `SELECT * FROM bq_bets WHERE bottle_id = ? AND status = 'open'`
+                            ).bind(bottle_id).all();
+                            for (const bet of (openBets || [])) {
+                                const won = bet.bet_on_player_id === player.id;
+                                const winnings = won ? Math.floor(bet.amount * bet.odds * 0.95) : 0;
+                                const botFee = won ? Math.floor(bet.amount * bet.odds * 0.05) : 0;
+                                await db.prepare(`UPDATE bq_bets SET status = ?, resolved_at = datetime('now') WHERE id = ?`).bind(won ? 'won' : 'lost', bet.id).run();
+                                if (won) {
+                                    await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(winnings, bet.player_id).run();
+                                    if (botFee > 0) {
+                                        const { results: bots } = await db.prepare(`SELECT id FROM bq_players WHERE type = 'ai'`).all();
+                                        const bs = bots?.length ? Math.ceil(botFee / bots.length) : botFee;
+                                        for (const bot of bots) {
+                                            await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(bs, bot.id).run();
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (betErr) {
+                            console.error('Bet resolution error:', betErr);
+                        }
                     }
                 }
             }
