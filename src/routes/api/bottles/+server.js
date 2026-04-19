@@ -71,6 +71,9 @@ export async function POST({ platform, locals, request }) {
 
   const user = locals.user;
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+  if (user.role !== 'member' && user.role !== 'admin') {
+    return json({ error: 'Only members can launch bottles' }, { status: 403 });
+  }
 
   const body = await request.json();
   const { content, content_type = 'message', title = '', bottle_type = 'glass' } = body;
