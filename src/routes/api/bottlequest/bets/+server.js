@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { logTransaction } from '$lib/server/bottlequest-logger.js';
 
 function haversineKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -88,6 +89,7 @@ export async function POST({ request, locals, platform }) {
         await db.prepare(
             `INSERT INTO bq_bets (id, player_id, bottle_id, bet_on_player_id, amount, odds) VALUES (?, ?, ?, ?, ?, ?)`
         ).bind(crypto.randomUUID(), player.id, bottle_id, bet_on_player_id, amount, odds).run();
+        await logTransaction(db, player.id, 'bet_placed', -amount, `Bet on ${betOn.display_name || betOn.username} for bottle`, bottle_id);
 
         const updated = await db.prepare(`SELECT fuel FROM bq_players WHERE id = ?`).bind(player.id).first();
 

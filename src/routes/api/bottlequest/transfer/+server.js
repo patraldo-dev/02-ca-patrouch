@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { logTransaction } from '$lib/server/bottlequest-logger.js';
 
 // POST: transfer fuel between players
 // GET: transfer history for a player
@@ -56,9 +57,12 @@ export async function POST({ request, locals }) {
 
         // Commission goes to bot players (split equally)
         const { results: bots } = await db.prepare(`SELECT id FROM bq_players WHERE type = 'ai'`).all();
+        await logTransaction(db, sender.id, 'transfer_out', -amount, `Transfer to ${to_player.display_name || to_player.username}`, to_player_id);
+        await logTransaction(db, to_player_id, 'transfer_in', received, `Transfer from ${sender.display_name || sender.username}`, sender.id);
         const botShare = bots?.length ? Math.ceil(fee / bots.length) : fee;
         for (const bot of bots) {
             await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(botShare, bot.id).run();
+            await logTransaction(db, bot.id, 'commission', botShare, 'Bank fee from transfer');
         }
 
         // Track total fees collected

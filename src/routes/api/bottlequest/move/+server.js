@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { logTransaction } from '$lib/server/bottlequest-logger.js';
 
 const CAPTURE_RADIUS = 0.000005; // ~5.5 meters
 
@@ -106,7 +107,7 @@ export async function POST({ request, locals, platform }) {
             `INSERT INTO bq_moves (id, player_id, from_lat, from_lon, to_lat, to_lon, distance_km, fuel_cost, speed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(crypto.randomUUID(), player.id, fromLat, fromLon, target_lat, target_lon, distKm, fuelCost, speed).run();
 
-        // Check bottle capture
+        await logTransaction(db, player.id, 'move', -fuelCost, `Move ${speed} to ${target_lat.toFixed(4)}, ${target_lon.toFixed(4)}`, moveId);
         let captured = null;
         if (bottle_id) {
             const bottle = await db.prepare(
@@ -128,6 +129,7 @@ export async function POST({ request, locals, platform }) {
                         await db.prepare(`UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`)
                             .bind(captureBonus, captureBonus, player.id).run();
                         captured = { bottle_id: bottle.id, title: bottle.title, bonus: captureBonus };
+                        await logTransaction(db, player.id, 'capture', captureBonus + 50, `Captured ${bottle.title}`, bottle.id);
 
                         // Resolve all bets on this bottle
                         try {

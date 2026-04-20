@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { logTransaction } from '$lib/server/bottlequest-logger.js';
 
 export async function GET({ platform, locals }) {
   const db = platform?.env?.DB_book;
@@ -64,6 +65,7 @@ export async function POST({ platform, locals }) {
       `UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`
     ).bind(fuel, playerId).run();
 
+    await logTransaction(db, playerId, 'checkin', fuel, 'Daily check-in');
     return json({ success: true, fuel, message: '+10 ⛽' });
   } catch (e) {
     return json({ error: e.message }, { status: 500 });
