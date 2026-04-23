@@ -22,3 +22,13 @@ export async function DELETE({ request, platform }) {
   const auth = createAuth(platform.env);
   return auth.handler(request);
 }
+
+export async function OPTIONS({ request }) {
+  return new Response(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    },
+  });
+}
