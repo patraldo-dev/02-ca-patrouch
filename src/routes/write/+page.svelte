@@ -20,8 +20,6 @@
     onMount(() => {
         invalidateAll();
     });
-        return () => clearInterval(interval);
-    });
 
     // Onboarding is handled by layout
     let showOnboarding = $state(false);
