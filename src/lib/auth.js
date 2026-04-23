@@ -39,5 +39,10 @@ export function createAuth(env) {
         maxAge: 5 * 60,
       },
     },
+    trustedOrigins: [
+      'https://patrouch.ca',
+      'https://*.chef-tech.workers.dev',
+      'http://localhost:5173',
+    ],
   });
 }
