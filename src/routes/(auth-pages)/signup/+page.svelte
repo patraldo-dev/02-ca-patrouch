@@ -285,5 +285,5 @@ id="confirmPassword"
     .btn-oauth { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1rem; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; cursor: pointer; background: var(--surface, #141417); color: var(--text); font-family: var(--font-body, 'Inter', sans-serif); transition: border-color 0.2s; }
     .btn-oauth:hover { border-color: var(--accent, #c9a87c); }
     .btn-google svg { flex-shrink: 0; }
-    .btn-github { color: #fff; }
+    .btn-github { color: var(--text); }
 </style>

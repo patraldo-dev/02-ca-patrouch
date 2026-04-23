@@ -6,6 +6,7 @@ globalThis.process = globalThis.process || {};
 globalThis.process.env = globalThis.process.env || {};
 
 import { createAuth } from '$lib/auth.js';
+import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { building } from '$app/environment';
 
 /** @type {import('@sveltejs/kit').Handle} */
@@ -67,5 +68,6 @@ export async function handle({ event, resolve }) {
         event.locals.user = null;
     }
 
-    return resolve(event);
+    // Let Better Auth handle /api/auth/* routes
+    return svelteKitHandler({ event, resolve, auth, building });
 }
