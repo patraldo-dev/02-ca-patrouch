@@ -3,23 +3,57 @@
 import { createAuth } from '$lib/auth.js';
 
 export async function GET({ request, platform }) {
-  const auth = createAuth(platform.env);
-  return auth.handler(request);
+  try {
+    const auth = createAuth(platform.env);
+    const response = await auth.handler(request);
+    return response;
+  } catch (e) {
+    console.error('[AUTH GET]', e.message, e.stack);
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }
 
 export async function POST({ request, platform }) {
-  const auth = createAuth(platform.env);
-  return auth.handler(request);
+  try {
+    const auth = createAuth(platform.env);
+    const response = await auth.handler(request);
+    return response;
+  } catch (e) {
+    console.error('[AUTH POST]', e.message, e.stack);
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }
 
 export async function PUT({ request, platform }) {
-  const auth = createAuth(platform.env);
-  return auth.handler(request);
+  try {
+    const auth = createAuth(platform.env);
+    return await auth.handler(request);
+  } catch (e) {
+    console.error('[AUTH PUT]', e.message);
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }
 
 export async function DELETE({ request, platform }) {
-  const auth = createAuth(platform.env);
-  return auth.handler(request);
+  try {
+    const auth = createAuth(platform.env);
+    return await auth.handler(request);
+  } catch (e) {
+    console.error('[AUTH DELETE]', e.message);
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }
 
 export async function OPTIONS() {
