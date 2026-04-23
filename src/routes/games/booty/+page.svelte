@@ -702,7 +702,6 @@
 </div>
 
 {#if data.player}
-    <BootyChat username={data.player.username} displayName={data.player.display_name} />
 {/if}
 
 <section class="bottles-page">
@@ -1026,7 +1025,9 @@
             <h2>{$t('bottles.map_title')}</h2>
             <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
         </div>
-        <div class="map-container" bind:this={mapEl}></div>
+        <div class="map-container" bind:this={mapEl}>
+        </div>
+        <BootyChat username={data.player.username} displayName={data.player.display_name} />
     </div>
 
     <!-- Beached / Found bottles (public) -->
