@@ -1,0 +1,1 @@
+import{V as h,W as t,h as b,B as k,X as B}from"./7EQ61Un6.js";function u(r,i){return r===i||r?.[B]===i}function c(r={},i,a,S){return h(()=>{var f,s;return t(()=>{f=s,s=[],b(()=>{r!==a(...s)&&(i(r,...s),f&&u(a(...f),r)&&i(null,...f))})}),()=>{k(()=>{s&&u(a(...s),r)&&i(null,...s)})}}),r}export{c as b};

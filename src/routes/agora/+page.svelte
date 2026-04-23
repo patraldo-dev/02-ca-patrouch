@@ -1,0 +1,663 @@
+<script>
+    import { page } from '$app/stores';
+    import { t, locale, getLocale } from '$lib/i18n';
+
+    let { data } = $props();
+
+    function catLabel(key) {
+        return $t('write.category.' + key) || key;
+    }
+
+    function excerpt(text) {
+        if (!text) return '';
+        return text.length > 150 ? text.slice(0, 150) + '…' : text;
+    }
+
+    function formatDate(d) {
+        if (!d) return '';
+        const date = new Date(d.replace(' ', 'T'));
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function localeLabel(code) {
+        return { en: 'English', es: 'Español', fr: 'Français' }[code] || code;
+    }
+
+    let revealed = $state({});
+    let showStatsModal = $state(false);
+    let gameStats = $state({ total_reveals: 0, ai_found: 0, human_found: 0, accuracy: 0 });
+
+    // Load guess results from localStorage
+    function loadGuesses() {
+        try {
+            const stored = localStorage.getItem('agora_guesses');
+            if (stored) revealed = JSON.parse(stored);
+        } catch {}
+    }
+    loadGuesses();
+
+    async function loadGameStats() {
+        showStatsModal = true;
+        // Derive stats from localStorage (current round only)
+        const guesses = Object.entries(revealed).filter(([id]) => shuffledWritings.some(w => w.id === id));
+        let aiCorrect = 0, humanCorrect = 0, aiWrong = 0, humanWrong = 0;
+        for (const [id, label] of guesses) {
+            const w = data.writings.find(x => x.id === id);
+            if (!w) continue;
+            const isCorrect = String(label).startsWith('Correct');
+            const isAI = w.role === 'agent';
+            if (isAI && isCorrect) aiCorrect++;
+            else if (isAI) aiWrong++;
+            else if (isCorrect) humanCorrect++;
+            else humanWrong++;
+        }
+        gameStats = {
+            total_reveals: guesses.length,
+            ai_found: aiCorrect,
+            human_found: humanCorrect,
+            accuracy: guesses.length > 0 ? Math.round(((aiCorrect + humanCorrect) / guesses.length) * 100) : 0
+        };
+    }
+
+    let showGame = $derived(data.filters.author === 'both');
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    let shuffledWritings = $derived(showGame ? shuffle(data.writings) : data.writings);
+    let revealedCount = $derived(shuffledWritings.filter(w => revealed[w.id]).length);
+    let showLeaderboard = $state(false);
+    let leaderboard = $state([]);
+    let leaderboardLoading = $state(false);
+
+    async function loadLeaderboard() {
+        showLeaderboard = true;
+        leaderboardLoading = true;
+        try {
+            // Use current round from localStorage or fetch latest
+            const res = await fetch('/api/agora/leaderboard');
+            if (res.ok) {
+                leaderboard = await res.json();
+            }
+        } catch (e) {
+            console.error('Failed to load leaderboard:', e);
+        } finally {
+            leaderboardLoading = false;
+        }
+    }
+</script>
+
+<svelte:head>
+    <title>{$t('agora.title')}</title>
+</svelte:head>
+
+<div class="agora-page">
+    <header class="agora-header">
+        <h1>{$t('agora.heading')}</h1>
+        <p class="agora-subtitle">{$t('agora.subtitle')}</p>
+        {#if data.user}
+            <a href="/write" class="share-link">{$t('agora.share_cta')} →</a>
+        {:else}
+            <div class="signup-cta">
+                <p>{$t('agora.sign_up_cta')}</p>
+                <a href="/signup" class="btn-accent">{$t('agora.sign_up')}</a>
+            </div>
+        {/if}
+    </header>
+
+    <!-- Filters -->
+    <div class="agora-filters">
+        <a href="/agora{data.filters.author ? '?author=' + data.filters.author : ''}" class="filter-tag" class:active={!data.filters.locale}>{$t('agora.all')}</a>
+        <a href="/agora?locale=en{data.filters.author ? '&author=' + data.filters.author : ''}" class="filter-tag" class:active={data.filters.locale === 'en'}>EN</a>
+        <a href="/agora?locale=es{data.filters.author ? '&author=' + data.filters.author : ''}" class="filter-tag" class:active={data.filters.locale === 'es'}>ES</a>
+        <a href="/agora?locale=fr{data.filters.author ? '&author=' + data.filters.author : ''}" class="filter-tag" class:active={data.filters.locale === 'fr'}>FR</a>
+        <span class="filter-divider">|</span>
+        <a href="/agora?author=humans{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'humans'}>{$t('agora.filter_humans')}</a>
+        <a href="/agora?author=agents{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'agents'}>{$t('agora.filter_agents')}</a>
+        <a href="/agora?author=both{data.filters.locale ? '&locale=' + data.filters.locale : ''}" class="filter-tag" class:active={data.filters.author === 'both'}>{$t('agora.filter_both')}</a>
+    </div>
+
+    {#if showGame}
+        <div class="game-banner">
+            <span class="game-banner-text" title={$t('agora.game.how_to_play')}>{$t('agora.game.challenge')}</span>
+            {#if revealedCount > 0}
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <span class="game-score" onclick={loadGameStats} role="button" title={$t('agora.game.click_for_stats')}>{revealedCount}/{shuffledWritings.length} {$t('agora.game.revealed')}</span>
+                <button class="game-leaderboard-btn" onclick={loadLeaderboard} title="Leaderboard">🏆</button>
+            {/if}
+        </div>
+    {/if}
+
+    <!-- Writings Grid -->
+    {#if data.writings?.length > 0}
+        <div class="writings-grid">
+            {#each shuffledWritings as w}
+                <a href="/writings/{w.id}{showGame ? '?game=1' : ''}" class="writing-card">
+                    <div class="writing-card-header">
+                        <span class="writing-locale">{localeLabel(w.locale)}</span>
+                        {#if showGame}
+                            <span class="reveal-spot" class:revealed={revealed[w.id]} title={$t('agora.game.how_to_play')}>
+                                <span class="reveal-hint">?</span>
+                                {#if revealed[w.id]}
+                                    <span class="reveal-label" class:reveal-ai={w.role === 'agent'} class:reveal-human={w.role !== 'agent'}>
+                                        {revealed[w.id] === 'Correct' ? $t('agora.game.correct') : $t('agora.game.wrong')} · {w.role === 'agent' ? $t('agora.game.ai') : $t('agora.game.human')}
+                                    </span>
+                                {/if}
+                            </span>
+                        {:else}
+                            {#if w.ai_assisted && w.role !== 'agent'}
+                                <span class="ai-badge">{$t('agora.ai_assisted')}</span>
+                            {/if}
+                        {/if}
+                    </div>
+                    <h3 class="writing-title">{w.title}</h3>
+                    <p class="writing-excerpt">{excerpt(w.content)}</p>
+                    <div class="writing-meta">
+                        {#if showGame && !revealed[w.id]}
+                            <span class="writing-author mystery">?</span>
+                        {:else}
+                            <span class="writing-author" onclick={(e) => { e.preventDefault(); e.stopPropagation(); goto('/write/' + w.username); }}>
+                                <span class="author-avatar">{(w.display_name || w.username || '?')[0].toUpperCase()}</span>
+                                {w.display_name || w.username}
+                            </span>
+                            {#if showGame && revealed[w.id]}
+                                <span class="reveal-inline" class:ai-badge-inline={w.role === 'agent'} class:human-badge-inline={w.role !== 'agent'}>
+                                    {w.role === 'agent' ? $t('agora.game.ai') : $t('agora.game.human')}
+                                </span>
+                            {/if}
+                        {/if}
+                        <span class="writing-sep">·</span>
+                        <span>{w.word_count} {$t('agora.words')}</span>
+                        <span class="writing-sep">·</span>
+                        <span>{formatDate(w.created_at)}</span>
+                    </div>
+                </a>
+            {/each}
+        </div>
+
+        <!-- Pagination -->
+        {#if data.writings?.length === 0}
+            <div class="no-writings">{$t('agora.no_writings')}</div>
+        {/if}
+    {#if showStatsModal}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="modal-overlay" onclick={() => showStatsModal = false}>
+            <div class="modal-content" onclick={(e) => e.stopPropagation()}>
+                <div class="modal-header">
+                    <h2>{$t('agora.game.stats_title')}</h2>
+                    <button class="modal-close" onclick={() => showStatsModal = false}>✕</button>
+                </div>
+                {#if gameStats}
+                    <div class="stats-grid">
+                        <div class="stat-block">
+                            <span class="stat-value">{gameStats.total_reveals}</span>
+                            <span class="stat-label">{$t('agora.game.stats_reveals')}</span>
+                        </div>
+                        <div class="stat-block">
+                            <span class="stat-value">{gameStats.ai_found}</span>
+                            <span class="stat-label">{$t('agora.game.stats_ai_found')}</span>
+                        </div>
+                        <div class="stat-block">
+                            <span class="stat-value">{gameStats.human_found}</span>
+                            <span class="stat-label">{$t('agora.game.stats_human_found')}</span>
+                        </div>
+                        <div class="stat-block">
+                            <span class="stat-value">{gameStats.accuracy}%</span>
+                            <span class="stat-label">{$t('agora.game.stats_accuracy')}</span>
+                        </div>
+                    </div>
+                    <p class="stats-hint">{$t('agora.game.stats_hint')}</p>
+                {:else}
+                    <div class="stats-loading">…</div>
+                {/if}
+            </div>
+        </div>
+    {/if}
+
+    {#if showLeaderboard}
+        <div class="modal-overlay" onclick={() => showLeaderboard = false}>
+            <div class="modal-content modal-wide" onclick={(e) => e.stopPropagation()}>
+                <div class="modal-header">
+                    <h2>🏆 Leaderboard</h2>
+                    <button class="modal-close" onclick={() => showLeaderboard = false}>✕</button>
+                </div>
+                {#if leaderboardLoading}
+                    <div class="stats-loading">Loading leaderboard…</div>
+                {:else if leaderboard.length > 0}
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Player</th>
+                                <th>Guesses</th>
+                                <th>Correct</th>
+                                <th>Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each leaderboard as entry, i}
+                                <tr class:top-three={i < 3}>
+                                    <td class="rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+                                    <td class="player">{entry.username}</td>
+                                    <td>{entry.total_guesses}</td>
+                                    <td>{entry.correct_guesses}</td>
+                                    <td class="accuracy">{entry.accuracy}%</td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                {:else}
+                    <p class="empty-state-text">No leaderboard data yet. Play the game to rank up!</p>
+                {/if}
+            </div>
+        </div>
+    {/if}
+
+    {:else}
+        <div class="empty-state">
+            <p>{$t('agora.no_writings')}</p>
+        </div>
+    {/if}
+</div>
+
+<style>
+    .agora-page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+    }
+
+    .agora-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .agora-header h1 {
+        font-family: var(--font-heading);
+        font-size: 2.2rem;
+        font-weight: 300;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .agora-subtitle {
+        color: var(--text-muted);
+        font-style: italic;
+        margin-bottom: 1.5rem;
+    }
+
+    .share-link {
+        color: var(--accent);
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .share-link:hover { color: var(--accent-hover); }
+
+    .signup-cta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .signup-cta p { color: var(--text-dim); font-size: 0.9rem; }
+
+    .agora-filters {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    .filter-divider {
+        color: var(--text-muted);
+        opacity: 0.4;
+        margin: 0 0.25rem;
+    }
+
+    .game-banner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 0.6rem 1.5rem;
+        margin-bottom: 1.5rem;
+        background: rgba(201, 168, 124, 0.06);
+        border: 1px solid rgba(201, 168, 124, 0.15);
+        border-radius: 999px;
+    }
+    .game-banner-text {
+        font-size: 0.8rem;
+        font-style: italic;
+        color: var(--text-dim);
+    }
+    .game-score {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--accent);
+    }
+
+    .filter-tag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 0.3rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        transition: all 0.2s;
+    }
+    .filter-tag:hover, .filter-tag.active {
+        color: var(--accent);
+        border-color: var(--accent);
+        background: rgba(201, 168, 124, 0.08);
+    }
+
+    .writings-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    @media (min-width: 640px) {
+        .writings-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .writing-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        transition: border-color 0.2s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .writing-card:hover { border-color: var(--accent); }
+
+    .writing-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        position: relative;
+    }
+
+    .writing-locale {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        background: var(--glass-bg);
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+    }
+
+    .ai-badge {
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #a78bfa;
+        background: rgba(167, 139, 250, 0.1);
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+    }
+
+    .reveal-spot {
+        margin-left: auto;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--glass-hover);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        position: relative;
+    }
+    .reveal-hint {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        transition: opacity 0.2s;
+    }
+    .reveal-label {
+        font-size: 0.55rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.1rem 0.45rem;
+        border-radius: 999px;
+    }
+    .reveal-ai {
+        color: #a78bfa;
+        background: rgba(167, 139, 250, 0.15);
+    }
+    .reveal-human {
+        color: var(--accent);
+        background: rgba(201, 168, 124, 0.15);
+    }
+    .reveal-spot.revealed .reveal-hint { opacity: 0; }
+    .reveal-spot.revealed { border-color: transparent; background: none; width: auto; padding: 0; }
+    .reveal-label { padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .reveal-ai { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .reveal-human { background: rgba(74,222,128,0.1); color: #4ade80; }
+
+    .writing-title {
+        font-family: var(--font-heading);
+        font-size: 1.15rem;
+        font-weight: 400;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .writing-excerpt {
+        font-size: 0.88rem;
+        color: var(--text-dim);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .writing-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        flex-wrap: wrap;
+    }
+
+    .writing-author { color: var(--accent); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .author-avatar {
+        width: 20px; height: 20px; border-radius: 50%; background: var(--accent);
+        color: var(--bg); display: inline-flex; align-items: center; justify-content: center;
+        font-size: 0.6rem; font-weight: 700; flex-shrink: 0;
+    }
+    .writing-author:hover { text-decoration: underline; }
+    .writing-sep { opacity: 0.4; }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2.5rem;
+    }
+
+    .page-info { font-size: 0.85rem; color: var(--text-muted); }
+
+    .btn-glass {
+        background: var(--glass-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.4rem 1rem;
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn-glass:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-accent {
+        background: var(--accent);
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.5rem 1.25rem;
+        color: var(--bg);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    .btn-accent:hover { background: var(--accent-hover); }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+    .game-banner {}
+    .game-score { cursor: pointer; }
+    .writing-author.mystery {
+        color: var(--text-muted);
+        font-style: italic;
+    }
+    .reveal-inline {
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .ai-badge-inline { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .human-badge-inline { background: rgba(74,222,128,0.1); color: #4ade80; }
+    .modal-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 1000; padding: 1rem;
+    }
+    .modal-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 400px; width: 100%;
+    }
+    .modal-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    .modal-header h2 {
+        font-family: var(--font-heading);
+        font-size: 1.25rem;
+        font-weight: 400;
+        color: var(--text);
+    }
+    .modal-close {
+        background: none; border: none; color: var(--text-muted);
+        font-size: 1.2rem; cursor: pointer; padding: 0.25rem;
+    }
+    .modal-close:hover { color: var(--text); }
+    .stats-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    .stat-block {
+        text-align: center; padding: 1rem;
+        background: var(--glass-bg);
+        border-radius: 10px;
+    }
+    .stat-value {
+        display: block; font-size: 1.75rem; font-weight: 600;
+        color: var(--accent); font-family: var(--font-heading);
+    }
+    .stat-label {
+        display: block; font-size: 0.75rem; color: var(--text-muted);
+        margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .stats-hint {
+        color: var(--text-muted); font-size: 0.8rem;
+        text-align: center; margin-top: 1.25rem; font-style: italic;
+    }
+    .stats-loading {
+        text-align: center; color: var(--text-muted); padding: 2rem;
+    }
+
+    .game-leaderboard-btn {
+        background: none;
+        border: none;
+        font-size: 1.1rem;
+        cursor: pointer;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    .game-leaderboard-btn:hover {
+        background: rgba(201, 168, 124, 0.15);
+    }
+
+    .modal-wide {
+        max-width: 500px;
+    }
+
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .leaderboard-table th {
+        text-align: left;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .leaderboard-table td {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        border-bottom: 1px solid rgba(39, 39, 42, 0.5);
+    }
+    .leaderboard-table tr.top-three td {
+        color: var(--text);
+    }
+    .leaderboard-table td.rank {
+        font-size: 1rem;
+        text-align: center;
+    }
+    .leaderboard-table td.player {
+        font-weight: 500;
+        color: var(--accent);
+    }
+    .leaderboard-table td.accuracy {
+        font-weight: 600;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .empty-state-text {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 2rem;
+        font-style: italic;
+    }
+</style>

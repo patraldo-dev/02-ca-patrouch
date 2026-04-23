@@ -1,0 +1,7 @@
+curl -X POST "https://api.cloudflare.com/client/v4/accounts/477082f5c9678c608889bd8f03f7b807/ai/run/@cf/myshell-ai/melotts" \
+  -H "Authorization: Bearer cfut_00Q0R7zKJAcoWJkvg8oNULetoygSNN5YoL0GSsjB9ce2d780" \
+  -H "Content-Type: application/json" \
+  --data-raw '{
+    "prompt": "Hola mundo",
+    "lang": "es"
+  }'

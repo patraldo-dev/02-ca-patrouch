@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /evaluate/
+Disallow: /refine/
+Disallow: /audio/
+Disallow: /write/new
+Disallow: /writings/*/edit
+
+Sitemap: https://patrouch.ca/sitemap.xml
