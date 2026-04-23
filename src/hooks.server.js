@@ -14,35 +14,29 @@ export async function handle({ event, resolve }) {
     // Skip during build
     if (building) return resolve(event);
 
-    // ⚠️ CRITICAL: Force real D1 — no mock, no fallback
+    // ⚠️ CRITICAL: Force real D1
     if (!event.platform?.env?.DB_book) {
-        throw new Error('❌ D1 database binding "DB_book" not found. Check wrangler.jsonc.');
+        throw new Error('❌ D1 database binding "DB_book" not found.');
     }
 
     event.locals.db = event.platform.env.DB_book;
     event.locals.platform = event.platform;
 
-    // Read locale from cookie
+    // Locale
     const localeCookie = event.cookies.get('preferredLanguage') || event.cookies.get('locale');
     event.locals.locale = ['en', 'es', 'fr'].includes(localeCookie) ? localeCookie : 'es';
 
-    // Log Mailgun key for debugging
-    if (event.platform?.env?.MAILGUN_API_KEY) {
-        console.log('🔑 MAILGUN_API_KEY is set (length:', event.platform.env.MAILGUN_API_KEY.length, ')');
-    } else {
-        console.error('❌ MAILGUN_API_KEY is MISSING or undefined');
-    }
-
-    // Better Auth — create per-request instance with D1 binding
+    // Better Auth — intercept /api/auth/* first
     const auth = createAuth(event.platform.env);
     event.locals.auth = auth;
 
-    // Get session via Better Auth
-    try {
-        const session = await auth.api.getSession({
-            headers: event.request.headers,
-        });
+    if (event.url.pathname.startsWith('/api/auth')) {
+        return svelteKitHandler({ event, resolve, auth, building });
+    }
 
+    // Session for non-auth routes
+    try {
+        const session = await auth.api.getSession({ headers: event.request.headers });
         if (session) {
             event.locals.session = session.session;
             event.locals.user = {
@@ -56,18 +50,15 @@ export async function handle({ event, resolve }) {
                 display_name: session.user.name || null,
                 created_at: session.user.createdAt,
             };
-            console.log('✅ Better Auth session:', event.locals.user.username);
         } else {
             event.locals.session = null;
             event.locals.user = null;
-            console.log('📭 No Better Auth session');
         }
     } catch (e) {
-        console.error('❌ Better Auth session error:', e.message);
+        console.error('❌ Session error:', e.message);
         event.locals.session = null;
         event.locals.user = null;
     }
 
-    // Let Better Auth handle /api/auth/* routes
-    return svelteKitHandler({ event, resolve, auth, building });
+    return resolve(event);
 }
