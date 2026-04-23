@@ -9,6 +9,9 @@ const config = {
 		adapter: adapter({
 			platformProxy: {
 				enabled: true
+			},
+			routes: {
+				include: ['/api/auth/(.*)', '/api/auth']
 			}
 		})
 	}
