@@ -310,7 +310,7 @@
 <div class="write-page">
     <div class="inspiration-tape" role="status" aria-label="Writing inspiration">
         <div class="ticker-marquee">
-            <div class="ticker-track">{#each [...quotes, ...quotes] as quote}<span class="ticker-item">✍️ {quote}</span>{/each}</div>
+            <div class="ticker-track">{#each [...quotes, ...quotes] as quote}<span class="ticker-item">✍️ {quote}</span><span class="ticker-divider">🌿</span>{/each}</div>
         </div>
     </div>
     {#if !data.user}
