@@ -7,14 +7,14 @@ export async function POST({ locals, platform, request }) {
     if (!user || !db) return json({ success: false, message: 'Not authenticated' }, { status: 401 });
 
     const existing = await db.prepare('SELECT id FROM bq_players WHERE username = ?').bind(user.username).first();
-    if (existing) return json({ success: false, message: 'Already a player' }, { status: 400 });
+    if (existing) return json({ success: false, message: '⚠️ Ya eres un jugador del Crusade. ¡A conquistar!' }, { status: 400 });
 
     const body = await request.json();
     const portId = body.port_id || 'port-pv';
 
     // Get port coords
     const port = await db.prepare('SELECT id, name, lat, lon FROM bq_ports WHERE id = ?').bind(portId).first();
-    if (!port) return json({ success: false, message: 'Invalid port' }, { status: 400 });
+    if (!port) return json({ success: false, message: '⚠️ Puerto no encontrado. Selecciona otro puerto.' }, { status: 400 });
 
     const playerId = crypto.randomUUID();
     const username = user.username || user.email?.split('@')[0] || 'unknown';
