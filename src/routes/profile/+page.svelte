@@ -446,11 +446,11 @@
 </div>
 
 {#if showCropModal}
-<div class="crop-overlay" on:pointerup={onCropPointerUp} on:pointerleave={onCropPointerUp}>
+<div class="crop-overlay" onpointerup={onCropPointerUp} onpointerleave={onCropPointerUp}>
     <div class="crop-modal">
         <h2 class="crop-title">{$t('crop.title')}</h2>
         <p class="crop-hint">{$t('crop.drag_hint')}</p>
-        <div class="crop-area" on:pointerdown={onCropPointerDown} on:pointermove={onCropPointerMove}>
+        <div class="crop-area" onpointerdown={onCropPointerDown} onpointermove={onCropPointerMove}>
             <div class="crop-viewport" style="transform: translate({cropDrag.imgX}px, {cropDrag.imgY}px);">
                 {#if cropImageSrc}
                     <!-- svelte-ignore a11y_img_alt_missing -->
