@@ -57,7 +57,7 @@
         finally { savingProfile = false; }
     }
 
-    let memberSince = $derived(() => {
+    let memberSince = $derived.by(() => {
         const d = data.profile?.created_at;
         if (!d) return '';
         return new Date(d.replace ? d.replace(' ', 'T') : d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
