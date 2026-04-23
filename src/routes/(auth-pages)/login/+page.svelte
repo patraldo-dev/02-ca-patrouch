@@ -317,8 +317,9 @@
     }
     
     .login-button:disabled {
-        background: var(--border);
-        color: var(--text-muted);
+        background: var(--accent);
+        opacity: 0.6;
+        color: #fff;
         cursor: not-allowed;
     }
     
