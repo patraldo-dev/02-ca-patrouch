@@ -118,7 +118,7 @@
         background: var(--bg, #09090b);
         border: 2px solid var(--border, rgba(255,255,255,0.1));
         border-radius: var(--radius, 8px);
-        color: var(--text-body, #e4e4e7);
+        color: var(--text, #e4e4e7);
         font-family: var(--font-body, 'Inter', sans-serif);
         font-size: 0.95rem;
         outline: none;
