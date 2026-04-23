@@ -530,7 +530,7 @@
                 showToast('Joined the Crusade!');
                 await invalidateAll();
             } else {
-                showToast(d.error || 'Join failed');
+                showToast(d.message || d.error || 'Join failed');
             }
         } catch {}
         joining = false;
