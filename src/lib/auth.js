@@ -11,6 +11,8 @@ export function createAuth(env) {
   const db = drizzle(env.DB_book);
 
   return betterAuth({
+    secret: env.BETTER_AUTH_SECRET || '',
+    baseURL: 'https://patrouch.ca',
     database: drizzleAdapter(db, {
       provider: 'sqlite',
     }),
