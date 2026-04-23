@@ -103,10 +103,11 @@
                 textarea.selectionStart = textarea.selectionEnd = cursorPos + insertText.length;
             });
         };
-        recognition.onerror = (e) => { if (e.error !== 'no-speech') dictating = false; };
+        recognition.onerror = (e) => { showToast('❌ Voice: ' + (e.error || 'error')); dictating = false; };
         recognition.onend = () => { dictating = false; };
         recognition.start();
         dictating = true;
+        showToast('🎙️ Listening...');
     }
 
     let editorSaving = $state(false);
