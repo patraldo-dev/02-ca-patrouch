@@ -319,8 +319,8 @@
                     {/if}
                     <button onclick={() => { toggleMobileMenu(); handleLogout(); }} class="btn-glass block">{$t('common.nav.logout')}</button>
                 {:else}
-                    <a href="/login" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.login')}</a>
-                    <a href="/signup" onclick={toggleMobileMenu} class="btn-accent block">{$t('common.nav.signup')}</a>
+                    <a href="/login" onclick={() => { toggleMobileMenu(); }} class="btn-glass block">{$t('common.nav.login')}</a>
+                    <a href="/signup" onclick={() => { toggleMobileMenu(); }} class="btn-accent block">{$t('common.nav.signup')}</a>
                 {/if}
             </div>
         </div>
