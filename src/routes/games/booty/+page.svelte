@@ -1027,7 +1027,9 @@
         </div>
         <div class="map-container" bind:this={mapEl}>
         </div>
+        {#if data.player}
         <BootyChat username={data.player.username} displayName={data.player.display_name} />
+        {/if}
     </div>
 
     <!-- Beached / Found bottles (public) -->
