@@ -25,6 +25,6 @@ export async function POST({ locals, platform, request }) {
         VALUES (?, ?, ?, 'human', ?, ?, ?, ?, 100, 0, 1, NULL, NULL, NULL)
     `).bind(playerId, username, displayName, port.id, port.name, port.lat, port.lon).run();
 
-    await logTransaction(db, { player_id: player.id, type: 'join', amount: 0, detail: `Joined from port ${port_id}` });
+    await logTransaction(db, { player_id: playerId, type: 'join', amount: 0, detail: `Joined from port ${port.name}` });
     return json({ success: true, message: 'Welcome to the Crusade!', playerId });
 }
