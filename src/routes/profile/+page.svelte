@@ -60,7 +60,7 @@
     let memberSince = $derived.by(() => {
         const d = data.profile?.created_at;
         if (!d) return '';
-        return new Date(d.replace ? d.replace(' ', 'T') : d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        return new Date(d.replace ? d.replace(' ', 'T') : d).toLocaleDateString($t('profile.date_locale', 'en-US'), { year: 'numeric', month: 'long', day: 'numeric' });
     });
 
     async function toggleProfileVisibility() {
@@ -204,7 +204,7 @@
 
     {#if activeTab === 'profile'}
     <section class="privacy-section">
-        <h2>Privacy</h2>
+        <h2>{$t('profile.privacy_title', 'Privacy')}</h2>
         <label class="toggle-row">
             <span>{$t("profile.public_label")}</span>
             <button class="toggle-btn" class:active={showProfile} onclick={toggleProfileVisibility}>
@@ -297,7 +297,7 @@
                         <div class="writing-item-info">
                             <span class="writing-item-title">{w.title}</span>
                             <span class="writing-item-meta">
-                                {w.locale?.toUpperCase()} · {w.word_count} words · {new Date(w.created_at.replace(' ', 'T')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {w.locale?.toUpperCase()} · {w.word_count} $t('write.dashboard.words_word', 'words') · {new Date(w.created_at.replace(' ', 'T')).toLocaleDateString($t('profile.date_locale', 'en-US'), { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                         </div>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
