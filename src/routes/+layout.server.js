@@ -42,8 +42,8 @@ export async function load({ locals, cookies }) {
     let onboarding_completed = true;
     if (user) {
         const ob = await locals.db.prepare(
-            'SELECT onboarding_completed FROM users WHERE id = ?'
-        ).bind(user.id).first();
+            'SELECT onboarding_completed FROM user WHERE id = ?'
+        ).bind(user.id).first().catch(() => ({ onboarding_completed: 1 }));
         onboarding_completed = ob?.onboarding_completed === 1;
     }
 
