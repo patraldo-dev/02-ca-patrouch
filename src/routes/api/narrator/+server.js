@@ -111,9 +111,9 @@ Reply ONLY with valid JSON, no markdown.`;
         }
 
         await db.prepare(`
-            INSERT INTO narrator_events (id, title, narrative, event_type, modifier_type, modifier_value, affected_zone, target_players, duration_hours, expires_at, title_es, narrative_es, title_fr, narrative_fr)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).bind(id, title, narrative, event_type || 'flavor', modifier_type || null, modifier_value || null, affected_zone || null, target_players || null, dur, tEs || null, nEs || null, tFr || null, nFr || null).run();
+            INSERT INTO narrator_events (id, title, narrative, event_type, duration_hours, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(id, title, narrative, event_type || 'flavor', dur, expiresSql).run();
 
         return json({ success: true, id });
     } catch (e) {
