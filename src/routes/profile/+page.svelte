@@ -78,18 +78,26 @@
         const img = cropImgEl;
         if (!img) return;
         const size = 400;
+        const containerSize = 280;
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');
+
+        // The crop area is 280x280. The image is translated by (imgX, imgY).
+        // We need to find what part of the original image falls inside the crop circle.
         const scaleX = img.naturalWidth / img.clientWidth;
         const scaleY = img.naturalHeight / img.clientHeight;
-        const containerSize = 280;
-        const imgW = img.clientWidth;
-        const imgH = img.clientHeight;
-        const sx = (containerSize / 2 - cropDrag.imgX) * scaleX;
-        const sy = (containerSize / 2 - cropDrag.imgY) * scaleY;
+
+        // Offset of the image relative to the crop viewport center
+        const offsetX = -cropDrag.imgX;
+        const offsetY = -cropDrag.imgY;
+
+        // Source coordinates in the original image
+        const sx = (img.clientWidth / 2 + offsetX - containerSize / 2) * scaleX;
+        const sy = (img.clientHeight / 2 + offsetY - containerSize / 2) * scaleY;
         const sSize = containerSize * scaleX;
+
         ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, size, size);
         const blob = await new Promise(r => canvas.toBlob(r, 'image/webp', 0.85));
         pendingBlob = blob;
