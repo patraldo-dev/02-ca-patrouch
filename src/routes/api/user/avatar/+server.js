@@ -54,7 +54,7 @@ export async function POST({ locals, request, platform }) {
         }
 
         const ext = file.name.split('.').pop() || 'jpg';
-        const imageId = `avatar-${user.id}`;
+        const imageId = `avatar-${user.id}-${Date.now()}`;
 
         // CF Images requires multipart/form-data with specific field names
         const uploadForm = new FormData();

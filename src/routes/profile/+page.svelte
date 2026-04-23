@@ -451,10 +451,10 @@
         <h2 class="crop-title">{$t('crop.title')}</h2>
         <p class="crop-hint">{$t('crop.drag_hint')}</p>
         <div class="crop-area" onpointerdown={onCropPointerDown} onpointermove={onCropPointerMove}>
-            <div class="crop-viewport" style="transform: translate({cropDrag.imgX}px, {cropDrag.imgY}px);">
+            <div class="crop-viewport">
                 {#if cropImageSrc}
                     <!-- svelte-ignore a11y_img_alt_missing -->
-                    <img bind:this={cropImgEl} src={cropImageSrc} draggable="false" />
+                    <img bind:this={cropImgEl} src={cropImageSrc} draggable="false" style="transform: translate({cropDrag.imgX}px, {cropDrag.imgY}px);" />
                 {/if}
             </div>
             <div class="crop-ring"></div>
@@ -760,7 +760,7 @@
         will-change: transform;
     }
     .crop-viewport img {
-        max-width: none; width: 280px; height: 280px; object-fit: cover; pointer-events: none; user-select: none;
+        min-width: 100%; min-height: 100%; width: auto; height: auto; max-width: none; max-height: none; object-fit: cover; pointer-events: none; user-select: none;
     }
     .crop-ring {
         position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent); pointer-events: none;
