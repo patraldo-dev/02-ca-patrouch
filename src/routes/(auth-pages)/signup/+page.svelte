@@ -14,9 +14,15 @@
         const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%';
         let pwd = '';
         for (let i = 0; i < 14; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
-        password = pwd;
-        confirmPassword = pwd;
+        return pwd;
     }
+
+    // Auto-suggest a password on load
+    onMount(() => {
+        const suggested = generatePassword();
+        password = suggested;
+        confirmPassword = suggested;
+    });
     let error = $state('');
     let success = $state('');
     let isLoading = $state(false);
@@ -116,7 +122,7 @@
     autocomplete="new-password"  
     disabled={isLoading}
                 />
-                <button type="button" class="btn-generate" onclick={generatePassword} disabled={isLoading}>🎲</button>
+                <button type="button" class="btn-generate" onclick={() => { const p = generatePassword(); password = p; confirmPassword = p; }} disabled={isLoading}>🔄</button>
             </div>
         </div>
 
