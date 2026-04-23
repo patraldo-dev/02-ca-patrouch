@@ -15,21 +15,11 @@
 
     let { data } = $props();
 
-    // Inspiration ticker — i18n + Agora excerpts
-    // Ticker quotes — built server-side, no client get(t) needed
+    // Inspiration ticker — slow continuous marquee
     let quotes = $state(data.tickerQuotes || []);
-    let currentQuote = $state(0);
-    let sliding = $state(false);
     onMount(() => {
         invalidateAll();
-        const interval = setInterval(() => {
-            // Slide out left, swap, slide in from right
-            sliding = true;
-            setTimeout(() => {
-                currentQuote = quotes.length ? (currentQuote + 1) % quotes.length : 0;
-                sliding = false;
-            }, 800);
-        }, 4000);
+    });
         return () => clearInterval(interval);
     });
 
@@ -319,8 +309,8 @@
 
 <div class="write-page">
     <div class="inspiration-tape" role="status" aria-label="Writing inspiration">
-        <div class="ticker-content" class:sliding>
-            <span class="ticker-item">✍️ {quotes[currentQuote]}</span>
+        <div class="ticker-marquee">
+            <div class="ticker-track">{#each [...quotes, ...quotes] as quote}<span class="ticker-item">✍️ {quote}</span>{/each}</div>
         </div>
     </div>
     {#if !data.user}
@@ -621,10 +611,14 @@
 {/if}
 
 <style>
-    .inspiration-tape { background: var(--surface); border-bottom: 1px solid var(--border); overflow: hidden; white-space: nowrap; padding: 0.6rem 1.5rem; margin-bottom: 1rem; border-radius: 8px; text-align: center; }
-    .inspiration-tape .ticker-content { display: inline-block; transition: transform 0.8s ease, opacity 0.4s ease; }
-    .inspiration-tape .ticker-content.sliding { transform: translateX(-100%); opacity: 0; }
-    .inspiration-tape .ticker-item { font-size: 0.85rem; color: var(--muted); font-style: italic; padding: 0 1rem; }
+    .inspiration-tape { background: var(--surface); border-bottom: 1px solid var(--border); overflow: hidden; white-space: nowrap; padding: 0.6rem 0; margin-bottom: 1rem; border-radius: 8px; }
+    .ticker-marquee { overflow: hidden; }
+    .ticker-track { display: inline-block; animation: marquee 60s linear infinite; }
+    .ticker-item { font-size: 0.85rem; color: var(--muted); font-style: italic; padding: 0 3rem; }
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
     .write-page {
         max-width: 1100px;
         margin: 0 auto;
