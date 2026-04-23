@@ -195,7 +195,9 @@
             document.exitFullscreen().then(() => isFullscreen = false);
         }
     }
-    document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
+    onMount(() => {
+        document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
+    });
     let mapInstance = $state(null);
 
     // Haversine
