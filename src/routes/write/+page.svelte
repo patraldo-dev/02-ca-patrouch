@@ -611,7 +611,7 @@
 <style>
     .inspiration-tape { background: var(--surface); border-bottom: 1px solid var(--border); overflow: hidden; white-space: nowrap; padding: 0.6rem 0; margin-bottom: 1rem; border-radius: 8px; }
     .ticker-marquee { overflow: hidden; }
-    .ticker-track { display: inline-block; animation: marquee 60s linear infinite; }
+    .ticker-track { display: inline-block; animation: marquee 180s linear infinite; }
     .ticker-item { font-size: 0.85rem; color: var(--muted); font-style: italic; padding: 0 3rem; }
     @keyframes marquee {
         0% { transform: translateX(0); }
