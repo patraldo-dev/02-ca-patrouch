@@ -2,6 +2,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { drizzle } from 'drizzle-orm/d1';
+import { authSchema } from '$db/auth-schema.js';
 
 /**
  * Create a Better Auth instance per-request using D1 binding from env.
@@ -15,6 +16,7 @@ export function createAuth(env) {
     baseURL: 'https://patrouch.ca',
     database: drizzleAdapter(db, {
       provider: 'sqlite',
+      schema: authSchema,
     }),
     emailAndPassword: {
       enabled: true,
