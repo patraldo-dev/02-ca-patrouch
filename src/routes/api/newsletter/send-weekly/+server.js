@@ -6,8 +6,9 @@ import { json } from '@sveltejs/kit';
 import { sendDailyPromptEmail } from '$lib/server/mailgun.js';
 
 export async function POST({ request, platform }) {
+    const cronSecret = platform?.env?.CRON_SECRET;
     const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer sappho-cron-2026-secret`) {
+    if (!authHeader || !cronSecret || authHeader !== `Bearer ${cronSecret}`) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
