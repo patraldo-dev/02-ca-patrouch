@@ -310,6 +310,8 @@
         </div>
         <div class="avatar-row">
             <p class="user-profile-avatar-label">{$t('profile.user.avatar_label')}</p>
+        </div>
+        <div class="avatar-row">
             <button class="btn-upload-avatar" onclick={() => avatarInput.click()} disabled={uploadingAvatar}>
                 {uploadingAvatar ? '⏳' : '📷'} {uploadingAvatar ? 'Uploading...' : 'Upload'}
             </button>
