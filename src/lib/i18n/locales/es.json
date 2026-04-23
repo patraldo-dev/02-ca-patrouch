@@ -898,5 +898,12 @@
   "taller.dictation_desc": "Escucha y escribe — mejora tu ortografía y gramática en inglés, español y francés. Próximamente.",
   "profile.privacy_title": "Privacidad",
   "profile.booty_keywords": "Palabras clave de Bottle Booty",
-  "profile.date_locale": "es-MX"
+  "profile.date_locale": "es-MX",
+  "profile.user.avatar_err_no_file": "No se seleccionó ninguna imagen",
+  "profile.user.avatar_err_format": "Solo se permiten imágenes JPG, PNG o WebP",
+  "profile.user.avatar_err_size": "La imagen debe ser menor a 2MB",
+  "profile.user.avatar_err_moderation": "La imagen fue rechazada por el sistema de moderación",
+  "profile.user.avatar_err_unavailable": "Servicio de imágenes no disponible",
+  "profile.user.avatar_err_generic": "Error al subir la imagen. Intenta de nuevo.",
+  "profile.user.avatar_err_network": "Error de conexión. Verifica tu internet."
 }

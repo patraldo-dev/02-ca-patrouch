@@ -898,5 +898,16 @@
   "taller.dictation_desc": "Listen and write — improve your spelling and grammar in English, Spanish, and French. Coming soon.",
   "profile.privacy_title": "Privacy",
   "profile.booty_keywords": "Bottle Booty Keywords",
-  "profile.date_locale": "en-US"
+  "profile.date_locale": "en-US",
+  "profile.user.avatar_err_no_file": "No image selected",
+  "profile.user.avatar_err_format": "Only JPG, PNG, or WebP images are allowed",
+  "profile.user.avatar_err_size": "Image must be under 2MB",
+  "profile.user.avatar_err_moderation": "Image rejected by content moderation",
+  "profile.user.avatar_err_unavailable": "Image service not available",
+  "profile.user.avatar_err_generic": "Failed to upload image. Please try again.",
+  "profile.user.avatar_err_network": "Connection error. Check your internet.",
+  "crop.title": "Crop your avatar",
+  "crop.apply": "Apply",
+  "crop.cancel": "Cancel",
+  "crop.drag_hint": "Drag to reposition"
 }

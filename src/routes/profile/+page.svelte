@@ -35,6 +35,12 @@
     let uploadingAvatar = $state(false);
     let avatarInput;
     let savingProfile = $state(false);
+    let showCropModal = $state(false);
+    let cropImageSrc = $state('');
+    let cropImgEl;
+    let cropDrag = $state({ active: false, startX: 0, startY: 0, imgX: 0, imgY: 0 });
+    let cropPreviewUrl = $state('');
+    let pendingBlob = $state(null);
     let toastMessage = $state('');
     let toastTimeout = $state(null);
 
@@ -44,23 +50,102 @@
         toastTimeout = setTimeout(() => { toastMessage = ''; }, 3000);
     }
 
-    async function handleAvatarSelect(e) {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    function getUploadError(res, errBody) {
+        const msg = errBody?.error || '';
+        if (res.status === 400) {
+            if (msg.includes('No file')) return $t('profile.user.avatar_err_no_file');
+            if (msg.includes('Only') || msg.includes('jpg') || msg.includes('png') || msg.includes('webp') || msg.includes('format')) return $t('profile.user.avatar_err_format');
+            if (msg.includes('2MB') || msg.includes('under 2') || msg.includes('too large') || msg.includes('size')) return $t('profile.user.avatar_err_size');
+            if (msg.includes('moderation') || msg.includes('content') || msg.includes('rejected')) return $t('profile.user.avatar_err_moderation');
+        }
+        if (res.status === 503) return $t('profile.user.avatar_err_unavailable');
+        return $t('profile.user.avatar_err_generic');
+    }
+
+    function openCropModal(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            cropImageSrc = e.target.result;
+            cropDrag = { active: false, startX: 0, startY: 0, imgX: 0, imgY: 0 };
+            cropPreviewUrl = '';
+            pendingBlob = null;
+            showCropModal = true;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function applyCrop() {
+        const img = cropImgEl;
+        if (!img) return;
+        const size = 400;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scaleX = img.naturalWidth / img.clientWidth;
+        const scaleY = img.naturalHeight / img.clientHeight;
+        const containerSize = 280;
+        const imgW = img.clientWidth;
+        const imgH = img.clientHeight;
+        const sx = (containerSize / 2 - cropDrag.imgX) * scaleX;
+        const sy = (containerSize / 2 - cropDrag.imgY) * scaleY;
+        const sSize = containerSize * scaleX;
+        ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, size, size);
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/webp', 0.85));
+        pendingBlob = blob;
+        cropPreviewUrl = URL.createObjectURL(blob);
+    }
+
+    async function confirmCrop() {
+        if (!pendingBlob) return;
+        showCropModal = false;
+        await uploadBlob(pendingBlob);
+        if (cropPreviewUrl) URL.revokeObjectURL(cropPreviewUrl);
+        cropPreviewUrl = '';
+        pendingBlob = null;
+    }
+
+    function cancelCrop() {
+        showCropModal = false;
+        if (cropPreviewUrl) URL.revokeObjectURL(cropPreviewUrl);
+        cropImageSrc = '';
+        cropPreviewUrl = '';
+        pendingBlob = null;
+    }
+
+    async function uploadBlob(blob) {
         uploadingAvatar = true;
         try {
             const fd = new FormData();
-            fd.append('avatar', file);
+            fd.append('avatar', blob, 'avatar.webp');
             const res = await fetch('/api/user/avatar', { method: 'POST', body: fd });
             if (res.ok) {
                 const data = await res.json();
                 avatarUrl = data.url;
             } else {
-                const err = await res.json();
-                flash(err.error || 'Upload failed', true);
+                let errBody;
+                try { errBody = await res.json(); } catch {}
+                flash(getUploadError(res, errBody), true);
             }
-        } catch { flash('Network error', true); }
+        } catch { flash($t('profile.user.avatar_err_network'), true); }
         finally { uploadingAvatar = false; avatarInput.value = ''; }
+    }
+
+    async function handleAvatarSelect(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        openCropModal(file);
+    }
+
+    function onCropPointerDown(e) {
+        cropDrag = { ...cropDrag, active: true, startX: e.clientX - cropDrag.imgX, startY: e.clientY - cropDrag.imgY };
+    }
+    function onCropPointerMove(e) {
+        if (!cropDrag.active) return;
+        cropDrag = { ...cropDrag, imgX: e.clientX - cropDrag.startX, imgY: e.clientY - cropDrag.startY };
+    }
+    function onCropPointerUp() {
+        cropDrag = { ...cropDrag, active: false };
     }
 
     async function saveUserProfile() {
@@ -360,6 +445,33 @@
     {/if}
 </div>
 
+{#if showCropModal}
+<div class="crop-overlay" on:pointerup={onCropPointerUp} on:pointerleave={onCropPointerUp}>
+    <div class="crop-modal">
+        <h2 class="crop-title">{$t('crop.title')}</h2>
+        <p class="crop-hint">{$t('crop.drag_hint')}</p>
+        <div class="crop-area" on:pointerdown={onCropPointerDown} on:pointermove={onCropPointerMove}>
+            <div class="crop-viewport" style="transform: translate({cropDrag.imgX}px, {cropDrag.imgY}px);">
+                {#if cropImageSrc}
+                    <!-- svelte-ignore a11y_img_alt_missing -->
+                    <img bind:this={cropImgEl} src={cropImageSrc} draggable="false" />
+                {/if}
+            </div>
+            <div class="crop-ring"></div>
+        </div>
+        {#if cropPreviewUrl}
+            <div class="crop-preview-row">
+                <img src={cropPreviewUrl} alt="Preview" class="crop-preview-circle" />
+                <button class="crop-confirm" onclick={confirmCrop}>{$t('crop.apply')}</button>
+            </div>
+        {:else}
+            <button class="crop-apply-btn" onclick={applyCrop}>{$t('crop.apply')}</button>
+        {/if}
+        <button class="crop-cancel-btn" onclick={cancelCrop}>{$t('crop.cancel')}</button>
+    </div>
+</div>
+{/if}
+
 <style>
     .profile-page {
         max-width: 600px;
@@ -627,4 +739,44 @@
     .avatar-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
     .stats-tab { display: flex; flex-direction: column; gap: 1.5rem; }
     .stats-empty { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2rem; }
+    .crop-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .crop-modal {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+        padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+        max-width: 360px; width: 90vw;
+    }
+    .crop-title { font-size: 1.1rem; color: var(--text); margin: 0; font-weight: 400; }
+    .crop-hint { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
+    .crop-area {
+        width: 280px; height: 280px; border-radius: 50%; overflow: hidden;
+        position: relative; cursor: grab; touch-action: none; background: var(--bg);
+    }
+    .crop-area:active { cursor: grabbing; }
+    .crop-viewport {
+        position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+        will-change: transform;
+    }
+    .crop-viewport img {
+        max-width: none; width: 280px; height: 280px; object-fit: cover; pointer-events: none; user-select: none;
+    }
+    .crop-ring {
+        position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent); pointer-events: none;
+    }
+    .crop-apply-btn, .crop-confirm {
+        padding: 0.5rem 2rem; background: var(--accent); color: var(--bg); border: none;
+        border-radius: 8px; font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+        cursor: pointer; transition: opacity 0.15s;
+    }
+    .crop-apply-btn:hover, .crop-confirm:hover { opacity: 0.9; }
+    .crop-cancel-btn {
+        padding: 0.4rem 1.5rem; background: none; border: 1px solid var(--border); border-radius: 8px;
+        color: var(--text-dim); font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;
+        transition: all 0.15s;
+    }
+    .crop-cancel-btn:hover { border-color: var(--text-muted); color: var(--text); }
+    .crop-preview-row { display: flex; align-items: center; gap: 1rem; }
+    .crop-preview-circle { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
 </style>

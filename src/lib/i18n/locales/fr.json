@@ -898,5 +898,16 @@
   "taller.dictation_desc": "Écoutez et écrivez — améliorez votre orthographe et grammaire en anglais, espagnol et français. Bientôt disponible.",
   "profile.privacy_title": "Confidentialité",
   "profile.booty_keywords": "Mots-clés Bottle Booty",
-  "profile.date_locale": "fr-FR"
+  "profile.date_locale": "fr-FR",
+  "profile.user.avatar_err_no_file": "Aucune image sélectionnée",
+  "profile.user.avatar_err_format": "Seules les images JPG, PNG ou WebP sont autorisées",
+  "profile.user.avatar_err_size": "L'image doit être inférieure à 2 Mo",
+  "profile.user.avatar_err_moderation": "Image rejetée par la modération de contenu",
+  "profile.user.avatar_err_unavailable": "Service d'images indisponible",
+  "profile.user.avatar_err_generic": "Échec du téléchargement. Veuillez réessayer.",
+  "profile.user.avatar_err_network": "Erreur de connexion. Vérifiez votre internet.",
+  "crop.title": "Recadrez votre avatar",
+  "crop.apply": "Appliquer",
+  "crop.cancel": "Annuler",
+  "crop.drag_hint": "Glissez pour repositionner"
 }
