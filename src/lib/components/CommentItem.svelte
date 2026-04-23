@@ -209,6 +209,7 @@
         height: 100%;
         object-fit: cover;
     }
+    .comment-avatar {
         color: var(--accent);
     }
     .comment-body { flex: 1; min-width: 0; }
