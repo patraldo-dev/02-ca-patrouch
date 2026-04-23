@@ -9,6 +9,14 @@
     let email = $state('');
     let password = $state('');
     let confirmPassword = $state('');
+
+    function generatePassword() {
+        const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%';
+        let pwd = '';
+        for (let i = 0; i < 14; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+        password = pwd;
+        confirmPassword = pwd;
+    }
     let error = $state('');
     let success = $state('');
     let isLoading = $state(false);
@@ -97,8 +105,9 @@
 
         <div>
             <label for="password">Password</label>
-            <input
-id="password"
+            <div class="password-row">
+                <input
+    id="password"
     bind:value={password}
     type="password"
     placeholder="Create a password"
@@ -106,7 +115,9 @@ id="password"
     minlength="8"
     autocomplete="new-password"  
     disabled={isLoading}
-            />
+                />
+                <button type="button" class="btn-generate" onclick={generatePassword} disabled={isLoading}>🎲</button>
+            </div>
         </div>
 
         <div>
@@ -242,4 +253,8 @@ id="confirmPassword"
         margin-bottom: 1rem;
         font-size: 0.9rem;
     }
+    .password-row { display: flex; gap: 0.5rem; }
+    .password-row input { flex: 1; }
+    .btn-generate { background: var(--surface, #141417); border: 2px solid var(--border); color: var(--text); padding: 0 0.75rem; border-radius: 8px; cursor: pointer; font-size: 1.1rem; }
+    .btn-generate:hover { border-color: var(--accent, #c9a87c); }
 </style>
