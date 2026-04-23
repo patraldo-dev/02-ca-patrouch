@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { g as getAgoraLeaderboard, a as getChallengeEntries, b as getActiveChallenges, d as getCurrentWriterOfTheWeek, e as getAllBadgesWithStatus, f as getWritingHeatmapData } from "../../../../chunks/engagement.js";
+import { g as getAgoraLeaderboard, a as getChallengeEntries, b as getActiveChallenges, c as getCurrentWriterOfTheWeek, d as getAllBadgesWithStatus, e as getWritingHeatmapData } from "../../../../chunks/engagement.js";
 async function GET({ url, platform, locals }) {
   try {
     const db = platform?.env?.DB_book;

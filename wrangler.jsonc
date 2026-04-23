@@ -21,7 +21,9 @@
 	"vars": {
                 "MAILGUN_DOMAIN": "patrouch.ca",
 	       	"CONTACT_EMAIL": "contact@patrouch.ca",
-	       	"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca"
+	       	"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca",
+		"GOOGLE_CLIENT_ID": "935787532460-ontb8nl83lvk1uce52tige0ceidnm62d.apps.googleusercontent.com",
+                "GITHUB_CLIENT_ID": "Ov23liTXqoPm2WmALAWR"
         },
 
         "d1_databases": [

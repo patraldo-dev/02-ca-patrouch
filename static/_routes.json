@@ -1,5 +1,0 @@
-{
-  "version": 1,
-  "include": ["/api/*"],
-  "exclude": ["**/*.{js,css,png,jpg,svg,woff,woff2,ico,webmanifest,avif,webp,mp3,mp4,ogg,wav}"]
-}

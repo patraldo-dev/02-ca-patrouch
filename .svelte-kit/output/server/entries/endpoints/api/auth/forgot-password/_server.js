@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { s as sendMailgunEmail } from "../../../../../chunks/email.js";
-import { g as generateSessionToken } from "../../../../../chunks/utils3.js";
+import { g as generateSessionToken } from "../../../../../chunks/utils.js";
 async function POST({ request, platform }) {
   const db = platform?.env?.DB_book;
   if (!db) {

@@ -1,25 +1,37 @@
-import { d as attr, e as escape_html, c as store_get, u as unsubscribe_stores, a as pop, p as push } from "../../../../chunks/index2.js";
-import { t } from "../../../../chunks/index3.js";
-function _page($$payload, $$props) {
-  push();
-  var $$store_subs;
-  let isAdult = false;
-  let username = "";
-  let email = "";
-  let password = "";
-  let confirmPassword = "";
-  let isLoading = false;
-  $$payload.out.push(`<main class="svelte-1w0wxd8"><svg class="signup-icon svelte-1w0wxd8" width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="28" r="26" stroke="#c9a87c" stroke-width="1" opacity="0.3"></circle><path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"></path><path d="M22 16 L26 28" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"></path><circle cx="26" cy="28" r="1.5" fill="#c9a87c"></circle><path d="M26 28 Q30 32 34 26" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"></path></svg> <h1>Create an Account</h1> `);
-  {
-    $$payload.out.push("<!--[!-->");
-  }
-  $$payload.out.push(`<!--]--> <form class="svelte-1w0wxd8"><div><label for="username" class="svelte-1w0wxd8">Username</label> <input id="username"${attr("value", username)} type="text" required placeholder="Choose a username" minlength="3" maxlength="32" class="svelte-1w0wxd8"/></div> <div><label for="email" class="svelte-1w0wxd8">Email</label> <input id="email"${attr("value", email)} type="email" required placeholder="your@email.com" class="svelte-1w0wxd8"/></div> <div><label for="password" class="svelte-1w0wxd8">Password</label> <input id="password"${attr("value", password)} type="password" placeholder="Create a password" required minlength="8" autocomplete="new-password"${attr("disabled", isLoading, true)} class="svelte-1w0wxd8"/></div> <div><label for="confirmPassword" class="svelte-1w0wxd8">Confirm Password</label> <input id="confirmPassword"${attr("value", confirmPassword)} type="password" placeholder="Repeat your password" required autocomplete="new-password"${attr("disabled", isLoading, true)} class="svelte-1w0wxd8"/></div> <div class="checkbox-group svelte-1w0wxd8"><input type="checkbox" id="adult"${attr("checked", isAdult, true)} required${attr("disabled", isLoading, true)} class="svelte-1w0wxd8"/> <label for="adult" class="svelte-1w0wxd8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.adult_confirm"))}</label></div> `);
-  {
-    $$payload.out.push("<!--[!-->");
-  }
-  $$payload.out.push(`<!--]--> <button type="submit"${attr("disabled", isLoading, true)} class="svelte-1w0wxd8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.button"))}</button></form> <p style="margin-top: 1rem;">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.have_account"))} <a href="/login" class="svelte-1w0wxd8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.login_link"))}</a></p></main>`);
-  if ($$store_subs) unsubscribe_stores($$store_subs);
-  pop();
+import { e as escape_html, s as store_get, b as attr, u as unsubscribe_stores } from "../../../../chunks/renderer.js";
+import { t } from "../../../../chunks/index2.js";
+import "../../../../chunks/auth-client.js";
+function _page($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    var $$store_subs;
+    let isAdult = false;
+    let username = "";
+    let email = "";
+    let password = "";
+    let confirmPassword = "";
+    function generatePassword() {
+      const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
+      let pwd = "";
+      for (let i = 0; i < 14; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+      return pwd;
+    }
+    onMount(() => {
+      const suggested = generatePassword();
+      password = suggested;
+      confirmPassword = suggested;
+    });
+    let isLoading = false;
+    $$renderer2.push(`<main class="svelte-1w0wxd8"><svg class="signup-icon svelte-1w0wxd8" width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="28" r="26" stroke="#c9a87c" stroke-width="1" opacity="0.3"></circle><path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"></path><path d="M22 16 L26 28" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"></path><circle cx="26" cy="28" r="1.5" fill="#c9a87c"></circle><path d="M26 28 Q30 32 34 26" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"></path></svg> <h1>Create an Account</h1> `);
+    {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> <div class="oauth-section svelte-1w0wxd8"><p class="oauth-divider svelte-1w0wxd8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.or_continue_with") || "or continue with")}</p> <div class="oauth-buttons svelte-1w0wxd8"><button type="button" class="btn-oauth btn-google svelte-1w0wxd8"><svg width="18" height="18" viewBox="0 0 24 24" class="svelte-1w0wxd8"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"></path><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path></svg> Google</button> <button type="button" class="btn-oauth btn-github svelte-1w0wxd8"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg> GitHub</button></div></div> <form class="svelte-1w0wxd8"><div><label for="username" class="svelte-1w0wxd8">Username</label> <input id="username"${attr("value", username)} type="text" required="" placeholder="Choose a username" minlength="3" maxlength="32" class="svelte-1w0wxd8"/></div> <div><label for="email" class="svelte-1w0wxd8">Email</label> <input id="email"${attr("value", email)} type="email" required="" placeholder="your@email.com" class="svelte-1w0wxd8"/></div> <div><label for="password" class="svelte-1w0wxd8">Password</label> <div class="password-row svelte-1w0wxd8"><input id="password"${attr("value", password)} type="password" placeholder="Create a password" required="" minlength="8" autocomplete="new-password"${attr("disabled", isLoading, true)} class="svelte-1w0wxd8"/> <button type="button" class="btn-generate svelte-1w0wxd8"${attr("disabled", isLoading, true)}>🔄</button></div></div> <div><label for="confirmPassword" class="svelte-1w0wxd8">Confirm Password</label> <input id="confirmPassword"${attr("value", confirmPassword)} type="password" placeholder="Repeat your password" required="" autocomplete="new-password"${attr("disabled", isLoading, true)} class="svelte-1w0wxd8"/></div> <div class="checkbox-group svelte-1w0wxd8"><input type="checkbox" id="adult"${attr("checked", isAdult, true)} required=""${attr("disabled", isLoading, true)} class="svelte-1w0wxd8"/> <label for="adult" class="svelte-1w0wxd8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.adult_confirm"))}</label></div> `);
+    {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> <button type="submit"${attr("disabled", isLoading, true)} class="svelte-1w0wxd8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.button"))}</button></form> <p style="margin-top: 1rem;">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.have_account"))} <a href="/login" class="svelte-1w0wxd8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("signup.login_link"))}</a></p></main>`);
+    if ($$store_subs) unsubscribe_stores($$store_subs);
+  });
 }
 export {
   _page as default

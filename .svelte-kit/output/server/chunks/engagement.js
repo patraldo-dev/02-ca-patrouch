@@ -156,9 +156,9 @@ async function getChallengeEntries(db, challengeId) {
 export {
   getChallengeEntries as a,
   getActiveChallenges as b,
-  checkAndUnlockBadges as c,
-  getCurrentWriterOfTheWeek as d,
-  getAllBadgesWithStatus as e,
-  getWritingHeatmapData as f,
+  getCurrentWriterOfTheWeek as c,
+  getAllBadgesWithStatus as d,
+  getWritingHeatmapData as e,
+  checkAndUnlockBadges as f,
   getAgoraLeaderboard as g
 };

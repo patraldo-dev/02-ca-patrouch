@@ -7,10 +7,10 @@ function __memo(fn) {
 return {
 	appDir: "_app",
 	appPath: "_app",
-	assets: new Set([".assetsignore","favicon.ico","robots.txt"]),
-	mimeTypes: {".txt":"text/plain"},
+	assets: new Set([".assetsignore","_routes.json","favicon.ico","robots.txt"]),
+	mimeTypes: {".json":"application/json",".txt":"text/plain"},
 	_: {
-		client: {start:"_app/immutable/entry/start.dQnphZQ9.js",app:"_app/immutable/entry/app.JVNoIJV3.js",imports:["_app/immutable/entry/start.dQnphZQ9.js","_app/immutable/chunks/S4Hihn2m.js","_app/immutable/chunks/BVz-wF_9.js","_app/immutable/chunks/7EQ61Un6.js","_app/immutable/chunks/CC5H2EQ_.js","_app/immutable/chunks/DVpYTlYi.js","_app/immutable/chunks/C0IeHCTK.js","_app/immutable/chunks/CuzFCTBL.js","_app/immutable/entry/app.JVNoIJV3.js","_app/immutable/chunks/D9Z9MdNV.js","_app/immutable/chunks/7EQ61Un6.js","_app/immutable/chunks/CC5H2EQ_.js","_app/immutable/chunks/DVpYTlYi.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/BVz-wF_9.js","_app/immutable/chunks/C0IeHCTK.js","_app/immutable/chunks/D8ru06rp.js","_app/immutable/chunks/yBlTv31V.js","_app/immutable/chunks/CU8g8LG6.js","_app/immutable/chunks/BrvIvy0u.js","_app/immutable/chunks/CuzFCTBL.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.BXEaBPJB.js",app:"_app/immutable/entry/app.DLGvaCaL.js",imports:["_app/immutable/entry/start.BXEaBPJB.js","_app/immutable/chunks/CgUAF2Mz.js","_app/immutable/chunks/BMGDZvjk.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/CU8NK243.js","_app/immutable/entry/app.DLGvaCaL.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/vYeeBVxZ.js","_app/immutable/chunks/C91UaUCV.js","_app/immutable/chunks/BekfPKSE.js","_app/immutable/chunks/DM3HuRQe.js","_app/immutable/chunks/Cai8yQTP.js","_app/immutable/chunks/CU8NK243.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('../output/server/nodes/0.js')),
 			__memo(() => import('../output/server/nodes/1.js')),
@@ -262,6 +262,13 @@ return {
 				params: [],
 				page: null,
 				endpoint: __memo(() => import('../output/server/entries/endpoints/api/auth/signup/_server.js'))
+			},
+			{
+				id: "/api/auth/[...all]",
+				pattern: /^\/api\/auth(?:\/([^]*))?\/?$/,
+				params: [{"name":"all","optional":false,"rest":true,"chained":true}],
+				page: null,
+				endpoint: __memo(() => import('../output/server/entries/endpoints/api/auth/_...all_/_server.js'))
 			},
 			{
 				id: "/api/books",

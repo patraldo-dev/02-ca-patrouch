@@ -1,20 +1,22 @@
-import { k as head, e as escape_html } from "../../../chunks/index2.js";
-function _page($$payload) {
+import { h as head, e as escape_html } from "../../../chunks/renderer.js";
+function _page($$renderer) {
   let input = "¡Hola, quién eres? Café, año, música";
-  head($$payload, ($$payload2) => {
-    $$payload2.title = `<title>UTF-8 Test — Ex Libris</title>`;
-    $$payload2.out.push(`<meta charset="utf-8"/>`);
+  head("1c6m2lj", $$renderer, ($$renderer2) => {
+    $$renderer2.title(($$renderer3) => {
+      $$renderer3.push(`<title>UTF-8 Test — Ex Libris</title>`);
+    });
+    $$renderer2.push(`<meta charset="utf-8"/>`);
   });
-  $$payload.out.push(`<div class="container svelte-1c6m2lj"><h1 class="svelte-1c6m2lj">UTF-8 Internationalization Test</h1> <form accept-charset="UTF-8"><textarea rows="4" placeholder="Type text with diacritics..." class="svelte-1c6m2lj">`);
+  $$renderer.push(`<div class="container svelte-1c6m2lj"><h1 class="svelte-1c6m2lj">UTF-8 Internationalization Test</h1> <form accept-charset="UTF-8"><textarea rows="4" placeholder="Type text with diacritics..." class="svelte-1c6m2lj">`);
   const $$body = escape_html(input);
   if ($$body) {
-    $$payload.out.push(`${$$body}`);
+    $$renderer.push(`${$$body}`);
   }
-  $$payload.out.push(`</textarea> <button type="button" class="svelte-1c6m2lj">Test UTF-8</button></form> `);
+  $$renderer.push(`</textarea> <button type="button" class="svelte-1c6m2lj">Test UTF-8</button></form> `);
   {
-    $$payload.out.push("<!--[!-->");
+    $$renderer.push("<!--[-1-->");
   }
-  $$payload.out.push(`<!--]--></div>`);
+  $$renderer.push(`<!--]--></div>`);
 }
 export {
   _page as default

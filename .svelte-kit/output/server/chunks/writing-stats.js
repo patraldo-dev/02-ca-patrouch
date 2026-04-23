@@ -1,4 +1,4 @@
-import { c as checkAndUnlockBadges } from "./engagement.js";
+import { f as checkAndUnlockBadges } from "./engagement.js";
 const CATEGORIES = [
   "fiction",
   "poetry",

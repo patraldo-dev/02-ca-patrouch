@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { v as verifyPassword } from "../../../../../chunks/auth-helpers.js";
-import { g as generateSessionToken } from "../../../../../chunks/utils3.js";
+import { g as generateSessionToken } from "../../../../../chunks/utils.js";
 async function POST({ request, platform }) {
   const db = platform?.env?.DB_book;
   if (!db) return json({ error: "DB unavailable" }, { status: 500 });

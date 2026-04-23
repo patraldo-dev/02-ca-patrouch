@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit";
-import { f as getWritingHeatmapData, d as getCurrentWriterOfTheWeek, e as getAllBadgesWithStatus } from "../../../chunks/engagement.js";
+import { e as getWritingHeatmapData, c as getCurrentWriterOfTheWeek, d as getAllBadgesWithStatus } from "../../../chunks/engagement.js";
 async function load({ locals }) {
   const user = locals?.user;
   if (!user) throw redirect(302, "/login");

@@ -1,6 +1,6 @@
 import "@sveltejs/kit";
 import { c as getTodayData } from "../../../chunks/writing-stats.js";
-import { f as getWritingHeatmapData, d as getCurrentWriterOfTheWeek, e as getAllBadgesWithStatus } from "../../../chunks/engagement.js";
+import { e as getWritingHeatmapData, c as getCurrentWriterOfTheWeek, d as getAllBadgesWithStatus } from "../../../chunks/engagement.js";
 import { f as fr, e as es, a as en } from "../../../chunks/fr.js";
 import { g as getDailyArtwork } from "../../../chunks/art-prompt.js";
 const locales = { en, es, fr };
