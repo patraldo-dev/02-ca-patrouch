@@ -3,6 +3,7 @@
     import { t } from '$lib/i18n';
     import { get } from 'svelte/store';
     import { goto } from '$app/navigation';
+    import { avatarVariant } from '$lib/utils.js';
     import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
     import WordMilestones from '$lib/components/WordMilestones.svelte';
     import BadgeTrophyCase from '$lib/components/BadgeTrophyCase.svelte';
@@ -30,6 +31,7 @@
     let userDisplayName = $state(data.profile?.display_name || '');
     let userBio = $state(data.profile?.bio || '');
     let avatarUrl = $state(data.profile?.avatar_url || null);
+    let avatarDisplayUrl = $derived(avatarVariant(avatarUrl, 'avatar200'));
     let uploadingAvatar = $state(false);
     let avatarInput;
     let savingProfile = $state(false);
@@ -208,7 +210,7 @@
     <section class="user-profile-section">
         <div class="user-profile-avatar-large">
             {#if avatarUrl}
-                <img src={avatarUrl} alt="Avatar" class="avatar-img" />
+                <img src={avatarDisplayUrl} alt="Avatar" class="avatar-img" />
             {:else}
                 {(userDisplayName || data.user?.username || '?')[0].toUpperCase()}
             {/if}

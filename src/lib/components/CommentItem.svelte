@@ -2,6 +2,7 @@
     import { t } from '$lib/i18n';
     import { marked } from 'marked';
     import ReplyForm from './ReplyForm.svelte';
+    import { avatarVariant } from '$lib/utils.js';
 
     let {
         comment,
@@ -89,6 +90,7 @@
         showReplyForm = false;
     }
 
+    let avatarUrl = $derived(avatarVariant(comment.avatar_url || comment.image, 'avatar100'));
     let avatar = $derived((comment.username || '?')[0].toUpperCase());
 </script>
 
@@ -98,7 +100,7 @@
     </div>
 {:else}
     <div class="comment-item" class:is-featured={comment.is_featured}>
-        <div class="comment-avatar">{avatar}</div>
+        <div class="comment-avatar">{#if avatarUrl}<img src={avatarUrl} alt="" />{:else}{avatar}{/if}</div>
         <div class="comment-body">
             <div class="comment-header">
                 <span class="comment-username">{comment.username}</span>
@@ -200,6 +202,13 @@
         font-family: var(--font-heading);
         font-size: 0.85rem;
         font-weight: 600;
+        overflow: hidden;
+    }
+    .comment-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
         color: var(--accent);
     }
     .comment-body { flex: 1; min-width: 0; }

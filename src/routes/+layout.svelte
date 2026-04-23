@@ -13,6 +13,7 @@
     import LanguageSwitcherDesktop from '$lib/components/LanguageSwitcherDesktop.svelte';
     import LanguageSwitcherMobile from '$lib/components/LanguageSwitcherMobile.svelte';
     import { getTheme, setTheme } from '$lib/theme.js';
+    import { avatarVariant } from '$lib/utils.js';
 
     // Track page views on navigation
     if (browser) {
@@ -223,7 +224,7 @@
                         {#if data.user?.role === 'admin'}
                         <div class="profile-switcher">
                             <button class="profile-trigger" onclick={() => profilesOpen = !profilesOpen}>
-                                <span class="profile-avatar">{(activeDisplayName || '?')[0].toUpperCase()}</span>
+                                <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
                                 <span class="profile-name">{activeDisplayName}</span>
                                 <span class="admin-badge">admin</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
@@ -249,7 +250,7 @@
                         </div>
                         {:else}
                         <a href="/profile" class="profile-trigger">
-                            <span class="profile-avatar">{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}</span>
+                            <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
                             <span class="profile-name">{data.user.display_name || data.user.username}</span>
                         </a>
                         {/if}
@@ -634,6 +635,12 @@
         justify-content: center;
         font-size: 0.75rem;
         font-weight: 700;
+        overflow: hidden;
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
     .profile-name {
         font-size: 0.8rem;

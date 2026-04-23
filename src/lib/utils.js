@@ -18,6 +18,11 @@ export function generateSessionToken() {
  * @param {string} str - The input string to slugify
  * @returns {string} The slugified string with diacritics preserved
  */
+export function avatarVariant(avatarUrl, variant = 'avatar200') {
+    if (!avatarUrl) return null;
+    return avatarUrl.replace(/\/avatar\d+$/, `/${variant}`);
+}
+
 export function slugifyDiacritics(str) {
     return str
         .normalize('NFC')
