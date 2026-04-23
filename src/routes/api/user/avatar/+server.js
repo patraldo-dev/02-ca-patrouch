@@ -1,7 +1,10 @@
+// POST /api/user/avatar — Upload avatar via Cloudflare Images REST API + AI moderation
 import { json } from '@sveltejs/kit';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const CF_ACCOUNT_ID = '477082f5c9678c608889bd8f03f7b807';
+const CF_IMAGES_UPLOAD_URL = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/images/v1`;
 
 export async function POST({ locals, request, platform }) {
     const user = locals?.user;
@@ -43,22 +46,60 @@ export async function POST({ locals, request, platform }) {
         // Fail open: allow image if moderation is unavailable
     }
 
-    // Generate key and store in R2
-    const ext = file.name.split('.').pop() || 'jpg';
-    const uuid = crypto.randomUUID();
-    const key = `avatars/${user.id}/${uuid}.${ext}`;
+    // Upload to Cloudflare Images via REST API
+    try {
+        const apiToken = platform?.env?.CLOUDFLARE_API_TOKEN;
+        if (!apiToken) {
+            return json({ error: 'Image service not configured' }, { status: 503 });
+        }
 
-    await platform.env.R2_ASSETS.put(key, imageBytes, {
-        httpMetadata: { contentType: file.type }
-    });
+        const ext = file.name.split('.').pop() || 'jpg';
+        const imageId = `avatar-${user.id}`;
 
-    const avatarUrl = `https://assets.patrouch.ca/${key}`;
+        // CF Images requires multipart/form-data with specific field names
+        const uploadForm = new FormData();
+        uploadForm.append('file', file, `${imageId}.${ext}`);
+        uploadForm.append('id', imageId);
+        uploadForm.append('metadata', JSON.stringify({
+            userId: user.id,
+            type: 'avatar',
+            uploadedAt: new Date().toISOString()
+        }));
+        // Require approval=false for auto-delivery
+        uploadForm.append('requireSignedURLs', 'false');
 
-    // Update user image in D1
-    const db = locals.db;
-    if (db) {
-        await db.prepare('UPDATE "user" SET image = ? WHERE id = ?').bind(avatarUrl, user.id).run();
+        const response = await fetch(CF_IMAGES_UPLOAD_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiToken}`,
+            },
+            body: uploadForm,
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            console.error('CF Images upload error:', JSON.stringify(result.errors));
+            return json({ error: 'Failed to upload image' }, { status: 500 });
+        }
+
+        // Get the variants — use the first variant URL
+        const imageData = result.result;
+        const variant = imageData?.variants?.[0];
+
+        // Fallback: construct delivery URL from image ID
+        const avatarUrl = variant || `https://imagedelivery.net/${CF_ACCOUNT_ID}/${imageId}/public`;
+
+        // Update user image in D1
+        const db = locals.db;
+        if (db) {
+            await db.prepare('UPDATE "user" SET image = ? WHERE id = ?').bind(avatarUrl, user.id).run();
+        }
+
+        return json({ url: avatarUrl, imageId: imageData?.id || imageId });
+
+    } catch (e) {
+        console.error('CF Images upload failed:', e.message);
+        return json({ error: 'Failed to upload image: ' + e.message }, { status: 500 });
     }
-
-    return json({ url: avatarUrl });
 }
