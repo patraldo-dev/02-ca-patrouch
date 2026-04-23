@@ -29,6 +29,9 @@
     // User profile form state
     let userDisplayName = $state(data.profile?.display_name || '');
     let userBio = $state(data.profile?.bio || '');
+    let avatarUrl = $state(data.profile?.avatar_url || null);
+    let uploadingAvatar = $state(false);
+    let avatarInput;
     let savingProfile = $state(false);
     let toastMessage = $state('');
     let toastTimeout = $state(null);
@@ -39,13 +42,34 @@
         toastTimeout = setTimeout(() => { toastMessage = ''; }, 3000);
     }
 
+    async function handleAvatarSelect(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        uploadingAvatar = true;
+        try {
+            const fd = new FormData();
+            fd.append('avatar', file);
+            const res = await fetch('/api/user/avatar', { method: 'POST', body: fd });
+            if (res.ok) {
+                const data = await res.json();
+                avatarUrl = data.url;
+            } else {
+                const err = await res.json();
+                flash(err.error || 'Upload failed', true);
+            }
+        } catch { flash('Network error', true); }
+        finally { uploadingAvatar = false; avatarInput.value = ''; }
+    }
+
     async function saveUserProfile() {
         savingProfile = true;
         try {
+            const payload = { display_name: userDisplayName, bio: userBio };
+            if (avatarUrl !== (data.profile?.avatar_url || null)) payload.avatar_url = avatarUrl;
             const res = await fetch('/api/user/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ display_name: userDisplayName, bio: userBio })
+                body: JSON.stringify(payload)
             });
             if (res.ok) {
                 showToast($t('profile.user.saved'));
@@ -183,9 +207,19 @@
     {#if activeTab === 'user-profile'}
     <section class="user-profile-section">
         <div class="user-profile-avatar-large">
-            {(userDisplayName || data.user?.username || '?')[0].toUpperCase()}
+            {#if avatarUrl}
+                <img src={avatarUrl} alt="Avatar" class="avatar-img" />
+            {:else}
+                {(userDisplayName || data.user?.username || '?')[0].toUpperCase()}
+            {/if}
         </div>
-        <p class="user-profile-avatar-label">{$t('profile.user.avatar_label')}</p>
+        <div class="avatar-row">
+            <p class="user-profile-avatar-label">{$t('profile.user.avatar_label')}</p>
+            <button class="btn-upload-avatar" onclick={() => avatarInput.click()} disabled={uploadingAvatar}>
+                {uploadingAvatar ? '⏳' : '📷'} {uploadingAvatar ? 'Uploading...' : 'Upload'}
+            </button>
+            <input bind:this={avatarInput} type="file" accept="image/jpeg,image/png,image/webp" onchange={handleAvatarSelect} class="hidden-input" />
+        </div>
         <div class="user-profile-form">
             <div class="form-group">
                 <label>{$t('profile.user.display_name')}</label>
@@ -579,6 +613,16 @@
     }
     .btn-save-user:hover { opacity: 0.9; }
     .btn-save-user:disabled { opacity: 0.4; cursor: not-allowed; }
+    .hidden-input { display: none; }
+    .avatar-row { display: flex; align-items: center; gap: 0.5rem; }
+    .btn-upload-avatar {
+        background: none; border: 1px solid var(--border); border-radius: 6px;
+        padding: 0.25rem 0.6rem; color: var(--text-dim); font-size: 0.75rem;
+        cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
+    }
+    .btn-upload-avatar:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-upload-avatar:disabled { opacity: 0.4; cursor: not-allowed; }
+    .avatar-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
     .stats-tab { display: flex; flex-direction: column; gap: 1.5rem; }
     .stats-empty { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2rem; }
 </style>
