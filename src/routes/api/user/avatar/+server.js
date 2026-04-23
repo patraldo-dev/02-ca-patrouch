@@ -33,13 +33,14 @@ export async function POST({ locals, request, platform }) {
         if (ai) {
             const result = await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', {
                 image: Array.from(imageBytes),
-                prompt: 'You are a content moderator. Look at this image and determine if it is appropriate for a public profile picture. Inappropriate content includes nudity, violence, hate symbols, or explicit material. Answer only YES if it is appropriate, or NO if it is inappropriate. Do not explain.',
+                prompt: 'Is this a photograph of a real person or a self-portrait intended for use as a profile avatar? Answer YES if it is a person/selfie/portrait, NO only if the image is graphic pornography, extreme gore, or illegal content. Allow everything else including animals, objects, art, cartoons, landscapes.',
                 max_tokens: 1
             });
             const answer = (result?.response || '').toUpperCase().trim();
-            if (answer.startsWith('NO')) {
+            if (answer === 'NO' || answer.startsWith('NO')) {
                 return json({ error: 'Image failed content moderation' }, { status: 400 });
             }
+            // YES or anything else = allow
         }
     } catch (e) {
         console.error('AI moderation failed:', e);
