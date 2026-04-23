@@ -46,7 +46,6 @@
             <div class="login-header">
                 <h1>{$t('auth.login.title')}</h1>
                 <p>{$t('auth.login.subtitle')}</p>
-                <p class="signup-link">{$t('auth.login.no_account')} <a href="/signup">{$t('auth.login.sign_up')}</a></p>
             </div>
             
             {#if error}
@@ -70,6 +69,13 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                     GitHub
                 </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span class="divider-line"></span>
+                <span class="divider-text">or</span>
+                <span class="divider-line"></span>
             </div>
 
             <form onsubmit={(e) => { e.preventDefault(); handleLogin(); }} class="login-form">
@@ -100,11 +106,6 @@
                 </div>
                 
                 <div class="form-options">
-                    <label class="checkbox-container">
-                        <input type="checkbox" />
-                        <span class="checkmark"></span>
-                        Remember me
-                    </label>
                     <a href="/forgot-password" class="forgot-link">{$t('auth.login.forgot')}</a>
                 </div>
                 
@@ -116,12 +117,10 @@
                     {/if}
                 </button>
             </form>
+
+            <p class="signup-link">{$t('auth.login.no_account')} <a href="/signup">{$t('auth.login.sign_up')}</a></p>
         </div>
     </div>
-
-    <a href="#footer" class="hero-scroll" aria-label="Scroll to subscribe">
-        <span class="scroll-line"></span>
-    </a>
 </div>
 
 <style>
@@ -155,42 +154,20 @@
     
     .login-header {
         text-align: center;
-        margin-bottom: 36px;
-    }
-    
-    .logo {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 0;
+        margin-bottom: 32px;
     }
     
     .login-header h1 {
         font-size: 31px;
         font-weight: 700;
         color: var(--text);
-        margin: 0 0 12px 0;
+        margin: 0 0 8px 0;
     }
     
     .login-header p {
         color: var(--text-dim);
-        margin: 0 0 0 0;
+        margin: 0;
         font-size: 16px;
-    }
-    
-    .signup-link {
-        color: var(--text-dim);
-        font-size: 14px;
-        margin-top: 8px !important;
-    }
-    
-    .signup-link a {
-        color: var(--accent);
-        text-decoration: none;
-        font-weight: 600;
-    }
-    
-    .signup-link a:hover {
-        text-decoration: underline;
     }
     
     .error-message {
@@ -205,6 +182,31 @@
         font-size: 14px;
         border: 1px solid var(--border);
     }
+
+    /* OAuth buttons */
+    .oauth-section { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .btn-oauth { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1rem; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; cursor: pointer; background: var(--surface, #141417); color: var(--text); font-family: var(--font-body, 'Inter', sans-serif); transition: border-color 0.2s; }
+    .btn-oauth:hover { border-color: var(--accent, #c9a87c); }
+    .btn-github { color: var(--text); }
+
+    /* Divider */
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 1.5rem;
+    }
+    .divider-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+    .divider-text {
+        color: var(--muted, #a1a1aa);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
     
     .login-form {
         margin-bottom: 24px;
@@ -216,7 +218,6 @@
     }
     
     .form-group label {
-        text-align: left;
         display: block;
         font-size: 14px;
         font-weight: 600;
@@ -233,8 +234,6 @@
         background: var(--surface);
         color: var(--text);
         transition: border-color 0.2s, box-shadow 0.2s;
-        background: var(--surface);
-        color: var(--text);
     }
     
     .form-group input:focus {
@@ -244,55 +243,19 @@
     }
     
     .form-group input:disabled {
-        background-color: var(--surface);
         color: var(--text-muted);
         cursor: not-allowed;
     }
     
+    .form-group input::placeholder {
+        color: var(--text-muted);
+        opacity: 1;
+    }
+    
     .form-options {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        justify-content: flex-end;
         margin-bottom: 24px;
-    }
-    
-    .checkbox-container {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--text-dim);
-    }
-    
-    .checkbox-container input {
-        display: none;
-    }
-    
-    .checkbox-container .checkmark {
-        width: 18px;
-        height: 18px;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        margin-right: 8px;
-        position: relative;
-        transition: background-color 0.2s, border-color 0.2s;
-    }
-    
-    .checkbox-container input:checked + .checkmark {
-        background-color: var(--accent);
-        border-color: var(--accent);
-    }
-    
-    .checkbox-container input:checked + .checkmark:after {
-        content: "";
-        position: absolute;
-        left: 6px;
-        top: 2px;
-        width: 5px;
-        height: 10px;
-        border: solid var(--bg);
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
     }
     
     .forgot-link {
@@ -300,11 +263,9 @@
         text-decoration: none;
         font-size: 14px;
         font-weight: 500;
-        transition: color 0.2s;
     }
     
     .forgot-link:hover {
-        color: var(--accent-bg);
         text-decoration: underline;
     }
     
@@ -319,85 +280,34 @@
         font-weight: 600;
         cursor: pointer;
         transition: background-color 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
     }
     
-    .login-button:hover {
-        background: var(--accent-bg);
-    }
+    .login-button:hover { background: var(--accent-bg); }
     
     .login-button:disabled {
-        background: var(--accent);
         opacity: 0.6;
-        color: #fff;
         cursor: not-allowed;
     }
     
-    .login-footer {
-        margin-top: auto;
+    .signup-link {
         text-align: center;
-        color: var(--text-muted);
+        color: var(--text-dim);
         font-size: 14px;
+        margin-top: auto;
+        padding-top: 8px;
     }
     
-    .login-footer a {
+    .signup-link a {
         color: var(--accent);
         text-decoration: none;
         font-weight: 600;
     }
     
-    .login-footer a:hover {
-        text-decoration: underline;
-    }
+    .signup-link a:hover { text-decoration: underline; }
     
-
-    .hero-scroll {
-        display: flex;
-        justify-content: center;
-        padding: 32px 0;
-        text-decoration: none;
+    @media (max-width: 768px) {
+        .login-container { max-width: 400px; }
+        .login-card { padding: 30px 20px; }
+        .login-header h1 { font-size: 24px; }
     }
-
-    .hero-scroll .scroll-line {
-        width: 2px;
-        height: 48px;
-        background: linear-gradient(to bottom, var(--accent), transparent);
-        animation: scrollPulse 2s ease-in-out infinite;
-        transition: height 0.3s ease;
-    }
-
-    .hero-scroll:hover .scroll-line {
-        height: 64px;
-    }
-
-    @keyframes scrollPulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
-    }
-
-    .form-group input::placeholder {
-        color: var(--text-muted);
-        opacity: 1;
-    }
-    
-        @media (max-width: 768px) {
-        .login-container {
-            max-width: 400px;
-        }
-        
-        .login-card {
-            padding: 30px 20px;
-        }
-        
-        .login-header h1 {
-            font-size: 24px;
-        }
-    }
-    .oauth-section { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
-    .btn-oauth { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1rem; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; cursor: pointer; background: var(--surface, #141417); color: var(--text); font-family: var(--font-body, 'Inter', sans-serif); transition: border-color 0.2s; }
-    .btn-oauth:hover { border-color: var(--accent, #c9a87c); }
-    .btn-github { color: var(--text); }
 </style>
