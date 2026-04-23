@@ -187,6 +187,15 @@
 
     // Map
     let mapEl = $state(null);
+    let isFullscreen = $state(false);
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            mapEl.requestFullscreen().then(() => isFullscreen = true).catch(() => {});
+        } else {
+            document.exitFullscreen().then(() => isFullscreen = false);
+        }
+    }
+    document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
     let mapInstance = $state(null);
 
     // Haversine
@@ -1011,7 +1020,10 @@
 
     <!-- Ocean Map -->
     <div class="section">
-        <h2>{$t('bottles.map_title')}</h2>
+        <div class="section-header">
+            <h2>{$t('bottles.map_title')}</h2>
+            <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
+        </div>
         <div class="map-container" bind:this={mapEl}></div>
     </div>
 
@@ -1430,6 +1442,10 @@
     .btn-chat-speed:disabled { opacity: 0.4; }
     .btn-chat-cancel { background: transparent; border: 1px solid var(--muted); color: var(--muted); padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
     .map-container { height: 450px; border-radius: 12px; overflow: hidden; border: 1px solid var(--bs-border); cursor: crosshair; }
+    .map-container:fullscreen { height: 100vh; border-radius: 0; border: none; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .section-header h2 { margin: 0; }
+    .btn-sm { background: rgba(255,255,255,0.1); border: 1px solid var(--bs-border); color: var(--text); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
 
     /* Beached items */
     .beached-item { background: var(--bs-surface); border: 1px solid rgba(239,68,68,0.12); border-radius: 10px; padding: 1.25rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
