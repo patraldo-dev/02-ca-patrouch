@@ -19,17 +19,17 @@
     // Ticker quotes — built server-side, no client get(t) needed
     let quotes = $state(data.tickerQuotes || []);
     let currentQuote = $state(0);
-    let fading = $state(false);
+    let sliding = $state(false);
     onMount(() => {
         invalidateAll();
         const interval = setInterval(() => {
-            // Fade out, swap, fade in
-            fading = true;
+            // Slide out left, swap, slide in from right
+            sliding = true;
             setTimeout(() => {
                 currentQuote = quotes.length ? (currentQuote + 1) % quotes.length : 0;
-                fading = false;
-            }, 600);
-        }, 10000);
+                sliding = false;
+            }, 800);
+        }, 4000);
         return () => clearInterval(interval);
     });
 
@@ -319,7 +319,7 @@
 
 <div class="write-page">
     <div class="inspiration-tape" role="status" aria-label="Writing inspiration">
-        <div class="ticker-content" class:fading>
+        <div class="ticker-content" class:sliding>
             <span class="ticker-item">✍️ {quotes[currentQuote]}</span>
         </div>
     </div>
@@ -622,8 +622,8 @@
 
 <style>
     .inspiration-tape { background: var(--surface); border-bottom: 1px solid var(--border); overflow: hidden; white-space: nowrap; padding: 0.6rem 1.5rem; margin-bottom: 1rem; border-radius: 8px; text-align: center; }
-    .inspiration-tape .ticker-content { display: inline-block; transition: opacity 0.6s ease, transform 0.6s ease; max-width: 100%; }
-    .inspiration-tape .ticker-content.fading { opacity: 0; transform: translateY(6px); }
+    .inspiration-tape .ticker-content { display: inline-block; transition: transform 0.8s ease, opacity 0.4s ease; }
+    .inspiration-tape .ticker-content.sliding { transform: translateX(-100%); opacity: 0; }
     .inspiration-tape .ticker-item { font-size: 0.85rem; color: var(--muted); font-style: italic; padding: 0 1rem; }
     .write-page {
         max-width: 1100px;
