@@ -4,14 +4,18 @@ export async function GET({ locals }) {
     const user = locals?.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = locals.db;
-    if (!db) return json({ error: 'No database' }, { status: 500 });
-
-    const row = await db.prepare(
-        'SELECT username, email, role, bio, avatar_url, display_name, created_at FROM users WHERE id = ?'
-    ).bind(user.id).first();
-
-    return json({ profile: row });
+    // Return user data from Better Auth session (already in locals)
+    return json({
+        profile: {
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            bio: user.bio || null,
+            avatar_url: user.avatar_url || null,
+            display_name: user.display_name || null,
+            created_at: user.created_at
+        }
+    });
 }
 
 export async function PUT({ locals, request }) {
@@ -33,21 +37,27 @@ export async function PUT({ locals, request }) {
         return json({ error: 'Display name must be 50 characters or less' }, { status: 400 });
     }
 
+    // Update the Better Auth 'user' table (name field stores display_name)
     const updates = [];
     const values = [];
 
-    if (bio !== undefined) { updates.push('bio = ?'); values.push(bio); }
-    if (avatar_url !== undefined) { updates.push('avatar_url = ?'); values.push(avatar_url); }
-    if (display_name !== undefined) { updates.push('display_name = ?'); values.push(display_name); }
+    if (display_name !== undefined) { updates.push('name = ?'); values.push(display_name); }
+    if (avatar_url !== undefined) { updates.push('image = ?'); values.push(avatar_url); }
 
-    if (updates.length === 0) return json({ error: 'Nothing to update' }, { status: 400 });
+    if (updates.length > 0) {
+        values.push(user.id);
+        await db.prepare(`UPDATE "user" SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+    }
 
-    values.push(user.id);
-    await db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+    // Bio is stored in profiles table, not in Better Auth user
+    if (bio !== undefined) {
+        const activeProfile = await db.prepare(
+            'SELECT id FROM profiles WHERE user_id = ? AND is_active = 1'
+        ).bind(user.id).first();
+        if (activeProfile) {
+            await db.prepare('UPDATE profiles SET bio = ? WHERE id = ?').bind(bio, activeProfile.id).run();
+        }
+    }
 
-    const row = await db.prepare(
-        'SELECT username, email, role, bio, avatar_url, display_name, created_at FROM users WHERE id = ?'
-    ).bind(user.id).first();
-
-    return json({ profile: row });
+    return json({ ok: true });
 }
