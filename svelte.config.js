@@ -11,8 +11,7 @@ const config = {
 				enabled: true
 			},
 			routes: {
-				include: ['/api/auth/(.*)'],
-				exclude: ['**/*']
+				exclude: ['**/*.js', '**/*.css', '**/*.png', '**/*.jpg', '**/*.svg', '**/*.woff*', '**/*.ico', '**/*.webmanifest']
 			}
 		})
 	}
