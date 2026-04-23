@@ -88,7 +88,7 @@ export async function POST({ locals, request, platform }) {
         const variant = imageData?.variants?.[0];
 
         // Fallback: construct delivery URL from image ID
-        const avatarUrl = variant || `https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${imageId}/public`;
+        const avatarUrl = variant || `https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/${imageId}/avatar`;
 
         // Update user image in D1
         const db = locals.db;
