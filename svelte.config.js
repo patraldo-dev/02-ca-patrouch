@@ -9,9 +9,6 @@ const config = {
 		adapter: adapter({
 			platformProxy: {
 				enabled: true
-			},
-			routes: {
-				exclude: ['**/*.js', '**/*.css', '**/*.png', '**/*.jpg', '**/*.svg', '**/*.woff*', '**/*.ico', '**/*.webmanifest']
 			}
 		})
 	}
