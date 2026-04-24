@@ -305,10 +305,13 @@
                 }
                 playerPts.push([lat, lon]);
                 const emoji = player.type === 'ai' ? '🤖' : '🧭';
+                const avatarHtml = player.avatar_url
+                    ? `<img src="${player.avatar_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);" />`
+                    : `<div style="background:${player.team_color || '#c9a87c'};color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${emoji}</div>`;
                 const zIndexOffset = count > 1 ? i : 0;
                 const icon = L.divIcon({
                     className: 'player-marker',
-                    html: `<div style="background:${player.team_color || '#c9a87c'};color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);position:relative;z-index:${400 + zIndexOffset}">${emoji}</div>`,
+                    html: avatarHtml,
                     iconSize: [30, 30], iconAnchor: [15, 15]
                 });
                 const pm = L.marker([lat, lon], { icon, zIndexOffset }).addTo(mapInstance);
@@ -325,9 +328,12 @@
             if (!bot.lat || !bot.lon) continue;
             botPts.push([bot.lat, bot.lon]);
             const isHijacked = bot.hijacked_by && new Date(bot.hijacked_until) > new Date();
+            const botAvatarHtml = bot.avatar_url
+                ? `<img src="${bot.avatar_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px dashed ${isHijacked ? '#fff' : '#ff6b6b'};box-shadow:0 0 12px rgba(239,68,68,0.5);" />`
+                : `<div style="background:${isHijacked ? '#c9a87c' : '#ef4444'};color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px dashed ${isHijacked ? '#fff' : '#ff6b6b'};box-shadow:0 0 12px rgba(239,68,68,0.5);animation:botPulse 2s infinite">☠️</div>`;
             const icon = L.divIcon({
                 className: 'bot-marker',
-                html: `<div style="background:${isHijacked ? '#c9a87c' : '#ef4444'};color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px dashed ${isHijacked ? '#fff' : '#ff6b6b'};box-shadow:0 0 12px rgba(239,68,68,0.5);animation:botPulse 2s infinite">☠️</div>`,
+                html: botAvatarHtml,
                 iconSize: [32, 32], iconAnchor: [16, 16]
             });
             const bm = L.marker([bot.lat, bot.lon], { icon }).addTo(mapInstance);
