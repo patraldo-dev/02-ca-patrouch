@@ -7,7 +7,7 @@ export async function load({ locals }) {
     const db = locals.db;
     if (!db) return {
         user,
-        profile: { bio: '', avatar_url: '', display_name: '', created_at: '', show_in_scoreboard: 1, show_email: 0, show_profile: 1 },
+        profile: { bio: '', avatar_url: '', display_name: '', created_at: '', show_in_scoreboard: 1, show_email: 0 },
         notificationPrefs: { game: 1, writing: 1, community: 1 },
         isBQPlayer: false
     };
@@ -38,7 +38,7 @@ export async function load({ locals }) {
         created_at: baUser?.created_at || user.created_at || '',
         show_in_scoreboard: profileRow?.show_in_scoreboard ?? 1,
         show_email: profileRow?.show_email ?? 0,
-        show_profile: vis?.show_profile ?? 1
+        show_profile: 1
     };
 
     // Load notification preferences
