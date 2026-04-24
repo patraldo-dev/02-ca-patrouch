@@ -1,1 +1,1 @@
-// ssr enabled - data needed from server
+export const ssr = false;
