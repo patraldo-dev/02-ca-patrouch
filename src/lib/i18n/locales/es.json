@@ -906,5 +906,14 @@
   "profile.user.avatar_err_moderation": "La imagen fue rechazada por el sistema de moderación",
   "profile.user.avatar_err_unavailable": "Servicio de imágenes no disponible",
   "profile.user.avatar_err_generic": "Error al subir la imagen. Intenta de nuevo.",
-  "profile.user.avatar_err_network": "Error de conexión. Verifica tu internet."
+  "profile.user.avatar_err_network": "Error de conexión. Verifica tu internet.",
+  "signup.title": "Crear Cuenta",
+  "signup.username": "Usuario",
+  "signup.username_placeholder": "Elige un nombre de usuario",
+  "signup.email": "Correo electrónico",
+  "signup.email_placeholder": "tu@correo.com",
+  "signup.password": "Contraseña",
+  "signup.password_placeholder": "Crea una contraseña",
+  "signup.confirm_password": "Confirmar Contraseña",
+  "signup.confirm_placeholder": "Repite tu contraseña"
 }

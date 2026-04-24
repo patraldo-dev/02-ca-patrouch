@@ -102,57 +102,23 @@
 
     <form onsubmit={(e) => { e.preventDefault(); handleSignup(); }}>
         <div>
-            <label for="username">Username</label>
-            <input
-                id="username"
-                bind:value={username}
-                type="text"
-                required
-                placeholder="Choose a username"
-                minlength="3"
-                maxlength="32"
-            />
+            <label for="username">{$t('signup.username')}</label>
+            <input id="username" bind:value={username} type="text" required placeholder={$t('signup.username_placeholder')} minlength="3" maxlength="32" />
         </div>
-
         <div>
-            <label for="email">Email</label>
-            <input
-                id="email"
-                bind:value={email}
-                type="email"
-                required
-                placeholder="your@email.com"
-            />
+            <label for="email">{$t('signup.email')}</label>
+            <input id="email" bind:value={email} type="email" required placeholder={$t('signup.email_placeholder')} />
         </div>
-
         <div>
-            <label for="password">Password</label>
+            <label for="password">{$t('signup.password')}</label>
             <div class="password-row">
-                <input
-    id="password"
-    bind:value={password}
-    type="password"
-    placeholder="Create a password"
-    required
-    minlength="8"
-    autocomplete="new-password"  
-    disabled={isLoading}
-                />
+                <input id="password" bind:value={password} type="password" placeholder={$t('signup.password_placeholder')} required minlength="8" autocomplete="new-password" disabled={isLoading} />
                 <button type="button" class="btn-generate" onclick={() => { const p = generatePassword(); password = p; confirmPassword = p; }} disabled={isLoading}>🔄</button>
             </div>
         </div>
-
         <div>
-            <label for="confirmPassword">Confirm Password</label>
-            <input
-id="confirmPassword"
-    bind:value={confirmPassword}
-    type="password"
-    placeholder="Repeat your password"
-    required
-    autocomplete="new-password"  
-    disabled={isLoading}
-            />
+            <label for="confirmPassword">{$t('signup.confirm_password')}</label>
+            <input id="confirmPassword" bind:value={confirmPassword} type="password" placeholder={$t('signup.confirm_placeholder')} required autocomplete="new-password" disabled={isLoading} />
         </div>
 
         <div class="checkbox-group">

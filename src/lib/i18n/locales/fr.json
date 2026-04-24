@@ -910,5 +910,14 @@
   "crop.title": "Recadrez votre avatar",
   "crop.apply": "Appliquer",
   "crop.cancel": "Annuler",
-  "crop.drag_hint": "Glissez pour repositionner"
+  "crop.drag_hint": "Glissez pour repositionner",
+  "signup.title": "Créer un Compte",
+  "signup.username": "Nom d'utilisateur",
+  "signup.username_placeholder": "Choisissez un nom",
+  "signup.email": "Courriel",
+  "signup.email_placeholder": "votre@courriel.com",
+  "signup.password": "Mot de passe",
+  "signup.password_placeholder": "Créez un mot de passe",
+  "signup.confirm_password": "Confirmer le mot de passe",
+  "signup.confirm_placeholder": "Répétez votre mot de passe"
 }

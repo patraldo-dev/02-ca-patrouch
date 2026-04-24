@@ -910,5 +910,14 @@
   "crop.title": "Crop your avatar",
   "crop.apply": "Apply",
   "crop.cancel": "Cancel",
-  "crop.drag_hint": "Drag to reposition"
+  "crop.drag_hint": "Drag to reposition",
+  "signup.title": "Create Account",
+  "signup.username": "Username",
+  "signup.username_placeholder": "Choose a username",
+  "signup.email": "Email",
+  "signup.email_placeholder": "your@email.com",
+  "signup.password": "Password",
+  "signup.password_placeholder": "Create a password",
+  "signup.confirm_password": "Confirm Password",
+  "signup.confirm_placeholder": "Repeat your password"
 }
