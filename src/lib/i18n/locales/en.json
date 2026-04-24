@@ -822,7 +822,7 @@
   "bottles.launch": "Launch Bottle",
   "bottles.status.preparing": "Preparing",
   "bottles.status.launched": "Launched",
-  "bottles.status.sailing": "Sailing",
+  "bottles.status.sailing": "Floating",
   "bottles.status.beached": "Beached",
   "bottles.status.found": "Found!",
   "bottles.status.sunk": "Sunk",
