@@ -934,5 +934,6 @@
   "booty.beached_modal.launch_port": "Port de départ",
   "booty.beached_modal.distance": "Distance parcourue",
   "booty.beached_modal.points": "Points si trouvée",
-  "booty.beached_modal.nearby": "Joueurs proches"
+  "booty.beached_modal.nearby": "Joueurs proches",
+  "booty.beached_modal.view_on_map": "Voir sur la carte"
 }

@@ -917,6 +917,7 @@
                         <div class="detail-row"><span>{$t('booty.beached_modal.nearby')}</span><span>{nearbyPlayers.map(p => p.display_name || p.username).join(', ')}</span></div>
                         {/if}
                     </div>
+                    <button class="btn-flyto" onclick={() => { showBeachedModal = false; flyToBottle(bottle); }}>📍 {$t('booty.beached_modal.view_on_map')}</button>
                 </div>
             {/each}
         </div>
@@ -1366,6 +1367,8 @@
     .beached-modal-box { max-width: 560px; max-height: 80vh; overflow-y: auto; }
     .beached-modal-list { display: flex; flex-direction: column; gap: 0.75rem; }
     .beached-modal-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,124,0.15); border-radius: 10px; padding: 1rem; }
+    .btn-flyto { margin-top: 0.75rem; width: 100%; padding: 0.5rem; background: var(--surface, #141417); border: 1px solid var(--accent, #c9a87c); color: var(--accent, #c9a87c); border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: Inter, sans-serif; transition: background 0.2s; }
+    .btn-flyto:hover { background: rgba(201,168,124,0.1); }
     .beached-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
     .beached-modal-header strong { color: var(--accent); font-size: 1rem; }
     .beached-modal-details { display: flex; flex-direction: column; gap: 0.25rem; }

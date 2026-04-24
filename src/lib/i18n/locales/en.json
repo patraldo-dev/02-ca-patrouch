@@ -934,5 +934,6 @@
   "booty.beached_modal.launch_port": "Launch port",
   "booty.beached_modal.distance": "Distance traveled",
   "booty.beached_modal.points": "Points if found",
-  "booty.beached_modal.nearby": "Nearby players"
+  "booty.beached_modal.nearby": "Nearby players",
+  "booty.beached_modal.view_on_map": "View on map"
 }
