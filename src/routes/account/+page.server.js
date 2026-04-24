@@ -30,8 +30,6 @@ export async function load({ locals }) {
         ).bind(user.id).first();
     }
 
-    const vis = await db.prepare('SELECT show_profile FROM profiles WHERE user_id = ?').bind(user.id).first();
-
     const profile = {
         bio: profileRow?.bio || '',
         avatar_url: baUser?.avatar_url || '',
