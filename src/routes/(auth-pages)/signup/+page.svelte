@@ -1,6 +1,7 @@
 <!-- src/routes/(auth-pages)/signup/+page.svelte -->
 <script>
     import { browser } from '$app/environment';
+    import { onMount } from 'svelte';
     import { t } from '$lib/i18n';
     import { getLocale } from '$lib/i18n';
     import { authClient } from '$lib/auth-client.js';
@@ -43,18 +44,17 @@
         success = '';
 
         try {
-            const response = await fetch('/api/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password })
+            const { error: authError } = await authClient.signUp.email({
+                email,
+                password,
+                name: username
             });
 
-            const result = await response.json();
-
-            if (response.ok) {
+            if (authError) {
+                error = authError.message || 'Signup failed';
                 success = $t('signup.success');
             } else {
-                error = result.error || $t('signup.failed');
+                success = $t('signup.success');
             }
         } catch (err) {
             console.error('Signup error:', err);

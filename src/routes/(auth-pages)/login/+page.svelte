@@ -20,16 +20,14 @@
         isLoading = true;
         error = '';
         try {
-            const response = await fetch('/api/auth/login?redirectTo=' + encodeURIComponent(redirectTo), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identifier, password })
+            const { error: authError } = await authClient.signIn.email({
+                email: identifier,
+                password
             });
-            const result = await response.json();
-            if (response.ok) {
-                window.location.href = redirectTo;
+            if (authError) {
+                error = authError.message || 'Invalid credentials';
             } else {
-                error = result.error || 'Invalid credentials';
+                window.location.href = redirectTo;
             }
         } catch (err) {
             console.error('Login error:', err);
