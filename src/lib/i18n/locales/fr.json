@@ -925,5 +925,14 @@
   "signup.or": "ou",
   "signup.email_heading": "S'inscrire par courriel",
   "signup.privacy_note": "Nous ne publierons jamais sans autorisation.",
-  "signup.trust_copy": "Nous n'utiliserons que votre nom et courriel."
+  "signup.trust_copy": "Nous n'utiliserons que votre nom et courriel.",
+  "booty.beached_modal.title": "Bouteilles Échouées",
+  "booty.beached_modal.subtitle": "Bouteilles attendant d'être trouvées",
+  "booty.beached_modal.launched_by": "Lancée par",
+  "booty.beached_modal.location": "Échouée à",
+  "booty.beached_modal.days_beach": "Jours échouée",
+  "booty.beached_modal.launch_port": "Port de départ",
+  "booty.beached_modal.distance": "Distance parcourue",
+  "booty.beached_modal.points": "Points si trouvée",
+  "booty.beached_modal.nearby": "Joueurs proches"
 }

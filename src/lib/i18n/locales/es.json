@@ -921,5 +921,14 @@
   "signup.or": "o",
   "signup.email_heading": "Regístrate con correo",
   "signup.privacy_note": "Nunca publicaremos sin tu permiso.",
-  "signup.trust_copy": "Solo usaremos tu nombre y correo."
+  "signup.trust_copy": "Solo usaremos tu nombre y correo.",
+  "booty.beached_modal.title": "Botellas Varadas",
+  "booty.beached_modal.subtitle": "Botellas esperando ser encontradas",
+  "booty.beached_modal.launched_by": "Lanzada por",
+  "booty.beached_modal.location": "Varada en",
+  "booty.beached_modal.days_beach": "Días varada",
+  "booty.beached_modal.launch_port": "Puerto de salida",
+  "booty.beached_modal.distance": "Distancia recorrida",
+  "booty.beached_modal.points": "Puntos si se encuentra",
+  "booty.beached_modal.nearby": "Jugadores cercanos"
 }

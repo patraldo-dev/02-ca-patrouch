@@ -925,5 +925,14 @@
   "signup.or": "or",
   "signup.email_heading": "Sign up with email",
   "signup.privacy_note": "We'll never post without permission.",
-  "signup.trust_copy": "We'll only use your name and email."
+  "signup.trust_copy": "We'll only use your name and email.",
+  "booty.beached_modal.title": "Beached Bottles",
+  "booty.beached_modal.subtitle": "Bottles waiting to be found",
+  "booty.beached_modal.launched_by": "Launched by",
+  "booty.beached_modal.location": "Beached at",
+  "booty.beached_modal.days_beach": "Days beached",
+  "booty.beached_modal.launch_port": "Launch port",
+  "booty.beached_modal.distance": "Distance traveled",
+  "booty.beached_modal.points": "Points if found",
+  "booty.beached_modal.nearby": "Nearby players"
 }

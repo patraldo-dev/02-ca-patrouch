@@ -37,6 +37,8 @@
     let betBottle = $state(null);
     let betPlayer = $state(null);
     let betAmount = $state('');
+    let showBeachedModal = $state(false);
+    let beachedBottles = $derived(data.bottles.filter(b => b.status === 'beached'));
 
     const contentTypes = ['short_story', 'poem', 'screenplay', 'video', 'song', 'lyrics', 'audiobook', 'fanzine', 'illustrated_book'];
 
@@ -740,7 +742,7 @@
                 <span class="stat-num">{totalLaunched}</span>
                 <span class="stat-label">{$t('bottles.total_launched')}</span>
             </div>
-            <div class="stat-item stat-divider">
+            <div class="stat-item stat-divider" class:stat-clickable={totalBeached > 0} onclick={() => { if (totalBeached > 0) showBeachedModal = true; }} role="button" tabindex="0">
                 <span class="stat-num">{totalBeached}</span>
                 <span class="stat-label">{$t('bottles.total_beached')}</span>
             </div>
@@ -880,6 +882,44 @@
                 </div>
             </div>
         {/each}
+    </div>
+    {/if}
+
+    <!-- Beached Bottles Modal -->
+    {#if showBeachedModal}
+    <div class="modal-overlay" onclick={() => showBeachedModal = false}></div>
+    <div class="modal-box beached-modal-box" onclick={(e) => e.stopPropagation()}>
+        <button class="btn-cancel" onclick={() => showBeachedModal = false}>✕</button>
+        <h2>🍾 {$t('booty.beached_modal.title')}</h2>
+        <p class="modal-desc">{$t('booty.beached_modal.subtitle')} ({beachedBottles.length})</p>
+        <div class="beached-modal-list">
+            {#each beachedBottles as bottle}
+                {@const daysSince = bottle.beached_at ? Math.floor((Date.now() - new Date(bottle.beached_at).getTime()) / 86400000) : '?'}
+                {@const nearbyPlayers = data.players.filter(p => {
+                    if (!p.lat || !p.lon || !bottle.current_lat || !bottle.current_lon) return false;
+                    const d = haversine(p.lat, p.lon, bottle.current_lat, bottle.current_lon);
+                    return d <= 10;
+                })}
+                {@const pointsWorth = Math.round(50 + (bottle.distance_km || 0) * 2)}
+                <div class="beached-modal-card">
+                    <div class="beached-modal-header">
+                        <strong>{bottle.title || $t('bottles.untitled')}</strong>
+                        <span class="type-tag">{contentTypeLabel(bottle.content_type)}</span>
+                    </div>
+                    <div class="beached-modal-details">
+                        <div class="detail-row"><span>{$t('booty.beached_modal.launched_by')}</span><span>{bottle.display_name || bottle.username || 'Anónimo'}</span></div>
+                        <div class="detail-row"><span>{$t('booty.beached_modal.location')}</span><span>{bottle.current_lat.toFixed(2)}°, {bottle.current_lon.toFixed(2)}°</span></div>
+                        <div class="detail-row"><span>{$t('booty.beached_modal.days_beach')}</span><span>{daysSince}d</span></div>
+                        <div class="detail-row"><span>{$t('booty.beached_modal.launch_port')}</span><span>{formatCoords(bottle.launch_lat, bottle.launch_lon)}</span></div>
+                        <div class="detail-row"><span>{$t('booty.beached_modal.distance')}</span><span>{(bottle.distance_km || 0).toFixed(0)} km</span></div>
+                        <div class="detail-row"><span>{$t('booty.beached_modal.points')}</span><span class="points-val">⭐ {pointsWorth}</span></div>
+                        {#if nearbyPlayers.length > 0}
+                        <div class="detail-row"><span>{$t('booty.beached_modal.nearby')}</span><span>{nearbyPlayers.map(p => p.display_name || p.username).join(', ')}</span></div>
+                        {/if}
+                    </div>
+                </div>
+            {/each}
+        </div>
     </div>
     {/if}
 
@@ -1323,6 +1363,15 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; }
     .modal-box { background: var(--bs-surface); border: 1px solid rgba(239,68,68,0.15); border-radius: 16px; padding: 2rem; max-width: 500px; width: calc(100% - 2rem); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
     .modal-box h2 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--bs-fg); margin-bottom: 0.5rem; }
+    .beached-modal-box { max-width: 560px; max-height: 80vh; overflow-y: auto; }
+    .beached-modal-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .beached-modal-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,124,0.15); border-radius: 10px; padding: 1rem; }
+    .beached-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+    .beached-modal-header strong { color: var(--accent); font-size: 1rem; }
+    .beached-modal-details { display: flex; flex-direction: column; gap: 0.25rem; }
+    .points-val { color: #f59e0b; font-weight: 600; }
+    .stat-clickable { cursor: pointer; transition: opacity 0.2s; }
+    .stat-clickable:hover { opacity: 0.8; }
     .modal-desc { color: var(--bs-muted); font-size: 0.95rem; margin-bottom: 1.25rem; }
     .rules-box { background: rgba(201,168,124,0.06); border: 1px solid rgba(201,168,124,0.15); border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; }
     .rules-box h3 { font-family: var(--font-heading); font-size: 1rem; color: var(--accent); margin-bottom: 0.5rem; }
