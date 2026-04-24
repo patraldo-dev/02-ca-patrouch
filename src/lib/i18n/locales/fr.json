@@ -607,6 +607,7 @@
   "signup.success": "Compte créé ! Vérifie ton e-mail pour confirmer ton adresse.",
   "signup.failed": "Inscription échouée. Réessaie.",
   "signup.network_error": "Erreur réseau. Réessaie.",
+  "signup.or_continue_with": "ou continuer avec",
   "common.nav.evaluate": "Évaluer",
   "evaluate.title": "Évaluation d'Écriture par IA",
   "evaluate.description": "Colle ton texte et reçois des retours honnêtes et constructifs de l'IA. Les brouillons bruts sont les bienvenus — cet outil valorise l'originalité et la prise de risque plutôt que la perfection.",

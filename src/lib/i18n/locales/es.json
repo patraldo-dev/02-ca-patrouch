@@ -607,6 +607,7 @@
   "signup.success": "¡Cuenta creada! Revisa tu correo para verificar tu dirección.",
   "signup.failed": "El registro falló. Intenta de nuevo.",
   "signup.network_error": "Error de red. Intenta de nuevo.",
+  "signup.or_continue_with": "o continúa con",
   "common.nav.evaluate": "Evaluar",
   "evaluate.title": "Evaluación de Escritura con IA",
   "evaluate.description": "Pega tu texto y recibe retroalimentación honesta y constructiva de la IA. Los borradores crudos son bienvenidos — esta herramienta valora la originalidad y el riesgo sobre la perfección.",

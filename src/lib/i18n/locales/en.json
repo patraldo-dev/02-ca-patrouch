@@ -621,6 +621,7 @@
   "signup.success": "Account created! Check your email to verify your address.",
   "signup.failed": "Signup failed. Please try again.",
   "signup.network_error": "Network error. Please try again.",
+  "signup.or_continue_with": "or continue with",
   "common.nav.evaluate": "Evaluate",
   "evaluate.title": "AI Writing Evaluation",
   "evaluate.description": "Paste your writing and get honest, constructive feedback from AI. Raw drafts welcome — this tool values originality and risk-taking over polish.",
