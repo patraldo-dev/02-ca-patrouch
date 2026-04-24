@@ -282,6 +282,7 @@
             const launchCoords = bottle.launch_lat ? formatCoords(bottle.launch_lat, bottle.launch_lon) : '';
             const currentCoords = bottle.current_lat ? formatCoords(bottle.current_lat, bottle.current_lon) : '';
             const dist = bottle.distance_km ? bottle.distance_km.toFixed(0) + ' km' : '';
+            const statusText = statusLabel(bottle.status);
             marker.bindPopup(`
                 <div style="color:#09090b;font-family:Inter,sans-serif;min-width:200px">
                     <strong style="font-family:Playfair Display,serif;font-size:1.05em">${bottle.title || '🍾'}</strong><br>
@@ -291,7 +292,7 @@
                         ${launchCoords ? `<div>📍 ${launchCoords}</div>` : ''}
                         ${currentCoords && currentCoords !== launchCoords ? `<div>➜ ${currentCoords}</div>` : ''}
                         ${dist ? `<div>📏 ${dist}</div>` : ''}
-                        <div style="margin-top:3px;font-weight:600;color:#333">{statusLabel(bottle.status)}</div>
+                        <div style="margin-top:3px;font-weight:600;color:#333">${statusText}</div>
                     </div>
                 </div>
             `);
