@@ -39,10 +39,19 @@ export async function POST({ locals, request, platform }) {
         if (result.image instanceof Uint8Array) {
             imageBytes = result.image;
         } else if (typeof result.image === 'string') {
-            imageBytes = Uint8Array.from(atob(result.image), c => c.charCodeAt(0));
+            const binaryStr = atob(result.image);
+            imageBytes = new Uint8Array(binaryStr.length);
+            for (let i = 0; i < binaryStr.length; i++) imageBytes[i] = binaryStr.charCodeAt(i);
+        } else if (result.image instanceof ArrayBuffer) {
+            imageBytes = new Uint8Array(result.image);
+        } else if (result.image && typeof result.image === 'object' && result.image.data) {
+            // Cloudflare Workers AI might return { image: { data: [...], shape: [...] } }
+            imageBytes = new Uint8Array(result.image.data);
         } else {
-            return json({ error: 'Invalid image format from AI' }, { status: 500 });
+            console.error('[AI Avatar] Unexpected image format:', typeof result.image, JSON.stringify(result).substring(0, 200));
+            return json({ error: 'Invalid image format from AI: ' + typeof result.image }, { status: 500 });
         }
+        console.log('[AI Avatar] Image bytes length:', imageBytes.length);
 
         // Upload to Cloudflare Images
         const apiToken = platform?.env?.CLOUDFLARE_API_TOKEN;
