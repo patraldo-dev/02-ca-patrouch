@@ -931,5 +931,12 @@
   "booty.beached_modal.distance": "Distancia recorrida",
   "booty.beached_modal.points": "Puntos si se encuentra",
   "booty.beached_modal.nearby": "Jugadores cercanos",
-  "booty.beached_modal.view_on_map": "Ver en mapa"
+  "booty.beached_modal.view_on_map": "Ver en mapa",
+  "booty.notifications.title": "Notificaciones",
+  "booty.notifications.mark_all_read": "Marcar todo leído",
+  "booty.notifications.no_notifications": "Sin notificaciones",
+  "booty.notifications.empty": "¡Todo al día!",
+  "booty.notifications.minutes_ago": "hace {n}m",
+  "booty.notifications.hours_ago": "hace {n}h",
+  "booty.notifications.days_ago": "hace {n}d"
 }

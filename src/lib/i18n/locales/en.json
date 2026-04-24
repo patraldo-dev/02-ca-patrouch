@@ -935,5 +935,12 @@
   "booty.beached_modal.distance": "Distance traveled",
   "booty.beached_modal.points": "Points if found",
   "booty.beached_modal.nearby": "Nearby players",
-  "booty.beached_modal.view_on_map": "View on map"
+  "booty.beached_modal.view_on_map": "View on map",
+  "booty.notifications.title": "Notifications",
+  "booty.notifications.mark_all_read": "Mark all read",
+  "booty.notifications.no_notifications": "No new notifications",
+  "booty.notifications.empty": "All caught up!",
+  "booty.notifications.minutes_ago": "{n}m ago",
+  "booty.notifications.hours_ago": "{n}h ago",
+  "booty.notifications.days_ago": "{n}d ago"
 }

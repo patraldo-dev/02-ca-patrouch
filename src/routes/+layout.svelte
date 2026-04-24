@@ -14,6 +14,7 @@
     import LanguageSwitcherMobile from '$lib/components/LanguageSwitcherMobile.svelte';
     import { getTheme, setTheme } from '$lib/theme.js';
     import { avatarVariant } from '$lib/utils.js';
+    import NotificationBell from '$lib/components/NotificationBell.svelte';
 
     // Track page views on navigation
     if (browser) {
@@ -218,6 +219,7 @@
                 <LanguageSwitcherDesktop serverLocale={data.serverLocale} />
                 <div class="auth-actions">
                     {#if data?.user}
+                        <NotificationBell />
                         {#if data.user?.role === 'admin'}
                         <div class="profile-switcher">
                             <button class="profile-trigger" onclick={() => profilesOpen = !profilesOpen}>
