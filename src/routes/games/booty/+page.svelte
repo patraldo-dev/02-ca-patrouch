@@ -200,6 +200,14 @@
     });
     let mapInstance = $state(null);
 
+    function flyToPlayer(player) {
+        if (mapInstance) mapInstance.flyTo([player.lat, player.lon], 6, { duration: 1.5 });
+    }
+
+    function flyToBottle(bottle) {
+        if (mapInstance && bottle.current_lat) mapInstance.flyTo([bottle.current_lat, bottle.current_lon], 8, { duration: 1.5 });
+    }
+
     // Haversine
     function haversine(lat1, lon1, lat2, lon2) {
         const R = 6371;
@@ -1115,7 +1123,7 @@
         <h2>🏴‍☠️ Players</h2>
         <div class="players-grid">
             {#each playersWithDist as player}
-                <div class="player-card">
+                <button class="player-card" onclick={() => flyToPlayer(player)}>
                     <div class="player-header">
                         <div class="player-avatar" style="background:{player.team_color || 'var(--accent)'}">
                             {player.type === 'ai' ? '🤖' : '🧭'}
@@ -1133,7 +1141,9 @@
                         <div class="detail-row"><span>⭐ Points</span><span>{player.points || 0}</span></div>
                         <div class="detail-row"><span>🫘 Beans</span><span>{formatBeans(player.fuel)}</span></div>
                         {#if player.nearestDist !== null}
-                            <div class="detail-row"><span>🍾 Nearest</span><span>{player.nearestDist.toFixed(0)} km</span></div>
+                            <button class="bottle-link" onclick={(e) => { e.stopPropagation(); flyToBottle(player.nearestBottle); }}>
+                                🍾 Nearest: {player.nearestDist.toFixed(0)} km
+                            </button>
                         {/if}
                     </div>
                     {#if data.myPlayer && player.id === data.myPlayer.id}
@@ -1518,6 +1528,8 @@
     .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
     .player-card { background: var(--bs-surface); border: 1px solid rgba(239,68,68,0.12); border-radius: 12px; padding: 1.25rem; text-align: left; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
     .player-card:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .bottle-link { margin-top: 0.5rem; background: var(--accent); color: var(--bg); border: none; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-family: var(--font-body); font-weight: 600; width: 100%; text-align: center; }
+    .bottle-link:hover { opacity: 0.85; }
     .player-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
     .player-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
     .player-info h3 { font-family: var(--font-heading); font-size: 1.05rem; margin: 0 0 0.2rem; color: var(--bs-fg); }
