@@ -1123,7 +1123,7 @@
         <h2>🏴‍☠️ Players</h2>
         <div class="players-grid">
             {#each playersWithDist as player}
-                <button class="player-card" onclick={() => flyToPlayer(player)}>
+                <div class="player-card" onclick={() => flyToPlayer(player)} role="button" tabindex="0">
                     <div class="player-header">
                         <div class="player-avatar" style="background:{player.team_color || 'var(--accent)'}">
                             {player.type === 'ai' ? '🤖' : '🧭'}
@@ -1155,7 +1155,7 @@
                             💸 Send me 🫘
                         </button>
                     {/if}
-                </button>
+                </div>
             {/each}
         </div>
     </div>
