@@ -4,6 +4,7 @@
     import { t } from '$lib/i18n';
     import { authClient } from '$lib/auth-client.js';
 
+    let showPassword = $state(false);
     let isAdult = $state(false);
     let username = $state('');
     let email = $state('');
@@ -126,7 +127,8 @@
         <div>
             <label for="password">{$t('signup.password')}</label>
             <div class="password-row">
-                <input id="password" bind:value={password} type="password" placeholder={$t('signup.password_placeholder')} required minlength="8" autocomplete="new-password" disabled={isLoading} />
+                <input id="password" bind:value={password} type={showPassword ? 'text' : 'password'} placeholder={$t('signup.password_placeholder')} required minlength="8" autocomplete="new-password" disabled={isLoading} />
+                <button type="button" class="btn-generate" title="Toggle visibility" onclick={() => showPassword = !showPassword} disabled={isLoading}>{showPassword ? '🙈' : '👁️'}</button>
                 <button type="button" class="btn-generate" title="Generate password" onclick={() => { const p = generatePassword(); password = p; confirmPassword = p; }} disabled={isLoading}>🔄</button>
             </div>
         </div>
