@@ -8,7 +8,7 @@ export async function POST({ locals, request }) {
 
     // Check authorization (cron or admin)
     const authHeader = request.headers.get('Authorization');
-    if (authHeader !== `Bearer ${locals.cronSecret || 'sappho-cron-2026-secret'}` && user.role !== 'admin') {
+    if (authHeader !== `Bearer ${platform?.env?.CRON_SECRET}` && user.role !== 'admin') {
         return json({ error: 'Forbidden' }, { status: 403 });
     }
 
