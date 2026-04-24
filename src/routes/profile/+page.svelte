@@ -34,6 +34,8 @@
     let avatarUrl = $state(data.profile?.avatar_url || null);
     let avatarDisplayUrl = $derived(avatarVariant(avatarUrl, 'avatar200'));
     let uploadingAvatar = $state(false);
+    let generatingAvatar = $state(false);
+    let aiPrompt = $state('');
     let avatarInput;
     let savingProfile = $state(false);
     let showCropModal = $state(false);
@@ -120,6 +122,38 @@
         cropImageSrc = '';
         cropPreviewUrl = '';
         pendingBlob = null;
+    }
+
+    let showAIPrompt = $state(false);
+
+    function openAIGenerate() {
+        aiPrompt = '';
+        showAIPrompt = true;
+    }
+
+    async function generateAIAvatar() {
+        if (!aiPrompt.trim()) {
+            openAIGenerate();
+            return;
+        }
+        generatingAvatar = true;
+        try {
+            const res = await fetch('/api/user/avatar/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: aiPrompt.trim() })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                avatarUrl = data.url;
+                showAIPrompt = false;
+                showToast('✨ Avatar generado');
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Error al generar avatar', true);
+            }
+        } catch { showToast('Error de conexión', true); }
+        finally { generatingAvatar = false; }
     }
 
     async function uploadBlob(blob) {
@@ -349,7 +383,10 @@
         </div>
         <div class="avatar-row">
             <button class="btn-upload-avatar" onclick={() => avatarInput.click()} disabled={uploadingAvatar}>
-                {uploadingAvatar ? '⏳' : '📷'} {uploadingAvatar ? 'Uploading...' : 'Upload'}
+                {uploadingAvatar ? '⏳' : '📁'} {uploadingAvatar ? 'Subiendo...' : 'Subir foto'}
+            </button>
+            <button class="btn-generate-avatar" onclick={generateAIAvatar} disabled={uploadingAvatar || generatingAvatar}>
+                {generatingAvatar ? '⏳' : '✨'} {generatingAvatar ? 'Generando...' : 'Avatar AI'}
             </button>
             <input bind:this={avatarInput} type="file" accept="image/jpeg,image/png,image/webp" onchange={handleAvatarSelect} class="hidden-input" />
         </div>
@@ -492,6 +529,19 @@
     </div>
     {/if}
 </div>
+    {#if showAIPrompt}
+        <div class="emoji-picker-overlay" onclick={() => showAIPrompt = false}></div>
+        <div class="emoji-picker" style="width:360px">
+            <h3 style="color:var(--text);margin:0 0 12px;font-size:1.1rem">✨ Generar Avatar con IA</h3>
+            <p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 10px">Describe cómo quieres tu avatar (máx 200 caracteres)</p>
+            <input bind:value={aiPrompt} placeholder="bearded pirate captain, dark moody style" maxlength="200" class="ai-prompt-input" />
+            <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+                <button onclick={() => showAIPrompt = false} style="padding:8px 16px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);cursor:pointer;font-family:var(--font-body)">Cancelar</button>
+                <button onclick={generateAIAvatar} disabled={!aiPrompt.trim() || generatingAvatar} style="padding:8px 16px;background:var(--accent);border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-weight:600;font-family:var(--font-body)">{generatingAvatar ? '⏳ Generando...' : '✨ Generar'}</button>
+            </div>
+        </div>
+    {/if}
+
     {#if showEmojiPicker}
         <div class="emoji-picker-overlay" onclick={() => showEmojiPicker = false}></div>
         <div class="emoji-picker">
@@ -849,4 +899,9 @@
     .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; max-height: 300px; overflow-y: auto; }
     .emoji-item { background: none; border: none; font-size: 1.3rem; padding: 4px; cursor: pointer; border-radius: 4px; }
     .emoji-item:hover { background: var(--bg); }
+    .btn-generate-avatar { background: none; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 0.9rem; padding: 2px 6px; margin-left: 4px; vertical-align: middle; font-family: var(--font-body); color: var(--text); transition: all 0.15s; }
+    .btn-generate-avatar:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-generate-avatar:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ai-prompt-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 0.95rem; box-sizing: border-box; font-family: var(--font-body); }
+    .ai-prompt-input:focus { outline: none; border-color: var(--accent); }
 </style>
