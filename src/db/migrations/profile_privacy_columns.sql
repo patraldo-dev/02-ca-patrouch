@@ -1,0 +1,2 @@
+-- Add privacy columns to profiles table if missing
+-- Run individually and ignore errors if column already exists

@@ -243,12 +243,12 @@
                                         </button>
                                     {/each}
                                     <div class="profile-divider"></div>
-                                    <a href="/profile" class="profile-manage">{$t('common.nav.manage_profiles')}</a>
+                                    <a href="/account" class="profile-manage">{$t('common.nav.manage_profiles')}</a>
                                 </div>
                             {/if}
                         </div>
                         {:else}
-                        <a href="/profile" class="profile-trigger">
+                        <a href="/account" class="profile-trigger">
                             <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
                             <span class="profile-name">{data.user.display_name || data.user.username}</span>
                         </a>
@@ -324,7 +324,7 @@
                         </div>
                     </div>
                     {#if data.user?.role === 'admin'}
-                    <a href="/profile" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
+                    <a href="/account" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
                     <a href="/admin" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
                     {/if}
                     <button onclick={() => { toggleMobileMenu(); handleLogout(); }} class="btn-glass block">{$t('common.nav.logout')}</button>
