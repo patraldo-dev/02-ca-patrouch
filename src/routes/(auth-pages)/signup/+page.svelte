@@ -313,9 +313,9 @@
         color: var(--muted, #a1a1aa);
     }
 
-    /* Password */
     .password-row { display: flex; gap: 0.5rem; }
-    .password-row input { flex: 1; }
+    .password-row input { flex: 1; min-width: 0; }
+    input { width: 100%; box-sizing: border-box; }
     .btn-generate {
         background: var(--surface, #141417);
         border: 2px solid var(--border);
