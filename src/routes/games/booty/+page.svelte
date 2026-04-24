@@ -126,7 +126,13 @@
     }
 
     function statusLabel(s) {
-        return get(t)('bottles.status.' + (s || 'unknown'));
+        const labels = {
+            launched: { en: 'Launched', es: 'Lanzada', fr: 'Lancée' },
+            sailing: { en: 'Floating', es: 'Flotando', fr: 'Flottant' },
+            beached: { en: 'Beached', es: 'Varada', fr: 'Échouée' },
+            found: { en: 'Found', es: 'Encontrada', fr: 'Trouvée' },
+        };
+        return (labels[s] || { en: s, es: s, fr: s })[data.serverLocale || 'en'];
     }
 
     function contentTypeLabel(type) {
