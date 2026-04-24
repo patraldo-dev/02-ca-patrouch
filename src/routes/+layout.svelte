@@ -100,12 +100,9 @@
     async function handleLogout() {
         if (!browser) return;
         try {
-            const response = await fetch('/api/auth/logout', { method: 'POST' });
-            if (response.ok) window.location.href = '/';
-        } catch (err) {
-            console.error('Logout failed:', err);
-            window.location.href = '/';
-        }
+            await fetch('/api/auth/sign-out', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        } catch {}
+        window.location.href = '/';
     }
 
     function onScroll() {
