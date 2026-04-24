@@ -273,6 +273,9 @@
                 </span>
             </button>
             {#if data.user}
+            <a href="/account" class="mobile-avatar-btn">
+                <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
+            </a>
             <div class="mobile-bell">
                 <NotificationBell />
             </div>
@@ -774,6 +777,8 @@
 
     .block { display: block; width: 100%; text-align: center; }
 
+    .mobile-avatar-btn { display: flex; align-items: center; padding: 0; text-decoration: none; }
+    .mobile-avatar-btn .profile-avatar { border: 2px solid var(--accent); }
     /* ── Mobile Bell ── */
     .mobile-bell {
         display: flex;
