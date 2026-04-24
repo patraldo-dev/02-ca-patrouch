@@ -349,26 +349,16 @@
     <!-- TAB: Profile -->
     {#if activeTab === 'profile'}
     <section class="section-card">
-        <div class="avatar-section">
-            <div class="avatar-large">
-                {#if avatarUrl}
-                    <img src={avatarDisplayUrl} alt="Avatar" class="avatar-img" />
-                {:else}
-                    {(userDisplayName || data.user?.username || '?')[0].toUpperCase()}
-                {/if}
-            </div>
-            <p class="avatar-label">{$t('profile.user.avatar_label')}</p>
-            <div class="avatar-actions">
+        <div class="form-area">
+            <div class="avatar-actions" style="margin-bottom:1.25rem">
                 <button class="btn-outline" onclick={() => avatarInput.click()} disabled={uploadingAvatar}>
-                    {uploadingAvatar ? '⏳' : '📁'} {uploadingAvatar ? 'Uploading...' : 'Upload'}
+                    {uploadingAvatar ? '⏳' : '📁'} {uploadingAvatar ? $t('crop.cancel') : $t('profile.user.avatar_label')}
                 </button>
                 <button class="btn-outline" onclick={generateAIAvatar} disabled={uploadingAvatar || generatingAvatar}>
-                    {generatingAvatar ? '⏳' : '✨'} {generatingAvatar ? 'Generating...' : 'AI Avatar'}
+                    {generatingAvatar ? '⏳' : '✨'} {generatingAvatar ? $t('crop.cancel') : $t('account.ai_avatar_title')}
                 </button>
                 <input bind:this={avatarInput} type="file" accept="image/jpeg,image/png,image/webp" onchange={handleAvatarSelect} class="hidden-input" />
             </div>
-        </div>
-        <div class="form-area">
             <div class="form-group">
                 <label>{$t('profile.user.display_name')}</label>
                 <div class="input-with-btn">
@@ -384,7 +374,6 @@
                 </div>
                 <span class="bio-counter">{userBio.length}/500</span>
             </div>
-            <div class="member-since">{$t('profile.user.member_since')} {memberSince}</div>
             <button class="btn-primary" onclick={saveUserProfile} disabled={savingProfile}>
                 {savingProfile ? '...' : $t('profile.user.save')}
             </button>
