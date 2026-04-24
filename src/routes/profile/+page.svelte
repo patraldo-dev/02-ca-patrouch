@@ -145,6 +145,38 @@
         openCropModal(file);
     }
 
+    let emojiTarget = $state(null);
+    let showEmojiPicker = $state(false);
+    let currentEmojiCat = $state(0);
+
+    const emojiData = {
+        '😊': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😉','😊','😇','🥰','😍','🤩','😘','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','😐','😑','😶','😏','😒','🙄','😬','😌','😔','😪','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠'],
+        '👋': ['👋','🤚','🖐️','✋','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🤝','🙏','💪'],
+        '❤️': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝'],
+        '🪄': ['✨','⭐','🌟','💫','🔥','💥','💫','🎵','🎶','🎤','🎧','🎸','🎹','📝','📖','📚','💡','🎨','🎭','🎮','🎲','🏆','🥇','🎯','🎪','🎭','🎬','🎊','🎉','🎁','🎀','✅','❌','⚠️','❓','❗','💯','🆗','🆕'],
+        '🌍': ['🌍','🌎','🌏','🌟','⭐','🌙','☀️','🌈','☁️','⛈️','❄️','💧','🌊','🌊','🏔️','⛰️','🌋','🌸','🌺','🌻','🌹','🍀','🌿','🍁','🍂','🍃','🪻','🌺'],
+        '🍕': ['☕','🍵','🍷','🍺','🥂','🍹','🍕','🍔','🌮','🍣','🍩','🍪','🎂','🍰','🍫','🍿','🧁','🍰','🎂','🍦','🍉','🍇','🍓','🍒','🥝','🥑'],
+    };
+
+    function toggleEmoji(target) {
+        emojiTarget = target;
+        showEmojiPicker = !showEmojiPicker;
+    }
+
+    function insertEmoji(emoji) {
+        const input = emojiTarget === 'name' ? document.getElementById('displayNameInput') : document.getElementById('bioInput');
+        if (!input) return;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const value = input.value;
+        input.value = value.substring(0, start) + emoji + value.substring(end);
+        input.selectionStart = input.selectionEnd = start + emoji.length;
+        input.focus();
+        if (emojiTarget === 'name') userDisplayName = input.value;
+        else userBio = input.value;
+        showEmojiPicker = false;
+    }
+
     function onCropPointerDown(e) {
         cropDrag = { ...cropDrag, active: true, startX: e.clientX - cropDrag.imgX, startY: e.clientY - cropDrag.imgY };
     }
@@ -320,11 +352,13 @@
         <div class="user-profile-form">
             <div class="form-group">
                 <label>{$t('profile.user.display_name')}</label>
-                <input bind:value={userDisplayName} placeholder={$t('profile.user.display_name_placeholder')} maxlength="50" />
+                <input id="displayNameInput" bind:value={userDisplayName} placeholder={$t('profile.user.display_name_placeholder')} maxlength="50" />
+                <button class="emoji-btn" onclick={toggleEmoji('name')} type="button">😄</button>
             </div>
             <div class="form-group">
                 <label>{$t('profile.user.bio')}</label>
-                <textarea bind:value={userBio} placeholder={$t('profile.user.bio_placeholder')} maxlength="500" rows="4"></textarea>
+                <textarea id="bioInput" bind:value={userBio} placeholder={$t('profile.user.bio_placeholder')} maxlength="500" rows="4"></textarea>
+                <button class="emoji-btn" onclick={toggleEmoji('bio')} type="button">😄</button>
                 <span class="bio-counter">{userBio.length}/500</span>
             </div>
             <div class="member-since">{$t('profile.user.member_since')} {memberSince}</div>
@@ -454,6 +488,18 @@
     </div>
     {/if}
 </div>
+    {#if showEmojiPicker}
+        <div class="emoji-picker-overlay" onclick={() => showEmojiPicker = false}></div>
+        <div class="emoji-picker">
+            <div class="emoji-tabs">{#each Object.keys(emojiData) as cat, i}
+                <button class="emoji-tab" class:active={currentEmojiCat === i} onclick={() => currentEmojiCat = i} type="button">{cat}</button>
+            {/each}</div>
+            <div class="emoji-grid">{#each Object.values(emojiData)[currentEmojiCat] as emoji}
+                <button class="emoji-item" onclick={() => insertEmoji(emoji)} type="button">{emoji}</button>
+            {/each}</div>
+        </div>
+    {/if}
+
 
 {#if showCropModal}
 <div class="crop-overlay" onpointerup={onCropPointerUp} onpointerleave={onCropPointerUp}>
@@ -789,4 +835,14 @@
     .crop-cancel-btn:hover { border-color: var(--text-muted); color: var(--text); }
     .crop-preview-row { display: flex; align-items: center; gap: 1rem; }
     .crop-preview-circle { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+    .emoji-btn { background: none; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 1rem; padding: 2px 6px; margin-left: 4px; vertical-align: middle; }
+    .emoji-btn:hover { border-color: var(--accent); }
+    .emoji-picker-overlay { position: fixed; inset: 0; z-index: 998; }
+    .emoji-picker { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 320px; max-height: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .emoji-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+    .emoji-tab { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem; }
+    .emoji-tab.active { border-color: var(--accent); }
+    .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; max-height: 300px; overflow-y: auto; }
+    .emoji-item { background: none; border: none; font-size: 1.3rem; padding: 4px; cursor: pointer; border-radius: 4px; }
+    .emoji-item:hover { background: var(--bg); }
 </style>
