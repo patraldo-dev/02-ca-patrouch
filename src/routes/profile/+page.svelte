@@ -249,7 +249,9 @@
     let memberSince = $derived.by(() => {
         const d = data.profile?.created_at;
         if (!d) return '';
-        return new Date(d.replace ? d.replace(' ', 'T') : d).toLocaleDateString($t('profile.date_locale', 'en-US'), { year: 'numeric', month: 'long', day: 'numeric' });
+        try {
+            return new Date(d.includes('T') ? d : d.replace(' ', 'T')).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch { return d; }
     });
 
     async function toggleProfileVisibility() {
