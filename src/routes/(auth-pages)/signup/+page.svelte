@@ -17,7 +17,6 @@
         return pwd;
     }
 
-    // Auto-generate a secure password on load
     onMount(() => {
         const suggested = generatePassword();
         password = suggested;
@@ -70,6 +69,16 @@
 </script>
 
 <main>
+    <!-- Top: already have account -->
+    <p class="login-link-top">
+        {$t('signup.have_account')} <a href="/login">{$t('signup.login_link')}</a>
+    </p>
+
+    <div class="divider">
+        <span>{$t('signup.or')}</span>
+    </div>
+
+    <!-- Icon + Title -->
     <svg class="signup-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="28" cy="28" r="26" stroke="#c9a87c" stroke-width="1" opacity="0.3"/>
         <path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
@@ -83,7 +92,7 @@
         <div class="success-banner">{success}</div>
     {/if}
 
-    <!-- Social login first -->
+    <!-- Social login -->
     <div class="oauth-section">
         <div class="oauth-buttons">
             <button type="button" class="btn-oauth btn-google" onclick={() => authClient.signIn.social({ provider: 'google' })}>
@@ -95,9 +104,9 @@
                 {$t('signup.continue_github')}
             </button>
         </div>
+        <p class="trust-copy">{$t('signup.trust_copy')}</p>
     </div>
 
-    <!-- Divider -->
     <div class="divider">
         <span>{$t('signup.or')}</span>
     </div>
@@ -141,10 +150,6 @@
             {isLoading ? $t('signup.creating') : $t('signup.button')}
         </button>
     </form>
-
-    <p class="login-link">
-        {$t('signup.have_account')} <a href="/login">{$t('signup.login_link')}</a>
-    </p>
 </main>
 
 <style>
@@ -157,6 +162,11 @@
         background: var(--surface);
         color: var(--text-dim);
         text-align: center;
+    }
+
+    .login-link-top {
+        font-size: 0.85rem;
+        margin: 0;
     }
 
     .signup-icon {
@@ -207,6 +217,12 @@
         margin: -0.5rem 0 0;
     }
 
+    .trust-copy {
+        font-size: 0.75rem;
+        color: var(--muted, #a1a1aa);
+        margin: 0.5rem 0 0;
+    }
+
     .error-text {
         color: #ef4444;
         font-size: 0.85rem;
@@ -214,6 +230,8 @@
     }
 
     input {
+        width: 100%;
+        box-sizing: border-box;
         padding: 0.5rem;
         font-size: 1rem;
         border: 1px solid var(--border);
@@ -237,7 +255,7 @@
         border-radius: 4px;
         cursor: pointer;
         font-weight: 600;
-        transition: background-color 0.2s;
+        transition: filter 0.2s;
     }
 
     button[type="submit"]:hover {
@@ -267,11 +285,6 @@
         font-size: 0.9rem;
     }
 
-    .login-link {
-        margin-top: 1rem;
-        font-size: 0.85rem;
-    }
-
     /* OAuth */
     .oauth-section { margin-bottom: 1.25rem; }
     .oauth-buttons { display: flex; gap: 0.75rem; }
@@ -299,7 +312,7 @@
         display: flex;
         align-items: center;
         gap: 1rem;
-        margin-bottom: 1.25rem;
+        margin: 1rem 0;
     }
     .divider::before,
     .divider::after {
@@ -313,9 +326,9 @@
         color: var(--muted, #a1a1aa);
     }
 
+    /* Password */
     .password-row { display: flex; gap: 0.5rem; }
     .password-row input { flex: 1; min-width: 0; }
-    input { width: 100%; box-sizing: border-box; }
     .btn-generate {
         background: var(--surface, #141417);
         border: 2px solid var(--border);
