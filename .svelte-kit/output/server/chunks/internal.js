@@ -49,6 +49,7 @@ const options = {
 				} catch(e) {}
 			})();
 		<\/script>
+		<style>html,body{background-color:#09090b;color:#e5e5e5;margin:0}</style>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" href="/favicon.ico" />
@@ -125,7 +126,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "1r26tbs"
+  version_hash: "n0qie2"
 };
 async function get_hooks() {
   let handle;

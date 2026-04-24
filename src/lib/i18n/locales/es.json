@@ -915,5 +915,10 @@
   "signup.password": "Contraseña",
   "signup.password_placeholder": "Crea una contraseña",
   "signup.confirm_password": "Confirmar Contraseña",
-  "signup.confirm_placeholder": "Repite tu contraseña"
+  "signup.confirm_placeholder": "Repite tu contraseña",
+  "signup.continue_google": "Continuar con Google",
+  "signup.continue_github": "Continuar con GitHub",
+  "signup.or": "o",
+  "signup.email_heading": "Regístrate con usuario y correo",
+  "signup.privacy_note": "Nunca publicaremos sin tu permiso."
 }

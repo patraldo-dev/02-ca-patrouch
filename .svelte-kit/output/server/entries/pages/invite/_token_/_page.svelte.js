@@ -1,7 +1,7 @@
 import { e as escape_html, s as store_get, u as unsubscribe_stores } from "../../../../chunks/renderer.js";
 import { p as page } from "../../../../chunks/stores.js";
 import { g as goto } from "../../../../chunks/client.js";
-import { t } from "../../../../chunks/index2.js";
+import { t } from "../../../../chunks/index3.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;

@@ -1,6 +1,6 @@
 import { h as head, a as attr_class, s as store_get, e as escape_html, u as unsubscribe_stores } from "../../../chunks/renderer.js";
 import { p as page } from "../../../chunks/stores.js";
-import { t } from "../../../chunks/index2.js";
+import { t } from "../../../chunks/index3.js";
 function _layout($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;

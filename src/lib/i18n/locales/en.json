@@ -919,5 +919,10 @@
   "signup.password": "Password",
   "signup.password_placeholder": "Create a password",
   "signup.confirm_password": "Confirm Password",
-  "signup.confirm_placeholder": "Repeat your password"
+  "signup.confirm_placeholder": "Repeat your password",
+  "signup.continue_google": "Continue with Google",
+  "signup.continue_github": "Continue with GitHub",
+  "signup.or": "or",
+  "signup.email_heading": "Sign up with username and email",
+  "signup.privacy_note": "We'll never post without permission."
 }

@@ -27,22 +27,18 @@
     "file": "chunks/auth-client.js",
     "name": "auth-client",
     "imports": [
-      "_index3.js"
+      "_url.js"
     ]
-  },
-  "_auth-helpers.js": {
-    "file": "chunks/auth-helpers.js",
-    "name": "auth-helpers"
   },
   "_auth.js": {
     "file": "chunks/auth.js",
     "name": "auth",
     "imports": [
-      "_index3.js"
+      "_url.js"
     ],
     "dynamicImports": [
-      "_index3.js",
-      "_index3.js"
+      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs"
     ]
   },
   "_bottle-crypto.js": {
@@ -58,15 +54,11 @@
     "name": "client",
     "imports": [
       "_exports.js",
-      "_utils3.js",
-      "_index.js",
+      "_utils2.js",
+      "_index2.js",
       "_root.js",
       "_state.svelte.js"
     ]
-  },
-  "_email.js": {
-    "file": "chunks/email.js",
-    "name": "email"
   },
   "_engagement.js": {
     "file": "chunks/engagement.js",
@@ -92,25 +84,20 @@
     "file": "chunks/html.js",
     "name": "html"
   },
-  "_index.js": {
-    "file": "chunks/index.js",
-    "name": "index",
-    "imports": [
-      "_utils2.js"
-    ]
-  },
   "_index2.js": {
     "file": "chunks/index2.js",
     "name": "index",
     "imports": [
-      "_index.js",
-      "_fr.js"
+      "_utils.js"
     ]
   },
   "_index3.js": {
     "file": "chunks/index3.js",
     "name": "index",
-    "isDynamicEntry": true
+    "imports": [
+      "_index2.js",
+      "_fr.js"
+    ]
   },
   "_internal.js": {
     "file": "chunks/internal.js",
@@ -136,7 +123,7 @@
     "file": "chunks/renderer.js",
     "name": "renderer",
     "imports": [
-      "_utils2.js",
+      "_utils.js",
       "_render-context.js"
     ]
   },
@@ -144,7 +131,7 @@
     "file": "chunks/root.js",
     "name": "root",
     "imports": [
-      "_utils2.js",
+      "_utils.js",
       "_renderer.js"
     ]
   },
@@ -156,7 +143,7 @@
     "file": "chunks/shared.js",
     "name": "shared",
     "imports": [
-      "_utils3.js",
+      "_utils2.js",
       "_render-context.js"
     ]
   },
@@ -164,7 +151,7 @@
     "file": "chunks/state.svelte.js",
     "name": "state.svelte",
     "imports": [
-      "_utils2.js",
+      "_utils.js",
       "_exports.js",
       "_root.js"
     ]
@@ -175,21 +162,25 @@
     "imports": [
       "_renderer.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js"
     ]
   },
+  "_url.js": {
+    "file": "chunks/url.js",
+    "name": "url"
+  },
   "_utils.js": {
     "file": "chunks/utils.js",
-    "name": "utils"
-  },
-  "_utils2.js": {
-    "file": "chunks/utils2.js",
     "name": "utils",
     "imports": [
       "_false.js"
     ]
+  },
+  "_utils2.js": {
+    "file": "chunks/utils2.js",
+    "name": "utils"
   },
   "_utils3.js": {
     "file": "chunks/utils3.js",
@@ -235,10 +226,16 @@
       "_false.js",
       "_server.js",
       "_exports.js",
-      "_utils3.js",
-      "_index.js",
+      "_utils2.js",
+      "_index2.js",
       "_internal.js"
     ]
+  },
+  "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs": {
+    "file": "chunks/index.js",
+    "name": "index",
+    "src": "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+    "isDynamicEntry": true
   },
   "src/hooks.server.js": {
     "file": "entries/hooks.server.js",
@@ -270,7 +267,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.DfI_3ZAf.css"
@@ -289,7 +286,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_auth-client.js"
     ],
     "css": [
@@ -303,7 +300,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_auth-client.js"
     ],
     "css": [
@@ -316,7 +313,7 @@
     "src": "src/routes/+layout.js",
     "isEntry": true,
     "imports": [
-      "_index2.js"
+      "_index3.js"
     ]
   },
   "src/routes/+layout.server.js": {
@@ -332,14 +329,14 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js",
       "_OnboardingFlow.svelte_svelte_type_style_lang.js",
       "_stores.js",
-      "_utils.js",
+      "_utils3.js",
       "_html.js"
     ],
     "css": [
@@ -359,9 +356,9 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js"
     ],
@@ -377,7 +374,7 @@
     "imports": [
       "_renderer.js",
       "_stores.js",
-      "_index2.js",
+      "_index3.js",
       "_html.js"
     ],
     "css": [
@@ -398,7 +395,7 @@
     "imports": [
       "_renderer.js",
       "_stores.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_layout.BaTVQL_z.css"
@@ -417,7 +414,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.fQPO_qEp.css"
@@ -448,9 +445,9 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js"
     ],
@@ -471,7 +468,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.ZDl7R65l.css"
@@ -494,10 +491,10 @@
     "imports": [
       "_renderer.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.BC9y6SNH.css"
@@ -519,7 +516,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.CFW0VVj1.css"
@@ -665,45 +662,6 @@
     "isEntry": true,
     "imports": [
       "_auth.js"
-    ]
-  },
-  "src/routes/api/auth/forgot-password/+server.js": {
-    "file": "entries/endpoints/api/auth/forgot-password/_server.js",
-    "name": "entries/endpoints/api/auth/forgot-password/_server",
-    "src": "src/routes/api/auth/forgot-password/+server.js",
-    "isEntry": true,
-    "imports": [
-      "_email.js",
-      "_utils.js"
-    ]
-  },
-  "src/routes/api/auth/login/+server.js": {
-    "file": "entries/endpoints/api/auth/login/_server.js",
-    "name": "entries/endpoints/api/auth/login/_server",
-    "src": "src/routes/api/auth/login/+server.js",
-    "isEntry": true,
-    "imports": [
-      "_auth-helpers.js",
-      "_utils.js"
-    ]
-  },
-  "src/routes/api/auth/reset-password/+server.js": {
-    "file": "entries/endpoints/api/auth/reset-password/_server.js",
-    "name": "entries/endpoints/api/auth/reset-password/_server",
-    "src": "src/routes/api/auth/reset-password/+server.js",
-    "isEntry": true,
-    "imports": [
-      "_auth-helpers.js"
-    ]
-  },
-  "src/routes/api/auth/signup/+server.js": {
-    "file": "entries/endpoints/api/auth/signup/_server.js",
-    "name": "entries/endpoints/api/auth/signup/_server",
-    "src": "src/routes/api/auth/signup/+server.js",
-    "isEntry": true,
-    "imports": [
-      "_auth-helpers.js",
-      "_email.js"
     ]
   },
   "src/routes/api/books/+server.js": {
@@ -1004,10 +962,7 @@
     "file": "entries/endpoints/api/subscribe/_server.js",
     "name": "entries/endpoints/api/subscribe/_server",
     "src": "src/routes/api/subscribe/+server.js",
-    "isEntry": true,
-    "imports": [
-      "_email.js"
-    ]
+    "isEntry": true
   },
   "src/routes/api/taller/prompts/+server.js": {
     "file": "entries/endpoints/api/taller/prompts/_server.js",
@@ -1169,7 +1124,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_client.js"
     ],
     "css": [
@@ -1226,7 +1181,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_client.js"
     ],
     "css": [
@@ -1247,14 +1202,20 @@
     "imports": [
       "_renderer.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.BFNOxqco.css"
     ]
+  },
+  "src/routes/games/booty/+page.js": {
+    "file": "entries/pages/games/booty/_page.js",
+    "name": "entries/pages/games/booty/_page",
+    "src": "src/routes/games/booty/+page.js",
+    "isEntry": true
   },
   "src/routes/games/booty/+page.server.js": {
     "file": "entries/pages/games/booty/_page.server.js",
@@ -1269,10 +1230,10 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
+      "_index3.js",
       "_index2.js",
-      "_index.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js"
     ],
@@ -1301,7 +1262,7 @@
       "_renderer.js",
       "_stores.js",
       "_client.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.Cd_u0VaS.css"
@@ -1320,7 +1281,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_html.js"
     ],
     "css": [
@@ -1343,12 +1304,12 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js",
-      "_utils.js",
+      "_utils3.js",
       "_WriterOfTheWeek.svelte_svelte_type_style_lang.js"
     ],
     "css": [
@@ -1368,7 +1329,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_client.js"
     ],
     "css": [
@@ -1382,7 +1343,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.CspyvFJ5.css"
@@ -1395,7 +1356,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.C-Z8B9gL.css"
@@ -1414,7 +1375,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_html.js"
     ],
     "css": [
@@ -1465,10 +1426,10 @@
     "imports": [
       "_renderer.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js",
-      "_index2.js",
+      "_index3.js",
       "_WriterOfTheWeek.svelte_svelte_type_style_lang.js",
       "_OnboardingFlow.svelte_svelte_type_style_lang.js",
       "_html.js"
@@ -1493,7 +1454,7 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js"
+      "_index3.js"
     ],
     "css": [
       "_app/immutable/assets/_page.COsISfz4.css"
@@ -1512,9 +1473,9 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js"
     ],
@@ -1541,13 +1502,13 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js",
       "_stores.js",
-      "_utils.js",
+      "_utils3.js",
       "_html.js"
     ],
     "css": [
@@ -1567,9 +1528,9 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_index2.js",
+      "_index3.js",
       "_exports.js",
-      "_utils3.js",
+      "_utils2.js",
       "_root.js",
       "_state.svelte.js"
     ],

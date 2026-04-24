@@ -10,7 +10,7 @@ return {
 	assets: new Set([".assetsignore","favicon.ico","robots.txt"]),
 	mimeTypes: {".txt":"text/plain"},
 	_: {
-		client: {start:"_app/immutable/entry/start.DYqahtOa.js",app:"_app/immutable/entry/app.DXRNHJhC.js",imports:["_app/immutable/entry/start.DYqahtOa.js","_app/immutable/chunks/De-grcsT.js","_app/immutable/chunks/pmSrnTe9.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/CU8NK243.js","_app/immutable/entry/app.DXRNHJhC.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/vYeeBVxZ.js","_app/immutable/chunks/C91UaUCV.js","_app/immutable/chunks/BekfPKSE.js","_app/immutable/chunks/DM3HuRQe.js","_app/immutable/chunks/Cai8yQTP.js","_app/immutable/chunks/CU8NK243.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.C_fEVmyA.js",app:"_app/immutable/entry/app.BwPMIPRI.js",imports:["_app/immutable/entry/start.C_fEVmyA.js","_app/immutable/chunks/DwdUaQX7.js","_app/immutable/chunks/DKbrVa_p.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/CU8NK243.js","_app/immutable/entry/app.BwPMIPRI.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/vYeeBVxZ.js","_app/immutable/chunks/C91UaUCV.js","_app/immutable/chunks/BekfPKSE.js","_app/immutable/chunks/DM3HuRQe.js","_app/immutable/chunks/Cai8yQTP.js","_app/immutable/chunks/CU8NK243.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('../output/server/nodes/0.js')),
 			__memo(() => import('../output/server/nodes/1.js')),
@@ -227,34 +227,6 @@ return {
 				params: [],
 				page: null,
 				endpoint: __memo(() => import('../output/server/entries/endpoints/api/analytics/_server.js'))
-			},
-			{
-				id: "/api/auth/forgot-password",
-				pattern: /^\/api\/auth\/forgot-password\/?$/,
-				params: [],
-				page: null,
-				endpoint: __memo(() => import('../output/server/entries/endpoints/api/auth/forgot-password/_server.js'))
-			},
-			{
-				id: "/api/auth/login",
-				pattern: /^\/api\/auth\/login\/?$/,
-				params: [],
-				page: null,
-				endpoint: __memo(() => import('../output/server/entries/endpoints/api/auth/login/_server.js'))
-			},
-			{
-				id: "/api/auth/reset-password",
-				pattern: /^\/api\/auth\/reset-password\/?$/,
-				params: [],
-				page: null,
-				endpoint: __memo(() => import('../output/server/entries/endpoints/api/auth/reset-password/_server.js'))
-			},
-			{
-				id: "/api/auth/signup",
-				pattern: /^\/api\/auth\/signup\/?$/,
-				params: [],
-				page: null,
-				endpoint: __memo(() => import('../output/server/entries/endpoints/api/auth/signup/_server.js'))
 			},
 			{
 				id: "/api/auth/[...all]",

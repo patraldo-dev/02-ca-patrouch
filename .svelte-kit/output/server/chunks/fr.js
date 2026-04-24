@@ -621,6 +621,7 @@ const en = {
   "signup.success": "Account created! Check your email to verify your address.",
   "signup.failed": "Signup failed. Please try again.",
   "signup.network_error": "Network error. Please try again.",
+  "signup.or_continue_with": "or continue with",
   "common.nav.evaluate": "Evaluate",
   "evaluate.title": "AI Writing Evaluation",
   "evaluate.description": "Paste your writing and get honest, constructive feedback from AI. Raw drafts welcome — this tool values originality and risk-taking over polish.",
@@ -909,7 +910,16 @@ const en = {
   "crop.title": "Crop your avatar",
   "crop.apply": "Apply",
   "crop.cancel": "Cancel",
-  "crop.drag_hint": "Drag to reposition"
+  "crop.drag_hint": "Drag to reposition",
+  "signup.title": "Create Account",
+  "signup.username": "Username",
+  "signup.username_placeholder": "Choose a username",
+  "signup.email": "Email",
+  "signup.email_placeholder": "your@email.com",
+  "signup.password": "Password",
+  "signup.password_placeholder": "Create a password",
+  "signup.confirm_password": "Confirm Password",
+  "signup.confirm_placeholder": "Repeat your password"
 };
 const es = {
   "common.nav.home": "Inicio",
@@ -1520,6 +1530,7 @@ const es = {
   "signup.success": "¡Cuenta creada! Revisa tu correo para verificar tu dirección.",
   "signup.failed": "El registro falló. Intenta de nuevo.",
   "signup.network_error": "Error de red. Intenta de nuevo.",
+  "signup.or_continue_with": "o continúa con",
   "common.nav.evaluate": "Evaluar",
   "evaluate.title": "Evaluación de Escritura con IA",
   "evaluate.description": "Pega tu texto y recibe retroalimentación honesta y constructiva de la IA. Los borradores crudos son bienvenidos — esta herramienta valora la originalidad y el riesgo sobre la perfección.",
@@ -1818,7 +1829,16 @@ const es = {
   "profile.user.avatar_err_moderation": "La imagen fue rechazada por el sistema de moderación",
   "profile.user.avatar_err_unavailable": "Servicio de imágenes no disponible",
   "profile.user.avatar_err_generic": "Error al subir la imagen. Intenta de nuevo.",
-  "profile.user.avatar_err_network": "Error de conexión. Verifica tu internet."
+  "profile.user.avatar_err_network": "Error de conexión. Verifica tu internet.",
+  "signup.title": "Crear Cuenta",
+  "signup.username": "Usuario",
+  "signup.username_placeholder": "Elige un nombre de usuario",
+  "signup.email": "Correo electrónico",
+  "signup.email_placeholder": "tu@correo.com",
+  "signup.password": "Contraseña",
+  "signup.password_placeholder": "Crea una contraseña",
+  "signup.confirm_password": "Confirmar Contraseña",
+  "signup.confirm_placeholder": "Repite tu contraseña"
 };
 const fr = {
   "common.nav.home": "Accueil",
@@ -2429,6 +2449,7 @@ const fr = {
   "signup.success": "Compte créé ! Vérifie ton e-mail pour confirmer ton adresse.",
   "signup.failed": "Inscription échouée. Réessaie.",
   "signup.network_error": "Erreur réseau. Réessaie.",
+  "signup.or_continue_with": "ou continuer avec",
   "common.nav.evaluate": "Évaluer",
   "evaluate.title": "Évaluation d'Écriture par IA",
   "evaluate.description": "Colle ton texte et reçois des retours honnêtes et constructifs de l'IA. Les brouillons bruts sont les bienvenus — cet outil valorise l'originalité et la prise de risque plutôt que la perfection.",
@@ -2731,7 +2752,16 @@ const fr = {
   "crop.title": "Recadrez votre avatar",
   "crop.apply": "Appliquer",
   "crop.cancel": "Annuler",
-  "crop.drag_hint": "Glissez pour repositionner"
+  "crop.drag_hint": "Glissez pour repositionner",
+  "signup.title": "Créer un Compte",
+  "signup.username": "Nom d'utilisateur",
+  "signup.username_placeholder": "Choisissez un nom",
+  "signup.email": "Courriel",
+  "signup.email_placeholder": "votre@courriel.com",
+  "signup.password": "Mot de passe",
+  "signup.password_placeholder": "Créez un mot de passe",
+  "signup.confirm_password": "Confirmer le mot de passe",
+  "signup.confirm_placeholder": "Répétez votre mot de passe"
 };
 export {
   en as a,

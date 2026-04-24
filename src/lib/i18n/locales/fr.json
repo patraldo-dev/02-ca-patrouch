@@ -919,5 +919,10 @@
   "signup.password": "Mot de passe",
   "signup.password_placeholder": "Créez un mot de passe",
   "signup.confirm_password": "Confirmer le mot de passe",
-  "signup.confirm_placeholder": "Répétez votre mot de passe"
+  "signup.confirm_placeholder": "Répétez votre mot de passe",
+  "signup.continue_google": "Continuer avec Google",
+  "signup.continue_github": "Continuer avec GitHub",
+  "signup.or": "ou",
+  "signup.email_heading": "Créer un compte avec pseudo et courriel",
+  "signup.privacy_note": "Nous ne publierons jamais sans autorisation."
 }

@@ -1,5 +1,5 @@
 import { e as escape_html, s as store_get, b as attr, u as unsubscribe_stores } from "../../../../chunks/renderer.js";
-import { t } from "../../../../chunks/index2.js";
+import { t } from "../../../../chunks/index3.js";
 import "../../../../chunks/auth-client.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {

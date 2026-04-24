@@ -1,9 +1,9 @@
 import { a as attr_class, e as escape_html, c as ensure_array_like, f as stringify, b as attr, h as head, s as store_get, j as clsx, i as attr_style, u as unsubscribe_stores, d as derived } from "../../../../chunks/renderer.js";
-import { t } from "../../../../chunks/index2.js";
-import { g as get } from "../../../../chunks/index.js";
+import { t } from "../../../../chunks/index3.js";
+import { g as get } from "../../../../chunks/index2.js";
 import "@sveltejs/kit/internal";
 import "../../../../chunks/exports.js";
-import "../../../../chunks/utils3.js";
+import "../../../../chunks/utils2.js";
 import "@sveltejs/kit/internal/server";
 import "../../../../chunks/root.js";
 import "../../../../chunks/state.svelte.js";
@@ -497,7 +497,7 @@ function _page($$renderer, $$props) {
       const each_array_11 = ensure_array_like(playersWithDist());
       for (let $$index_11 = 0, $$length = each_array_11.length; $$index_11 < $$length; $$index_11++) {
         let player = each_array_11[$$index_11];
-        $$renderer2.push(`<button class="player-card svelte-1wyf3u8"><div class="player-header svelte-1wyf3u8"><div class="player-avatar svelte-1wyf3u8"${attr_style(`background:${stringify(player.team_color || "var(--accent)")}`)}>${escape_html(player.type === "ai" ? "🤖" : "🧭")}</div> <div class="player-info svelte-1wyf3u8"><h3 class="svelte-1wyf3u8">${escape_html(player.display_name || player.username)} ${escape_html(player.type === "ai" ? "🤖" : "👤")}</h3> <span class="team-badge svelte-1wyf3u8"${attr_style(`background:${stringify(player.team_color || "var(--accent)")}22;color:${stringify(player.team_color || "var(--accent)")}`)}>${escape_html(player.type === "ai" ? "🤖 AI" : "👤 Human")} · ${escape_html(player.solo ? "Solo" : player.team_name || "Free Agent")}</span></div></div> <div class="player-details svelte-1wyf3u8"><div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">📍 Port</span><span class="svelte-1wyf3u8">${escape_html(player.port_name || "Unknown")}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">${escape_html(formatSolarTime(player.lon))}</span><span class="svelte-1wyf3u8">${escape_html(player.lat ? formatCoords(player.lat, player.lon) : "—")}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">⭐ Points</span><span class="svelte-1wyf3u8">${escape_html(player.points || 0)}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">🫘 Beans</span><span class="svelte-1wyf3u8">${escape_html(formatBeans(player.fuel))}</span></div> `);
+        $$renderer2.push(`<div class="player-card svelte-1wyf3u8" role="button" tabindex="0"><div class="player-header svelte-1wyf3u8"><div class="player-avatar svelte-1wyf3u8"${attr_style(`background:${stringify(player.team_color || "var(--accent)")}`)}>${escape_html(player.type === "ai" ? "🤖" : "🧭")}</div> <div class="player-info svelte-1wyf3u8"><h3 class="svelte-1wyf3u8">${escape_html(player.display_name || player.username)} ${escape_html(player.type === "ai" ? "🤖" : "👤")}</h3> <span class="team-badge svelte-1wyf3u8"${attr_style(`background:${stringify(player.team_color || "var(--accent)")}22;color:${stringify(player.team_color || "var(--accent)")}`)}>${escape_html(player.type === "ai" ? "🤖 AI" : "👤 Human")} · ${escape_html(player.solo ? "Solo" : player.team_name || "Free Agent")}</span></div></div> <div class="player-details svelte-1wyf3u8"><div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">📍 Port</span><span class="svelte-1wyf3u8">${escape_html(player.port_name || "Unknown")}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">${escape_html(formatSolarTime(player.lon))}</span><span class="svelte-1wyf3u8">${escape_html(player.lat ? formatCoords(player.lat, player.lon) : "—")}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">⭐ Points</span><span class="svelte-1wyf3u8">${escape_html(player.points || 0)}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">🫘 Beans</span><span class="svelte-1wyf3u8">${escape_html(formatBeans(player.fuel))}</span></div> `);
         if (player.nearestDist !== null) {
           $$renderer2.push("<!--[0-->");
           $$renderer2.push(`<button class="bottle-link svelte-1wyf3u8">🍾 Nearest: ${escape_html(player.nearestDist.toFixed(0))} km</button>`);
@@ -514,7 +514,7 @@ function _page($$renderer, $$props) {
         } else {
           $$renderer2.push("<!--[-1-->");
         }
-        $$renderer2.push(`<!--]--></button>`);
+        $$renderer2.push(`<!--]--></div>`);
       }
       $$renderer2.push(`<!--]--></div></div>`);
     } else {

@@ -102,18 +102,6 @@
 	"/api/analytics": [
 		"src/routes/api/analytics/+server.js"
 	],
-	"/api/auth/forgot-password": [
-		"src/routes/api/auth/forgot-password/+server.js"
-	],
-	"/api/auth/login": [
-		"src/routes/api/auth/login/+server.js"
-	],
-	"/api/auth/reset-password": [
-		"src/routes/api/auth/reset-password/+server.js"
-	],
-	"/api/auth/signup": [
-		"src/routes/api/auth/signup/+server.js"
-	],
 	"/api/auth/[...all]": [
 		"src/routes/api/auth/[...all]/+server.js"
 	],
@@ -345,6 +333,7 @@
 		"src/routes/+layout.server.js"
 	],
 	"/games/booty": [
+		"src/routes/games/booty/+page.js",
 		"src/routes/games/booty/+page.server.js",
 		"src/routes/+layout.js",
 		"src/routes/+layout.server.js"
