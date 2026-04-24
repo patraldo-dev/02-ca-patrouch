@@ -1155,7 +1155,7 @@
                             💸 Send me 🫘
                         </button>
                     {/if}
-                </div>
+                </button>
             {/each}
         </div>
     </div>
