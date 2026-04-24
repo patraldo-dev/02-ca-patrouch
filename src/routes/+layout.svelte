@@ -272,6 +272,11 @@
                     <span></span><span></span><span></span>
                 </span>
             </button>
+            {#if data.user}
+            <div class="mobile-bell">
+                <NotificationBell />
+            </div>
+            {/if}
         </div>
     </header>
 
@@ -316,7 +321,6 @@
                         <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
                         <div style="flex:1">
                             <div style="font-weight:600;font-size:0.95rem">{activeDisplayName}</div>
-                            <NotificationBell />
                         </div>
                     </div>
                     {#if data.user?.role === 'admin'}
@@ -769,6 +773,13 @@
     .btn-accent:hover { background: var(--accent-hover); }
 
     .block { display: block; width: 100%; text-align: center; }
+
+    /* ── Mobile Bell ── */
+    .mobile-bell {
+        display: flex;
+        align-items: center;
+        padding-right: 0.25rem;
+    }
 
     /* ── Mobile Toggle ── */
     .mobile-toggle {
