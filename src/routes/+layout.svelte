@@ -100,7 +100,7 @@
     async function handleLogout() {
         if (!browser) return;
         try {
-            await fetch('/api/auth/sign-out', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            await fetch('/api/auth/sign-out', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
         } catch {}
         window.location.href = '/';
     }
