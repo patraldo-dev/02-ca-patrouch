@@ -285,7 +285,7 @@
                         ${launchCoords ? `<div>📍 ${launchCoords}</div>` : ''}
                         ${currentCoords && currentCoords !== launchCoords ? `<div>➜ ${currentCoords}</div>` : ''}
                         ${dist ? `<div>📏 ${dist}</div>` : ''}
-                        <div style="margin-top:3px;text-transform:capitalize;font-weight:600;color:#333">${bottle.status}</div>
+                        <div style="margin-top:3px;font-weight:600;color:#333">{statusLabel(bottle.status)}</div>
                     </div>
                 </div>
             `);
