@@ -1,4 +1,4 @@
-import { a as attr_class, e as escape_html, s as store_get, b as attr, u as unsubscribe_stores, d as derived, c as ensure_array_like, f as stringify } from "../../../../chunks/renderer.js";
+import { a as attr_class, b as attr, e as escape_html, s as store_get, u as unsubscribe_stores, d as derived, c as ensure_array_like, f as stringify } from "../../../../chunks/renderer.js";
 import { t, g as getLocale } from "../../../../chunks/index2.js";
 import "@sveltejs/kit/internal";
 import "../../../../chunks/exports.js";
@@ -8,6 +8,7 @@ import "../../../../chunks/root.js";
 import "../../../../chunks/state.svelte.js";
 import { p as page } from "../../../../chunks/stores.js";
 import "marked";
+import { a as avatarVariant } from "../../../../chunks/utils.js";
 import { h as html } from "../../../../chunks/html.js";
 function CommentItem($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
@@ -42,10 +43,19 @@ function CommentItem($$renderer, $$props) {
         return d;
       }
     }
+    let avatarUrl = derived(() => avatarVariant(comment.avatar_url || comment.image, "avatar100"));
     let avatar = derived(() => (comment.username || "?")[0].toUpperCase());
     {
       $$renderer2.push("<!--[-1-->");
-      $$renderer2.push(`<div${attr_class("comment-item svelte-4fz57e", void 0, { "is-featured": comment.is_featured })}><div class="comment-avatar svelte-4fz57e">${escape_html(avatar())}</div> <div class="comment-body svelte-4fz57e"><div class="comment-header svelte-4fz57e"><span class="comment-username svelte-4fz57e">${escape_html(comment.username)}</span> `);
+      $$renderer2.push(`<div${attr_class("comment-item svelte-4fz57e", void 0, { "is-featured": comment.is_featured })}><div class="comment-avatar svelte-4fz57e">`);
+      if (avatarUrl()) {
+        $$renderer2.push("<!--[0-->");
+        $$renderer2.push(`<img${attr("src", avatarUrl())} alt="" class="svelte-4fz57e"/>`);
+      } else {
+        $$renderer2.push("<!--[-1-->");
+        $$renderer2.push(`${escape_html(avatar())}`);
+      }
+      $$renderer2.push(`<!--]--></div> <div class="comment-body svelte-4fz57e"><div class="comment-header svelte-4fz57e"><span class="comment-username svelte-4fz57e">${escape_html(comment.username)}</span> `);
       if (comment.parent_username) {
         $$renderer2.push("<!--[0-->");
         $$renderer2.push(`<span class="reply-indicator svelte-4fz57e">↳ ${escape_html(store_get($$store_subs ??= {}, "$t", t)("comments.reply_to"))} @${escape_html(comment.parent_username)}</span>`);

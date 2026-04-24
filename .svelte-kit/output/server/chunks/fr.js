@@ -895,7 +895,21 @@ const en = {
   "write.inspiration.9": "Not even Albot Camus can ignore a good piece of writing",
   "write.inspiration.from_agora": "from the Agora",
   "taller.dictation_title": "Dictation",
-  "taller.dictation_desc": "Listen and write — improve your spelling and grammar in English, Spanish, and French. Coming soon."
+  "taller.dictation_desc": "Listen and write — improve your spelling and grammar in English, Spanish, and French. Coming soon.",
+  "profile.privacy_title": "Privacy",
+  "profile.booty_keywords": "Bottle Booty Keywords",
+  "profile.date_locale": "en-US",
+  "profile.user.avatar_err_no_file": "No image selected",
+  "profile.user.avatar_err_format": "Only JPG, PNG, or WebP images are allowed",
+  "profile.user.avatar_err_size": "Image must be under 2MB",
+  "profile.user.avatar_err_moderation": "Image rejected by content moderation",
+  "profile.user.avatar_err_unavailable": "Image service not available",
+  "profile.user.avatar_err_generic": "Failed to upload image. Please try again.",
+  "profile.user.avatar_err_network": "Connection error. Check your internet.",
+  "crop.title": "Crop your avatar",
+  "crop.apply": "Apply",
+  "crop.cancel": "Cancel",
+  "crop.drag_hint": "Drag to reposition"
 };
 const es = {
   "common.nav.home": "Inicio",
@@ -1794,7 +1808,17 @@ const es = {
   "write.inspiration.9": "Ni Albot Camus puede ignorar un buen escrito",
   "write.inspiration.from_agora": "del Ágora",
   "taller.dictation_title": "Dictée",
-  "taller.dictation_desc": "Escucha y escribe — mejora tu ortografía y gramática en inglés, español y francés. Próximamente."
+  "taller.dictation_desc": "Escucha y escribe — mejora tu ortografía y gramática en inglés, español y francés. Próximamente.",
+  "profile.privacy_title": "Privacidad",
+  "profile.booty_keywords": "Palabras clave de Bottle Booty",
+  "profile.date_locale": "es-MX",
+  "profile.user.avatar_err_no_file": "No se seleccionó ninguna imagen",
+  "profile.user.avatar_err_format": "Solo se permiten imágenes JPG, PNG o WebP",
+  "profile.user.avatar_err_size": "La imagen debe ser menor a 2MB",
+  "profile.user.avatar_err_moderation": "La imagen fue rechazada por el sistema de moderación",
+  "profile.user.avatar_err_unavailable": "Servicio de imágenes no disponible",
+  "profile.user.avatar_err_generic": "Error al subir la imagen. Intenta de nuevo.",
+  "profile.user.avatar_err_network": "Error de conexión. Verifica tu internet."
 };
 const fr = {
   "common.nav.home": "Accueil",
@@ -2693,7 +2717,21 @@ const fr = {
   "write.inspiration.9": "Même Albot Camus ne peut ignorer un bon texte",
   "write.inspiration.from_agora": "de l'Agora",
   "taller.dictation_title": "Dictée",
-  "taller.dictation_desc": "Écoutez et écrivez — améliorez votre orthographe et grammaire en anglais, espagnol et français. Bientôt disponible."
+  "taller.dictation_desc": "Écoutez et écrivez — améliorez votre orthographe et grammaire en anglais, espagnol et français. Bientôt disponible.",
+  "profile.privacy_title": "Confidentialité",
+  "profile.booty_keywords": "Mots-clés Bottle Booty",
+  "profile.date_locale": "fr-FR",
+  "profile.user.avatar_err_no_file": "Aucune image sélectionnée",
+  "profile.user.avatar_err_format": "Seules les images JPG, PNG ou WebP sont autorisées",
+  "profile.user.avatar_err_size": "L'image doit être inférieure à 2 Mo",
+  "profile.user.avatar_err_moderation": "Image rejetée par la modération de contenu",
+  "profile.user.avatar_err_unavailable": "Service d'images indisponible",
+  "profile.user.avatar_err_generic": "Échec du téléchargement. Veuillez réessayer.",
+  "profile.user.avatar_err_network": "Erreur de connexion. Vérifiez votre internet.",
+  "crop.title": "Recadrez votre avatar",
+  "crop.apply": "Appliquer",
+  "crop.cancel": "Annuler",
+  "crop.drag_hint": "Glissez pour repositionner"
 };
 export {
   en as a,

@@ -7,10 +7,10 @@ function __memo(fn) {
 return {
 	appDir: "_app",
 	appPath: "_app",
-	assets: new Set([".assetsignore","_routes.json","favicon.ico","robots.txt"]),
-	mimeTypes: {".json":"application/json",".txt":"text/plain"},
+	assets: new Set([".assetsignore","favicon.ico","robots.txt"]),
+	mimeTypes: {".txt":"text/plain"},
 	_: {
-		client: {start:"_app/immutable/entry/start.BXEaBPJB.js",app:"_app/immutable/entry/app.DLGvaCaL.js",imports:["_app/immutable/entry/start.BXEaBPJB.js","_app/immutable/chunks/CgUAF2Mz.js","_app/immutable/chunks/BMGDZvjk.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/CU8NK243.js","_app/immutable/entry/app.DLGvaCaL.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/vYeeBVxZ.js","_app/immutable/chunks/C91UaUCV.js","_app/immutable/chunks/BekfPKSE.js","_app/immutable/chunks/DM3HuRQe.js","_app/immutable/chunks/Cai8yQTP.js","_app/immutable/chunks/CU8NK243.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.D5pWuO0L.js",app:"_app/immutable/entry/app.CoNSG8Bt.js",imports:["_app/immutable/entry/start.D5pWuO0L.js","_app/immutable/chunks/CfACfA3D.js","_app/immutable/chunks/BubMB4Uf.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/CU8NK243.js","_app/immutable/entry/app.CoNSG8Bt.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/vYeeBVxZ.js","_app/immutable/chunks/C91UaUCV.js","_app/immutable/chunks/BekfPKSE.js","_app/immutable/chunks/DM3HuRQe.js","_app/immutable/chunks/Cai8yQTP.js","_app/immutable/chunks/CU8NK243.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('../output/server/nodes/0.js')),
 			__memo(() => import('../output/server/nodes/1.js')),
@@ -243,13 +243,6 @@ return {
 				endpoint: __memo(() => import('../output/server/entries/endpoints/api/auth/login/_server.js'))
 			},
 			{
-				id: "/api/auth/logout",
-				pattern: /^\/api\/auth\/logout\/?$/,
-				params: [],
-				page: null,
-				endpoint: __memo(() => import('../output/server/entries/endpoints/api/auth/logout/_server.js'))
-			},
-			{
 				id: "/api/auth/reset-password",
 				pattern: /^\/api\/auth\/reset-password\/?$/,
 				params: [],
@@ -339,6 +332,13 @@ return {
 				params: [],
 				page: null,
 				endpoint: __memo(() => import('../output/server/entries/endpoints/api/bottlequest/checkin/_server.js'))
+			},
+			{
+				id: "/api/bottlequest/drift/simulate",
+				pattern: /^\/api\/bottlequest\/drift\/simulate\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('../output/server/entries/endpoints/api/bottlequest/drift/simulate/_server.js'))
 			},
 			{
 				id: "/api/bottlequest/fuel-request",
@@ -619,6 +619,20 @@ return {
 				params: [],
 				page: null,
 				endpoint: __memo(() => import('../output/server/entries/endpoints/api/upload-image/_server.js'))
+			},
+			{
+				id: "/api/user/avatar",
+				pattern: /^\/api\/user\/avatar\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('../output/server/entries/endpoints/api/user/avatar/_server.js'))
+			},
+			{
+				id: "/api/user/avatar/generate",
+				pattern: /^\/api\/user\/avatar\/generate\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('../output/server/entries/endpoints/api/user/avatar/generate/_server.js'))
 			},
 			{
 				id: "/api/user/profile",

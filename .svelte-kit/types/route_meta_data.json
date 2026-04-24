@@ -108,9 +108,6 @@
 	"/api/auth/login": [
 		"src/routes/api/auth/login/+server.js"
 	],
-	"/api/auth/logout": [
-		"src/routes/api/auth/logout/+server.js"
-	],
 	"/api/auth/reset-password": [
 		"src/routes/api/auth/reset-password/+server.js"
 	],
@@ -149,6 +146,9 @@
 	],
 	"/api/bottlequest/checkin": [
 		"src/routes/api/bottlequest/checkin/+server.js"
+	],
+	"/api/bottlequest/drift/simulate": [
+		"src/routes/api/bottlequest/drift/simulate/+server.js"
 	],
 	"/api/bottlequest/fuel-request": [
 		"src/routes/api/bottlequest/fuel-request/+server.js"
@@ -269,6 +269,12 @@
 	],
 	"/api/upload-image": [
 		"src/routes/api/upload-image/+server.js"
+	],
+	"/api/user/avatar": [
+		"src/routes/api/user/avatar/+server.js"
+	],
+	"/api/user/avatar/generate": [
+		"src/routes/api/user/avatar/generate/+server.js"
 	],
 	"/api/user/profile": [
 		"src/routes/api/user/profile/+server.js"

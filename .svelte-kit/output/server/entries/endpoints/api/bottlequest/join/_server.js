@@ -14,9 +14,9 @@ async function POST({ locals, platform, request }) {
   const username = user.username || user.email?.split("@")[0] || "unknown";
   const displayName = user.display_name || username;
   await db.prepare(`
-        INSERT INTO bq_players (id, username, display_name, type, port_id, port_name, lat, lon, fuel, points, solo, team_id, team_name, team_color)
-        VALUES (?, ?, ?, 'human', ?, ?, ?, ?, 100, 0, 1, NULL, NULL, NULL)
-    `).bind(playerId, username, displayName, port.id, port.name, port.lat, port.lon).run();
+        INSERT INTO bq_players (id, username, display_name, type, port_id, port_name, lat, lon, fuel, points, solo, team_id, team_name, team_color, avatar_url)
+        VALUES (?, ?, ?, 'human', ?, ?, ?, ?, 100, 0, 1, NULL, NULL, NULL, ?)
+    `).bind(playerId, username, displayName, port.id, port.name, port.lat, port.lon, locals.user?.avatar_url || null).run();
   await logTransaction(db, { player_id: playerId, type: "join", amount: 0, detail: `Joined from port ${port.name}` });
   return json({ success: true, message: "Welcome to the Crusade!", playerId });
 }

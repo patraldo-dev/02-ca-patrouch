@@ -2,12 +2,17 @@ import { json } from "@sveltejs/kit";
 async function GET({ locals }) {
   const user = locals?.user;
   if (!user) return json({ error: "Unauthorized" }, { status: 401 });
-  const db = locals.db;
-  if (!db) return json({ error: "No database" }, { status: 500 });
-  const row = await db.prepare(
-    "SELECT username, email, role, bio, avatar_url, display_name, created_at FROM users WHERE id = ?"
-  ).bind(user.id).first();
-  return json({ profile: row });
+  return json({
+    profile: {
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      bio: user.bio || null,
+      avatar_url: user.avatar_url || null,
+      display_name: user.display_name || null,
+      created_at: user.created_at
+    }
+  });
 }
 async function PUT({ locals, request }) {
   const user = locals?.user;
@@ -29,25 +34,27 @@ async function PUT({ locals, request }) {
   }
   const updates = [];
   const values = [];
-  if (bio !== void 0) {
-    updates.push("bio = ?");
-    values.push(bio);
-  }
-  if (avatar_url !== void 0) {
-    updates.push("avatar_url = ?");
-    values.push(avatar_url);
-  }
   if (display_name !== void 0) {
-    updates.push("display_name = ?");
+    updates.push("name = ?");
     values.push(display_name);
   }
-  if (updates.length === 0) return json({ error: "Nothing to update" }, { status: 400 });
-  values.push(user.id);
-  await db.prepare(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`).bind(...values).run();
-  const row = await db.prepare(
-    "SELECT username, email, role, bio, avatar_url, display_name, created_at FROM users WHERE id = ?"
-  ).bind(user.id).first();
-  return json({ profile: row });
+  if (avatar_url !== void 0) {
+    updates.push("image = ?");
+    values.push(avatar_url);
+  }
+  if (updates.length > 0) {
+    values.push(user.id);
+    await db.prepare(`UPDATE "user" SET ${updates.join(", ")} WHERE id = ?`).bind(...values).run();
+  }
+  if (bio !== void 0) {
+    const activeProfile = await db.prepare(
+      "SELECT id FROM profiles WHERE user_id = ? AND is_active = 1"
+    ).bind(user.id).first();
+    if (activeProfile) {
+      await db.prepare("UPDATE profiles SET bio = ? WHERE id = ?").bind(bio, activeProfile.id).run();
+    }
+  }
+  return json({ ok: true });
 }
 export {
   GET,
