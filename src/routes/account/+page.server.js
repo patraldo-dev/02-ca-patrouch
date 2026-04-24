@@ -14,7 +14,7 @@ export async function load({ locals }) {
 
     // Load auth user data
     const baUser = await db.prepare(
-        'SELECT name as display_name, image as avatar_url, createdAt as created_at FROM "user" WHERE id = ?'
+        'SELECT name as display_name, image as avatar_url, createdAt as created_at, email as username FROM "user" WHERE id = ?'
     ).bind(user.id).first();
 
     // Load profile data including privacy columns
@@ -36,6 +36,7 @@ export async function load({ locals }) {
         bio: profileRow?.bio || '',
         avatar_url: baUser?.avatar_url || '',
         display_name: baUser?.display_name || '',
+        username: baUser?.username || '',
         created_at: baUser?.created_at || user.created_at || '',
         show_in_scoreboard: profileRow?.show_in_scoreboard ?? 1,
         show_email: profileRow?.show_email ?? 0,

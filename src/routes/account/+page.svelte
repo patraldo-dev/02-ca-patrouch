@@ -315,7 +315,23 @@
 </svelte:head>
 
 <div class="account-page">
-    <h1>{$t('account.title')}</h1>
+    <!-- User Header -->
+    <div class="account-header">
+        <div class="account-avatar">
+            {#if avatarUrl}
+                <img src={avatarDisplayUrl} alt="Avatar" />
+            {:else}
+                <span class="avatar-fallback">{(data.profile?.display_name || '?')[0].toUpperCase()}</span>
+            {/if}
+        </div>
+        <div class="account-info">
+            <h1 class="account-name">{data.profile?.display_name || 'User'}</h1>
+            {#if data.profile?.username}
+                <p class="account-username">@{data.profile.username}</p>
+            {/if}
+            <p class="account-since">{$t('profile.user.member_since')} {memberSince}</p>
+        </div>
+    </div>
 
     <!-- Tab navigation -->
     <nav class="tab-nav">
@@ -547,6 +563,14 @@
         margin: 0 auto;
         padding: 2rem 1.5rem 4rem;
     }
+    .account-header { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+    .account-avatar { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent); flex-shrink: 0; }
+    .account-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .account-avatar .avatar-fallback { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: var(--surface); font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .account-info { flex: 1; min-width: 0; }
+    .account-name { font-family: var(--font-heading); font-size: 1.5rem; margin: 0 0 0.15rem; color: var(--text); }
+    .account-username { font-size: 0.85rem; color: var(--accent); margin: 0 0 0.25rem; }
+    .account-since { font-size: 0.8rem; color: var(--muted, #a1a1aa); margin: 0; }
     .account-page h1 {
         font-family: var(--font-heading);
         font-size: 2rem;

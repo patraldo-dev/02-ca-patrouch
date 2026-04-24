@@ -248,7 +248,7 @@
                             {/if}
                         </div>
                         {:else}
-                        <a href="/account" class="profile-trigger">
+                        <a href="/account" class="profile-trigger" title={data.user.display_name || data.user.username}>
                             <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
                             <span class="profile-name">{data.user.display_name || data.user.username}</span>
                         </a>
@@ -273,7 +273,7 @@
                 </span>
             </button>
             {#if data.user}
-            <a href="/account" class="mobile-avatar-btn">
+            <a href="/account" class="mobile-avatar-btn" title={activeDisplayName}>
                 <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
             </a>
             <div class="mobile-bell">
