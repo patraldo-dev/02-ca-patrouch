@@ -3,6 +3,7 @@
     import { t } from '$lib/i18n';
     import { get } from 'svelte/store';
     import { goto } from '$app/navigation';
+    import { tick } from 'svelte';
     import { avatarVariant } from '$lib/utils.js';
     import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
     import WordMilestones from '$lib/components/WordMilestones.svelte';
@@ -168,12 +169,15 @@
         if (!input) return;
         const start = input.selectionStart;
         const end = input.selectionEnd;
-        const value = input.value;
-        input.value = value.substring(0, start) + emoji + value.substring(end);
-        input.selectionStart = input.selectionEnd = start + emoji.length;
-        input.focus();
-        if (emojiTarget === 'name') userDisplayName = input.value;
-        else userBio = input.value;
+        const value = emojiTarget === 'name' ? userDisplayName : userBio;
+        const newValue = value.substring(0, start) + emoji + value.substring(end);
+        if (emojiTarget === 'name') userDisplayName = newValue;
+        else userBio = newValue;
+        // Let Svelte update the input via bind:value, then set cursor
+        tick().then(() => {
+            input.selectionStart = input.selectionEnd = start + emoji.length;
+            input.focus();
+        });
         showEmojiPicker = false;
     }
 

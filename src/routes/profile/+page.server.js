@@ -9,11 +9,11 @@ export async function load({ locals }) {
     const db = locals.db;
     if (!db) return { user, profile: { bio: '', avatar_url: '', display_name: '' }, profiles: [], writings: [], heatmapData: {}, writerOfTheWeek: null, userBadges: [], stats: null };
 
-    // Load user profile fields from users table
-    const profileRow = await db.prepare(
-        'SELECT bio, avatar_url, display_name, created_at FROM users WHERE id = ?'
+    // Load user profile from Better Auth 'user' table
+    const baUser = await db.prepare(
+        'SELECT name as display_name, image as avatar_url, createdAt as created_at FROM "user" WHERE id = ?'
     ).bind(user.id).first();
-    const userProfile = { bio: profileRow?.bio || '', avatar_url: profileRow?.avatar_url || '', display_name: profileRow?.display_name || '', created_at: profileRow?.created_at || user.created_at || '' };
+    const userProfile = { bio: profileRow?.bio || '', avatar_url: baUser?.avatar_url || profileRow?.avatar_url || '', display_name: baUser?.display_name || profileRow?.display_name || '', created_at: baUser?.created_at || user.created_at || '' };
 
     const { results } = await db.prepare(`
         SELECT id, display_name, locale, bio, is_primary, is_active
