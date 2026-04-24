@@ -20,9 +20,11 @@ export async function POST({ locals, request, platform }) {
     if (!ai) return json({ error: 'AI service not available' }, { status: 503 });
 
     try {
+        console.log('[AI Avatar] Generating with prompt:', prompt);
         // Enhance prompt for avatar generation
         const enhancedPrompt = `cartoon portrait avatar of ${prompt}, simple flat illustration style, clean background, profile picture, high quality`;
 
+        console.log('[AI Avatar] Enhanced prompt:', enhancedPrompt);
         const result = await ai.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
             prompt: enhancedPrompt,
             num_steps: 20,
@@ -30,6 +32,7 @@ export async function POST({ locals, request, platform }) {
             width: 512,
             height: 512,
         });
+        console.log('[AI Avatar] AI result keys:', Object.keys(result), 'image type:', typeof result.image, 'is Uint8Array:', result.image instanceof Uint8Array);
 
         // result.image is a base64 string or Uint8Array
         let imageBytes;
