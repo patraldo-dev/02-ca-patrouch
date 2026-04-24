@@ -312,7 +312,13 @@
             </div>
             <div class="mobile-auth">
                 {#if data?.user}
-                    <a href="/profile" onclick={toggleMobileMenu} class="welcome-mobile">{$t('common.nav.welcome')}, <strong>{data.user.display_name || data.user.username}</strong></a>
+                    <div class="mobile-user-header" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)">
+                        <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
+                        <div style="flex:1">
+                            <div style="font-weight:600;font-size:0.95rem">{activeDisplayName}</div>
+                            <NotificationBell />
+                        </div>
+                    </div>
                     {#if data.user?.role === 'admin'}
                     <a href="/profile" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
                     <a href="/admin" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
