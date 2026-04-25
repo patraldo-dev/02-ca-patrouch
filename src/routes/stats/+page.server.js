@@ -16,7 +16,7 @@ export async function load({ locals }) {
     ).bind(user.id).first();
 
     const badges = await db.prepare(
-        'SELECT badge_type, earned_at FROM user_badges WHERE user_id = ? ORDER BY earned_at DESC'
+        'SELECT badge_id, unlocked_at FROM user_badges WHERE user_id = ? ORDER BY unlocked_at DESC'
     ).bind(user.id).all();
 
     return { user, writings: writings.results || [], totalWords: totalWords?.total || 0, badges: badges.results || [] };
