@@ -37,13 +37,8 @@ export async function load({ locals }) {
         username: user.email || '',
         member_since: (() => {
             const raw = baUser?.created_at || user.createdAt;
-            if (!raw) return '';
-            let d = new Date(raw);
-            // If epoch seconds (< year 2000), convert to ms
-            if (d.getFullYear() < 2000 && typeof raw === 'number') d = new Date(raw * 1000);
-            if (typeof raw === 'string') d = new Date(raw.includes('T') ? raw : raw.replace(' ', 'T'));
-            if (raw instanceof Date) d = raw;
-            return isNaN(d.getTime()) ? String(raw) : d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+            if (!raw) return 'DEBUG: no raw';
+            return `DEBUG: type=${typeof raw} val=${JSON.stringify(raw)}`;
         })(),
         show_in_scoreboard: profileRow?.show_in_scoreboard ?? 1,
         show_email: profileRow?.show_email ?? 0,
