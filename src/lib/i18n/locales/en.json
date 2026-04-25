@@ -969,5 +969,14 @@
   "account.security.email": "Email",
   "account.saved": "Settings saved",
   "account.ai_avatar_title": "Generate AI Avatar",
-  "account.ai_avatar_desc": "Describe your ideal avatar and AI will create it"
+  "account.ai_avatar_desc": "Describe your ideal avatar and AI will create it",
+  "disclosure.publish_consent": "I wish to share my writing with the community. It may inspire other narratives on this platform — or it may simply be read and appreciated. I can withdraw anytime.",
+  "disclosure.signup_invite": "By accepting our invitation, you join a community of writers. Publishing here means sharing your voice — your words may nourish the universe we're building together, though there are no guarantees. We are creators, artists, makers, writers.",
+  "disclosure.footer": "A community of writers and creators. Your words may inspire more than you imagine.",
+  "disclosure.account_privacy": "We hope you wish for your writing to inspire content on this platform. There are no guarantees, but we will do our best to ensure your words shape the universe we're building. Be part of creating a vanguard experience. We are creators, artists, makers, writers.",
+  "disclosure.opt_out": "I prefer my writing not to inspire community content",
+  "disclosure.ai_written": "✨ Written by Sappho (AI)",
+  "disclosure.ai_narrated": "Narrated by Albot Camus (AI)",
+  "disclosure.ai_evaluated": "AI evaluation — not human judgment",
+  "disclosure.ai_refined": "Refined with AI assistance"
 }
