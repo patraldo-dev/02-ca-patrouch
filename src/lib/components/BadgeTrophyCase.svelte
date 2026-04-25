@@ -206,7 +206,7 @@
 
     .filter-btn:hover { border-color: var(--accent); }
 
-    .badge-grid {
+    .badge-grid { gap: 0.75rem;
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
         gap: 0.5rem;
@@ -214,7 +214,7 @@
         overflow: hidden;
     }
 
-    .badge-card {
+    .badge-card { padding: 1rem 0.75rem;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -236,9 +236,9 @@
 
     .badge-card.locked { opacity: 0.4; }
 
-    .badge-icon { font-size: 1.5rem; }
+    .badge-icon { font-size: 2rem; }
 
-    .badge-name {
+    .badge-name { font-size: 0.95rem;
         font-size: 0.8rem;
         color: var(--text-dim);
         text-align: center;
