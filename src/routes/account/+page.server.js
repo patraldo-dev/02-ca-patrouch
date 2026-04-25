@@ -12,13 +12,12 @@ export async function load({ locals }) {
         isBQPlayer: false
     };
 
-    // Load auth user data — keep createdAt as-is (no alias)
+    // Load auth user data
     const baUser = await db.prepare(
         'SELECT name as display_name, image as avatar_url, createdAt, email FROM "user" WHERE id = ?'
     ).bind(user.id).first();
-    console.log('[ACCOUNT] baUser:', JSON.stringify(baUser), 'createdAt type:', typeof baUser?.createdAt);
 
-    // Load profile data including privacy columns
+    // Load profile data
     let profileRow;
     try {
         profileRow = await db.prepare(
@@ -30,18 +29,16 @@ export async function load({ locals }) {
         ).bind(user.id).first();
     }
 
-    // Format member_since on server
+    // Format member_since — D1 returns epoch as string like "1776974583.0"
     let member_since = '';
     const rawDate = baUser?.createdAt ?? baUser?.created_at ?? user?.createdAt;
     if (rawDate != null) {
-        // D1 returns epoch as string like "1776974583.0"
         const ms = parseFloat(rawDate) * 1000;
         const d = new Date(ms);
         if (!isNaN(d.getTime())) {
             member_since = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
         }
     }
-    console.log('[ACCOUNT] member_since:', member_since, 'from rawDate:', rawDate);
 
     const profile = {
         bio: profileRow?.bio || '',
