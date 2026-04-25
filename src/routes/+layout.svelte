@@ -990,9 +990,13 @@
         .desktop-nav,
         .nav-actions { display: none !important; }
     }
+</style>
+
+<style:global>
     @media (min-width: 769px) {
-        :global(.mobile-toggle),
-        :global(.mobile-avatar-btn),
-        :global(.mobile-bell) { display: none !important; }
+        .mobile-toggle,
+        .mobile-avatar-btn,
+        .mobile-bell { display: none !important; }
     }
+</style>
 </style>
