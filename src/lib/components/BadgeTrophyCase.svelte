@@ -183,17 +183,17 @@
     .filters {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.35rem;
-        margin-bottom: 0.75rem;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
     }
 
     .filter-btn {
-        padding: 0.25rem 0.5rem;
+        padding: 0.35rem 0.75rem;
         border: 1px solid var(--border);
         border-radius: 999px;
         background: transparent;
         color: var(--text-muted);
-        font-size: 0.65rem;
+        font-size: 0.85rem;
         cursor: pointer;
         transition: all 0.2s;
     }
