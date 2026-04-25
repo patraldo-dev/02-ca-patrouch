@@ -190,20 +190,21 @@
     }
 
     function handleEmojiSelect(emoji) {
-        untrack(() => {
-            const input = emojiTarget === 'name' ? document.getElementById('displayNameInput') : document.getElementById('bioInput');
+        const target = emojiTarget;
+        setTimeout(() => {
+            const input = target === 'name' ? document.getElementById('displayNameInput') : document.getElementById('bioInput');
             if (!input) return;
             const start = input.selectionStart;
             const end = input.selectionEnd;
-            const value = emojiTarget === 'name' ? userDisplayName : userBio;
+            const value = target === 'name' ? userDisplayName : userBio;
             const newValue = value.substring(0, start) + emoji + value.substring(end);
-            if (emojiTarget === 'name') userDisplayName = newValue;
+            if (target === 'name') userDisplayName = newValue;
             else userBio = newValue;
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 input.selectionStart = input.selectionEnd = start + emoji.length;
                 input.focus();
-            }, 0);
-        });
+            });
+        }, 0);
     }
 
     function closeEmojiPicker() { showEmojiPicker = false; }
