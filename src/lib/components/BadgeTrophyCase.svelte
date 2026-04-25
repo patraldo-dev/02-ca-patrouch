@@ -193,7 +193,7 @@
         border-radius: 999px;
         background: transparent;
         color: var(--text-muted);
-        font-size: 1rem;
+        font-size: 1.15rem;
         cursor: pointer;
         transition: all 0.2s;
     }
