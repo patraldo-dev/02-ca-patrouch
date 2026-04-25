@@ -73,10 +73,11 @@ Reply ONLY with valid JSON, no markdown.`;
             });
 
             const aiText = String(aiResp?.response ?? aiResp ?? '');
-            const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) return json({ error: 'AI did not return JSON' }, { status: 500 });
+            // Extract JSON from possible markdown wrapping
+            let jsonStr = aiText.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] || aiText.match(/\{[\s\S]*\}/)?.[0];
+            if (!jsonStr) return json({ error: 'AI did not return JSON', aiPreview: aiText.slice(0, 200) }, { status: 500 });
 
-            data = JSON.parse(jsonMatch[0]);
+            data = JSON.parse(jsonStr.trim());
         }
 
         const { title, narrative, event_type, modifier_type, modifier_value, affected_zone, target_players, duration_hours, title_es, narrative_es, title_fr, narrative_fr } = data;
