@@ -481,6 +481,12 @@
                         {/if}
                         <div class="editor-actions">
                             <button type="button" class="btn-save" onclick={handleSave} disabled={editorSaving}>{$t('write.editor.save_draft')}</button>
+                            {#if editorVisibility === 'public'}
+                                <label class="disclosure-check">
+                                    <input type="checkbox" checked />
+                                    <span>{$t('disclosure.publish_consent')}</span>
+                                </label>
+                            {/if}
                             <button type="submit" class="btn-accent" disabled={editorSaving}>{$t('write.editor.publish')}</button>
                         </div>
                     </form>
@@ -926,7 +932,19 @@
     .inline-editor .editor-actions {
         display: flex;
         gap: 0.75rem;
+        flex-wrap: wrap;
     }
+    .disclosure-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.4rem;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+        max-width: 360px;
+        cursor: pointer;
+    }
+    .disclosure-check input { margin-top: 0.1rem; }
     .inline-editor .btn-save {
         padding: 0.6rem 1.5rem;
         background: var(--glass-bg);

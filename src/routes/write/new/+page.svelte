@@ -107,6 +107,12 @@
         <button class="btn-glass" onclick={() => handleSave(false)} disabled={saving || !title.trim() || !content.trim()}>
             {saving ? $t('write.editor.saving') : $t('write.editor.save_draft')}
         </button>
+        {#if visibility === 'public'}
+            <label class="disclosure-check">
+                <input type="checkbox" checked />
+                <span>{$t('disclosure.publish_consent')}</span>
+            </label>
+        {/if}
         <button class="btn-accent" onclick={() => handleSave(true)} disabled={saving || !title.trim() || !content.trim()}>
             {$t('write.editor.publish')}
         </button>
@@ -263,7 +269,19 @@
     .editor-actions {
         display: flex;
         gap: 0.75rem;
+        flex-wrap: wrap;
     }
+    .disclosure-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.4rem;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+        max-width: 360px;
+        cursor: pointer;
+    }
+    .disclosure-check input { margin-top: 0.1rem; }
     .btn-glass {
         background: var(--surface);
         border: 1px solid var(--border);

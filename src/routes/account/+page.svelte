@@ -48,6 +48,7 @@ import { avatarVariant } from '$lib/utils.js';
     let privacyPublic = $state(data.profile?.show_profile === 1);
     let privacyScoreboard = $state(data.profile?.show_in_scoreboard === 1);
     let privacyEmail = $state(data.profile?.show_email === 1);
+    let optOutEcosystem = $state(data.profile?.opt_out_ecosystem === 1);
 
     // --- Security tab state ---
     let currentPassword = $state('');
@@ -434,6 +435,15 @@ import { avatarVariant } from '$lib/utils.js';
                 <span class="toggle-knob"></span>
             </button>
         </div>
+        <div class="toggle-section ecosystem-disclosure">
+            <div class="toggle-info">
+                <h3>{$t('disclosure.account_privacy')}</h3>
+                <p>{$t('disclosure.opt_out')}</p>
+            </div>
+            <button class="toggle-btn" class:active={optOutEcosystem} onclick={() => optOutEcosystem = !optOutEcosystem}>
+                <span class="toggle-knob"></span>
+            </button>
+        </div>
         <button class="btn-primary" onclick={savePrivacy}>{$t('account.saved')}</button>
     </section>
     {/if}
@@ -652,6 +662,8 @@ import { avatarVariant } from '$lib/utils.js';
     .toggle-section:last-of-type { border-bottom: none; margin-bottom: 1rem; }
     .toggle-info h3 { font-size: 0.95rem; color: var(--text); margin: 0 0 0.25rem; font-weight: 500; }
     .toggle-info p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
+    .ecosystem-disclosure { border-bottom: none !important; padding-top: 1rem; margin-top: 0.5rem; }
+    .ecosystem-disclosure .toggle-info h3 { font-size: 0.85rem; font-style: italic; line-height: 1.5; }
 
     /* Toggle switch */
     .toggle-btn {

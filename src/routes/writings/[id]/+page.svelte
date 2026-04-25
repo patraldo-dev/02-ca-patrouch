@@ -202,6 +202,9 @@
                 {/if}
                 <span class="meta-date">{formatDate(w.created_at)}</span>
                 <span class="meta-words">{wordCountDisplay(w.word_count)} {$t('write.dashboard.words_word')}</span>
+                {#if w.role === 'agent'}
+                    <span class="ai-badge">{$t('disclosure.ai_written')}</span>
+                {/if}
                 {#if gameMode && !revealed}
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -382,6 +385,15 @@
         text-decoration: underline;
     }
     .meta-author.mystery { color: var(--text-muted); font-style: italic; }
+    .ai-badge {
+        font-size: 0.72rem;
+        background: linear-gradient(135deg, rgba(201,168,124,0.15), rgba(201,168,124,0.05));
+        color: var(--accent);
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        border: 1px solid rgba(201,168,124,0.2);
+        font-style: italic;
+    }
     .reveal-spot-view {
         display: inline-flex; align-items: center; justify-content: center;
         width: 24px; height: 24px; border-radius: 50%;

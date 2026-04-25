@@ -143,6 +143,7 @@
         </div>
 
         <p class="privacy-note">{$t('signup.privacy_note')}</p>
+        <p class="disclosure-invite">{$t('disclosure.signup_invite')}</p>
 
         {#if error}
             <p class="error-text">{error}</p>
@@ -217,6 +218,13 @@
         font-size: 0.75rem;
         color: var(--muted, #a1a1aa);
         margin: -0.5rem 0 0;
+    }
+    .disclosure-invite {
+        font-size: 0.72rem;
+        color: var(--muted, #a1a1aa);
+        margin: 0.5rem 0 0;
+        font-style: italic;
+        line-height: 1.5;
     }
 
     .trust-copy {
