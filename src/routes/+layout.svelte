@@ -642,7 +642,7 @@
     .profile-switcher {
         position: relative;
     }
-    .profile-trigger { position: relative; }
+    .profile-trigger { position: relative;
         display: flex;
         align-items: center;
         gap: 0.5rem;
