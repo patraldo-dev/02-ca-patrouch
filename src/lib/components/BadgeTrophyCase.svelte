@@ -161,7 +161,7 @@
     }
 
     .count {
-        font-size: 0.85rem;
+        font-size: 1rem;
         color: var(--text-muted);
     }
 
@@ -193,7 +193,7 @@
         border-radius: 999px;
         background: transparent;
         color: var(--text-muted);
-        font-size: 0.8rem;
+        font-size: 1rem;
         cursor: pointer;
         transition: all 0.2s;
     }
@@ -206,7 +206,7 @@
 
     .filter-btn:hover { border-color: var(--accent); }
 
-    .badge-grid { gap: 0.75rem;
+    .badge-grid { gap: 1rem; gap: 0.75rem;
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
         gap: 0.5rem;
@@ -214,7 +214,7 @@
         overflow: hidden;
     }
 
-    .badge-card { padding: 1rem 0.75rem;
+    .badge-card { padding: 1.25rem 1rem;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -236,10 +236,10 @@
 
     .badge-card.locked { opacity: 0.4; }
 
-    .badge-icon { font-size: 2rem; }
+    .badge-icon { font-size: 2.5rem; }
 
-    .badge-name { font-size: 0.95rem;
-        font-size: 0.8rem;
+    .badge-name { font-size: 1.1rem;
+        font-size: 1rem;
         color: var(--text-dim);
         text-align: center;
         line-height: 1.2;
@@ -250,7 +250,7 @@
     }
 
     .badge-rarity {
-        font-size: 0.85rem;
+        font-size: 1rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: var(--text-muted);
@@ -304,7 +304,7 @@
     .badge-modal-info { display: flex; flex-direction: column; gap: 0.5rem; }
 
     .badge-modal-rarity {
-        font-size: 0.8rem;
+        font-size: 1rem;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--text-muted);
@@ -324,19 +324,19 @@
 
     .badge-modal-desc {
         color: var(--text-dim);
-        font-size: 0.85rem;
+        font-size: 1rem;
         margin: 0;
         line-height: 1.5;
     }
 
     .badge-modal-date {
-        font-size: 0.75rem;
+        font-size: 0.95rem;
         color: var(--accent);
         margin: 0;
     }
 
     .badge-modal-hint {
-        font-size: 0.75rem;
+        font-size: 0.95rem;
         color: var(--text-muted);
         margin: 0;
         font-style: italic;
@@ -349,7 +349,7 @@
         border: 1px solid var(--accent-border);
         border-radius: 999px;
         color: var(--accent);
-        font-size: 0.8rem;
+        font-size: 1rem;
         cursor: pointer;
         transition: all 0.2s;
     }

@@ -141,7 +141,7 @@
 
     .milestone-group h4 {
         color: var(--text);
-        font-size: 0.85rem;
+        font-size: 1rem;
         margin: 0 0 0.75rem;
         font-weight: 500;
     }
@@ -169,7 +169,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.9rem;
+        font-size: 1.05rem;
         transition: all 0.3s;
     }
 
@@ -180,7 +180,7 @@
     }
 
     .label {
-        font-size: 0.9rem;
+        font-size: 1.05rem;
         color: var(--text-muted);
     }
 
@@ -200,13 +200,13 @@
     }
 
     .next-milestone {
-        font-size: 0.85rem;
+        font-size: 1rem;
         color: var(--text-muted);
         margin: 0;
     }
 
     .all-complete {
-        font-size: 0.9rem;
+        font-size: 1.05rem;
         color: var(--accent);
         margin: 0;
         font-weight: 500;
