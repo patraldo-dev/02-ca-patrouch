@@ -7,15 +7,16 @@ export async function load({ locals }) {
     const db = locals.db;
     if (!db) return {
         user,
-        profile: { bio: '', avatar_url: '', display_name: '', created_at: '', show_in_scoreboard: 1, show_email: 0 },
+        profile: { bio: '', avatar_url: '', display_name: '', member_since: '', show_in_scoreboard: 1, show_email: 0 },
         notificationPrefs: { game: 1, writing: 1, community: 1 },
         isBQPlayer: false
     };
 
-    // Load auth user data
+    // Load auth user data — keep createdAt as-is (no alias)
     const baUser = await db.prepare(
-        'SELECT name as display_name, image as avatar_url, createdAt as created_at, email FROM "user" WHERE id = ?'
+        'SELECT name as display_name, image as avatar_url, createdAt, email FROM "user" WHERE id = ?'
     ).bind(user.id).first();
+    console.log('[ACCOUNT] baUser:', JSON.stringify(baUser), 'createdAt type:', typeof baUser?.createdAt);
 
     // Load profile data including privacy columns
     let profileRow;
@@ -24,28 +25,31 @@ export async function load({ locals }) {
             'SELECT bio, COALESCE(show_in_scoreboard, 1) as show_in_scoreboard, COALESCE(show_email, 0) as show_email FROM profiles WHERE user_id = ? AND is_active = 1'
         ).bind(user.id).first();
     } catch (e) {
-        // Columns may not exist yet
         profileRow = await db.prepare(
             'SELECT bio FROM profiles WHERE user_id = ? AND is_active = 1'
         ).bind(user.id).first();
     }
 
+    // Format member_since on server
+    let member_since = '';
+    const rawDate = baUser?.createdAt;
+    if (rawDate != null) {
+        const ms = (typeof rawDate === 'number') ? rawDate * 1000 : new Date(rawDate).getTime();
+        const d = new Date(ms);
+        if (!isNaN(d.getTime())) {
+            member_since = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+    }
+    console.log('[ACCOUNT] member_since:', member_since, 'from rawDate:', rawDate);
+
     const profile = {
         bio: profileRow?.bio || '',
         avatar_url: baUser?.avatar_url || '',
         display_name: baUser?.display_name || '',
-        username: user.email || '',
-        member_since: (() => {
-            const raw = baUser?.created_at || user.createdAt;
-            if (!raw) return '';
-            // D1 returns epoch in seconds, JS Date needs milliseconds
-            const ms = (typeof raw === 'number') ? raw * 1000 : new Date(raw).getTime();
-            const d = new Date(ms);
-            return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
-        })(),
+        username: baUser?.email || user.email || '',
+        member_since,
         show_in_scoreboard: profileRow?.show_in_scoreboard ?? 1,
         show_email: profileRow?.show_email ?? 0,
-        show_profile: 1
     };
 
     // Load notification preferences
