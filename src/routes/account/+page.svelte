@@ -352,14 +352,12 @@ import { avatarVariant } from '$lib/utils.js';
                 <label>{$t('profile.user.display_name')}</label>
                 <div class="input-with-btn">
                     <input id="displayNameInput" bind:value={userDisplayName} placeholder={$t('profile.user.display_name_placeholder')} maxlength="50" />
-                    <button class="emoji-btn" onclick={toggleEmoji('name')} type="button">😄</button>
                 </div>
             </div>
             <div class="form-group">
                 <label>{$t('profile.user.bio')}</label>
                 <div class="input-with-btn">
                     <textarea id="bioInput" bind:value={userBio} placeholder={$t('profile.user.bio_placeholder')} maxlength="500" rows="4"></textarea>
-                    <button class="emoji-btn" onclick={toggleEmoji('bio')} type="button">😄</button>
                 </div>
                 <span class="bio-counter">{userBio.length}/500</span>
             </div>
