@@ -33,10 +33,9 @@ export async function load({ locals }) {
     // Format member_since on server
     let member_since = '';
     const rawDate = baUser?.createdAt ?? baUser?.created_at ?? user?.createdAt;
-    console.log('[ACCOUNT] rawDate:', rawDate, 'type:', typeof rawDate, 'baUser keys:', baUser ? Object.keys(baUser) : 'none');
     if (rawDate != null) {
-        const num = typeof rawDate === 'number' ? rawDate : (typeof rawDate === 'string' ? new Date(rawDate.replace(' ', 'T')).getTime() / 1000 : NaN);
-        const ms = (!isNaN(num) && num < 1e12) ? num * 1000 : (typeof rawDate === 'string' ? new Date(rawDate.replace(' ', 'T')).getTime() : Number(rawDate));
+        // D1 returns epoch as string like "1776974583.0"
+        const ms = parseFloat(rawDate) * 1000;
         const d = new Date(ms);
         if (!isNaN(d.getTime())) {
             member_since = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
