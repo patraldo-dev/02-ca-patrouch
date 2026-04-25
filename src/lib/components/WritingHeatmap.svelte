@@ -137,7 +137,7 @@
     }
 
     .heatmap-title {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 600;
         color: var(--text);
     }
@@ -149,7 +149,7 @@
     }
 
     .label {
-        font-size: 0.55rem;
+        font-size: 0.7rem;
         color: var(--text-muted);
     }
 
@@ -165,7 +165,7 @@
     }
 
     .month-label {
-        font-size: 0.9rem;
+        font-size: 0.65rem;
         color: var(--text-muted);
         width: 12px;
         text-align: center;

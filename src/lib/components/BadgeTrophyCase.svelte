@@ -161,7 +161,7 @@
     }
 
     .count {
-        font-size: 1rem;
+        font-size: 0.7rem;
         color: var(--text-muted);
     }
 
@@ -193,7 +193,7 @@
         border-radius: 999px;
         background: transparent;
         color: var(--text-muted);
-        font-size: 1rem;
+        font-size: 0.65rem;
         cursor: pointer;
         transition: all 0.2s;
     }
@@ -206,27 +206,25 @@
 
     .filter-btn:hover { border-color: var(--accent); }
 
-    .badge-grid { gap: 1rem; gap: 0.75rem;
+    .badge-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-        gap: 0.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.75rem;
         margin-bottom: 1rem;
-        overflow: hidden;
     }
 
-    .badge-card { padding: 1.25rem 1rem;
+    .badge-card {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.3rem;
-        padding: 0.75rem 0.5rem;
+        gap: 0.35rem;
+        padding: 1rem 0.5rem;
         border: 1px solid var(--border);
         border-radius: 8px;
         background: transparent;
         cursor: pointer;
         transition: all 0.2s;
         min-width: 0;
-        overflow: hidden;
     }
 
     .badge-card.unlocked:hover {
@@ -236,10 +234,10 @@
 
     .badge-card.locked { opacity: 0.4; }
 
-    .badge-icon { font-size: 2.5rem; }
+    .badge-icon { font-size: 2rem; }
 
-    .badge-name { font-size: 1.1rem;
-        font-size: 1rem;
+    .badge-name {
+        font-size: 0.85rem;
         color: var(--text-dim);
         text-align: center;
         line-height: 1.2;
@@ -250,7 +248,7 @@
     }
 
     .badge-rarity {
-        font-size: 1rem;
+        font-size: 0.7rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: var(--text-muted);
@@ -304,7 +302,7 @@
     .badge-modal-info { display: flex; flex-direction: column; gap: 0.5rem; }
 
     .badge-modal-rarity {
-        font-size: 1rem;
+        font-size: 0.65rem;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--text-muted);
@@ -324,19 +322,19 @@
 
     .badge-modal-desc {
         color: var(--text-dim);
-        font-size: 1rem;
+        font-size: 0.85rem;
         margin: 0;
         line-height: 1.5;
     }
 
     .badge-modal-date {
-        font-size: 0.95rem;
+        font-size: 0.75rem;
         color: var(--accent);
         margin: 0;
     }
 
     .badge-modal-hint {
-        font-size: 0.95rem;
+        font-size: 0.75rem;
         color: var(--text-muted);
         margin: 0;
         font-style: italic;
@@ -349,7 +347,7 @@
         border: 1px solid var(--accent-border);
         border-radius: 999px;
         color: var(--accent);
-        font-size: 1rem;
+        font-size: 0.8rem;
         cursor: pointer;
         transition: all 0.2s;
     }
