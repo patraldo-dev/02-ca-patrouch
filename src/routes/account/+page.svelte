@@ -2,7 +2,8 @@
 <script>
     import { t } from '$lib/i18n';
     import { goto } from '$app/navigation';
-    import { tick, untrack } from 'svelte';
+    import { tick } from 'svelte';
+    import EmojiPicker from '$lib/components/EmojiPicker.svelte';
 import { avatarVariant } from '$lib/utils.js';
     import { authClient } from '$lib/auth-client.js';
 
@@ -70,6 +71,27 @@ import { avatarVariant } from '$lib/utils.js';
         if (local.length <= 2) return local[0] + '***@' + domain;
         return local[0] + '***' + local[local.length - 1] + '@' + domain;
     });
+
+    // --- Emoji ---
+    let emojiTarget = $state(null);
+    let showEmojiPicker = $state(false);
+
+    function toggleEmoji(target) {
+        emojiTarget = target;
+        showEmojiPicker = !showEmojiPicker;
+    }
+
+    function handleEmojiSelect(emoji) {
+        const target = emojiTarget;
+        const start = target === 'name'
+            ? document.getElementById('displayNameInput').selectionStart
+            : document.getElementById('bioInput').selectionStart;
+        const value = target === 'name' ? userDisplayName : userBio;
+        const newValue = value.substring(0, start) + emoji + value.substring(start);
+        if (target === 'name') userDisplayName = newValue;
+        else userBio = newValue;
+        showEmojiPicker = false;
+    }
 
     // --- Avatar functions ---
     function getUploadError(res, errBody) {
@@ -330,14 +352,14 @@ import { avatarVariant } from '$lib/utils.js';
                 <label>{$t('profile.user.display_name')}</label>
                 <div class="input-with-btn">
                     <input id="displayNameInput" bind:value={userDisplayName} placeholder={$t('profile.user.display_name_placeholder')} maxlength="50" />
-                    <button class="emoji-btn" onclick={() => { const el = document.getElementById('displayNameInput'); el.focus(); }} type="button" title="Ctrl+Cmd+Space for emojis">😄</button>
+                    <button class="emoji-btn" onclick={toggleEmoji('name')} type="button">😄</button>
                 </div>
             </div>
             <div class="form-group">
                 <label>{$t('profile.user.bio')}</label>
                 <div class="input-with-btn">
                     <textarea id="bioInput" bind:value={userBio} placeholder={$t('profile.user.bio_placeholder')} maxlength="500" rows="4"></textarea>
-                    <button class="emoji-btn" onclick={() => { const el = document.getElementById('bioInput'); el.focus(); }} type="button" title="Ctrl+Cmd+Space for emojis">😄</button>
+                    <button class="emoji-btn" onclick={toggleEmoji('bio')} type="button">😄</button>
                 </div>
                 <span class="bio-counter">{userBio.length}/500</span>
             </div>
@@ -474,6 +496,10 @@ import { avatarVariant } from '$lib/utils.js';
 
 <!-- Emoji Picker -->
 
+
+{#if showEmojiPicker}
+    <EmojiPicker onSelect={handleEmojiSelect} onClose={() => showEmojiPicker = false} />
+{/if}
 
 <!-- Crop Modal -->
 {#if showCropModal}
