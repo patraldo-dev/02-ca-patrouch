@@ -998,5 +998,16 @@
         .mobile-avatar-btn,
         .mobile-bell { display: none !important; }
     }
+    /* Prevent layout shift from avatar loading */
+    .mobile-avatar-btn img,
+    .mobile-avatar-btn .profile-avatar,
+    .profile-trigger img,
+    .profile-trigger .profile-avatar {
+        content-visibility: auto;
+    }
+    header .header-actions {
+        display: flex;
+        align-items: center;
+    }
 </style>
 </style>
