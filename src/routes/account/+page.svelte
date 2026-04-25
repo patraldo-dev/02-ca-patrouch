@@ -3,6 +3,7 @@
     import { t } from '$lib/i18n';
     import { goto } from '$app/navigation';
     import { tick, untrack } from 'svelte';
+    import EmojiPicker from '$lib/components/EmojiPicker.svelte';
     import { avatarVariant } from '$lib/utils.js';
     import { authClient } from '$lib/auth-client.js';
 
@@ -59,17 +60,7 @@
     // --- Emoji picker ---
     let emojiTarget = $state(null);
     let showEmojiPicker = $state(false);
-    let currentEmojiCat = $state(0);
-    const emojiData = {
-        '😊': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😉','😊','😇','🥰','😍','🤩','😘','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','😐','😑','😶','😏','😒','🙄','😬','😌','😔','😪','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠'],
-        '👋': ['👋','🤚','🖐️','✋','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🤝','🙏','💪'],
-        '❤️': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝'],
-        '🪄': ['✨','⭐','🌟','💫','🔥','💥','🎵','🎶','🎤','🎧','🎸','🎹','📝','📖','📚','💡','🎨','🎭','🎮','🎲','🏆','🥇','🎯','🎪','🎬','🎊','🎉','🎁','🎀','✅','❌','⚠️','❓','❗','💯','🆗','🆕'],
-        '🌍': ['🌍','🌎','🌏','🌙','☀️','🌈','☁️','⛈️','❄️','💧','🌊','🏔️','⛰️','🌋','🌸','🌺','🌻','🌹','🍀','🌿','🍁','🍂','🍃'],
-        '🍕': ['☕','🍵','🍷','🍺','🥂','🍹','🍕','🍔','🌮','🍣','🍩','🍪','🎂','🍰','🍫','🍿','🧁','🍦','🍉','🍇','🍓','🍒','🥝','🥑'],
-    };
-
-    // --- Member since (formatted on server) ---
+        // --- Member since (formatted on server) ---
     let memberSince = $derived(data.profile?.member_since || '');
 
     // --- Masked email ---
@@ -198,23 +189,22 @@
         showEmojiPicker = !showEmojiPicker;
     }
 
-    function insertEmoji(emoji) {
-        untrack(() => {
-            const input = emojiTarget === 'name' ? document.getElementById('displayNameInput') : document.getElementById('bioInput');
-            if (!input) return;
-            const start = input.selectionStart;
-            const end = input.selectionEnd;
-            const value = emojiTarget === 'name' ? userDisplayName : userBio;
-            const newValue = value.substring(0, start) + emoji + value.substring(end);
-            if (emojiTarget === 'name') userDisplayName = newValue;
-            else userBio = newValue;
-            setTimeout(() => {
-                input.selectionStart = input.selectionEnd = start + emoji.length;
-                input.focus();
-            }, 0);
-        });
-        showEmojiPicker = false;
+    function handleEmojiSelect(emoji) {
+        const input = emojiTarget === 'name' ? document.getElementById('displayNameInput') : document.getElementById('bioInput');
+        if (!input) return;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const value = emojiTarget === 'name' ? userDisplayName : userBio;
+        const newValue = value.substring(0, start) + emoji + value.substring(end);
+        if (emojiTarget === 'name') userDisplayName = newValue;
+        else userBio = newValue;
+        setTimeout(() => {
+            input.selectionStart = input.selectionEnd = start + emoji.length;
+            input.focus();
+        }, 0);
     }
+
+    function closeEmojiPicker() { showEmojiPicker = false; }
 
     // --- Crop dragging ---
     function onCropPointerDown(e) {
@@ -506,15 +496,8 @@
 
 <!-- Emoji Picker -->
 {#if showEmojiPicker}
-    <div class="modal-overlay" onclick={() => showEmojiPicker = false}></div>
-    <div class="emoji-picker">
-        <div class="emoji-tabs">{#each Object.keys(emojiData) as cat, i}
-            <button class="emoji-tab" class:active={currentEmojiCat === i} onclick={() => currentEmojiCat = i} type="button">{cat}</button>
-        {/each}</div>
-        <div class="emoji-grid">{#each Object.values(emojiData)[currentEmojiCat] as emoji}
-            <button class="emoji-item" onclick={() => insertEmoji(emoji)} type="button">{emoji}</button>
-        {/each}</div>
-    </div>
+    <svelte:body />
+    <svelte:component this={EmojiPicker} onSelect={handleEmojiSelect} onClose={closeEmojiPicker} />
 {/if}
 
 <!-- Crop Modal -->
