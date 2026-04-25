@@ -207,7 +207,11 @@
         const newValue = value.substring(0, start) + emoji + value.substring(end);
         if (emojiTarget === 'name') userDisplayName = newValue;
         else userBio = newValue;
-        tick().then(() => { input.selectionStart = input.selectionEnd = start + emoji.length; input.focus(); });
+        // Defer cursor positioning to avoid state_unsafe_mutation
+        setTimeout(() => {
+            input.selectionStart = input.selectionEnd = start + emoji.length;
+            input.focus();
+        }, 0);
         showEmojiPicker = false;
     }
 
