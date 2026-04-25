@@ -37,8 +37,11 @@ export async function load({ locals }) {
         username: user.email || '',
         member_since: (() => {
             const raw = baUser?.created_at || user.createdAt;
-            if (!raw) return 'DEBUG: no raw';
-            return `DEBUG: type=${typeof raw} val=${JSON.stringify(raw)}`;
+            if (!raw) return '';
+            // D1 returns epoch in seconds, JS Date needs milliseconds
+            const ms = (typeof raw === 'number') ? raw * 1000 : new Date(raw).getTime();
+            const d = new Date(ms);
+            return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
         })(),
         show_in_scoreboard: profileRow?.show_in_scoreboard ?? 1,
         show_email: profileRow?.show_email ?? 0,
