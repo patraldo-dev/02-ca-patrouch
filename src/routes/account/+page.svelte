@@ -2,7 +2,7 @@
 <script>
     import { t } from '$lib/i18n';
     import { goto } from '$app/navigation';
-    import { tick } from 'svelte';
+    import { tick, untrack } from 'svelte';
     import { avatarVariant } from '$lib/utils.js';
     import { authClient } from '$lib/auth-client.js';
 
@@ -199,19 +199,20 @@
     }
 
     function insertEmoji(emoji) {
-        const input = emojiTarget === 'name' ? document.getElementById('displayNameInput') : document.getElementById('bioInput');
-        if (!input) return;
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        const value = emojiTarget === 'name' ? userDisplayName : userBio;
-        const newValue = value.substring(0, start) + emoji + value.substring(end);
-        if (emojiTarget === 'name') userDisplayName = newValue;
-        else userBio = newValue;
-        // Defer cursor positioning to avoid state_unsafe_mutation
-        setTimeout(() => {
-            input.selectionStart = input.selectionEnd = start + emoji.length;
-            input.focus();
-        }, 0);
+        untrack(() => {
+            const input = emojiTarget === 'name' ? document.getElementById('displayNameInput') : document.getElementById('bioInput');
+            if (!input) return;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const value = emojiTarget === 'name' ? userDisplayName : userBio;
+            const newValue = value.substring(0, start) + emoji + value.substring(end);
+            if (emojiTarget === 'name') userDisplayName = newValue;
+            else userBio = newValue;
+            setTimeout(() => {
+                input.selectionStart = input.selectionEnd = start + emoji.length;
+                input.focus();
+            }, 0);
+        });
         showEmojiPicker = false;
     }
 
