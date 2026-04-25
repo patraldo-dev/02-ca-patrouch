@@ -66,13 +66,21 @@ Reply ONLY with valid JSON, no markdown.`;
 
             const aiResp = await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
                 messages: [
-                    { role: 'system', content: 'You are El Narrador. Reply only with valid JSON.' },
+                    { role: 'system', content: 'Respond ONLY with valid JSON. No markdown, no backticks, no explanation.' },
                     { role: 'user', content: prompt }
                 ],
                 max_tokens: 300
             });
+            console.log('[NARRATOR] TYPE:', typeof aiResp, 'KEYS:', aiResp && typeof aiResp === 'object' ? Object.keys(aiResp) : 'N/A', 'FULL:', JSON.stringify(aiResp).slice(0, 500));
 
-            const aiText = JSON.stringify(aiResp?.response ?? aiResp?.result ?? aiResp ?? '');
+            // Defensive text extraction
+            function extractText(r) {
+                if (typeof r === 'string') return r;
+                if (r?.choices?.[0]?.message?.content) return r.choices[0].message.content;
+                if (r?.response) return r.response;
+                return JSON.stringify(r);
+            }
+            const aiText = extractText(aiResp);
             // aiText is now always a string (possibly JSON-wrapped)
             let jsonStr = aiText.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] || aiText.match(/\{[\s\S]*\}/)?.[0];
             if (!jsonStr) return json({ error: 'AI did not return JSON', aiPreview: aiText.slice(0, 500) }, { status: 500 });
