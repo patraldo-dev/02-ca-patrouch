@@ -990,4 +990,9 @@
         .desktop-nav,
         .nav-actions { display: none !important; }
     }
+    @media (min-width: 769px) {
+        .mobile-toggle,
+        .mobile-avatar-btn,
+        .mobile-bell { display: none !important; }
+    }
 </style>
