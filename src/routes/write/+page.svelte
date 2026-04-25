@@ -508,6 +508,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         Show tour
                     </button>
+                    <a href="/stats" class="sidebar-stats-link">📊 {$t('nav.stats')}</a>
                 {/if}
 
                 {#if stats}
@@ -1038,6 +1039,8 @@
     }
 
     .tour-link:hover { color: var(--accent); }
+    .sidebar-stats-link { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--text-muted); font-size: 0.75rem; text-decoration: none; padding: 0.3rem 0; transition: color 0.2s; }
+    .sidebar-stats-link:hover { color: var(--accent); }
 
     /* Sidebar */
     .stats-card, .recent-card {

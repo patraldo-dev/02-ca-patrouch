@@ -320,6 +320,7 @@ import { avatarVariant } from '$lib/utils.js';
                 <p class="account-username">@{data.profile.username}</p>
             {/if}
             <p class="account-since">{$t('profile.user.member_since')} {memberSince}</p>
+            <a href="/stats" class="view-stats-link">{$t('nav.stats')} →</a>
         </div>
     </div>
 
@@ -551,6 +552,8 @@ import { avatarVariant } from '$lib/utils.js';
     .account-name { font-family: var(--font-heading); font-size: 1.5rem; margin: 0 0 0.15rem; color: var(--text); }
     .account-username { font-size: 0.85rem; color: var(--accent); margin: 0 0 0.25rem; }
     .account-since { font-size: 0.8rem; color: var(--muted, #a1a1aa); margin: 0; }
+    .view-stats-link { font-size: 0.8rem; color: var(--accent); text-decoration: none; margin-top: 0.4rem; display: inline-block; }
+    .view-stats-link:hover { color: var(--accent-hover); text-decoration: underline; }
     .account-page h1 {
         font-family: var(--font-heading);
         font-size: 2rem;

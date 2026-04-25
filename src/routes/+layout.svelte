@@ -43,6 +43,7 @@
     let searchOpen = $state(false);
     let profilesOpen = $state(false);
     let tallerOpen = $state(false);
+    let avatarMenuOpen = $state(false);
     let helpOpen = $state(false);
     let profiles = $state([]);
     let activeProfileId = $state(data.activeProfile?.id || null);
@@ -248,10 +249,19 @@
                             {/if}
                         </div>
                         {:else}
-                        <a href="/account" class="profile-trigger" title={data.user.display_name || data.user.username}>
-                            <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
-                            <span class="profile-name">{data.user.display_name || data.user.username}</span>
-                        </a>
+                        <div class="profile-switcher">
+                            <button class="profile-trigger" onclick={() => avatarMenuOpen = !avatarMenuOpen}>
+                                <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
+                                <span class="profile-name">{data.user.display_name || data.user.username}</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            {#if avatarMenuOpen}
+                            <div class="profile-dropdown">
+                                <a href="/account" class="profile-manage">{$t('common.nav.manage_profiles')}</a>
+                                <a href="/stats" class="profile-manage">{$t('nav.stats')}</a>
+                            </div>
+                            {/if}
+                        </div>
                         {/if}
                         <button onclick={handleLogout} class="btn-glass">{$t('common.nav.logout')}</button>
                     {:else}
@@ -273,6 +283,7 @@
                 </span>
             </button>
             {#if data.user}
+            <a href="/stats" class="mobile-stats-btn desktop-hide" title={$t('nav.stats')}>📊</a>
             <a href="/account" class="mobile-avatar-btn desktop-hide" title={activeDisplayName}>
                 <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
             </a>
@@ -326,6 +337,7 @@
                             <div style="font-weight:600;font-size:0.95rem">{activeDisplayName}</div>
                         </div>
                     </a>
+                    <a href="/stats" onclick={toggleMobileMenu} class="btn-glass block">{$t('nav.stats')}</a>
                     {#if data.user?.role === 'admin'}
                     <a href="/account" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
                     <a href="/admin" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
@@ -779,6 +791,8 @@
     .block { display: block; width: 100%; text-align: center; }
 
     .mobile-avatar-btn { display: flex; align-items: center; padding: 0; text-decoration: none; }
+    .mobile-stats-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); text-decoration: none; font-size: 0.8rem; transition: all 0.2s; }
+    .mobile-stats-btn:hover { border-color: var(--accent); color: var(--accent); }
     .mobile-avatar-btn .profile-avatar { border: 2px solid var(--accent); }
     /* ── Mobile Bell ── */
     .mobile-bell {

@@ -978,5 +978,10 @@
   "disclosure.ai_written": "✨ Escrito por Sappho (IA)",
   "disclosure.ai_narrated": "Narrado por Albot Camus (IA)",
   "disclosure.ai_evaluated": "Evaluación de IA — no es juicio humano",
-  "disclosure.ai_refined": "Refinado con asistencia de IA"
+  "disclosure.ai_refined": "Refinado con asistencia de IA",
+  "common": {
+    "nav": {
+      "stats": "Estadísticas"
+    }
+  }
 }
