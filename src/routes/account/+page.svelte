@@ -496,8 +496,7 @@
 
 <!-- Emoji Picker -->
 {#if showEmojiPicker}
-    <svelte:body />
-    <svelte:component this={EmojiPicker} onSelect={handleEmojiSelect} onClose={closeEmojiPicker} />
+    <EmojiPicker onSelect={handleEmojiSelect} onClose={closeEmojiPicker} />
 {/if}
 
 <!-- Crop Modal -->
