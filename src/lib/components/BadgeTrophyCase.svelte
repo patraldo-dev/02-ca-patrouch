@@ -161,7 +161,7 @@
     }
 
     .count {
-        font-size: 0.7rem;
+        font-size: 0.85rem;
         color: var(--text-muted);
     }
 
@@ -193,7 +193,7 @@
         border-radius: 999px;
         background: transparent;
         color: var(--text-muted);
-        font-size: 0.65rem;
+        font-size: 0.8rem;
         cursor: pointer;
         transition: all 0.2s;
     }
@@ -239,7 +239,7 @@
     .badge-icon { font-size: 1.5rem; }
 
     .badge-name {
-        font-size: 0.65rem;
+        font-size: 0.8rem;
         color: var(--text-dim);
         text-align: center;
         line-height: 1.2;
@@ -250,7 +250,7 @@
     }
 
     .badge-rarity {
-        font-size: 0.5rem;
+        font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: var(--text-muted);
@@ -304,7 +304,7 @@
     .badge-modal-info { display: flex; flex-direction: column; gap: 0.5rem; }
 
     .badge-modal-rarity {
-        font-size: 0.65rem;
+        font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--text-muted);

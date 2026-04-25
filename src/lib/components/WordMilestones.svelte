@@ -169,7 +169,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.75rem;
+        font-size: 0.9rem;
         transition: all 0.3s;
     }
 
@@ -180,7 +180,7 @@
     }
 
     .label {
-        font-size: 0.6rem;
+        font-size: 0.9rem;
         color: var(--text-muted);
     }
 
@@ -200,13 +200,13 @@
     }
 
     .next-milestone {
-        font-size: 0.7rem;
+        font-size: 0.85rem;
         color: var(--text-muted);
         margin: 0;
     }
 
     .all-complete {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         color: var(--accent);
         margin: 0;
         font-weight: 500;

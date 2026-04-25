@@ -58,10 +58,11 @@
         max-width: 800px;
         margin: 2rem auto;
         padding: 0 1.5rem 4rem;
+        font-size: 1.05rem;
     }
     .stats-page h1 {
         font-family: var(--font-heading);
-        font-size: 2rem;
+        font-size: 2.25rem;
         font-weight: 300;
         color: var(--text);
         margin-bottom: 1.5rem;
@@ -76,18 +77,18 @@
         background: var(--surface, #141417);
         border: 1px solid var(--border, #333);
         border-radius: 12px;
-        padding: 1.25rem;
+        padding: 1.5rem;
         text-align: center;
     }
     .stat-value {
         display: block;
         font-family: var(--font-heading);
-        font-size: 1.75rem;
+        font-size: 2rem;
         font-weight: 700;
         color: var(--accent, #c9a87c);
     }
     .stat-label {
-        font-size: 0.85rem;
+        font-size: 0.95rem;
         color: var(--text-muted, #a1a1aa);
     }
     .section-card {
@@ -99,7 +100,7 @@
     }
     .section-card h2 {
         font-family: var(--font-heading);
-        font-size: 1.25rem;
+        font-size: 1.35rem;
         font-weight: 400;
         color: var(--text);
         margin: 0 0 1rem;
@@ -107,5 +108,6 @@
     @media (max-width: 600px) {
         .stats-grid { grid-template-columns: 1fr; }
         .stats-page { padding: 0 1rem 3rem; }
+        .stat-value { font-size: 1.75rem; }
     }
 </style>
