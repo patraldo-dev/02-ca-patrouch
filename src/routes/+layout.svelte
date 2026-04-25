@@ -252,6 +252,9 @@
                         <div class="profile-switcher">
                             <button class="profile-trigger" onclick={() => avatarMenuOpen = !avatarMenuOpen}>
                                 <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
+                                {#if data.bootyFuel > 0}
+                                    <span class="nav-bean-badge">🫘{data.bootyFuel}</span>
+                                {/if}
                                 <span class="profile-name">{data.user.display_name || data.user.username}</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                             </button>
@@ -286,6 +289,9 @@
             <a href="/stats" class="mobile-stats-btn desktop-hide" title={$t('nav.stats')}>📊</a>
             <a href="/account" class="mobile-avatar-btn desktop-hide" title={activeDisplayName}>
                 <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
+                {#if data.bootyFuel > 0}
+                    <span class="mobile-bean-badge">🫘{data.bootyFuel}</span>
+                {/if}
             </a>
             <div class="mobile-bell desktop-hide">
                 <NotificationBell />
@@ -636,7 +642,7 @@
     .profile-switcher {
         position: relative;
     }
-    .profile-trigger {
+    .profile-trigger { position: relative; }
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -1009,5 +1015,33 @@
     .desktop-hide { display: none; }
     @media (max-width: 768px) {
         .desktop-hide { display: flex; }
+    }
+    .nav-bean-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #1a1a2e;
+        color: #fff;
+        font-size: 0.7rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 999px;
+        white-space: nowrap;
+        border: 1px solid var(--accent);
+        pointer-events: none;
+        z-index: 10;
+    }
+    .mobile-bean-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #1a1a2e;
+        color: #fff;
+        font-size: 0.6rem;
+        padding: 0.05rem 0.25rem;
+        border-radius: 999px;
+        white-space: nowrap;
+        border: 1px solid var(--accent);
+        pointer-events: none;
+        z-index: 10;
     }
 </style>

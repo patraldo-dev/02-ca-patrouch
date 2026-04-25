@@ -26,6 +26,11 @@ export async function load({ locals, cookies }) {
             FROM profiles WHERE user_id = ? AND is_active = 1
         `).bind(user.id).first();
 
+        // Get booty player data (beans)
+        var bootyPlayer = await db.prepare(
+            'SELECT fuel FROM bq_players WHERE user_id = ?'
+        ).bind(user.id).first().catch(() => null);
+
         // Fallback to primary if no active
         if (!activeProfile) {
             const primary = await db.prepare(`
@@ -51,6 +56,7 @@ export async function load({ locals, cookies }) {
         user: user || null,
         serverLocale,
         activeProfile,
-        onboarding_completed
+        onboarding_completed,
+        bootyFuel: bootyPlayer?.fuel || 0
     };
 }
