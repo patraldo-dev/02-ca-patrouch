@@ -55,62 +55,62 @@
 
 <style>
     .stats-page {
-        max-width: 900px;
-        margin: 2rem auto;
-        padding: 0 1.5rem 4rem;
-        font-size: 1.1rem;
+        max-width: 100%;
+        margin: 1.5rem auto;
+        padding: 0 2rem 4rem;
+        font-size: 1.15rem;
     }
     .stats-page h1 {
         font-family: var(--font-heading);
-        font-size: 2.5rem;
+        font-size: 2.75rem;
         font-weight: 300;
         color: var(--text);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
     }
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
-        margin-bottom: 2rem;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
     }
     .stat-card {
         background: var(--surface, #141417);
         border: 1px solid var(--border, #333);
         border-radius: 12px;
-        padding: 2rem 1.25rem;
+        padding: 2.5rem 1rem;
         text-align: center;
     }
     .stat-value {
         display: block;
         font-family: var(--font-heading);
-        font-size: 2.75rem;
+        font-size: 3.25rem;
         font-weight: 700;
         color: var(--accent, #c9a87c);
-        line-height: 1.1;
+        line-height: 1;
     }
     .stat-label {
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: var(--text-muted, #a1a1aa);
-        margin-top: 0.25rem;
+        margin-top: 0.35rem;
     }
     .section-card {
         background: var(--surface, #141417);
         border: 1px solid var(--border, #333);
         border-radius: 12px;
-        padding: 1.75rem;
-        margin-bottom: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 1rem;
     }
     .section-card h2 {
         font-family: var(--font-heading);
-        font-size: 1.5rem;
+        font-size: 1.75rem;
         font-weight: 400;
         color: var(--text);
-        margin: 0 0 1rem;
+        margin: 0 0 0.75rem;
     }
     @media (max-width: 600px) {
         .stats-grid { grid-template-columns: 1fr; gap: 0.5rem; }
-        .stats-page { padding: 0 0.75rem 3rem; }
-        .stat-value { font-size: 2.25rem; }
-        .stat-card { padding: 1.25rem 1rem; }
+        .stats-page { padding: 0 1rem 3rem; }
+        .stat-value { font-size: 2.5rem; }
+        .stat-card { padding: 1.5rem 1rem; }
     }
 </style>
