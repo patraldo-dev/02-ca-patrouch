@@ -991,8 +991,8 @@
         .nav-actions { display: none !important; }
     }
     @media (min-width: 769px) {
-        .mobile-toggle,
-        .mobile-avatar-btn,
-        .mobile-bell { display: none !important; }
+        :global(.mobile-toggle),
+        :global(.mobile-avatar-btn),
+        :global(.mobile-bell) { display: none !important; }
     }
 </style>
