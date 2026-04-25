@@ -1,5 +1,6 @@
 <!-- src/lib/components/LanguageSwitcherMobile.svelte -->
 <script>
+  import { locale } from '$lib/i18n';
   import { browser } from '$app/environment';
 
   const languages = [
@@ -13,6 +14,7 @@
 
   async function switchLanguage(lang) {
     if (!browser) return;
+    activeLocale = lang;
     const currentPath = window.location.pathname + window.location.search;
     try {
       const res = await fetch('/api/locale', {
@@ -68,6 +70,12 @@
     cursor: pointer;
     transition: all 0.25s ease;
     -webkit-tap-highlight-color: transparent;
+    min-width: 42px;
+    text-align: center;
+  }
+
+  .lang-switcher {
+    min-width: 146px;
   }
 
   .lang-pill:active:not(.active) {

@@ -2,6 +2,7 @@
 <script>
   import { locale, getLocale } from '$lib/i18n';
   import { browser } from '$app/environment';
+  import { page } from '$app/stores';
 
   const languages = [
     { code: 'en', label: 'EN' },
@@ -11,6 +12,7 @@
 
   async function switchLanguage(lang) {
     if (!browser) return;
+    activeLocale = lang;
     const currentPath = window.location.pathname + window.location.search;
     try {
       const res = await fetch('/api/locale', {
@@ -71,6 +73,12 @@
     letter-spacing: 0.5px;
     cursor: pointer;
     transition: all 0.25s ease;
+    min-width: 42px;
+    text-align: center;
+  }
+
+  .lang-switcher {
+    min-width: 146px;
   }
 
   .lang-pill:hover:not(.active) {
