@@ -72,8 +72,7 @@ Reply ONLY with valid JSON, no markdown.`;
                 max_tokens: 300
             });
 
-            const aiText = typeof aiResp === 'string' ? aiResp : (aiResp?.response || JSON.stringify(aiResp));
-            console.log('[NARRATOR] AI response type:', typeof aiResp, 'text:', aiText.slice(0, 200));
+            const aiText = String(aiResp?.response ?? aiResp ?? '');
             const jsonMatch = aiText.match(/\{[\s\S]*\}/);
             if (!jsonMatch) return json({ error: 'AI did not return JSON' }, { status: 500 });
 
