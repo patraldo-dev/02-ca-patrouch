@@ -123,7 +123,7 @@
     .milestones-popup h3 {
         font-family: var(--font-heading);
         color: var(--accent);
-        font-size: 1.1rem;
+        font-size: 1.35rem;
         margin: 0 0 1.25rem;
     }
 
@@ -141,7 +141,7 @@
 
     .milestone-group h4 {
         color: var(--text);
-        font-size: 0.85rem;
+        font-size: 1.05rem;
         margin: 0 0 0.75rem;
         font-weight: 500;
     }
@@ -161,15 +161,15 @@
     }
 
     .dot {
-        width: 28px;
-        height: 28px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         background: rgba(201, 168, 124, 0.1);
         border: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.9rem;
+        font-size: 1.1rem;
         transition: all 0.3s;
     }
 
@@ -180,7 +180,7 @@
     }
 
     .label {
-        font-size: 0.75rem;
+        font-size: 0.9rem;
         color: var(--text-muted);
     }
 
@@ -200,13 +200,13 @@
     }
 
     .next-milestone {
-        font-size: 0.85rem;
+        font-size: 1rem;
         color: var(--text-muted);
         margin: 0;
     }
 
     .all-complete {
-        font-size: 0.95rem;
+        font-size: 1.1rem;
         color: var(--accent);
         margin: 0;
         font-weight: 500;
