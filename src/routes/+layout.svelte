@@ -273,10 +273,10 @@
                 </span>
             </button>
             {#if data.user}
-            <a href="/account" class="mobile-avatar-btn" title={activeDisplayName}>
+            <a href="/account" class="mobile-avatar-btn desktop-hide" title={activeDisplayName}>
                 <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
             </a>
-            <div class="mobile-bell">
+            <div class="mobile-bell desktop-hide">
                 <NotificationBell />
             </div>
             {/if}
@@ -990,17 +990,8 @@
         .desktop-nav,
         .nav-actions { display: none !important; }
     }
-    :global(.mobile-toggle),
-    :global(.mobile-avatar-btn),
-    :global(.mobile-bell) {
-        display: none;
-    }
+    .desktop-hide { display: none; }
     @media (max-width: 768px) {
-        :global(.mobile-toggle),
-        :global(.mobile-avatar-btn),
-        :global(.mobile-bell) {
-            display: flex;
-        }
+        .desktop-hide { display: flex; }
     }
-</style>
 </style>
