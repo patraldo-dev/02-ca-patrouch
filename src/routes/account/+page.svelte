@@ -69,14 +69,8 @@
         '🍕': ['☕','🍵','🍷','🍺','🥂','🍹','🍕','🍔','🌮','🍣','🍩','🍪','🎂','🍰','🍫','🍿','🧁','🍦','🍉','🍇','🍓','🍒','🥝','🥑'],
     };
 
-    // --- Member since ---
-    let memberSince = $derived.by(() => {
-        const d = data.profile?.created_at;
-        if (!d) return '';
-        try {
-            return new Date(d.includes('T') ? d : d.replace(' ', 'T')).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        } catch { return d; }
-    });
+    // --- Member since (formatted on server) ---
+    let memberSince = $derived(data.profile?.member_since || '');
 
     // --- Masked email ---
     let maskedEmail = $derived(() => {

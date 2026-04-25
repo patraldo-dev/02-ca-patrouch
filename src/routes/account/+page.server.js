@@ -35,7 +35,12 @@ export async function load({ locals }) {
         avatar_url: baUser?.avatar_url || '',
         display_name: baUser?.display_name || '',
         username: user.email || '',
-        created_at: baUser?.created_at || user.createdAt || '',
+        member_since: (() => {
+            const raw = baUser?.created_at || user.createdAt;
+            if (!raw) return '';
+            const d = new Date(raw.includes('T') ? raw : raw.replace(' ', 'T') + 'Z');
+            return isNaN(d.getTime()) ? String(raw) : d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+        })(),
         show_in_scoreboard: profileRow?.show_in_scoreboard ?? 1,
         show_email: profileRow?.show_email ?? 0,
         show_profile: 1
