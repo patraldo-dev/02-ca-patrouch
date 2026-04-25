@@ -55,14 +55,14 @@
 
 <style>
     .stats-page {
-        max-width: 800px;
+        max-width: 900px;
         margin: 2rem auto;
         padding: 0 1.5rem 4rem;
-        font-size: 1.05rem;
+        font-size: 1.1rem;
     }
     .stats-page h1 {
         font-family: var(--font-heading);
-        font-size: 2.25rem;
+        font-size: 2.5rem;
         font-weight: 300;
         color: var(--text);
         margin-bottom: 1.5rem;
@@ -70,44 +70,47 @@
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
+        gap: 0.75rem;
         margin-bottom: 2rem;
     }
     .stat-card {
         background: var(--surface, #141417);
         border: 1px solid var(--border, #333);
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 2rem 1.25rem;
         text-align: center;
     }
     .stat-value {
         display: block;
         font-family: var(--font-heading);
-        font-size: 2rem;
+        font-size: 2.75rem;
         font-weight: 700;
         color: var(--accent, #c9a87c);
+        line-height: 1.1;
     }
     .stat-label {
-        font-size: 0.95rem;
+        font-size: 1rem;
         color: var(--text-muted, #a1a1aa);
+        margin-top: 0.25rem;
     }
     .section-card {
         background: var(--surface, #141417);
         border: 1px solid var(--border, #333);
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1.75rem;
         margin-bottom: 1.5rem;
     }
     .section-card h2 {
         font-family: var(--font-heading);
-        font-size: 1.35rem;
+        font-size: 1.5rem;
         font-weight: 400;
         color: var(--text);
         margin: 0 0 1rem;
     }
     @media (max-width: 600px) {
-        .stats-grid { grid-template-columns: 1fr; }
-        .stats-page { padding: 0 1rem 3rem; }
-        .stat-value { font-size: 1.75rem; }
+        .stats-grid { grid-template-columns: 1fr; gap: 0.5rem; }
+        .stats-page { padding: 0 0.75rem 3rem; }
+        .stat-value { font-size: 2.25rem; }
+        .stat-card { padding: 1.25rem 1rem; }
     }
 </style>
