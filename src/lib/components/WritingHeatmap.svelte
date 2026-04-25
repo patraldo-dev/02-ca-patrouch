@@ -189,8 +189,8 @@
     }
 
     .cell {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         border-radius: 2px;
         border: none;
         padding: 0;
@@ -206,11 +206,11 @@
         cursor: default;
     }
 
-    .level-0 { background: rgba(201, 168, 124, 0.06); }
-    .level-1 { background: rgba(201, 168, 124, 0.2); }
-    .level-2 { background: rgba(201, 168, 124, 0.4); }
-    .level-3 { background: rgba(201, 168, 124, 0.65); }
-    .level-4 { background: rgba(201, 168, 124, 0.9); }
+    .level-0 { background: rgba(201, 168, 124, 0.1); }
+    .level-1 { background: rgba(201, 168, 124, 0.3); }
+    .level-2 { background: rgba(201, 168, 124, 0.5); }
+    .level-3 { background: rgba(201, 168, 124, 0.75); }
+    .level-4 { background: rgba(201, 168, 124, 1); }
 
     .cell.active {
         outline: 2px solid var(--accent);

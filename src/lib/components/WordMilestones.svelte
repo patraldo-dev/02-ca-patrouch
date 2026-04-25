@@ -128,8 +128,8 @@
     }
 
     .milestone-group {
-        margin-bottom: 1.25rem;
-        padding-bottom: 1.25rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
         border-bottom: 1px solid var(--glass-bg);
     }
 
@@ -142,7 +142,7 @@
     .milestone-group h4 {
         color: var(--text);
         font-size: 1.05rem;
-        margin: 0 0 0.75rem;
+        margin: 0 0 0.5rem;
         font-weight: 500;
     }
 

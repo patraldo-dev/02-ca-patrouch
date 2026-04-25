@@ -24,6 +24,18 @@ export async function load({ locals }) {
         user,
         writings: writings.results || [],
         totalWords: totalWords?.total || 0,
+        heatmapData: buildHeatmapData(writings.results || []),
         badges: getBadgeCatalog(unlockedBadges.results || [])
     };
+}
+
+function buildHeatmapData(writings) {
+    const map = {};
+    for (const w of writings) {
+        const dateStr = new Date(w.created_at * 1000).toISOString().split('T')[0];
+        if (!map[dateStr]) map[dateStr] = { count: 0, words: 0 };
+        map[dateStr].count++;
+        map[dateStr].words += w.word_count || 0;
+    }
+    return map;
 }

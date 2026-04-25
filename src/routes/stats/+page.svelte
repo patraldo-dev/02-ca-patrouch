@@ -37,7 +37,7 @@
     <!-- Heatmap -->
     <section class="section-card">
         <h2>Writing Activity</h2>
-        <WritingHeatmap writings={data.writings} />
+        <WritingHeatmap heatmapData={data.heatmapData} />
     </section>
 
     <!-- Milestones -->
