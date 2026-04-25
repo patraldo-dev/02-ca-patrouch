@@ -228,7 +228,7 @@
                 <h3>{$t('pages.home.works.agora')}</h3>
                 <p>{$t('pages.home.works.agora.desc')}</p>
             </a>
-            <a href="/profile" class="glass-card">
+            <a href="/stats" class="glass-card">
                 <span class="card-icon">📊</span>
                 <h3>{$t('pages.home.works.stats')}</h3>
                 <p>{$t('pages.home.works.stats.desc')}</p>
