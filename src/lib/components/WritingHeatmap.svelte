@@ -19,7 +19,7 @@
 
     function buildGrid(data) {
         const today = new Date();
-        const startDate = new Date(today.getFullYear(), 3, 1); // April 1 of current year
+        const startDate = new Date(today.getFullYear(), today.getMonth() - 11, 1); // 12 months back
         const dayOfWeek = startDate.getDay();
         const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         startDate.setDate(startDate.getDate() + mondayOffset);
@@ -74,7 +74,7 @@
 
 <div class="heatmap-container">
     <div class="heatmap-header">
-        <span class="heatmap-title">{$t('write.heatmap_title')}</span>
+        <span class="heatmap-title">{$t('write.heatmap_title')} <span class="heatmap-year">{new Date().getFullYear()}</span></span>
         <div class="legend">
             <span class="label">{$t('write.heatmap_less')}</span>
             <span class="cell level-0"></span>
@@ -140,6 +140,10 @@
         font-size: 0.85rem;
         font-weight: 600;
         color: var(--text);
+    }
+    .heatmap-year {
+        font-weight: 400;
+        color: var(--text-muted);
     }
 
     .legend {
