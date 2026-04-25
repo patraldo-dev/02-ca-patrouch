@@ -990,24 +990,17 @@
         .desktop-nav,
         .nav-actions { display: none !important; }
     }
-</style>
-
-<style:global>
-    @media (min-width: 769px) {
-        .mobile-toggle,
-        .mobile-avatar-btn,
-        .mobile-bell { display: none !important; }
+    :global(.mobile-toggle),
+    :global(.mobile-avatar-btn),
+    :global(.mobile-bell) {
+        display: none;
     }
-    /* Prevent layout shift from avatar loading */
-    .mobile-avatar-btn img,
-    .mobile-avatar-btn .profile-avatar,
-    .profile-trigger img,
-    .profile-trigger .profile-avatar {
-        content-visibility: auto;
-    }
-    header .header-actions {
-        display: flex;
-        align-items: center;
+    @media (max-width: 768px) {
+        :global(.mobile-toggle),
+        :global(.mobile-avatar-btn),
+        :global(.mobile-bell) {
+            display: flex;
+        }
     }
 </style>
 </style>
