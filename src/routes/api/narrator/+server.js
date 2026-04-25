@@ -72,9 +72,10 @@ Reply ONLY with valid JSON, no markdown.`;
                 max_tokens: 300
             });
 
-            const aiText = String(aiResp?.response ?? aiResp?.result ?? aiResp ?? '');
-            let jsonStr = String(aiText).match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] || String(aiText).match(/\{[\s\S]*\}/)?.[0];
-            if (!jsonStr) return json({ error: 'AI did not return JSON', aiPreview: String(aiText).slice(0, 500) }, { status: 500 });
+            const aiText = JSON.stringify(aiResp?.response ?? aiResp?.result ?? aiResp ?? '');
+            // aiText is now always a string (possibly JSON-wrapped)
+            let jsonStr = aiText.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] || aiText.match(/\{[\s\S]*\}/)?.[0];
+            if (!jsonStr) return json({ error: 'AI did not return JSON', aiPreview: aiText.slice(0, 500) }, { status: 500 });
 
             data = JSON.parse(jsonStr.trim());
         }
