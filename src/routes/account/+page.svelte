@@ -73,7 +73,7 @@
     let memberSince = $derived(data.profile?.member_since || '');
 
     // --- Masked email ---
-    let maskedEmail = $derived(() => {
+    let maskedEmail = $derived.by(() => {
         const email = data.user?.email || '';
         if (!email) return '';
         const [local, domain] = email.split('@');
