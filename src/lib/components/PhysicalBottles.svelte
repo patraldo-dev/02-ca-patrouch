@@ -7,6 +7,7 @@
     let physicalBottles = $state([]);
     let playerPos = $state(null);
     let nearbyBottle = $state(null);
+    let wasNearby = false;
     let capturing = $state(false);
     let capturedContent = $state(null);
     let locating = $state(false);
@@ -143,6 +144,12 @@
             if (d < closestDist) { closestDist = d; closest = bottle; }
         }
         nearbyBottle = closestDist <= CAPTURE_RADIUS ? closest : null;
+
+        // Vibrate when entering proximity
+        if (nearbyBottle && !wasNearby) {
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
+        wasNearby = !!nearbyBottle;
 
         // Update capture radius circle
         if (captureRadiusCircle) { leafletMap.removeLayer(captureRadiusCircle); captureRadiusCircle = null; }
