@@ -224,7 +224,7 @@
                         {#if data.user?.role === 'admin'}
                         <div class="profile-switcher">
                             <button class="profile-trigger" onclick={() => profilesOpen = !profilesOpen}>
-                                <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
+                                <span class="profile-avatar">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')} alt="" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
                                 <span class="profile-name">{activeDisplayName}</span>
                                 <span class="admin-badge">admin</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
@@ -251,7 +251,7 @@
                         {:else}
                         <div class="profile-switcher">
                             <button class="profile-trigger" onclick={() => avatarMenuOpen = !avatarMenuOpen}>
-                                <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
+                                <span class="profile-avatar">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
                                 {#if data.bootyFuel > 0}
                                     <span class="nav-bean-badge">🫘{data.bootyFuel}</span>
                                 {/if}
@@ -288,7 +288,7 @@
             {#if data.user}
             <a href="/stats" class="mobile-stats-btn desktop-hide" title={$t('nav.stats')}>📊</a>
             <a href="/account" class="mobile-avatar-btn desktop-hide" title={activeDisplayName}>
-                <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
+                <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
                 {#if data.bootyFuel > 0}
                     <span class="mobile-bean-badge">🫘{data.bootyFuel}</span>
                 {/if}
@@ -338,7 +338,7 @@
             <div class="mobile-auth">
                 {#if data?.user}
                     <a href="/account" onclick={toggleMobileMenu} class="mobile-user-header" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);text-decoration:none;color:inherit">
-                        <span class="profile-avatar">{#if avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')}<img src={avatarVariant(data.user?.image || data.user?.avatar_url, 'avatar48')} alt="" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
+                        <span class="profile-avatar">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')} alt="" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
                         <div style="flex:1">
                             <div style="font-weight:600;font-size:0.95rem">{activeDisplayName}</div>
                         </div>
