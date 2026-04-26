@@ -30,6 +30,19 @@ const COAST_POINTS = [
     [20.65, -105.23, 0.1], [20.63, -105.25, 0.1], [20.61, -105.30, 0.1],
     [20.55, -105.40, 0.1], [20.50, -105.36, 0.1], [20.47, -105.40, 0.1],
     [20.45, -105.38, 0.1], [20.43, -105.35, 0.1], [20.40, -105.30, 0.1],
+    // Northern Banderas Bay coast (Nuevo Vallarta / Bucerias area)
+    [20.75, -105.30, 0.1], [20.74, -105.28, 0.1], [20.73, -105.26, 0.1],
+    [20.72, -105.24, 0.1], [20.71, -105.22, 0.1], [20.70, -105.20, 0.1],
+    // Puerto Vallarta coast
+    [20.67, -105.23, 0.1], [20.66, -105.22, 0.1], [20.65, -105.20, 0.1],
+    [20.64, -105.21, 0.1], [20.63, -105.22, 0.1], [20.62, -105.23, 0.1],
+    // Southern Banderas Bay (south shore)
+    [20.52, -105.25, 0.1], [20.50, -105.28, 0.1], [20.48, -105.30, 0.1],
+    [20.46, -105.33, 0.1], [20.44, -105.30, 0.1], [20.42, -105.28, 0.1],
+    [20.40, -105.26, 0.1], [20.39, -105.24, 0.1], [20.38, -105.22, 0.1],
+    // Mismaloya / south coast
+    [20.48, -105.22, 0.1], [20.47, -105.20, 0.1], [20.46, -105.18, 0.1],
+    [20.45, -105.16, 0.1], [20.43, -105.15, 0.1], [20.41, -105.14, 0.1],
     [19.53, -105.22, 0.1], [19.55, -105.25, 0.1], [19.58, -105.30, 0.1],
     // Mexico Pacific coast
     [21.5, -105.2, 0.3], [21.0, -105.4, 0.3], [20.8, -105.6, 0.3],
@@ -51,20 +64,24 @@ const COAST_POINTS = [
 function checkCoast(lat, lon) {
     let closestName = null;
     let minDist = Infinity;
+    let closestLat = null;
+    let closestLon = null;
 
     for (const [clat, clon, threshold] of COAST_POINTS) {
         const d = haversine(lat, lon, clat, clon);
         if (d < minDist) {
             minDist = d;
             closestName = `${clat.toFixed(1)},${clon.toFixed(1)}`;
+            closestLat = clat;
+            closestLon = clon;
         }
         // Beach if within 300m of coast point
         if (d < 0.3) {
-            return { beached: true, coast: closestName, distanceKm: minDist };
+            return { beached: true, coast: closestName, distanceKm: minDist, coastLat: clat, coastLon: clon };
         }
     }
 
-    return { beached: false, coast: closestName, distanceKm: minDist, approaching: minDist < 5 };
+    return { beached: false, coast: closestName, distanceKm: minDist, approaching: minDist < 5, coastLat: closestLat, coastLon: closestLon };
 }
 
 function findZones(lat, lon) {
@@ -129,24 +146,26 @@ export async function simulateDrift(db) {
         let beached = false;
 
         if (coast.beached) {
-            // Bottle hits land!
+            // Bottle hits land — snap to coast point
+            const beachLat = coast.coastLat || newLat;
+            const beachLon = coast.coastLon || newLon;
             await db.prepare(`
                 UPDATE bottles SET status = 'beached', beached_at = datetime('now'),
                 current_lat = ?, current_lon = ?, distance_km = ?,
                 updated_at = datetime('now') WHERE id = ?
-            `).bind(newLat, newLon, (bottle.distance_km || 0) + distKm, bottle.id).run();
+            `).bind(beachLat, beachLon, (bottle.distance_km || 0) + distKm, bottle.id).run();
 
             // Log beaching event
             try {
                 await db.prepare(`
                     INSERT INTO bottle_events (id, bottle_id, event_type, lat, lon, description, created_at)
                     VALUES (?, ?, 'beached', ?, ?, ?, datetime('now'))
-                `).bind(crypto.randomUUID(), bottle.id, newLat, newLon,
-                    `Bottle beached after ${((bottle.distance_km || 0) + distKm).toFixed(1)} km`).run();
+                `).bind(crypto.randomUUID(), bottle.id, beachLat, beachLon,
+                    `Bottle beached at ${coast.coast} after ${((bottle.distance_km || 0) + distKm).toFixed(1)} km`).run();
             } catch (e) { /* bottle_events table may not exist in this DB */ }
 
             beached = true;
-            updated.push({ id: bottle.id, beached: true, lat: newLat.toFixed(4), lon: newLon.toFixed(4), distance_km: ((bottle.distance_km || 0) + distKm).toFixed(1) });
+            updated.push({ id: bottle.id, beached: true, lat: beachLat.toFixed(4), lon: beachLon.toFixed(4), distance_km: ((bottle.distance_km || 0) + distKm).toFixed(1) });
         } else {
             // Deflect slightly if approaching coast
             if (coast.approaching) {
