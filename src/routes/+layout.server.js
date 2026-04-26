@@ -31,7 +31,11 @@ export async function load({ locals, cookies }) {
             'SELECT fuel FROM bq_players WHERE user_id = ?'
         ).bind(user.id).first().catch(() => null);
 
-        // Get avatar from profile (takes priority over social login image)
+        // Get avatar from profile or user table
+        var userData = await db.prepare(
+            'SELECT image FROM "user" WHERE id = ?'
+        ).bind(user.id).first().catch(() => null);
+
         var profileAvatar = await db.prepare(
             'SELECT avatar_url FROM profiles WHERE user_id = ? AND is_active = 1'
         ).bind(user.id).first().catch(() => null);
@@ -63,6 +67,6 @@ export async function load({ locals, cookies }) {
         activeProfile,
         onboarding_completed,
         bootyFuel: bootyPlayer?.fuel || 0,
-        avatarUrl: profileAvatar?.avatar_url || null
+        avatarUrl: profileAvatar?.avatar_url || userData?.image || null
     };
 }
