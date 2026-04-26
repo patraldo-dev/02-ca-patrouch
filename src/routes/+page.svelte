@@ -205,7 +205,10 @@
         {#if data.user}
             <a href="/write" class="teaser-cta">{$t('pages.home.prompt.start_writing')}</a>
         {:else}
-            <a href="/signup" class="teaser-cta">{$t('pages.home.prompt.cta_guest')}</a>
+            <div class="auth-cta-group">
+                <a href="/login" class="teaser-cta">{$t('common.nav.login')}</a>
+                <a href="/signup" class="teaser-cta secondary">{$t('common.nav.signup')}</a>
+            </div>
         {/if}
     </div>
 </section>
@@ -556,6 +559,21 @@
 
     .teaser-cta:hover {
         background: var(--accent-hover);
+    }
+    .teaser-cta.secondary {
+        background: transparent;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+    }
+    .teaser-cta.secondary:hover {
+        background: var(--accent);
+        color: var(--bg);
+    }
+    .auth-cta-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
     }
 
     /* ── Sections ── */

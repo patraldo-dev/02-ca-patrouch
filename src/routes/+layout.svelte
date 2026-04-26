@@ -261,7 +261,6 @@
                             {#if avatarMenuOpen}
                             <div class="profile-dropdown">
                                 <a href="/account" class="profile-manage">{$t('common.nav.manage_profiles')}</a>
-                                <a href="/stats" class="profile-manage">{$t('nav.stats')}</a>
                             </div>
                             {/if}
                         </div>
@@ -286,7 +285,6 @@
                 </span>
             </button>
             {#if data.user}
-            <a href="/stats" class="mobile-stats-btn desktop-hide" title={$t('nav.stats')}>📊</a>
             <a href="/account" class="mobile-avatar-btn desktop-hide" title={activeDisplayName}>
                 <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
                 {#if data.bootyFuel > 0}
@@ -343,7 +341,6 @@
                             <div style="font-weight:600;font-size:0.95rem">{activeDisplayName}</div>
                         </div>
                     </a>
-                    <a href="/stats" onclick={toggleMobileMenu} class="btn-glass block">{$t('nav.stats')}</a>
                     {#if data.user?.role === 'admin'}
                     <a href="/account" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.manage_profiles')}</a>
                     <a href="/admin" onclick={toggleMobileMenu} class="btn-glass block">{$t('common.nav.admin')}</a>
