@@ -11,6 +11,10 @@
       "_internal.js"
     ]
   },
+  "_BadgeTrophyCase.D3Gr7r2L.css": {
+    "file": "_app/immutable/assets/BadgeTrophyCase.D3Gr7r2L.css",
+    "src": "_BadgeTrophyCase.D3Gr7r2L.css"
+  },
   "_OnboardingFlow.svelte_svelte_type_style_lang.js": {
     "file": "chunks/OnboardingFlow.svelte_svelte_type_style_lang.js",
     "name": "OnboardingFlow.svelte_svelte_type_style_lang"
@@ -304,7 +308,7 @@
       "_auth-client.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.BNSVbI18.css"
+      "_app/immutable/assets/_page.BtJYyJKg.css"
     ]
   },
   "src/routes/+layout.js": {
@@ -340,7 +344,7 @@
       "_html.js"
     ],
     "css": [
-      "_app/immutable/assets/_layout.BXUp96pS.css"
+      "_app/immutable/assets/_layout.BEHaVRSI.css"
     ]
   },
   "src/routes/+page.server.js": {
@@ -364,6 +368,31 @@
     ],
     "css": [
       "_app/immutable/assets/_page.B5EkY-xF.css"
+    ]
+  },
+  "src/routes/account/+page.server.js": {
+    "file": "entries/pages/account/_page.server.js",
+    "name": "entries/pages/account/_page.server",
+    "src": "src/routes/account/+page.server.js",
+    "isEntry": true
+  },
+  "src/routes/account/+page.svelte": {
+    "file": "entries/pages/account/_page.svelte.js",
+    "name": "entries/pages/account/_page.svelte",
+    "src": "src/routes/account/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_renderer.js",
+      "_index3.js",
+      "_exports.js",
+      "_utils2.js",
+      "_root.js",
+      "_state.svelte.js",
+      "_utils3.js",
+      "_auth-client.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_page.BgJuuVVK.css"
     ]
   },
   "src/routes/admin/+error.svelte": {
@@ -521,6 +550,18 @@
     "css": [
       "_app/immutable/assets/_page.CFW0VVj1.css"
     ]
+  },
+  "src/routes/api/account/notification-preferences/+server.js": {
+    "file": "entries/endpoints/api/account/notification-preferences/_server.js",
+    "name": "entries/endpoints/api/account/notification-preferences/_server",
+    "src": "src/routes/api/account/notification-preferences/+server.js",
+    "isEntry": true
+  },
+  "src/routes/api/account/privacy/+server.js": {
+    "file": "entries/endpoints/api/account/privacy/_server.js",
+    "name": "entries/endpoints/api/account/privacy/_server",
+    "src": "src/routes/api/account/privacy/+server.js",
+    "isEntry": true
   },
   "src/routes/api/admin/+layout.server.js": {
     "file": "entries/pages/api/admin/_layout.server.js",
@@ -898,6 +939,24 @@
       "_mailgun.js"
     ]
   },
+  "src/routes/api/notifications/+server.js": {
+    "file": "entries/endpoints/api/notifications/_server.js",
+    "name": "entries/endpoints/api/notifications/_server",
+    "src": "src/routes/api/notifications/+server.js",
+    "isEntry": true
+  },
+  "src/routes/api/notifications/create/+server.js": {
+    "file": "entries/endpoints/api/notifications/create/_server.js",
+    "name": "entries/endpoints/api/notifications/create/_server",
+    "src": "src/routes/api/notifications/create/+server.js",
+    "isEntry": true
+  },
+  "src/routes/api/notifications/mark-read/+server.js": {
+    "file": "entries/endpoints/api/notifications/mark-read/_server.js",
+    "name": "entries/endpoints/api/notifications/mark-read/_server",
+    "src": "src/routes/api/notifications/mark-read/+server.js",
+    "isEntry": true
+  },
   "src/routes/api/onboarding/+server.js": {
     "file": "entries/endpoints/api/onboarding/_server.js",
     "name": "entries/endpoints/api/onboarding/_server",
@@ -1238,7 +1297,7 @@
       "_state.svelte.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.iCVAt9eq.css"
+      "_app/immutable/assets/_page.D9B7Dpm2.css"
     ]
   },
   "src/routes/images/[imageID]/+server.js": {
@@ -1292,10 +1351,7 @@
     "file": "entries/pages/profile/_page.server.js",
     "name": "entries/pages/profile/_page.server",
     "src": "src/routes/profile/+page.server.js",
-    "isEntry": true,
-    "imports": [
-      "_engagement.js"
-    ]
+    "isEntry": true
   },
   "src/routes/profile/+page.svelte": {
     "file": "entries/pages/profile/_page.svelte.js",
@@ -1313,7 +1369,8 @@
       "_WriterOfTheWeek.svelte_svelte_type_style_lang.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.C9hcgJB4.css"
+      "_app/immutable/assets/_page.C9hcgJB4.css",
+      "_app/immutable/assets/BadgeTrophyCase.D3Gr7r2L.css"
     ]
   },
   "src/routes/refine/+page.server.js": {
@@ -1367,6 +1424,27 @@
     "name": "entries/endpoints/sitemap.xml/_server",
     "src": "src/routes/sitemap.xml/+server.js",
     "isEntry": true
+  },
+  "src/routes/stats/+page.server.js": {
+    "file": "entries/pages/stats/_page.server.js",
+    "name": "entries/pages/stats/_page.server",
+    "src": "src/routes/stats/+page.server.js",
+    "isEntry": true
+  },
+  "src/routes/stats/+page.svelte": {
+    "file": "entries/pages/stats/_page.svelte.js",
+    "name": "entries/pages/stats/_page.svelte",
+    "src": "src/routes/stats/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_renderer.js",
+      "_index3.js",
+      "_index2.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_page.tfn-m5Pj.css",
+      "_app/immutable/assets/BadgeTrophyCase.D3Gr7r2L.css"
+    ]
   },
   "src/routes/terms/+page.svelte": {
     "file": "entries/pages/terms/_page.svelte.js",
@@ -1435,7 +1513,8 @@
       "_html.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.GEOzN47v.css"
+      "_app/immutable/assets/_page.CoAeiDpG.css",
+      "_app/immutable/assets/BadgeTrophyCase.D3Gr7r2L.css"
     ]
   },
   "src/routes/write/[username]/+page.server.js": {
@@ -1480,7 +1559,7 @@
       "_state.svelte.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.DivMILlQ.css"
+      "_app/immutable/assets/_page.BXq2ygsA.css"
     ]
   },
   "src/routes/writings/+page.server.js": {
@@ -1512,7 +1591,7 @@
       "_html.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.DJL4ly1t.css"
+      "_app/immutable/assets/_page.D6I9s2AC.css"
     ]
   },
   "src/routes/writings/[id]/edit/+page.server.js": {

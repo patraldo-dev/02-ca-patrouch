@@ -47,7 +47,12 @@ function _page($$renderer, $$props) {
         $$renderer4.push(`${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.public"))}`);
       });
     });
-    $$renderer2.push(`</div> <label class="toggle-label svelte-p7m09"${attr("title", store_get($$store_subs ??= {}, "$t", t)("write.editor.ai_tooltip"))}><input type="checkbox"${attr("checked", aiAssisted, true)} class="svelte-p7m09"/> <span>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.ai_assisted"))} <span class="info-icon"${attr("title", store_get($$store_subs ??= {}, "$t", t)("write.editor.ai_tooltip"))}>ⓘ</span></span></label></div> <div class="editor-actions svelte-p7m09"><button class="btn-glass svelte-p7m09"${attr("disabled", !title.trim() || !content.trim(), true)}>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.save_draft"))}</button> <button class="btn-accent svelte-p7m09"${attr("disabled", !title.trim() || !content.trim(), true)}>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.publish"))}</button></div></div>`);
+    $$renderer2.push(`</div> <label class="toggle-label svelte-p7m09"${attr("title", store_get($$store_subs ??= {}, "$t", t)("write.editor.ai_tooltip"))}><input type="checkbox"${attr("checked", aiAssisted, true)} class="svelte-p7m09"/> <span>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.ai_assisted"))} <span class="info-icon"${attr("title", store_get($$store_subs ??= {}, "$t", t)("write.editor.ai_tooltip"))}>ⓘ</span></span></label></div> <div class="editor-actions svelte-p7m09"><button class="btn-glass svelte-p7m09"${attr("disabled", !title.trim() || !content.trim(), true)}>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.save_draft"))}</button> `);
+    {
+      $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<label class="disclosure-check svelte-p7m09"><input type="checkbox" checked="" class="svelte-p7m09"/> <span>${escape_html(store_get($$store_subs ??= {}, "$t", t)("disclosure.publish_consent"))}</span></label>`);
+    }
+    $$renderer2.push(`<!--]--> <button class="btn-accent svelte-p7m09"${attr("disabled", !title.trim() || !content.trim(), true)}>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.publish"))}</button></div></div>`);
     if ($$store_subs) unsubscribe_stores($$store_subs);
   });
 }

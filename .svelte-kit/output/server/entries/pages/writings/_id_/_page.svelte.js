@@ -271,6 +271,13 @@ function _page($$renderer, $$props) {
       $$renderer2.push(`<span class="meta-author svelte-4xfc6m">${escape_html(w.username)}</span>`);
     }
     $$renderer2.push(`<!--]--> <span class="meta-date">${escape_html(formatDate(w.created_at))}</span> <span class="meta-words">${escape_html(wordCountDisplay(w.word_count))} ${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.dashboard.words_word"))}</span> `);
+    if (w.role === "agent") {
+      $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<span class="ai-badge svelte-4xfc6m">${escape_html(store_get($$store_subs ??= {}, "$t", t)("disclosure.ai_written"))}</span>`);
+    } else {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> `);
     if (gameMode() && !revealed) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="guess-container-view svelte-4xfc6m"><span class="reveal-spot-view svelte-4xfc6m" role="button" tabindex="0">?</span> `);

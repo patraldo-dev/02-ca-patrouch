@@ -6,6 +6,7 @@ import "@sveltejs/kit/internal/server";
 import "../../../chunks/root.js";
 import "../../../chunks/state.svelte.js";
 import { t } from "../../../chunks/index3.js";
+/* empty css                                                            */
 import "../../../chunks/WriterOfTheWeek.svelte_svelte_type_style_lang.js";
 import "../../../chunks/OnboardingFlow.svelte_svelte_type_style_lang.js";
 import { h as html } from "../../../chunks/html.js";
@@ -162,7 +163,12 @@ function _page($$renderer, $$props) {
       {
         $$renderer2.push("<!--[-1-->");
       }
-      $$renderer2.push(`<!--]--> <div class="editor-actions svelte-x5qlc8"><button type="button" class="btn-save svelte-x5qlc8"${attr("disabled", editorSaving, true)}>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.save_draft"))}</button> <button type="submit" class="btn-accent svelte-x5qlc8"${attr("disabled", editorSaving, true)}>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.publish"))}</button></div></form></div> `);
+      $$renderer2.push(`<!--]--> <div class="editor-actions svelte-x5qlc8"><button type="button" class="btn-save svelte-x5qlc8"${attr("disabled", editorSaving, true)}>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.save_draft"))}</button> `);
+      {
+        $$renderer2.push("<!--[0-->");
+        $$renderer2.push(`<label class="disclosure-check svelte-x5qlc8"><input type="checkbox" checked="" class="svelte-x5qlc8"/> <span class="svelte-x5qlc8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("disclosure.publish_consent"))}</span></label>`);
+      }
+      $$renderer2.push(`<!--]--> <button type="submit" class="btn-accent svelte-x5qlc8"${attr("disabled", editorSaving, true)}>${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.editor.publish"))}</button></div></form></div> `);
       if (exhaustedPasses() && !acceptedToday()) {
         $$renderer2.push("<!--[0-->");
         $$renderer2.push(`<div class="free-write-card svelte-x5qlc8"><h3 class="svelte-x5qlc8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.dashboard.free_writing"))}</h3> <p class="svelte-x5qlc8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.dashboard.free_writing_desc"))}</p> <a href="/write/new" class="btn-glass svelte-x5qlc8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("write.dashboard.start_free_writing"))}</a></div>`);
@@ -172,7 +178,7 @@ function _page($$renderer, $$props) {
       $$renderer2.push(`<!--]--></div> <aside class="write-sidebar svelte-x5qlc8">`);
       {
         $$renderer2.push("<!--[0-->");
-        $$renderer2.push(`<button class="tour-link svelte-x5qlc8"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svelte-x5qlc8"><circle cx="12" cy="12" r="10" class="svelte-x5qlc8"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" class="svelte-x5qlc8"></path><line x1="12" y1="17" x2="12.01" y2="17" class="svelte-x5qlc8"></line></svg> Show tour</button>`);
+        $$renderer2.push(`<button class="tour-link svelte-x5qlc8"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svelte-x5qlc8"><circle cx="12" cy="12" r="10" class="svelte-x5qlc8"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" class="svelte-x5qlc8"></path><line x1="12" y1="17" x2="12.01" y2="17" class="svelte-x5qlc8"></line></svg> Show tour</button> <a href="/stats" class="sidebar-stats-link svelte-x5qlc8">📊 ${escape_html(store_get($$store_subs ??= {}, "$t", t)("nav.stats"))}</a>`);
       }
       $$renderer2.push(`<!--]--> `);
       if (stats) {

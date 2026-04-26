@@ -9,6 +9,7 @@ import "../../chunks/state.svelte.js";
 import "../../chunks/OnboardingFlow.svelte_svelte_type_style_lang.js";
 import { p as page } from "../../chunks/stores.js";
 import { a as avatarVariant } from "../../chunks/utils3.js";
+import "clsx";
 import { h as html } from "../../chunks/html.js";
 function SearchModal($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
@@ -101,6 +102,14 @@ function getTheme() {
   if (typeof document === "undefined") return "dark";
   return document.documentElement.getAttribute("data-theme") || "dark";
 }
+function NotificationBell($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]-->`);
+  });
+}
 function _layout($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;
@@ -164,6 +173,8 @@ function _layout($$renderer, $$props) {
       $$renderer3.push(`<!----> <div class="auth-actions svelte-12qhfyh">`);
       if (data?.user) {
         $$renderer3.push("<!--[0-->");
+        NotificationBell($$renderer3);
+        $$renderer3.push(`<!----> `);
         if (data.user?.role === "admin") {
           $$renderer3.push("<!--[0-->");
           $$renderer3.push(`<div class="profile-switcher svelte-12qhfyh"><button class="profile-trigger svelte-12qhfyh"><span class="profile-avatar svelte-12qhfyh">`);
@@ -181,7 +192,7 @@ function _layout($$renderer, $$props) {
           $$renderer3.push(`<!--]--></div>`);
         } else {
           $$renderer3.push("<!--[-1-->");
-          $$renderer3.push(`<a href="/profile" class="profile-trigger svelte-12qhfyh"><span class="profile-avatar svelte-12qhfyh">`);
+          $$renderer3.push(`<div class="profile-switcher svelte-12qhfyh"><button class="profile-trigger svelte-12qhfyh"><span class="profile-avatar svelte-12qhfyh">`);
           if (avatarVariant(data.user?.image || data.user?.avatar_url, "avatar48")) {
             $$renderer3.push("<!--[0-->");
             $$renderer3.push(`<img${attr("src", avatarVariant(data.user?.image || data.user?.avatar_url, "avatar48"))} alt="" class="svelte-12qhfyh"/>`);
@@ -189,14 +200,49 @@ function _layout($$renderer, $$props) {
             $$renderer3.push("<!--[-1-->");
             $$renderer3.push(`${escape_html((data.user.display_name || data.user.username || "?")[0].toUpperCase())}`);
           }
-          $$renderer3.push(`<!--]--></span> <span class="profile-name svelte-12qhfyh">${escape_html(data.user.display_name || data.user.username)}</span></a>`);
+          $$renderer3.push(`<!--]--></span> `);
+          if (data.bootyFuel > 0) {
+            $$renderer3.push("<!--[0-->");
+            $$renderer3.push(`<span class="nav-bean-badge svelte-12qhfyh">🫘${escape_html(data.bootyFuel)}</span>`);
+          } else {
+            $$renderer3.push("<!--[-1-->");
+          }
+          $$renderer3.push(`<!--]--> <span class="profile-name svelte-12qhfyh">${escape_html(data.user.display_name || data.user.username)}</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></button> `);
+          {
+            $$renderer3.push("<!--[-1-->");
+          }
+          $$renderer3.push(`<!--]--></div>`);
         }
         $$renderer3.push(`<!--]--> <button class="btn-glass svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.nav.logout"))}</button>`);
       } else {
         $$renderer3.push("<!--[-1-->");
         $$renderer3.push(`<a href="/login" class="btn-glass svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.nav.login"))}</a> <a href="/signup" class="btn-accent svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.nav.signup"))}</a>`);
       }
-      $$renderer3.push(`<!--]--></div></div> <button class="mobile-toggle svelte-12qhfyh" aria-label="Toggle menu"${attr("aria-expanded", mobileMenuOpen)}><span${attr_class("hamburger svelte-12qhfyh", void 0, { "open": mobileMenuOpen })}><span class="svelte-12qhfyh"></span><span class="svelte-12qhfyh"></span><span class="svelte-12qhfyh"></span></span></button></div></header> `);
+      $$renderer3.push(`<!--]--></div></div> <button class="mobile-toggle svelte-12qhfyh" aria-label="Toggle menu"${attr("aria-expanded", mobileMenuOpen)}><span${attr_class("hamburger svelte-12qhfyh", void 0, { "open": mobileMenuOpen })}><span class="svelte-12qhfyh"></span><span class="svelte-12qhfyh"></span><span class="svelte-12qhfyh"></span></span></button> `);
+      if (data.user) {
+        $$renderer3.push("<!--[0-->");
+        $$renderer3.push(`<a href="/stats" class="mobile-stats-btn desktop-hide svelte-12qhfyh"${attr("title", store_get($$store_subs ??= {}, "$t", t)("nav.stats"))}>📊</a> <a href="/account" class="mobile-avatar-btn desktop-hide svelte-12qhfyh"${attr("title", activeDisplayName)}><span class="profile-avatar svelte-12qhfyh" style="width:32px;height:32px;font-size:0.8rem">`);
+        if (avatarVariant(data.user?.image || data.user?.avatar_url, "avatar32")) {
+          $$renderer3.push("<!--[0-->");
+          $$renderer3.push(`<img${attr("src", avatarVariant(data.user?.image || data.user?.avatar_url, "avatar32"))} alt="" style="width:32px;height:32px" class="svelte-12qhfyh"/>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+          $$renderer3.push(`${escape_html((activeDisplayName || "?")[0].toUpperCase())}`);
+        }
+        $$renderer3.push(`<!--]--></span> `);
+        if (data.bootyFuel > 0) {
+          $$renderer3.push("<!--[0-->");
+          $$renderer3.push(`<span class="mobile-bean-badge svelte-12qhfyh">🫘${escape_html(data.bootyFuel)}</span>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--></a> <div class="mobile-bell desktop-hide svelte-12qhfyh">`);
+        NotificationBell($$renderer3);
+        $$renderer3.push(`<!----></div>`);
+      } else {
+        $$renderer3.push("<!--[-1-->");
+      }
+      $$renderer3.push(`<!--]--></div></header> `);
       {
         $$renderer3.push("<!--[-1-->");
       }
@@ -223,7 +269,7 @@ function _layout($$renderer, $$props) {
       }
       $$renderer3.push(`<!--]--></main> <footer id="footer" class="site-footer svelte-12qhfyh"><div class="container"><div class="newsletter-section svelte-12qhfyh">`);
       NewsletterForm($$renderer3);
-      $$renderer3.push(`<!----></div> <div class="footer-bottom svelte-12qhfyh"><p class="footer-tagline svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.footer.tagline"))}</p> <p class="footer-copy svelte-12qhfyh">© ${escape_html((/* @__PURE__ */ new Date()).getFullYear())} Christophe R Patraldo — <a href="https://patrouch.ca" class="svelte-12qhfyh">patrouch.ca</a></p> <p class="footer-built svelte-12qhfyh">${html(store_get($$store_subs ??= {}, "$t", t)("common.footer.built_by"))}</p> <p class="footer-links svelte-12qhfyh"><a href="/privacy" class="svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.footer.privacy"))}</a> <span class="footer-sep svelte-12qhfyh">·</span> <a href="/terms" class="svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.footer.terms"))}</a> <span class="footer-sep svelte-12qhfyh">·</span> <a href="mailto:ishmael@patrouch.ca" class="svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.footer.contact"))}</a></p></div></div></footer></div>`);
+      $$renderer3.push(`<!----></div> <div class="footer-bottom svelte-12qhfyh"><p class="footer-tagline svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.footer.tagline"))}</p> <p class="footer-copy svelte-12qhfyh">© ${escape_html((/* @__PURE__ */ new Date()).getFullYear())} Christophe R Patraldo — <a href="https://patrouch.ca" class="svelte-12qhfyh">patrouch.ca</a></p> <p class="footer-built svelte-12qhfyh">${html(store_get($$store_subs ??= {}, "$t", t)("common.footer.built_by"))}</p> <p class="footer-disclosure svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("disclosure.footer"))}</p> <p class="footer-links svelte-12qhfyh"><a href="/privacy" class="svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.footer.privacy"))}</a> <span class="footer-sep svelte-12qhfyh">·</span> <a href="/terms" class="svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.footer.terms"))}</a> <span class="footer-sep svelte-12qhfyh">·</span> <a href="mailto:ishmael@patrouch.ca" class="svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.footer.contact"))}</a></p></div></div></footer></div>`);
     }
     do {
       $$settled = true;

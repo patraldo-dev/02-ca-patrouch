@@ -37,6 +37,12 @@ async function POST({ request, platform }) {
     } catch {
     }
     if (!data.title || !data.narrative) {
+      let extractText = function(r) {
+        if (typeof r === "string") return r;
+        if (r?.choices?.[0]?.message?.content) return r.choices[0].message.content;
+        if (r?.response) return r.response;
+        return JSON.stringify(r);
+      };
       if (!ai) return json({ error: "AI unavailable" }, { status: 503 });
       const { results: players } = await db.prepare("SELECT username, lat, lon, fuel FROM bq_players").all();
       const playerContext = (players || []).slice(0, 10).map((p) => `${p.username} at (${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}) with ${p.fuel} beans`).join("; ");
@@ -53,15 +59,16 @@ Generate a JSON object with:
 Reply ONLY with valid JSON, no markdown.`;
       const aiResp = await ai.run("@cf/mistralai/mistral-small-3.1-24b-instruct", {
         messages: [
-          { role: "system", content: "You are El Narrador. Reply only with valid JSON." },
+          { role: "system", content: "Respond ONLY with valid JSON. No markdown, no backticks, no explanation." },
           { role: "user", content: prompt }
         ],
         max_tokens: 300
       });
-      const aiText = aiResp?.response || "";
-      const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return json({ error: "AI did not return JSON" }, { status: 500 });
-      data = JSON.parse(jsonMatch[0]);
+      console.log("[NARRATOR] TYPE:", typeof aiResp, "KEYS:", aiResp && typeof aiResp === "object" ? Object.keys(aiResp) : "N/A", "FULL:", JSON.stringify(aiResp).slice(0, 500));
+      const aiText = extractText(aiResp);
+      let jsonStr = aiText.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] || aiText.match(/\{[\s\S]*\}/)?.[0];
+      if (!jsonStr) return json({ error: "AI did not return JSON", aiPreview: aiText.slice(0, 500) }, { status: 500 });
+      data = JSON.parse(jsonStr.trim());
     }
     const { title, narrative, event_type, modifier_type, modifier_value, affected_zone, target_players, duration_hours, title_es, narrative_es, title_fr, narrative_fr } = data;
     const id = crypto.randomUUID();

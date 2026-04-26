@@ -10,7 +10,7 @@ return {
 	assets: new Set([".assetsignore","favicon.ico","robots.txt"]),
 	mimeTypes: {".txt":"text/plain"},
 	_: {
-		client: {start:"_app/immutable/entry/start.C_fEVmyA.js",app:"_app/immutable/entry/app.BwPMIPRI.js",imports:["_app/immutable/entry/start.C_fEVmyA.js","_app/immutable/chunks/DwdUaQX7.js","_app/immutable/chunks/DKbrVa_p.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/CU8NK243.js","_app/immutable/entry/app.BwPMIPRI.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/BCmwgY1R.js","_app/immutable/chunks/hXTTgo2q.js","_app/immutable/chunks/CeaMKrPw.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/DiQul2Ep.js","_app/immutable/chunks/vYeeBVxZ.js","_app/immutable/chunks/C91UaUCV.js","_app/immutable/chunks/BekfPKSE.js","_app/immutable/chunks/DM3HuRQe.js","_app/immutable/chunks/Cai8yQTP.js","_app/immutable/chunks/CU8NK243.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.CEQ0qc8W.js",app:"_app/immutable/entry/app.DDnEBR0S.js",imports:["_app/immutable/entry/start.CEQ0qc8W.js","_app/immutable/chunks/C4EgYJQM.js","_app/immutable/chunks/CQfdSLh-.js","_app/immutable/chunks/Cw8TFuSp.js","_app/immutable/chunks/B-kkWyoj.js","_app/immutable/chunks/BXAUmlsv.js","_app/immutable/chunks/DPhPjVjy.js","_app/immutable/chunks/DhJC173B.js","_app/immutable/entry/app.DDnEBR0S.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/B-kkWyoj.js","_app/immutable/chunks/BXAUmlsv.js","_app/immutable/chunks/DPhPjVjy.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/Cw8TFuSp.js","_app/immutable/chunks/ZUdecCQ-.js","_app/immutable/chunks/C4KPR46J.js","_app/immutable/chunks/C_4L7pnT.js","_app/immutable/chunks/Dg7bqLtf.js","_app/immutable/chunks/gvh7lOGK.js","_app/immutable/chunks/DhJC173B.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
@@ -47,7 +47,9 @@ return {
 			__memo(() => import('./nodes/33.js')),
 			__memo(() => import('./nodes/34.js')),
 			__memo(() => import('./nodes/35.js')),
-			__memo(() => import('./nodes/36.js'))
+			__memo(() => import('./nodes/36.js')),
+			__memo(() => import('./nodes/37.js')),
+			__memo(() => import('./nodes/38.js'))
 		],
 		remotes: {
 			
@@ -61,46 +63,67 @@ return {
 				endpoint: null
 			},
 			{
+				id: "/account",
+				pattern: /^\/account\/?$/,
+				params: [],
+				page: { layouts: [0,], errors: [1,], leaf: 9 },
+				endpoint: null
+			},
+			{
 				id: "/admin",
 				pattern: /^\/admin\/?$/,
 				params: [],
-				page: { layouts: [0,3,], errors: [1,4,], leaf: 9 },
+				page: { layouts: [0,3,], errors: [1,4,], leaf: 10 },
 				endpoint: null
 			},
 			{
 				id: "/admin/analytics",
 				pattern: /^\/admin\/analytics\/?$/,
 				params: [],
-				page: { layouts: [0,3,], errors: [1,4,], leaf: 10 },
+				page: { layouts: [0,3,], errors: [1,4,], leaf: 11 },
 				endpoint: null
 			},
 			{
 				id: "/admin/invitations",
 				pattern: /^\/admin\/invitations\/?$/,
 				params: [],
-				page: { layouts: [0,3,], errors: [1,4,], leaf: 11 },
+				page: { layouts: [0,3,], errors: [1,4,], leaf: 12 },
 				endpoint: null
 			},
 			{
 				id: "/admin/users",
 				pattern: /^\/admin\/users\/?$/,
 				params: [],
-				page: { layouts: [0,3,], errors: [1,4,], leaf: 12 },
+				page: { layouts: [0,3,], errors: [1,4,], leaf: 13 },
 				endpoint: null
 			},
 			{
 				id: "/agora",
 				pattern: /^\/agora\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 13 },
+				page: { layouts: [0,], errors: [1,], leaf: 14 },
 				endpoint: null
 			},
 			{
 				id: "/agora/community",
 				pattern: /^\/agora\/community\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 14 },
+				page: { layouts: [0,], errors: [1,], leaf: 15 },
 				endpoint: null
+			},
+			{
+				id: "/api/account/notification-preferences",
+				pattern: /^\/api\/account\/notification-preferences\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/account/notification-preferences/_server.js'))
+			},
+			{
+				id: "/api/account/privacy",
+				pattern: /^\/api\/account\/privacy\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/account/privacy/_server.js'))
 			},
 			{
 				id: "/api/admin",
@@ -467,6 +490,27 @@ return {
 				endpoint: __memo(() => import('./entries/endpoints/api/newsletter/subscribe/_server.js'))
 			},
 			{
+				id: "/api/notifications",
+				pattern: /^\/api\/notifications\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/notifications/_server.js'))
+			},
+			{
+				id: "/api/notifications/create",
+				pattern: /^\/api\/notifications\/create\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/notifications/create/_server.js'))
+			},
+			{
+				id: "/api/notifications/mark-read",
+				pattern: /^\/api\/notifications\/mark-read\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/notifications/mark-read/_server.js'))
+			},
+			{
 				id: "/api/onboarding",
 				pattern: /^\/api\/onboarding\/?$/,
 				params: [],
@@ -694,21 +738,21 @@ return {
 				id: "/audio",
 				pattern: /^\/audio\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 15 },
+				page: { layouts: [0,], errors: [1,], leaf: 16 },
 				endpoint: null
 			},
 			{
 				id: "/card/[id]",
 				pattern: /^\/card\/([^/]+?)\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 16 },
+				page: { layouts: [0,], errors: [1,], leaf: 17 },
 				endpoint: null
 			},
 			{
 				id: "/confirmation-success",
 				pattern: /^\/confirmation-success\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 17 },
+				page: { layouts: [0,], errors: [1,], leaf: 18 },
 				endpoint: null
 			},
 			{
@@ -722,7 +766,7 @@ return {
 				id: "/evaluate",
 				pattern: /^\/evaluate\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 18 },
+				page: { layouts: [0,], errors: [1,], leaf: 19 },
 				endpoint: null
 			},
 			{
@@ -736,14 +780,14 @@ return {
 				id: "/games",
 				pattern: /^\/games\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 19 },
+				page: { layouts: [0,], errors: [1,], leaf: 20 },
 				endpoint: null
 			},
 			{
 				id: "/games/booty",
 				pattern: /^\/games\/booty\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 20 },
+				page: { layouts: [0,], errors: [1,], leaf: 21 },
 				endpoint: null
 			},
 			{
@@ -757,7 +801,7 @@ return {
 				id: "/invite/[token]",
 				pattern: /^\/invite\/([^/]+?)\/?$/,
 				params: [{"name":"token","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 21 },
+				page: { layouts: [0,], errors: [1,], leaf: 22 },
 				endpoint: null
 			},
 			{
@@ -778,35 +822,35 @@ return {
 				id: "/privacy",
 				pattern: /^\/privacy\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 22 },
+				page: { layouts: [0,], errors: [1,], leaf: 23 },
 				endpoint: null
 			},
 			{
 				id: "/profile",
 				pattern: /^\/profile\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 23 },
+				page: { layouts: [0,], errors: [1,], leaf: 24 },
 				endpoint: null
 			},
 			{
 				id: "/refine",
 				pattern: /^\/refine\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 24 },
+				page: { layouts: [0,], errors: [1,], leaf: 25 },
 				endpoint: null
 			},
 			{
 				id: "/reset-password",
 				pattern: /^\/reset-password\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 25 },
+				page: { layouts: [0,], errors: [1,], leaf: 26 },
 				endpoint: null
 			},
 			{
 				id: "/reviews",
 				pattern: /^\/reviews\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 26 },
+				page: { layouts: [0,], errors: [1,], leaf: 27 },
 				endpoint: null
 			},
 			{
@@ -824,10 +868,17 @@ return {
 				endpoint: __memo(() => import('./entries/endpoints/sitemap.xml/_server.js'))
 			},
 			{
+				id: "/stats",
+				pattern: /^\/stats\/?$/,
+				params: [],
+				page: { layouts: [0,], errors: [1,], leaf: 28 },
+				endpoint: null
+			},
+			{
 				id: "/terms",
 				pattern: /^\/terms\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 27 },
+				page: { layouts: [0,], errors: [1,], leaf: 29 },
 				endpoint: null
 			},
 			{
@@ -841,56 +892,56 @@ return {
 				id: "/test-upload",
 				pattern: /^\/test-upload\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 28 },
+				page: { layouts: [0,], errors: [1,], leaf: 30 },
 				endpoint: null
 			},
 			{
 				id: "/test-utf8",
 				pattern: /^\/test-utf8\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 29 },
+				page: { layouts: [0,], errors: [1,], leaf: 31 },
 				endpoint: null
 			},
 			{
 				id: "/write",
 				pattern: /^\/write\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 30 },
+				page: { layouts: [0,], errors: [1,], leaf: 32 },
 				endpoint: null
 			},
 			{
 				id: "/write/new",
 				pattern: /^\/write\/new\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 32 },
+				page: { layouts: [0,], errors: [1,], leaf: 34 },
 				endpoint: null
 			},
 			{
 				id: "/write/[username]",
 				pattern: /^\/write\/([^/]+?)\/?$/,
 				params: [{"name":"username","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 31 },
+				page: { layouts: [0,], errors: [1,], leaf: 33 },
 				endpoint: null
 			},
 			{
 				id: "/writings",
 				pattern: /^\/writings\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 33 },
+				page: { layouts: [0,], errors: [1,], leaf: 35 },
 				endpoint: null
 			},
 			{
 				id: "/writings/[id]",
 				pattern: /^\/writings\/([^/]+?)\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 34 },
+				page: { layouts: [0,], errors: [1,], leaf: 36 },
 				endpoint: null
 			},
 			{
 				id: "/writings/[id]/edit",
 				pattern: /^\/writings\/([^/]+?)\/edit\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,], errors: [1,], leaf: 35 },
+				page: { layouts: [0,], errors: [1,], leaf: 37 },
 				endpoint: null
 			}
 		],

@@ -7,6 +7,7 @@ import "@sveltejs/kit/internal/server";
 import "../../../chunks/root.js";
 import "../../../chunks/state.svelte.js";
 import { a as avatarVariant } from "../../../chunks/utils3.js";
+/* empty css                                                            */
 import "../../../chunks/WriterOfTheWeek.svelte_svelte_type_style_lang.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {

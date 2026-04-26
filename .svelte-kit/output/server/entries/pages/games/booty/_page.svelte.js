@@ -71,7 +71,13 @@ function _page($$renderer, $$props) {
       return "status-badge status-" + (s || "unknown");
     }
     function statusLabel(s) {
-      return get(t)("bottles.status." + (s || "unknown"));
+      const labels = {
+        launched: { en: "Launched", es: "Lanzada", fr: "Lancée" },
+        sailing: { en: "Floating", es: "Flotando", fr: "Flottant" },
+        beached: { en: "Beached", es: "Varada", fr: "Échouée" },
+        found: { en: "Found", es: "Encontrada", fr: "Trouvée" }
+      };
+      return (labels[s] || { en: s, es: s, fr: s })[data.serverLocale || "en"];
     }
     function contentTypeLabel(type) {
       const key = "bottles.type." + (type || "short_story");
@@ -185,7 +191,7 @@ function _page($$renderer, $$props) {
     {
       $$renderer2.push("<!--[-1-->");
     }
-    $$renderer2.push(`<!--]--> <div class="stats-bar svelte-1wyf3u8"><div class="stats-row svelte-1wyf3u8"><div class="stat-item svelte-1wyf3u8"><span class="stat-num svelte-1wyf3u8">${escape_html(totalLaunched())}</span> <span class="stat-label svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.total_launched"))}</span></div> <div class="stat-item stat-divider svelte-1wyf3u8"><span class="stat-num svelte-1wyf3u8">${escape_html(totalBeached())}</span> <span class="stat-label svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.total_beached"))}</span></div></div> <div class="stats-row svelte-1wyf3u8"><div class="stat-item svelte-1wyf3u8"><span class="stat-num svelte-1wyf3u8">${escape_html(totalFound())}</span> <span class="stat-label svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.total_found"))}</span></div> <div class="stat-item stat-divider svelte-1wyf3u8"><span class="stat-num svelte-1wyf3u8">${escape_html(data.playersInPursuit || 0)}</span> <span class="stat-label svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.players_in_pursuit"))}</span></div></div> <div class="stats-row stats-row-center svelte-1wyf3u8"><button${attr_class("stat-checkin svelte-1wyf3u8", void 0, { "stat-checked": checkedIn })}${attr("disabled", checkinLoading, true)}><span class="stat-num svelte-1wyf3u8">${escape_html("✋")}</span> <span class="stat-label svelte-1wyf3u8">${escape_html("Check in")}</span></button></div> <div class="stats-row stats-row-center svelte-1wyf3u8">`);
+    $$renderer2.push(`<!--]--> <div class="stats-bar svelte-1wyf3u8"><div class="stats-row svelte-1wyf3u8"><div class="stat-item svelte-1wyf3u8"><span class="stat-num svelte-1wyf3u8">${escape_html(totalLaunched())}</span> <span class="stat-label svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.total_launched"))}</span></div> <div${attr_class("stat-item stat-divider svelte-1wyf3u8", void 0, { "stat-clickable": totalBeached() > 0 })} role="button" tabindex="0"><span class="stat-num svelte-1wyf3u8">${escape_html(totalBeached())}</span> <span class="stat-label svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.total_beached"))}</span></div></div> <div class="stats-row svelte-1wyf3u8"><div class="stat-item svelte-1wyf3u8"><span class="stat-num svelte-1wyf3u8">${escape_html(totalFound())}</span> <span class="stat-label svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.total_found"))}</span></div> <div class="stat-item stat-divider svelte-1wyf3u8"><span class="stat-num svelte-1wyf3u8">${escape_html(data.playersInPursuit || 0)}</span> <span class="stat-label svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.players_in_pursuit"))}</span></div></div> <div class="stats-row stats-row-center svelte-1wyf3u8"><button${attr_class("stat-checkin svelte-1wyf3u8", void 0, { "stat-checked": checkedIn })}${attr("disabled", checkinLoading, true)}><span class="stat-num svelte-1wyf3u8">${escape_html("✋")}</span> <span class="stat-label svelte-1wyf3u8">${escape_html("Check in")}</span></button></div> <div class="stats-row stats-row-center svelte-1wyf3u8">`);
     if (data.user && !data.myPlayer) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<button class="stat-register svelte-1wyf3u8">→ ${escape_html(store_get($$store_subs ??= {}, "$t", t)("booty.register"))}</button>`);
@@ -314,6 +320,10 @@ function _page($$renderer, $$props) {
       $$renderer2.push("<!--[-1-->");
     }
     $$renderer2.push(`<!--]--> `);
+    {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> `);
     if (data.user) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="section svelte-1wyf3u8"><div class="section-header svelte-1wyf3u8"><h2 class="svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.my_bottles"))}</h2> <button class="btn btn-accent svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.create"))}</button></div> `);
@@ -324,9 +334,9 @@ function _page($$renderer, $$props) {
       if (myBottles.length) {
         $$renderer2.push("<!--[0-->");
         $$renderer2.push(`<div class="bottles-table-wrap svelte-1wyf3u8"><table class="bottles-table svelte-1wyf3u8"><thead class="svelte-1wyf3u8"><tr class="svelte-1wyf3u8"><th class="svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.title"))}</th><th class="svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.content_type"))}</th><th class="svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.status.launched"))}</th><th class="svelte-1wyf3u8">Lat/Lng</th><th class="svelte-1wyf3u8"></th></tr></thead><tbody class="svelte-1wyf3u8"><!--[-->`);
-        const each_array_7 = ensure_array_like(myBottles);
-        for (let $$index_7 = 0, $$length = each_array_7.length; $$index_7 < $$length; $$index_7++) {
-          let bottle = each_array_7[$$index_7];
+        const each_array_8 = ensure_array_like(myBottles);
+        for (let $$index_8 = 0, $$length = each_array_8.length; $$index_8 < $$length; $$index_8++) {
+          let bottle = each_array_8[$$index_8];
           $$renderer2.push(`<tr class="tr-clickable svelte-1wyf3u8"><td class="td-title svelte-1wyf3u8">${escape_html(bottle.title || store_get($$store_subs ??= {}, "$t", t)("bottles.untitled"))}</td><td class="svelte-1wyf3u8"><span class="type-tag svelte-1wyf3u8">${escape_html(contentTypeLabel(bottle.content_type))}</span></td><td class="td-date svelte-1wyf3u8">${escape_html(formatDate(bottle.launched_at))}</td><td class="td-coords svelte-1wyf3u8">${escape_html(bottle.current_lat ? formatSolarTime(bottle.current_lon) : "—")}<br class="svelte-1wyf3u8"/><span class="mono svelte-1wyf3u8" style="font-size:0.75rem">${escape_html(bottle.current_lat ? formatCoords(bottle.current_lat, bottle.current_lon) : "")}</span></td><td class="td-action svelte-1wyf3u8">`);
           if (bottle.status === "preparing") {
             $$renderer2.push("<!--[0-->");
@@ -396,9 +406,9 @@ function _page($$renderer, $$props) {
     if (chatHistory.length) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<!--[-->`);
-      const each_array_8 = ensure_array_like(chatHistory);
-      for (let $$index_8 = 0, $$length = each_array_8.length; $$index_8 < $$length; $$index_8++) {
-        let msg = each_array_8[$$index_8];
+      const each_array_9 = ensure_array_like(chatHistory);
+      for (let $$index_9 = 0, $$length = each_array_9.length; $$index_9 < $$length; $$index_9++) {
+        let msg = each_array_9[$$index_9];
         $$renderer2.push(`<div${attr_class(`chat-msg ${stringify(msg.role)}`, "svelte-1wyf3u8")}>${escape_html(msg.text)}</div>`);
       }
       $$renderer2.push(`<!--]-->`);
@@ -426,9 +436,9 @@ function _page($$renderer, $$props) {
     if (data.bottles.filter((b) => b.status === "beached" || b.status === "found").length) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="section svelte-1wyf3u8"><h2 class="svelte-1wyf3u8">${escape_html(store_get($$store_subs ??= {}, "$t", t)("bottles.washed_up"))}</h2> <!--[-->`);
-      const each_array_9 = ensure_array_like(data.bottles.filter((b) => b.status === "beached" || b.status === "found"));
-      for (let $$index_9 = 0, $$length = each_array_9.length; $$index_9 < $$length; $$index_9++) {
-        let bottle = each_array_9[$$index_9];
+      const each_array_10 = ensure_array_like(data.bottles.filter((b) => b.status === "beached" || b.status === "found"));
+      for (let $$index_10 = 0, $$length = each_array_10.length; $$index_10 < $$length; $$index_10++) {
+        let bottle = each_array_10[$$index_10];
         $$renderer2.push(`<div class="beached-item svelte-1wyf3u8"><div class="beached-icon svelte-1wyf3u8">${escape_html(bottle.status === "found" ? "📬" : "🍾")}</div> <div class="beached-info svelte-1wyf3u8"><strong class="svelte-1wyf3u8">${escape_html(bottle.display_name || bottle.username || "Anónimo")}</strong> <div class="beached-meta svelte-1wyf3u8"><span class="type-tag svelte-1wyf3u8">${escape_html(contentTypeLabel(bottle.content_type))}</span> `);
         if (bottle.launched_at) {
           $$renderer2.push("<!--[0-->");
@@ -481,9 +491,9 @@ function _page($$renderer, $$props) {
     if (data.players?.length) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="scoreboard-section svelte-1wyf3u8"><h2 class="section-title svelte-1wyf3u8">🏆 ${escape_html(store_get($$store_subs ??= {}, "$t", t)("scoreboard.title"))}</h2> <div class="scoreboard-list svelte-1wyf3u8" role="list"><!--[-->`);
-      const each_array_10 = ensure_array_like([...data.players].sort((a, b) => (b.points || 0) - (a.points || 0)));
-      for (let i = 0, $$length = each_array_10.length; i < $$length; i++) {
-        let p = each_array_10[i];
+      const each_array_11 = ensure_array_like([...data.players].sort((a, b) => (b.points || 0) - (a.points || 0)));
+      for (let i = 0, $$length = each_array_11.length; i < $$length; i++) {
+        let p = each_array_11[i];
         $$renderer2.push(`<div class="score-row svelte-1wyf3u8" role="listitem"><span class="score-rank svelte-1wyf3u8">${escape_html(i + 1)}</span> <span class="score-type svelte-1wyf3u8">${escape_html(p.type === "ai" ? "🤖" : p.solo ? "👤" : "👥")}</span> <span class="score-name svelte-1wyf3u8">${escape_html(p.display_name || p.username)}</span> <span class="score-pts svelte-1wyf3u8">⭐ ${escape_html(p.points || 0)}</span> <span class="score-fuel svelte-1wyf3u8">${escape_html(formatBeans(p.fuel))}</span></div>`);
       }
       $$renderer2.push(`<!--]--></div></div>`);
@@ -494,9 +504,9 @@ function _page($$renderer, $$props) {
     if (playersWithDist().length) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="section svelte-1wyf3u8"><h2 class="svelte-1wyf3u8">🏴‍☠️ Players</h2> <div class="players-grid svelte-1wyf3u8"><!--[-->`);
-      const each_array_11 = ensure_array_like(playersWithDist());
-      for (let $$index_11 = 0, $$length = each_array_11.length; $$index_11 < $$length; $$index_11++) {
-        let player = each_array_11[$$index_11];
+      const each_array_12 = ensure_array_like(playersWithDist());
+      for (let $$index_12 = 0, $$length = each_array_12.length; $$index_12 < $$length; $$index_12++) {
+        let player = each_array_12[$$index_12];
         $$renderer2.push(`<div class="player-card svelte-1wyf3u8" role="button" tabindex="0"><div class="player-header svelte-1wyf3u8"><div class="player-avatar svelte-1wyf3u8"${attr_style(`background:${stringify(player.team_color || "var(--accent)")}`)}>${escape_html(player.type === "ai" ? "🤖" : "🧭")}</div> <div class="player-info svelte-1wyf3u8"><h3 class="svelte-1wyf3u8">${escape_html(player.display_name || player.username)} ${escape_html(player.type === "ai" ? "🤖" : "👤")}</h3> <span class="team-badge svelte-1wyf3u8"${attr_style(`background:${stringify(player.team_color || "var(--accent)")}22;color:${stringify(player.team_color || "var(--accent)")}`)}>${escape_html(player.type === "ai" ? "🤖 AI" : "👤 Human")} · ${escape_html(player.solo ? "Solo" : player.team_name || "Free Agent")}</span></div></div> <div class="player-details svelte-1wyf3u8"><div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">📍 Port</span><span class="svelte-1wyf3u8">${escape_html(player.port_name || "Unknown")}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">${escape_html(formatSolarTime(player.lon))}</span><span class="svelte-1wyf3u8">${escape_html(player.lat ? formatCoords(player.lat, player.lon) : "—")}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">⭐ Points</span><span class="svelte-1wyf3u8">${escape_html(player.points || 0)}</span></div> <div class="detail-row svelte-1wyf3u8"><span class="svelte-1wyf3u8">🫘 Beans</span><span class="svelte-1wyf3u8">${escape_html(formatBeans(player.fuel))}</span></div> `);
         if (player.nearestDist !== null) {
           $$renderer2.push("<!--[0-->");

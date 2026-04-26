@@ -16,6 +16,9 @@ async function load({ locals, cookies }) {
             SELECT id, display_name, locale, bio, is_primary, is_active
             FROM profiles WHERE user_id = ? AND is_active = 1
         `).bind(user.id).first();
+    var bootyPlayer = await db.prepare(
+      "SELECT fuel FROM bq_players WHERE user_id = ?"
+    ).bind(user.id).first().catch(() => null);
     if (!activeProfile) {
       const primary = await db.prepare(`
                 SELECT id, display_name, locale, bio, is_primary, is_active
@@ -38,7 +41,8 @@ async function load({ locals, cookies }) {
     user: user || null,
     serverLocale,
     activeProfile,
-    onboarding_completed
+    onboarding_completed,
+    bootyFuel: bootyPlayer?.fuel || 0
   };
 }
 export {

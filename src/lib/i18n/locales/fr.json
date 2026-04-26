@@ -983,5 +983,6 @@
     "nav": {
       "stats": "Statistiques"
     }
-  }
+  },
+  "nav.stats": "Statistiques"
 }
