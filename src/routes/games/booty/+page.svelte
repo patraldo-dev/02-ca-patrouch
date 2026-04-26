@@ -5,7 +5,6 @@
     import { browser } from '$app/environment';
     import { invalidateAll } from '$app/navigation';
     import BootyChat from '$lib/components/BootyChat.svelte';
-    import PhysicalBottles from '$lib/components/PhysicalBottles.svelte';
 
     let { data } = $props();
 
@@ -726,11 +725,10 @@
 </div>
 
 {#if data.myPlayer}
-    <div style="background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;">
-        <h2 class="text-xl font-bold mb-2" style="font-family:Playfair Display,serif">🏴☠️ Botellas Físicas — Puerto Vallarta</h2>
-        <p class="text-sm mb-4" style="color:var(--text-dim)">5 botellas escondidas en PV. Encuéntralas con tu GPS y sigue la cadena del tesoro del Capitán Garras.</p>
-        <PhysicalBottles player={data.myPlayer} />
-    </div>
+    <a href="/games/booty/arbooty" style="display:block;background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;text-decoration:none;color:var(--text);">
+        <h2 class="text-xl font-bold mb-1" style="font-family:Playfair Display,serif">🏴☠️ {$t('booty.arbooty.title')}</h2>
+        <p class="text-sm" style="color:var(--text-dim)">{$t('booty.arbooty.card_desc')}</p>
+    </a>
 {/if}
 
 <section class="bottles-page">

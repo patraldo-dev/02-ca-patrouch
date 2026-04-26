@@ -997,5 +997,11 @@
       "stats": "Statistiques"
     }
   },
-  "nav.stats": "Statistiques"
+  "nav.stats": "Statistiques",
+  "booty.arbooty.title": "Arbooty — Chasse au Trésor",
+  "booty.arbooty.description": "Trouvez les bouteilles cachées du Capitaine à travers Puerto Vallarta.",
+  "booty.arbooty.back": "Retour à Booty Battle",
+  "booty.arbooty.card_desc": "Explorez Puerto Vallarta et trouvez 5 bouteilles cachées avec le GPS.",
+  "booty.arbooty.join_required": "Vous devez être joueur de Booty Battle pour participer.",
+  "booty.arbooty.join_btn": "Rejoindre Booty Battle"
 }

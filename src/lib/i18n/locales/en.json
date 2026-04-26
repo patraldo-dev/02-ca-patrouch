@@ -997,5 +997,11 @@
       "stats": "Stats"
     }
   },
-  "nav.stats": "Stats"
+  "nav.stats": "Stats",
+  "booty.arbooty.title": "Arbooty — Treasure Hunt",
+  "booty.arbooty.description": "Find the Captain's hidden bottles across Puerto Vallarta. Each bottle contains a clue leading to the next.",
+  "booty.arbooty.back": "Back to Booty Battle",
+  "booty.arbooty.card_desc": "Explore Puerto Vallarta and find 5 hidden bottles with GPS. Follow the treasure hunt chain!",
+  "booty.arbooty.join_required": "You need to be a Booty Battle player to participate.",
+  "booty.arbooty.join_btn": "Join Booty Battle"
 }

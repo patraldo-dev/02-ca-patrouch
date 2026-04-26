@@ -984,5 +984,11 @@
       "stats": "Estadísticas"
     }
   },
-  "nav.stats": "Estadísticas"
+  "nav.stats": "Estadísticas",
+  "booty.arbooty.title": "Arbooty — Búsqueda del Tesoro",
+  "booty.arbooty.description": "Encuentra las botellas escondidas del Capitán por Puerto Vallarta. Cada botella contiene una pista hacia la siguiente.",
+  "booty.arbooty.back": "Volver a Booty Battle",
+  "booty.arbooty.card_desc": "Explora Puerto Vallarta y encuentra 5 botellas escondidas con GPS. ¡Sigue la cadena del tesoro!",
+  "booty.arbooty.join_required": "Necesitas ser jugador de Booty Battle para participar.",
+  "booty.arbooty.join_btn": "Unirse a Booty Battle"
 }
