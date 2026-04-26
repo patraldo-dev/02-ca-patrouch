@@ -41,7 +41,6 @@ declare module '$env/static/private' {
 	export const HISTTIMEFORMAT: string;
 	export const OPENROUTER_API_KEY: string;
 	export const USER: string;
-	export const QWEN_TOOLS_ENABLED: string;
 	export const npm_config_user_agent: string;
 	export const XDG_SESSION_TYPE: string;
 	export const npm_node_execpath: string;
@@ -49,7 +48,6 @@ declare module '$env/static/private' {
 	export const SHLVL: string;
 	export const BROWSER: string;
 	export const npm_config_noproxy: string;
-	export const OPENAI_BASE_URL: string;
 	export const XCURSOR_SIZE_LOW_DENSITY: string;
 	export const SOMMELIER_VERSION: string;
 	export const HOME: string;
@@ -57,8 +55,6 @@ declare module '$env/static/private' {
 	export const NVM_BIN: string;
 	export const npm_package_json: string;
 	export const NVM_INC: string;
-	export const QWEN_STREAMING: string;
-	export const OPENAI_API_KEY: string;
 	export const MANAGERPID: string;
 	export const npm_config_userconfig: string;
 	export const npm_config_local_prefix: string;
@@ -96,7 +92,6 @@ declare module '$env/static/private' {
 	export const LS_COLORS: string;
 	export const npm_lifecycle_script: string;
 	export const SHELL: string;
-	export const OPENAI_MODEL: string;
 	export const npm_package_version: string;
 	export const npm_lifecycle_event: string;
 	export const QT_ACCESSIBILITY: string;
@@ -201,7 +196,6 @@ declare module '$env/dynamic/private' {
 		HISTTIMEFORMAT: string;
 		OPENROUTER_API_KEY: string;
 		USER: string;
-		QWEN_TOOLS_ENABLED: string;
 		npm_config_user_agent: string;
 		XDG_SESSION_TYPE: string;
 		npm_node_execpath: string;
@@ -209,7 +203,6 @@ declare module '$env/dynamic/private' {
 		SHLVL: string;
 		BROWSER: string;
 		npm_config_noproxy: string;
-		OPENAI_BASE_URL: string;
 		XCURSOR_SIZE_LOW_DENSITY: string;
 		SOMMELIER_VERSION: string;
 		HOME: string;
@@ -217,8 +210,6 @@ declare module '$env/dynamic/private' {
 		NVM_BIN: string;
 		npm_package_json: string;
 		NVM_INC: string;
-		QWEN_STREAMING: string;
-		OPENAI_API_KEY: string;
 		MANAGERPID: string;
 		npm_config_userconfig: string;
 		npm_config_local_prefix: string;
@@ -256,7 +247,6 @@ declare module '$env/dynamic/private' {
 		LS_COLORS: string;
 		npm_lifecycle_script: string;
 		SHELL: string;
-		OPENAI_MODEL: string;
 		npm_package_version: string;
 		npm_lifecycle_event: string;
 		QT_ACCESSIBILITY: string;

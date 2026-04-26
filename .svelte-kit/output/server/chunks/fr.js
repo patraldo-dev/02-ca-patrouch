@@ -980,7 +980,8 @@ const en = {
   "disclosure.ai_narrated": "Narrated by Albot Camus (AI)",
   "disclosure.ai_evaluated": "AI evaluation — not human judgment",
   "disclosure.ai_refined": "Refined with AI assistance",
-  common: common$2
+  common: common$2,
+  "nav.stats": "Stats"
 };
 const common$1 = { "nav": { "stats": "Estadísticas" } };
 const es = {
@@ -1964,7 +1965,8 @@ const es = {
   "disclosure.ai_narrated": "Narrado por Albot Camus (IA)",
   "disclosure.ai_evaluated": "Evaluación de IA — no es juicio humano",
   "disclosure.ai_refined": "Refinado con asistencia de IA",
-  common: common$1
+  common: common$1,
+  "nav.stats": "Estadísticas"
 };
 const common = { "nav": { "stats": "Statistiques" } };
 const fr = {
@@ -2948,7 +2950,8 @@ const fr = {
   "disclosure.ai_narrated": "Narré par Albot Camus (IA)",
   "disclosure.ai_evaluated": "Évaluation par IA — pas un jugement humain",
   "disclosure.ai_refined": "Affiné avec l'assistance de l'IA",
-  common
+  common,
+  "nav.stats": "Statistiques"
 };
 export {
   en as a,
