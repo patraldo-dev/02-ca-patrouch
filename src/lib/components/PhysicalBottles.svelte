@@ -271,7 +271,7 @@
     <!-- Capture result modal -->
     {#if capturedContent}
         <div class="capture-modal-overlay" onclick={closeCaptureModal}>
-            <div class="capture-modal" onclick|stopPropagation style="animation: revealContent 0.5s ease-out;">
+            <div class="capture-modal" onclick={(e) => e.stopPropagation()} style="animation: revealContent 0.5s ease-out;">
                 {#if capturedContent.error}
                     <p>{capturedContent.error}</p>
                 {:else}
