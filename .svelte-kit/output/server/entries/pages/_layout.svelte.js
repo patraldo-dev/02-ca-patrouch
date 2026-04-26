@@ -1,4 +1,4 @@
-import { m as bind_props, e as escape_html, s as store_get, b as attr, u as unsubscribe_stores, c as ensure_array_like, a as attr_class, f as stringify, h as head, i as attr_style } from "../../chunks/renderer.js";
+import { n as bind_props, e as escape_html, s as store_get, b as attr, u as unsubscribe_stores, c as ensure_array_like, a as attr_class, f as stringify, h as head, i as attr_style } from "../../chunks/renderer.js";
 import { t, l as locale } from "../../chunks/index3.js";
 import "@sveltejs/kit/internal";
 import "../../chunks/exports.js";
@@ -178,9 +178,9 @@ function _layout($$renderer, $$props) {
         if (data.user?.role === "admin") {
           $$renderer3.push("<!--[0-->");
           $$renderer3.push(`<div class="profile-switcher svelte-12qhfyh"><button class="profile-trigger svelte-12qhfyh"><span class="profile-avatar svelte-12qhfyh">`);
-          if (avatarVariant(data.user?.image || data.user?.avatar_url, "avatar48")) {
+          if (avatarVariant(data.avatarUrl || data.user?.image, "avatar48")) {
             $$renderer3.push("<!--[0-->");
-            $$renderer3.push(`<img${attr("src", avatarVariant(data.user?.image || data.user?.avatar_url, "avatar48"))} alt="" class="svelte-12qhfyh"/>`);
+            $$renderer3.push(`<img${attr("src", avatarVariant(data.avatarUrl || data.user?.image, "avatar48"))} alt="" class="svelte-12qhfyh"/>`);
           } else {
             $$renderer3.push("<!--[-1-->");
             $$renderer3.push(`${escape_html((activeDisplayName || "?")[0].toUpperCase())}`);
@@ -193,9 +193,9 @@ function _layout($$renderer, $$props) {
         } else {
           $$renderer3.push("<!--[-1-->");
           $$renderer3.push(`<div class="profile-switcher svelte-12qhfyh"><button class="profile-trigger svelte-12qhfyh"><span class="profile-avatar svelte-12qhfyh">`);
-          if (avatarVariant(data.user?.image || data.user?.avatar_url, "avatar48")) {
+          if (avatarVariant(data.avatarUrl || data.user?.image, "avatar48")) {
             $$renderer3.push("<!--[0-->");
-            $$renderer3.push(`<img${attr("src", avatarVariant(data.user?.image || data.user?.avatar_url, "avatar48"))} alt="" class="svelte-12qhfyh"/>`);
+            $$renderer3.push(`<img${attr("src", avatarVariant(data.avatarUrl || data.user?.image, "avatar48"))} alt="" class="svelte-12qhfyh"/>`);
           } else {
             $$renderer3.push("<!--[-1-->");
             $$renderer3.push(`${escape_html((data.user.display_name || data.user.username || "?")[0].toUpperCase())}`);
@@ -221,10 +221,10 @@ function _layout($$renderer, $$props) {
       $$renderer3.push(`<!--]--></div></div> <button class="mobile-toggle svelte-12qhfyh" aria-label="Toggle menu"${attr("aria-expanded", mobileMenuOpen)}><span${attr_class("hamburger svelte-12qhfyh", void 0, { "open": mobileMenuOpen })}><span class="svelte-12qhfyh"></span><span class="svelte-12qhfyh"></span><span class="svelte-12qhfyh"></span></span></button> `);
       if (data.user) {
         $$renderer3.push("<!--[0-->");
-        $$renderer3.push(`<a href="/stats" class="mobile-stats-btn desktop-hide svelte-12qhfyh"${attr("title", store_get($$store_subs ??= {}, "$t", t)("nav.stats"))}>📊</a> <a href="/account" class="mobile-avatar-btn desktop-hide svelte-12qhfyh"${attr("title", activeDisplayName)}><span class="profile-avatar svelte-12qhfyh" style="width:32px;height:32px;font-size:0.8rem">`);
-        if (avatarVariant(data.user?.image || data.user?.avatar_url, "avatar32")) {
+        $$renderer3.push(`<a href="/account" class="mobile-avatar-btn desktop-hide svelte-12qhfyh"${attr("title", activeDisplayName)}><span class="profile-avatar svelte-12qhfyh" style="width:32px;height:32px;font-size:0.8rem">`);
+        if (avatarVariant(data.avatarUrl || data.user?.image, "avatar32")) {
           $$renderer3.push("<!--[0-->");
-          $$renderer3.push(`<img${attr("src", avatarVariant(data.user?.image || data.user?.avatar_url, "avatar32"))} alt="" style="width:32px;height:32px" class="svelte-12qhfyh"/>`);
+          $$renderer3.push(`<img${attr("src", avatarVariant(data.avatarUrl || data.user?.image, "avatar32"))} alt="" style="width:32px;height:32px" class="svelte-12qhfyh"/>`);
         } else {
           $$renderer3.push("<!--[-1-->");
           $$renderer3.push(`${escape_html((activeDisplayName || "?")[0].toUpperCase())}`);

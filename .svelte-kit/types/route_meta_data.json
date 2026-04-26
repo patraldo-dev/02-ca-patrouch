@@ -161,6 +161,9 @@
 	"/api/bottlequest/move": [
 		"src/routes/api/bottlequest/move/+server.js"
 	],
+	"/api/bottlequest/physical": [
+		"src/routes/api/bottlequest/physical/+server.js"
+	],
 	"/api/bottlequest/transfer": [
 		"src/routes/api/bottlequest/transfer/+server.js"
 	],
@@ -326,6 +329,7 @@
 		"src/routes/+layout.server.js"
 	],
 	"/card/[id]": [
+		"src/routes/card/[id]/+page.js",
 		"src/routes/card/[id]/+page.server.js",
 		"src/routes/+layout.js",
 		"src/routes/+layout.server.js"
@@ -436,6 +440,7 @@
 		"src/routes/+layout.server.js"
 	],
 	"/write/[username]": [
+		"src/routes/write/[username]/+page.js",
 		"src/routes/write/[username]/+page.server.js",
 		"src/routes/+layout.js",
 		"src/routes/+layout.server.js"

@@ -19,6 +19,12 @@ async function load({ locals, cookies }) {
     var bootyPlayer = await db.prepare(
       "SELECT fuel FROM bq_players WHERE user_id = ?"
     ).bind(user.id).first().catch(() => null);
+    var userData = await db.prepare(
+      'SELECT image FROM "user" WHERE id = ?'
+    ).bind(user.id).first().catch(() => null);
+    var profileAvatar = await db.prepare(
+      "SELECT avatar_url FROM profiles WHERE user_id = ? AND is_active = 1"
+    ).bind(user.id).first().catch(() => null);
     if (!activeProfile) {
       const primary = await db.prepare(`
                 SELECT id, display_name, locale, bio, is_primary, is_active
@@ -42,7 +48,8 @@ async function load({ locals, cookies }) {
     serverLocale,
     activeProfile,
     onboarding_completed,
-    bootyFuel: bootyPlayer?.fuel || 0
+    bootyFuel: bootyPlayer?.fuel || 0,
+    avatarUrl: profileAvatar?.avatar_url || userData?.image || null
   };
 }
 export {

@@ -93,7 +93,7 @@ function _page($$renderer, $$props) {
         $$renderer2.push(`<a href="/write" class="teaser-cta svelte-1uha8ag">${escape_html(store_get($$store_subs ??= {}, "$t", t)("pages.home.prompt.start_writing"))}</a>`);
       } else {
         $$renderer2.push("<!--[-1-->");
-        $$renderer2.push(`<a href="/signup" class="teaser-cta svelte-1uha8ag">${escape_html(store_get($$store_subs ??= {}, "$t", t)("pages.home.prompt.cta_guest"))}</a>`);
+        $$renderer2.push(`<div class="auth-cta-group svelte-1uha8ag"><a href="/login" class="teaser-cta svelte-1uha8ag">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.nav.login"))}</a> <a href="/signup" class="teaser-cta secondary svelte-1uha8ag">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.nav.signup"))}</a></div>`);
       }
       $$renderer2.push(`<!--]--></div></section>`);
     } else {

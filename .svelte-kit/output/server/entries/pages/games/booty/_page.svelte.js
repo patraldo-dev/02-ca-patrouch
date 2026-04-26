@@ -1,4 +1,4 @@
-import { a as attr_class, e as escape_html, c as ensure_array_like, f as stringify, b as attr, h as head, s as store_get, j as clsx, i as attr_style, u as unsubscribe_stores, d as derived } from "../../../../chunks/renderer.js";
+import { j as ssr_context, a as attr_class, e as escape_html, c as ensure_array_like, f as stringify, b as attr, h as head, s as store_get, k as clsx, i as attr_style, u as unsubscribe_stores, d as derived } from "../../../../chunks/renderer.js";
 import { t } from "../../../../chunks/index3.js";
 import { g as get } from "../../../../chunks/index2.js";
 import "@sveltejs/kit/internal";
@@ -7,6 +7,12 @@ import "../../../../chunks/utils2.js";
 import "@sveltejs/kit/internal/server";
 import "../../../../chunks/root.js";
 import "../../../../chunks/state.svelte.js";
+import "clsx";
+import { h as html } from "../../../../chunks/html.js";
+function onDestroy(fn) {
+  /** @type {SSRContext} */
+  ssr_context.r.on_destroy(fn);
+}
 function BootyChat($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let messages = [];
@@ -48,6 +54,67 @@ function BootyChat($$renderer, $$props) {
         $$renderer2.push("<!--[-1-->");
       }
       $$renderer2.push(`<!--]--></div> <form class="chat-input-row svelte-q3qfat"><input type="text"${attr("value", input)} placeholder="Escribe un mensaje..."${attr("disabled", !connected, true)} maxlength="500" class="svelte-q3qfat"/> <button type="submit"${attr("disabled", !connected, true)} aria-label="Send" class="svelte-q3qfat">➤</button></form></div>`);
+    }
+    $$renderer2.push(`<!--]--></div>`);
+  });
+}
+function PhysicalBottles($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let physicalBottles = [];
+    let locating = false;
+    onDestroy(() => {
+    });
+    head("fzn84i", $$renderer2, ($$renderer3) => {
+      $$renderer3.push(`${html(`
+    <style>
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.5); }
+            70% { box-shadow: 0 0 0 15px rgba(59,130,246,0); }
+            100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+        }
+        @keyframes bottleBob {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-4px) rotate(5deg); }
+        }
+        @keyframes revealContent {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    `)}`);
+    });
+    $$renderer2.push(`<div class="physical-container svelte-fzn84i"><button class="locate-btn svelte-fzn84i"${attr("disabled", locating, true)}>${escape_html("📍 Localízame")}</button> `);
+    {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> <div class="physical-map svelte-fzn84i"></div> `);
+    if (physicalBottles.length > 0) {
+      $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<div class="bottle-list svelte-fzn84i"><h3 class="svelte-fzn84i">🏴‍☠️ Botellas Físicas — PV</h3> <!--[-->`);
+      const each_array = ensure_array_like(physicalBottles);
+      for (let i = 0, $$length = each_array.length; i < $$length; i++) {
+        let bottle = each_array[i];
+        $$renderer2.push(`<button${attr_class("bottle-item svelte-fzn84i", void 0, { "found": bottle.found_by })}><span class="bottle-num svelte-fzn84i">${escape_html(i + 1)}</span> <span class="bottle-info svelte-fzn84i"><strong class="svelte-fzn84i">${escape_html(bottle.title)}</strong> `);
+        if (bottle.found_by) {
+          $$renderer2.push("<!--[0-->");
+          $$renderer2.push(`<span class="found-tag svelte-fzn84i">✅ Capturada</span>`);
+        } else {
+          $$renderer2.push("<!--[-1-->");
+          $$renderer2.push(`<span class="available-tag svelte-fzn84i">🔍 Disponible</span>`);
+        }
+        $$renderer2.push(`<!--]--></span></button>`);
+      }
+      $$renderer2.push(`<!--]--></div>`);
+    } else {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> `);
+    {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> `);
+    {
+      $$renderer2.push("<!--[-1-->");
     }
     $$renderer2.push(`<!--]--></div>`);
   });
@@ -184,6 +251,9 @@ function _page($$renderer, $$props) {
     $$renderer2.push(`<!--]--></div></div> `);
     if (data.player) {
       $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<div style="background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;" class="svelte-1wyf3u8"><h2 class="text-xl font-bold mb-2 svelte-1wyf3u8" style="font-family:Playfair Display,serif">🏴☠️ Botellas Físicas — Puerto Vallarta</h2> <p class="text-sm mb-4 svelte-1wyf3u8" style="color:var(--text-dim)">5 botellas escondidas en PV. Encuéntralas con tu GPS y sigue la cadena del tesoro del Capitán Garras.</p> `);
+      PhysicalBottles($$renderer2, { player: data.player });
+      $$renderer2.push(`<!----></div>`);
     } else {
       $$renderer2.push("<!--[-1-->");
     }

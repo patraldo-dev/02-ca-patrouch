@@ -729,7 +729,7 @@
     <div style="background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;">
         <h2 class="text-xl font-bold mb-2" style="font-family:Playfair Display,serif">🏴☠️ Botellas Físicas — Puerto Vallarta</h2>
         <p class="text-sm mb-4" style="color:var(--text-dim)">5 botellas escondidas en PV. Encuéntralas con tu GPS y sigue la cadena del tesoro del Capitán Garras.</p>
-        <PhysicalBottles player={data.player} />
+        <PhysicalBottles player={data.myPlayer} />
     </div>
 {/if}
 
