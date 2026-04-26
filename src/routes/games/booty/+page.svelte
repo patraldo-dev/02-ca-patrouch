@@ -726,6 +726,11 @@
 </div>
 
 {#if data.player}
+    <div style="background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;">
+        <h2 class="text-xl font-bold mb-2" style="font-family:Playfair Display,serif">🏴☠️ Botellas Físicas — Puerto Vallarta</h2>
+        <p class="text-sm mb-4" style="color:var(--text-dim)">5 botellas escondidas en PV. Encuéntralas con tu GPS y sigue la cadena del tesoro del Capitán Garras.</p>
+        <PhysicalBottles player={data.player} />
+    </div>
 {/if}
 
 <section class="bottles-page">
@@ -1092,13 +1097,6 @@
         </div>
         {#if data.player}
         <BootyChat username={data.player.username} displayName={data.player.display_name} />
-        {#if data.player}
-            <div class="mt-8">
-                <h2 class="text-xl font-bold mb-4" style="font-family:Playfair Display,serif">🏴‍☠️ Botellas Físicas — Puerto Vallarta</h2>
-                <p class="text-sm text-stone-500 mb-4">5 botellas escondidas en PV. Encuéntralas con tu GPS y sigue la cadena del tesoro del Capitán Garras.</p>
-                <PhysicalBottles player={data.player} />
-            </div>
-        {/if}
         {/if}
     </div>
 
