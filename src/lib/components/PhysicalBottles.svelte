@@ -30,6 +30,7 @@
             const res = await fetch('/api/bottlequest/physical');
             const json = await res.json();
             physicalBottles = json.bottles || [];
+            checkProximity();
         } catch {}
 
         // Init Leaflet
@@ -298,7 +299,7 @@
 
 <style>
     .physical-container { position: relative; }
-    .physical-map { width: 100%; height: 500px; border-radius: 12px; border: 2px solid #c9a87c; }
+    .physical-map { width: 100%; height: 500px; border-radius: 12px; border: 2px solid #c9a87c; position: relative; }
     .locate-btn {
         position: absolute; top: 10px; left: 10px; z-index: 1000;
         background: #1c1917; color: #fff; border: 2px solid #c9a87c;
