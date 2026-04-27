@@ -299,7 +299,7 @@
 
 <style>
     .physical-container { position: relative; }
-    .physical-map { width: 100%; height: 500px; border-radius: 12px; border: 2px solid #c9a87c; position: relative; }
+    .physical-map { width: 100%; height: 500px; border-radius: 12px; border: 2px solid #c9a87c; position: relative; overflow: visible; }
     .locate-btn {
         position: absolute; top: 10px; left: 10px; z-index: 1000;
         background: #1c1917; color: #fff; border: 2px solid #c9a87c;
@@ -336,7 +336,7 @@
     .bottle-info strong { font-size: 0.85rem; color: #09090b; }
     .found-tag, .available-tag { font-size: 0.75rem; }
     .capture-prompt {
-        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10000;
     }
     .capture-prompt-inner {
         background: #1c1917; color: #fff; padding: 14px 24px; border-radius: 12px;
