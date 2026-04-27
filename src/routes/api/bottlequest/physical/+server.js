@@ -45,14 +45,14 @@ export async function POST({ locals, platform, request }) {
     const rewardPoints = isTreasure ? 500 : 50;
 
     await db.prepare(`
-        UPDATE bottles SET status = 'found', found_by = ?, found_at = ?, opened_by = ?, updated_at = ?
+        UPDATE bottles SET status = 'found', found_by = ?, found_at = ?, opened_by = ?
         WHERE id = ?
-    `).bind(player.username, now, player.username, now, bottle_id).run();
+    `).bind(player.username, now, player.username, bottle_id).run();
 
     await db.prepare(`
-        UPDATE bq_players SET fuel = fuel + ?, points = points + ?, updated_at = ?
+        UPDATE bq_players SET fuel = fuel + ?, points = points + ?
         WHERE id = ?
-    `).bind(rewardFuel, rewardPoints, now, player.id).run();
+    `).bind(rewardFuel, rewardPoints, player.id).run();
 
     return json({
         success: true,
