@@ -336,7 +336,7 @@
     .bottle-info strong { font-size: 0.85rem; color: #09090b; }
     .found-tag, .available-tag { font-size: 0.75rem; }
     .capture-prompt {
-        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10000;
+        position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000;
     }
     .capture-prompt-inner {
         background: #1c1917; color: #fff; padding: 14px 24px; border-radius: 12px;
