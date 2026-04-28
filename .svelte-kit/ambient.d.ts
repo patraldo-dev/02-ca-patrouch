@@ -85,11 +85,13 @@ declare module '$env/static/private' {
 	export const npm_config_node_gyp: string;
 	export const PATH: string;
 	export const INVOCATION_ID: string;
+	export const npm_config_prefer_offline: string;
 	export const NODE: string;
 	export const npm_package_name: string;
 	export const XDG_RUNTIME_DIR: string;
 	export const XCURSOR_THEME: string;
 	export const DISPLAY: string;
+	export const npm_config_legacy_peer_deps: string;
 	export const DISPLAY_LOW_DENSITY: string;
 	export const LANG: string;
 	export const XDG_CURRENT_DESKTOP: string;
@@ -116,7 +118,6 @@ declare module '$env/static/private' {
 	export const OPENCLAW_PATH_BOOTSTRAPPED: string;
 	export const INIT_CWD: string;
 	export const EDITOR: string;
-	export const NODE_ENV: string;
 }
 
 /**
@@ -250,11 +251,13 @@ declare module '$env/dynamic/private' {
 		npm_config_node_gyp: string;
 		PATH: string;
 		INVOCATION_ID: string;
+		npm_config_prefer_offline: string;
 		NODE: string;
 		npm_package_name: string;
 		XDG_RUNTIME_DIR: string;
 		XCURSOR_THEME: string;
 		DISPLAY: string;
+		npm_config_legacy_peer_deps: string;
 		DISPLAY_LOW_DENSITY: string;
 		LANG: string;
 		XDG_CURRENT_DESKTOP: string;
@@ -281,7 +284,6 @@ declare module '$env/dynamic/private' {
 		OPENCLAW_PATH_BOOTSTRAPPED: string;
 		INIT_CWD: string;
 		EDITOR: string;
-		NODE_ENV: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
