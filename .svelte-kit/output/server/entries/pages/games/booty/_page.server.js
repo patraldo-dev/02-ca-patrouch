@@ -44,7 +44,7 @@ async function load({ locals, url, platform }) {
     }
     if (locals.user) {
       try {
-        myPlayer = await db.prepare("SELECT id FROM bq_players WHERE username = ?").bind(locals.user.username).first();
+        myPlayer = await db.prepare("SELECT id FROM bq_players WHERE username = ? OR display_name = ?").bind(locals.user.username, locals.user.username).first();
         if (myPlayer) {
           const { results: beans } = await db.prepare(`SELECT bean_type, amount FROM bq_bean_inventory WHERE player_id = ?`).bind(myPlayer.id).all();
           myPlayer.beans = {};

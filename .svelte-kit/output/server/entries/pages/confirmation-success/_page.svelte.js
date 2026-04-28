@@ -1,4 +1,4 @@
-import { d as derived, s as store_get, u as unsubscribe_stores } from "../../../chunks/renderer.js";
+import { d as derived, b as store_get, u as unsubscribe_stores } from "../../../chunks/renderer.js";
 import { p as page } from "../../../chunks/stores.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {

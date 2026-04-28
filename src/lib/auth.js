@@ -77,7 +77,12 @@ export function createAuth(env) {
       autoSignIn: true,
       password: {
         hash: hashPassword,
-        verify: verifyPassword,
+        verify: async ({ hash, password }) => {
+            console.log('[verify] called — hash type:', typeof hash, 'first 20:', hash?.slice(0, 20), 'pw type:', typeof password);
+            const result = await verifyPassword(hash, password);
+            console.log('[verify] result:', result);
+            return result;
+        },
       },
     },
     socialProviders: {

@@ -1,4 +1,4 @@
-import { e as escape_html, s as store_get, b as attr, u as unsubscribe_stores } from "../../../../../chunks/renderer.js";
+import { e as escape_html, b as store_get, c as attr, u as unsubscribe_stores } from "../../../../../chunks/renderer.js";
 import { g as getLocale, t } from "../../../../../chunks/index3.js";
 import "@sveltejs/kit/internal";
 import "../../../../../chunks/exports.js";

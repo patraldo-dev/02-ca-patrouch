@@ -994,7 +994,13 @@ const en = {
   "disclosure.ai_evaluated": "AI evaluation — not human judgment",
   "disclosure.ai_refined": "Refined with AI assistance",
   common: common$2,
-  "nav.stats": "Stats"
+  "nav.stats": "Stats",
+  "booty.arbooty.title": "Arbooty — Treasure Hunt",
+  "booty.arbooty.description": "Find the Captain's hidden bottles across Puerto Vallarta. Each bottle contains a clue leading to the next.",
+  "booty.arbooty.back": "Back to Booty Battle",
+  "booty.arbooty.card_desc": "Explore Puerto Vallarta and find 5 hidden bottles with GPS. Follow the treasure hunt chain!",
+  "booty.arbooty.join_required": "You need to be a Booty Battle player to participate.",
+  "booty.arbooty.join_btn": "Join Booty Battle"
 };
 const common$1 = { "nav": { "stats": "Estadísticas" } };
 const es = {
@@ -1979,7 +1985,13 @@ const es = {
   "disclosure.ai_evaluated": "Evaluación de IA — no es juicio humano",
   "disclosure.ai_refined": "Refinado con asistencia de IA",
   common: common$1,
-  "nav.stats": "Estadísticas"
+  "nav.stats": "Estadísticas",
+  "booty.arbooty.title": "Arbooty — Búsqueda del Tesoro",
+  "booty.arbooty.description": "Encuentra las botellas escondidas del Capitán por Puerto Vallarta. Cada botella contiene una pista hacia la siguiente.",
+  "booty.arbooty.back": "Volver a Booty Battle",
+  "booty.arbooty.card_desc": "Explora Puerto Vallarta y encuentra 5 botellas escondidas con GPS. ¡Sigue la cadena del tesoro!",
+  "booty.arbooty.join_required": "Necesitas ser jugador de Booty Battle para participar.",
+  "booty.arbooty.join_btn": "Unirse a Booty Battle"
 };
 const common = { "nav": { "stats": "Statistiques" } };
 const fr = {
@@ -2977,7 +2989,13 @@ const fr = {
   "disclosure.ai_evaluated": "Évaluation par IA — pas un jugement humain",
   "disclosure.ai_refined": "Affiné avec l'assistance de l'IA",
   common,
-  "nav.stats": "Statistiques"
+  "nav.stats": "Statistiques",
+  "booty.arbooty.title": "Arbooty — Chasse au Trésor",
+  "booty.arbooty.description": "Trouvez les bouteilles cachées du Capitaine à travers Puerto Vallarta.",
+  "booty.arbooty.back": "Retour à Booty Battle",
+  "booty.arbooty.card_desc": "Explorez Puerto Vallarta et trouvez 5 bouteilles cachées avec le GPS.",
+  "booty.arbooty.join_required": "Vous devez être joueur de Booty Battle pour participer.",
+  "booty.arbooty.join_btn": "Rejoindre Booty Battle"
 };
 export {
   en as a,

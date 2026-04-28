@@ -1,4 +1,4 @@
-import { h as head, a as attr_class, s as store_get, u as unsubscribe_stores } from "../../../../chunks/renderer.js";
+import { h as head, a as attr_class, b as store_get, u as unsubscribe_stores } from "../../../../chunks/renderer.js";
 import { p as page } from "../../../../chunks/stores.js";
 function _layout($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {

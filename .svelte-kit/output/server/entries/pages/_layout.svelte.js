@@ -1,4 +1,4 @@
-import { n as bind_props, e as escape_html, s as store_get, b as attr, u as unsubscribe_stores, c as ensure_array_like, a as attr_class, f as stringify, h as head, i as attr_style } from "../../chunks/renderer.js";
+import { n as bind_props, e as escape_html, b as store_get, c as attr, u as unsubscribe_stores, f as ensure_array_like, a as attr_class, i as stringify, h as head, j as attr_style } from "../../chunks/renderer.js";
 import { t, l as locale } from "../../chunks/index3.js";
 import "@sveltejs/kit/internal";
 import "../../chunks/exports.js";

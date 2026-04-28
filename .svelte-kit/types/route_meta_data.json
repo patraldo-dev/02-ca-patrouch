@@ -31,6 +31,12 @@
 		"src/routes/+layout.js",
 		"src/routes/+layout.server.js"
 	],
+	"/admin/bottles": [
+		"src/routes/admin/bottles/+page.server.js",
+		"src/routes/admin/+layout.server.js",
+		"src/routes/+layout.js",
+		"src/routes/+layout.server.js"
+	],
 	"/admin/invitations": [
 		"src/routes/admin/+layout.server.js",
 		"src/routes/+layout.js",
@@ -70,6 +76,9 @@
 	],
 	"/api/admin/books/[slug]": [
 		"src/routes/api/admin/books/[slug]/+server.js"
+	],
+	"/api/admin/bottles": [
+		"src/routes/api/admin/bottles/+server.js"
 	],
 	"/api/admin/cleanup": [
 		"src/routes/api/admin/cleanup/+server.js"
@@ -359,6 +368,12 @@
 	"/games/booty": [
 		"src/routes/games/booty/+page.js",
 		"src/routes/games/booty/+page.server.js",
+		"src/routes/+layout.js",
+		"src/routes/+layout.server.js"
+	],
+	"/games/booty/arbooty": [
+		"src/routes/games/booty/arbooty/+page.js",
+		"src/routes/games/booty/arbooty/+page.server.js",
 		"src/routes/+layout.js",
 		"src/routes/+layout.server.js"
 	],
