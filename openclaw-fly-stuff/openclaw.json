@@ -1,0 +1,288 @@
+{
+    "meta": {
+        "lastTouchedVersion": "2026.3.25",
+        "lastTouchedAt": "2026-04-28T02:45:34.114Z"
+    },
+    "wizard": {
+        "lastRunAt": "2026-04-27T23:51:52.723Z",
+        "lastRunVersion": "2026.3.25",
+        "lastRunCommand": "doctor",
+        "lastRunMode": "local"
+    },
+    "auth": {
+        "profiles": {
+            "zai:default": {
+                "provider": "zai",
+                "mode": "api_key"
+            }
+        }
+    },
+    "models": {
+        "mode": "merge",
+        "providers": {
+            "zai": {
+                "baseUrl": "https://api.z.ai/api/paas/v4",
+                "api": "openai-completions",
+                "models": [
+                    {
+                        "id": "glm-5",
+                        "name": "GLM-5",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 1,
+                            "output": 3.2,
+                            "cacheRead": 0.2,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 202800,
+                        "maxTokens": 131100
+                    },
+                    {
+                        "id": "glm-5-turbo",
+                        "name": "GLM-5 Turbo",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 1.2,
+                            "output": 4,
+                            "cacheRead": 0.24,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 202800,
+                        "maxTokens": 131100
+                    },
+                    {
+                        "id": "glm-4.7",
+                        "name": "GLM-4.7",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 0.6,
+                            "output": 2.2,
+                            "cacheRead": 0.11,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 204800,
+                        "maxTokens": 131072
+                    },
+                    {
+                        "id": "glm-4.7-flash",
+                        "name": "GLM-4.7 Flash",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 0.07,
+                            "output": 0.4,
+                            "cacheRead": 0,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 200000,
+                        "maxTokens": 131072
+                    },
+                    {
+                        "id": "glm-4.7-flashx",
+                        "name": "GLM-4.7 FlashX",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 0.06,
+                            "output": 0.4,
+                            "cacheRead": 0.01,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 200000,
+                        "maxTokens": 128000
+                    },
+                    {
+                        "id": "glm-4.6",
+                        "name": "GLM-4.6",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 0.6,
+                            "output": 2.2,
+                            "cacheRead": 0.11,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 204800,
+                        "maxTokens": 131072
+                    },
+                    {
+                        "id": "glm-4.6v",
+                        "name": "GLM-4.6V",
+                        "reasoning": true,
+                        "input": [
+                            "text",
+                            "image"
+                        ],
+                        "cost": {
+                            "input": 0.3,
+                            "output": 0.9,
+                            "cacheRead": 0,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 128000,
+                        "maxTokens": 32768
+                    },
+                    {
+                        "id": "glm-4.5",
+                        "name": "GLM-4.5",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 0.6,
+                            "output": 2.2,
+                            "cacheRead": 0.11,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 131072,
+                        "maxTokens": 98304
+                    },
+                    {
+                        "id": "glm-4.5-air",
+                        "name": "GLM-4.5 Air",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 0.2,
+                            "output": 1.1,
+                            "cacheRead": 0.03,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 131072,
+                        "maxTokens": 98304
+                    },
+                    {
+                        "id": "glm-4.5-flash",
+                        "name": "GLM-4.5 Flash",
+                        "reasoning": true,
+                        "input": [
+                            "text"
+                        ],
+                        "cost": {
+                            "input": 0,
+                            "output": 0,
+                            "cacheRead": 0,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 131072,
+                        "maxTokens": 98304
+                    },
+                    {
+                        "id": "glm-4.5v",
+                        "name": "GLM-4.5V",
+                        "reasoning": true,
+                        "input": [
+                            "text",
+                            "image"
+                        ],
+                        "cost": {
+                            "input": 0.6,
+                            "output": 1.8,
+                            "cacheRead": 0,
+                            "cacheWrite": 0
+                        },
+                        "contextWindow": 64000,
+                        "maxTokens": 16384
+                    }
+                ]
+            }
+        }
+    },
+    "agents": {
+        "defaults": {
+            "model": {
+                "primary": "zai/glm-5"
+            },
+            "models": {
+                "zai/glm-5": {
+                    "alias": "GLM"
+                }
+            },
+            "workspace": "/data/workspace"
+        }
+    },
+    "tools": {
+        "profile": "coding"
+    },
+    "commands": {
+        "native": "auto",
+        "nativeSkills": "auto",
+        "restart": true,
+        "ownerDisplay": "raw"
+    },
+    "session": {
+        "dmScope": "per-channel-peer"
+    },
+"channels": {
+  "telegram": {
+    "enabled": true,
+    "dmPolicy": "allowlist",
+    "botToken": "8711323500:AAHpJr0FcLve3LcAtvx-meRspDb7_HJ_5_0",
+    "groups": {
+      "*": {
+        "requireMention": true
+      }
+    },
+    "allowFrom": [8660066867],
+    "groupPolicy": "allowlist",
+    "streaming": "partial"
+  }
+},
+    "gateway": {
+        "port": 18789,
+        "mode": "local",
+        "bind": "lan",
+        "controlUi": {
+            "allowedOrigins": [
+                "*",
+                "https://openclaw-patrouch.fly.dev"
+            ]
+        },
+        "auth": {
+            "mode": "token",
+            "token": "3ef296450f5a85445e3b4b0fcd14673949cb8a164c0c28e6",
+            "trustedProxy": {
+                "userHeader": "X-Forwarded-For"
+            }
+        },
+        "trustedProxies": [
+            "127.0.0.1"
+        ],
+        "tailscale": {
+            "mode": "off",
+            "resetOnExit": false
+        }
+    },
+    "skills": {
+        "install": {
+            "nodeManager": "npm"
+        }
+    },
+    "plugins": {
+        "entries": {
+            "zai": {
+                "enabled": true
+            }
+        }
+    }
+}
+
+

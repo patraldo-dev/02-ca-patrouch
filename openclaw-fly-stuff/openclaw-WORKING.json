@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.25",
+    "lastTouchedAt": "2026-04-28T05:38:57.493Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-04-27T23:51:52.723Z",
+    "lastRunVersion": "2026.3.25",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
+  },
+  "auth": {
+    "profiles": {
+      "zai:default": {
+        "provider": "zai",
+        "mode": "api_key"
+      },
+      "openrouter:default": {
+        "provider": "openrouter",
+        "mode": "api_key"
+      }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "zai": {
+        "baseUrl": "https://api.z.ai/api/coding/paas/v4",
+        "apiKey": "74cca1ecc3554435bd9f0bed418c592a.P5sm30saCHc9LSmH",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "glm-5-turbo",
+            "name": "GLM-5 Turbo",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 1.2,
+              "output": 4,
+              "cacheRead": 0.24,
+              "cacheWrite": 0
+            },
+            "contextWindow": 202800,
+            "maxTokens": 131100
+          }
+        ]
+      },
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "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",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "openrouter/hunter-alpha",
+            "name": "Hunter Alpha",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 1048576,
+            "maxTokens": 65536
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "zai/glm-5-turbo"
+      },
+      "models": {
+        "zai/glm-5": {
+          "alias": "GLM"
+        }
+      },
+      "workspace": "/data/workspace"
+    }
+  },
+  "tools": {
+    "profile": "coding"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "botToken": "8711323500:AAHpJr0FcLve3LcAtvx-meRspDb7_HJ_5_0",
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      },
+      "allowFrom": [
+        8660066867
+      ],
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "allowedOrigins": [
+        "*",
+        "https://openclaw-patrouch.fly.dev"
+      ]
+    },
+    "auth": {
+      "mode": "token",
+      "token": "3ef296450f5a85445e3b4b0fcd14673949cb8a164c0c28e6",
+      "trustedProxy": {
+        "userHeader": "X-Forwarded-For"
+      }
+    },
+    "trustedProxies": [
+      "127.0.0.1"
+    ],
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "zai": {
+        "enabled": true
+      }
+    }
+  }
+}
