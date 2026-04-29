@@ -86,10 +86,6 @@ export function createAuth(env) {
       enabled: true,
       minPasswordLength: 8,
       autoSignIn: true,
-      password: {
-        hash: hashPassword,
-        verify: verifyPassword,
-      },
     },
     socialProviders: {
       google: {
