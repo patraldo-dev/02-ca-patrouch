@@ -69,7 +69,7 @@ Reply ONLY with valid JSON, no markdown.`;
                     { role: 'system', content: 'Respond ONLY with valid JSON. No markdown, no backticks, no explanation.' },
                     { role: 'user', content: prompt }
                 ],
-                max_tokens: 300
+                max_tokens: 150
             });
             console.log('[NARRATOR] TYPE:', typeof aiResp, 'KEYS:', aiResp && typeof aiResp === 'object' ? Object.keys(aiResp) : 'N/A', 'FULL:', JSON.stringify(aiResp).slice(0, 500));
 
@@ -95,29 +95,12 @@ Reply ONLY with valid JSON, no markdown.`;
 
         let tEs = title_es, nEs = narrative_es, tFr = title_fr, nFr = narrative_fr;
 
-        // Auto-translate if translations not provided
-        if (ai && (!nEs || !nFr)) {
-            try {
-                // Detect source language from what was provided
-                const hasEs = !!nEs, hasFr = !!nFr;
-                const combined = title + '. ' + narrative;
-
-                if (!hasEs) {
-                    [tEs, nEs] = await Promise.all([
-                        translateText(ai, title, 'es'),
-                        translateText(ai, narrative, 'es')
-                    ]);
-                }
-                if (!hasFr) {
-                    [tFr, nFr] = await Promise.all([
-                        translateText(ai, title, 'fr'),
-                        translateText(ai, narrative, 'fr')
-                    ]);
-                }
-            } catch (err) {
-                console.error('Narrator translation failed:', err);
-            }
-        }
+        // Skip auto-translate in cron to avoid CPU timeout
+        // Translations handled client-side on demand
+        if (!tEs) tEs = title;
+        if (!nEs) nEs = narrative;
+        if (!tFr) tFr = title;
+        if (!nFr) nFr = narrative;
 
         await db.prepare(`
             INSERT INTO narrator_events (id, title, narrative, event_type, duration_hours, expires_at)
