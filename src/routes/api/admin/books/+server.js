@@ -60,7 +60,7 @@ export async function POST({ request, platform }) {
         if (coverImageFile && coverImageFile.size > 0) {
             // Upload the image to Cloudflare Images directly
 const accountId = platform?.env?.CLOUDFLARE_ACCOUNT_ID;
-const apiKey = platform?.env?.CLOUDFLARE_API_TOKEN;
+const apiKey = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
             
             if (!accountId || !apiKey) {
                 return json({ 

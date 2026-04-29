@@ -5,7 +5,7 @@ export async function POST({ request, platform }) {
   try {
     // 1. Check environment variables
     const accountId = platform?.env?.CLOUDFLARE_ACCOUNT_ID;
-    const apiToken = platform?.env?.CLOUDFLARE_API_TOKEN;
+    const apiToken = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
     
     console.log('Environment variables:', {
       accountId: accountId ? 'present' : 'missing',

@@ -49,7 +49,7 @@ export async function POST({ locals, request, platform }) {
 
     // Upload to Cloudflare Images via REST API
     try {
-        const apiToken = platform?.env?.CLOUDFLARE_API_TOKEN;
+        const apiToken = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
         if (!apiToken) {
             return json({ error: 'Image service not configured' }, { status: 503 });
         }

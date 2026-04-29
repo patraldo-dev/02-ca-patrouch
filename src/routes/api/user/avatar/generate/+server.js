@@ -39,7 +39,7 @@ export async function POST({ locals, request, platform }) {
         const blob = new Blob([imageBytes], { type: 'image/png' });
 
         // Upload to Cloudflare Images
-        const apiToken = platform?.env?.CLOUDFLARE_API_TOKEN;
+        const apiToken = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
         const imageId = `avatar-${user.id}-${Date.now()}`;
 
         const uploadForm = new FormData();
