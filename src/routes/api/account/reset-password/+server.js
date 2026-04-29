@@ -4,11 +4,16 @@ import { json } from '@sveltejs/kit';
 
 export async function POST({ request, locals }) {
     const user = locals?.user;
-    if (!user || user.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+    if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
     
     const { userId, newPassword } = await request.json();
     if (!userId || !newPassword || newPassword.length < 8) {
         return json({ error: 'Invalid input' }, { status: 400 });
+    }
+
+    // Users can only reset their own password (or admin can reset anyone)
+    if (userId !== user.id && user.role !== 'admin') {
+        return json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { scrypt } = await import('node:crypto');
