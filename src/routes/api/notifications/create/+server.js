@@ -4,7 +4,7 @@ export async function POST({ request, platform }) {
     const db = platform?.env?.DB_book;
     if (!db) return json({ error: 'No DB' }, { status: 500 });
 
-    const cronSecret = platform?.env?.CRON_SECRET;
+    const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
     const auth = request.headers.get('Authorization');
     if (!auth || !cronSecret || auth !== `Bearer ${cronSecret}`) {
         return json({ error: 'Unauthorized' }, { status: 401 });

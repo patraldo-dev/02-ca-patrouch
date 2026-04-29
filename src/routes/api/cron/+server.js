@@ -6,7 +6,7 @@ import { json } from '@sveltejs/kit';
 
 export async function GET({ url, platform }) {
     const secret = url.searchParams.get('secret');
-    const envSecret = platform?.env?.CRON_SECRET;
+    const envSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
     if (!envSecret || secret !== envSecret) {
         return json({ error: 'Forbidden' }, { status: 403 });
     }

@@ -8,7 +8,8 @@ export async function POST({ locals, request }) {
 
     // Check authorization (cron or admin)
     const authHeader = request.headers.get('Authorization');
-    if (authHeader !== `Bearer ${platform?.env?.CRON_SECRET}` && user.role !== 'admin') {
+    const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+    if (authHeader !== `Bearer ${cronSecret}` && user.role !== 'admin') {
         return json({ error: 'Forbidden' }, { status: 403 });
     }
 

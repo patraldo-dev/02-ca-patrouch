@@ -14,7 +14,7 @@ export async function POST({ request, platform }) {
     if (!db) return json({ error: 'No DB' }, { status: 500 });
 
     // Cron auth - accept from cron with secret
-    const cronSecret = platform?.env?.CRON_SECRET;
+    const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
     if (cronSecret) {
         const auth = request.headers.get('Authorization');
         if (!auth || auth !== `Bearer ${cronSecret}`) {

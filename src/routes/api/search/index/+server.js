@@ -6,7 +6,7 @@ import { json } from '@sveltejs/kit';
 
 export async function POST({ request, platform }) {
     const authHeader = request.headers.get('authorization');
-    const cronSecret = platform?.env?.CRON_SECRET;
+    const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
