@@ -9,7 +9,7 @@ import { authSchema } from '../db/auth-schema.js';
 const PBKDF2_ITERATIONS = 100000;
 const HASH_LENGTH = 32; // 256 bits
 
-async function hashPassword(password) {
+export async function hashPassword(password) {
     const enc = new TextEncoder();
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const keyMaterial = await crypto.subtle.importKey(
