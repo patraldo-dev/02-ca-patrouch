@@ -4,62 +4,68 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { drizzle } from 'drizzle-orm/d1';
 import { authSchema } from '../db/auth-schema.js';
 
-// Custom scrypt hash/verify to avoid CPU limit on CF Workers free plan
-// Better Auth's default @noble/hashes scrypt is too CPU-intensive for Workers
-const SCRYPT_KEYLEN = 64;
-const SCRYPT_COST = 2048; // N — low enough for CF Workers free CPU limit (16384 timeouts)
-const SCRYPT_BLOCK = 8;
-const SCRYPT_PARALLEL = 1;
+// PBKDF2 via WebCrypto — doesn't count against CF Workers CPU time
+// Format: pbkdf2:iterations:salt_base64:hash_base64
+const PBKDF2_ITERATIONS = 100000;
+const HASH_LENGTH = 32; // 256 bits
 
 async function hashPassword(password) {
-    const { scrypt } = await import('node:crypto');
+    const enc = new TextEncoder();
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    return new Promise((resolve, reject) => {
-        scrypt(password, salt, SCRYPT_KEYLEN, { N: SCRYPT_COST, r: SCRYPT_BLOCK, p: SCRYPT_PARALLEL }, (err, derivedKey) => {
-            if (err) return reject(err);
-            const buf = Buffer.alloc(salt.length + derivedKey.length);
-            salt.copy(buf, 0);
-            derivedKey.copy(buf, salt.length);
-            resolve(`scrypt:${SCRYPT_COST}:${SCRYPT_BLOCK}:${SCRYPT_PARALLEL}:${buf.toString('base64')}`);
-        });
-    });
+    const keyMaterial = await crypto.subtle.importKey(
+        'raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']
+    );
+    const bits = await crypto.subtle.deriveBits(
+        { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+        keyMaterial, HASH_LENGTH * 8
+    );
+    const hashB64 = btoa(String.fromCharCode(...new Uint8Array(bits)));
+    const saltB64 = btoa(String.fromCharCode(...salt));
+    return `pbkdf2:${PBKDF2_ITERATIONS}:${saltB64}:${hashB64}`;
 }
 
 async function verifyPassword(hash, password) {
-    const { scrypt } = await import('node:crypto');
     try {
-        const [prefix, N, r, p, data] = hash.split(':');
-        if (prefix !== 'scrypt') throw new Error('Unsupported hash format');
-        const buf = Buffer.from(data, 'base64');
-        const salt = buf.subarray(0, 16);
-        const key = buf.subarray(16);
-        return new Promise((resolve) => {
-            scrypt(password, salt, key.length, { N: parseInt(N), r: parseInt(r), p: parseInt(p) }, (err, derivedKey) => {
-                if (err) return resolve(false);
-                resolve(derivedKey.equals(key));
-            });
-        });
-    } catch {
-        // Fallback for old PBKDF2 hashes
         const parts = hash.split(':');
-        if (parts.length === 3 && parseInt(parts[0]) > 10000) {
-            // Old PBKDF2 format: iterations:saltB64:hashB64
-            const { pbkdf2 } = await import('node:crypto');
-            const [iterations, saltB64, hashB64] = parts;
-            const salt = Buffer.from(saltB64, 'base64');
-            const expected = Buffer.from(hashB64, 'base64');
-            const derived = pbkdf2Sync ? 
-                pbkdf2Sync(password, salt, parseInt(iterations), expected.length, 'sha256') :
-                null;
-            if (derived) return derived.equals(expected);
+        if (parts[0] === 'pbkdf2') {
+            const [_, iterations, saltB64, hashB64] = parts;
+            const enc = new TextEncoder();
+            const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
+            const expected = Uint8Array.from(atob(hashB64), c => c.charCodeAt(0));
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']
+            );
+            const bits = await crypto.subtle.deriveBits(
+                { name: 'PBKDF2', salt, iterations: parseInt(iterations), hash: 'SHA-256' },
+                keyMaterial, expected.length * 8
+            );
+            const derived = new Uint8Array(bits);
+            return derived.length === expected.length && derived.every((b, i) => b === expected[i]);
         }
+        // Legacy scrypt support (read-only, for migration)
+        if (parts[0] === 'scrypt') {
+            const [_, N, r, p, data] = parts;
+            const buf = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+            const salt = buf.slice(0, 16);
+            const expectedKey = buf.slice(16);
+            const { scrypt } = await import('node:crypto');
+            const derived = await new Promise((resolve) => {
+                scrypt(password, salt, expectedKey.length, { N: parseInt(N), r: parseInt(r), p: parseInt(p) }, (err, key) => {
+                    if (err) return resolve(null);
+                    resolve(key);
+                });
+            });
+            if (!derived) return false;
+            return derived.length === expectedKey.length && derived.every((b, i) => b === expectedKey[i]);
+        }
+        return false;
+    } catch {
         return false;
     }
 }
 
 /**
  * Create a Better Auth instance per-request using D1 binding from env.
- * D1 bindings are only available at request time, so we can't use a singleton.
  */
 export function createAuth(env) {
   const db = drizzle(env.DB_book);
@@ -77,12 +83,7 @@ export function createAuth(env) {
       autoSignIn: true,
       password: {
         hash: hashPassword,
-        verify: async ({ hash, password }) => {
-            console.log('[verify] called — hash type:', typeof hash, 'first 20:', hash?.slice(0, 20), 'pw type:', typeof password);
-            const result = await verifyPassword(hash, password);
-            console.log('[verify] result:', result);
-            return result;
-        },
+        verify: verifyPassword,
       },
     },
     socialProviders: {
