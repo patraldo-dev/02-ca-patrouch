@@ -73,6 +73,11 @@ export function createAuth(env) {
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET || '',
     baseURL: 'https://patrouch.ca',
+    advanced: {
+      ipAddress: {
+        ipAddressHeaders: ['cf-connecting-ip']
+      }
+    },
     database: drizzleAdapter(db, {
       provider: 'sqlite',
       schema: authSchema,
