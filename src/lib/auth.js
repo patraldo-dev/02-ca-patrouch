@@ -7,7 +7,7 @@ import { authSchema } from '../db/auth-schema.js';
 // Custom scrypt hash/verify to avoid CPU limit on CF Workers free plan
 // Better Auth's default @noble/hashes scrypt is too CPU-intensive for Workers
 const SCRYPT_KEYLEN = 64;
-const SCRYPT_COST = 16384; // N — lower than default 262144 but still secure
+const SCRYPT_COST = 2048; // N — low enough for CF Workers free CPU limit (16384 timeouts)
 const SCRYPT_BLOCK = 8;
 const SCRYPT_PARALLEL = 1;
 
