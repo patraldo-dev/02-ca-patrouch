@@ -57,6 +57,9 @@ import { avatarVariant } from '$lib/utils.js';
     let changingPassword = $state(false);
     let passwordMessage = $state('');
     let passwordError = $state(false);
+    let showCurrentPw = $state(false);
+    let showNewPw = $state(false);
+    let showConfirmPw = $state(false);
 
     // --- Emoji picker ---
 
@@ -459,15 +462,15 @@ import { avatarVariant } from '$lib/utils.js';
         <div class="form-area">
             <div class="form-group">
                 <label>{$t('account.security.current_password')}</label>
-                <input type="password" bind:value={currentPassword} />
+                <div class="pw-wrapper"><input type={showCurrentPw ? 'text' : 'password'} bind:value={currentPassword} /><button type="button" class="pw-toggle" onclick={() => showCurrentPw = !showCurrentPw} aria-label="Toggle">{#if showCurrentPw}👁️{:else}🔒{/if}</button></div>
             </div>
             <div class="form-group">
                 <label>{$t('account.security.new_password')}</label>
-                <input type="password" bind:value={newPassword} />
+                <div class="pw-wrapper"><input type={showNewPw ? 'text' : 'password'} bind:value={newPassword} /><button type="button" class="pw-toggle" onclick={() => showNewPw = !showNewPw} aria-label="Toggle">{#if showNewPw}👁️{:else}🔒{/if}</button><button type="button" class="pw-gen" onclick={() => newPassword = crypto.getRandomValues(new Uint32Array(3)).reduce((s,n) => s + n.toString(36), '').slice(0,16)} title="Generate password">🎲</button></div>
             </div>
             <div class="form-group">
                 <label>{$t('account.security.confirm_password')}</label>
-                <input type="password" bind:value={confirmPassword} />
+                <div class="pw-wrapper"><input type={showConfirmPw ? 'text' : 'password'} bind:value={confirmPassword} /><button type="button" class="pw-toggle" onclick={() => showConfirmPw = !showConfirmPw} aria-label="Toggle">{#if showConfirmPw}👁️{:else}🔒{/if}</button></div>
             </div>
             <button class="btn-primary" onclick={changePassword} disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}>
                 {changingPassword ? '...' : $t('account.security.change_password')}
@@ -635,6 +638,14 @@ import { avatarVariant } from '$lib/utils.js';
         border: 2px solid var(--border); border-radius: 8px; color: var(--text);
         font-family: var(--font-body); font-size: 0.9rem; outline: none; box-sizing: border-box;
     }
+    .pw-wrapper { position: relative; }
+    .pw-wrapper input { padding-right: 80px; }
+    .pw-toggle, .pw-gen {
+        position: absolute; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 6px;
+    }
+    .pw-toggle { right: 36px; }
+    .pw-gen { right: 6px; }
+    .pw-toggle:hover, .pw-gen:hover { opacity: 0.7; }
     .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
     .input-with-btn { display: flex; gap: 0; }
     .input-with-btn input, .input-with-btn textarea { flex: 1; }
