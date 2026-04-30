@@ -113,7 +113,6 @@ export function createAuth(env) {
         return new Response(null, { status: 302, headers: { Location: '/login' } });
       },
     },
-    },
     socialProviders: {
       google: {
         clientId: env.GOOGLE_CLIENT_ID || '',
