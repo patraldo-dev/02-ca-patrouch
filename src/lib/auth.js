@@ -89,7 +89,7 @@ export function createAuth(env) {
       sendResetPassword: async ({ user, token, url }, request) => {
         const { sendMailgunEmail } = await import('$lib/server/mailgun.js');
         const acceptLang = request?.headers?.get('accept-language') || '';
-        const lang = acceptLang.startsWith('es') ? 'es' : acceptLang.startsWith('fr') ? 'fr' : 'en';
+        const lang = acceptLang.startsWith('fr') ? 'fr' : acceptLang.startsWith('en') ? 'en' : 'es';
         const t = {
           en: { subject: 'Reset your password — Patrouch', title: 'Reset your password', body: 'You requested a password reset. Click below to set a new one:', btn: 'Reset Password', footer: 'This link expires in 1 hour. If you didn\'t request this, ignore it.' },
           es: { subject: 'Restablece tu contraseña — Patrouch', title: 'Restablece tu contraseña', body: 'Solicitaste un cambio de contraseña. Haz clic abajo para establecer una nueva:', btn: 'Restablecer Contraseña', footer: 'Este enlace expira en 1 hora. Si no lo solicitaste, ignóralo.' },
