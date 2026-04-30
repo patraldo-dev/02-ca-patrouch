@@ -102,7 +102,7 @@ export function createAuth(env) {
         await sendMailgunEmail(user.email, 'Reset your password — Patrouch', html, `Reset your password: ${url}`, { MAILGUN_API_KEY: env.MAILGUN_API_KEY, MAILGUN_DOMAIN: env.MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL });
       },
       onPasswordReset: async () => {
-        return new Response(null, { status: 302, headers: { Location: '/account' } });
+        return new Response(null, { status: 302, headers: { Location: '/login' } });
       },
     },
     socialProviders: {
