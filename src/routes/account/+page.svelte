@@ -351,6 +351,9 @@ import { avatarVariant } from '$lib/utils.js';
                 <button class="btn-outline" onclick={generateAIAvatar} disabled={uploadingAvatar || generatingAvatar}>
                     {generatingAvatar ? '⏳' : '✨'} {generatingAvatar ? $t('crop.cancel') : $t('account.ai_avatar_title')}
                 </button>
+                {#if avatarUrl && !avatarUrl.startsWith('data:')}
+                    <a href={avatarUrl} download="avatar.png" class="btn-outline" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px">💾</a>
+                {/if}
                 <input bind:this={avatarInput} type="file" accept="image/jpeg,image/png,image/webp" onchange={handleAvatarSelect} class="hidden-input" />
             </div>
             <div class="form-group">
