@@ -29,6 +29,13 @@ export async function load({ locals }) {
         ).bind(user.id).first();
     }
 
+    // Get profile avatar (preferred) or social login image
+    let profileAvatar = '';
+    try {
+        const pa = await db.prepare('SELECT avatar_url FROM profiles WHERE user_id = ? AND is_active = 1').bind(user.id).first();
+        profileAvatar = pa?.avatar_url || '';
+    } catch (e) {}
+
     // Format member_since — D1 returns epoch as string like "1776974583.0"
     let member_since = '';
     const rawDate = baUser?.createdAt ?? baUser?.created_at ?? user?.createdAt;
@@ -42,7 +49,7 @@ export async function load({ locals }) {
 
     const profile = {
         bio: profileRow?.bio || '',
-        avatar_url: baUser?.avatar_url || '',
+        avatar_url: profileAvatar || baUser?.avatar_url || '',
         display_name: baUser?.display_name || '',
         username: baUser?.email || user.email || '',
         member_since,
