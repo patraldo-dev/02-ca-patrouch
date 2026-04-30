@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { a as sendMailgunEmail } from "../../../../../chunks/mailgun.js";
+import { sendMailgunEmail } from "../../../../../chunks/mailgun.js";
 function generateToken() {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);

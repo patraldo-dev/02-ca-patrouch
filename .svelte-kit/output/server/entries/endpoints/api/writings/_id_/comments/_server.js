@@ -105,6 +105,15 @@ async function POST({ locals, params, request, platform }) {
         JOIN users u ON c.user_id = u.id
         WHERE c.id = ?
     `).bind(commentId).first();
+  try {
+    const { notify } = await import("../../../../../../chunks/notify.js");
+    const writing2 = await db.prepare("SELECT user_id, title FROM writings WHERE id = ?").bind(writingId).first();
+    if (writing2 && writing2.user_id !== locals.user.id) {
+      await notify(db, { user_id: writing2.user_id, type: "comment", title: "💬 New comment", body: "Someone commented on: " + (writing2.title || "your writing") });
+    }
+  } catch (e) {
+    console.error("[comment] notify failed:", e.message);
+  }
   return json({ comment: { ...newComment, liked: false } }, { status: 201 });
 }
 export {

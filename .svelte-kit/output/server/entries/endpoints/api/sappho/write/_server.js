@@ -13,7 +13,7 @@ async function POST({ request, platform }) {
       return json({ error: "Missing DB or AI binding" }, { status: 503 });
     }
     const authHeader = request.headers.get("authorization");
-    const cronSecret = platform?.env?.CRON_SECRET;
+    const cronSecret = await platform?.env?.CRON_SECRET?.get?.() ?? null;
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       return json({ error: "Unauthorized" }, { status: 401 });
     }

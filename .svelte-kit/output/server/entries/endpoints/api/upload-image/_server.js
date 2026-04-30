@@ -2,7 +2,7 @@ async function POST({ request, platform }) {
   console.log("=== UPLOAD REQUEST START ===");
   try {
     const accountId = platform?.env?.CLOUDFLARE_ACCOUNT_ID;
-    const apiToken = platform?.env?.CLOUDFLARE_API_TOKEN;
+    const apiToken = await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.() ?? null;
     console.log("Environment variables:", {
       accountId: accountId ? "present" : "missing",
       apiToken: apiToken ? "present" : "missing",

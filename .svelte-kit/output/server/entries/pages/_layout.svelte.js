@@ -192,7 +192,7 @@ function _layout($$renderer, $$props) {
           $$renderer3.push(`<!--]--></div>`);
         } else {
           $$renderer3.push("<!--[-1-->");
-          $$renderer3.push(`<div class="profile-switcher svelte-12qhfyh"><button class="profile-trigger svelte-12qhfyh"><span class="profile-avatar svelte-12qhfyh">`);
+          $$renderer3.push(`<a href="/account" class="profile-switcher svelte-12qhfyh"><span class="profile-avatar svelte-12qhfyh">`);
           if (avatarVariant(data.avatarUrl || data.user?.image, "avatar48")) {
             $$renderer3.push("<!--[0-->");
             $$renderer3.push(`<img${attr("src", avatarVariant(data.avatarUrl || data.user?.image, "avatar48"))} alt="" class="svelte-12qhfyh"/>`);
@@ -207,11 +207,7 @@ function _layout($$renderer, $$props) {
           } else {
             $$renderer3.push("<!--[-1-->");
           }
-          $$renderer3.push(`<!--]--> <span class="profile-name svelte-12qhfyh">${escape_html(data.user.display_name || data.user.username)}</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></button> `);
-          {
-            $$renderer3.push("<!--[-1-->");
-          }
-          $$renderer3.push(`<!--]--></div>`);
+          $$renderer3.push(`<!--]--> <span class="profile-name svelte-12qhfyh">${escape_html(data.user.display_name || data.user.username)}</span></a>`);
         }
         $$renderer3.push(`<!--]--> <button class="btn-glass svelte-12qhfyh">${escape_html(store_get($$store_subs ??= {}, "$t", t)("common.nav.logout"))}</button>`);
       } else {

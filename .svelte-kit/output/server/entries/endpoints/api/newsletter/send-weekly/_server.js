@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
-import { s as sendDailyPromptEmail } from "../../../../../chunks/mailgun.js";
+import { sendDailyPromptEmail } from "../../../../../chunks/mailgun.js";
 async function POST({ request, platform }) {
-  const cronSecret = platform?.env?.CRON_SECRET;
+  const cronSecret = await platform?.env?.CRON_SECRET?.get?.() ?? null;
   const authHeader = request.headers.get("authorization");
   if (!authHeader || !cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return json({ error: "Unauthorized" }, { status: 401 });

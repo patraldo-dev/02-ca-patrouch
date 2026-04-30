@@ -34,17 +34,6 @@
       "_url.js"
     ]
   },
-  "_auth.js": {
-    "file": "chunks/auth.js",
-    "name": "auth",
-    "imports": [
-      "_url.js"
-    ],
-    "dynamicImports": [
-      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
-      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs"
-    ]
-  },
   "_bottle-crypto.js": {
     "file": "chunks/bottle-crypto.js",
     "name": "bottle-crypto"
@@ -121,10 +110,6 @@
     "dynamicImports": [
       "src/hooks.server.js"
     ]
-  },
-  "_mailgun.js": {
-    "file": "chunks/mailgun.js",
-    "name": "mailgun"
   },
   "_render-context.js": {
     "file": "chunks/render-context.js",
@@ -255,9 +240,35 @@
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_auth.js",
+      "src/lib/auth.js",
       "_environment.js"
     ]
+  },
+  "src/lib/auth.js": {
+    "file": "chunks/auth.js",
+    "name": "auth",
+    "src": "src/lib/auth.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_url.js"
+    ],
+    "dynamicImports": [
+      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+      "src/lib/server/mailgun.js"
+    ]
+  },
+  "src/lib/server/mailgun.js": {
+    "file": "chunks/mailgun.js",
+    "name": "mailgun",
+    "src": "src/lib/server/mailgun.js",
+    "isDynamicEntry": true
+  },
+  "src/lib/server/notify.js": {
+    "file": "chunks/notify.js",
+    "name": "notify",
+    "src": "src/lib/server/notify.js",
+    "isDynamicEntry": true
   },
   "src/routes/(auth-pages)/+layout.server.js": {
     "file": "entries/pages/(auth-pages)/_layout.server.js",
@@ -399,7 +410,7 @@
       "_auth-client.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.BgJuuVVK.css"
+      "_app/immutable/assets/_page.DkxxvQWG.css"
     ]
   },
   "src/routes/admin/+error.svelte": {
@@ -593,6 +604,12 @@
     "src": "src/routes/api/account/privacy/+server.js",
     "isEntry": true
   },
+  "src/routes/api/account/reset-password/+server.js": {
+    "file": "entries/endpoints/api/account/reset-password/_server.js",
+    "name": "entries/endpoints/api/account/reset-password/_server",
+    "src": "src/routes/api/account/reset-password/+server.js",
+    "isEntry": true
+  },
   "src/routes/api/admin/+layout.server.js": {
     "file": "entries/pages/api/admin/_layout.server.js",
     "name": "entries/pages/api/admin/_layout.server",
@@ -738,7 +755,7 @@
     "src": "src/routes/api/auth/[...all]/+server.js",
     "isEntry": true,
     "imports": [
-      "_auth.js"
+      "src/lib/auth.js"
     ]
   },
   "src/routes/api/books/+server.js": {
@@ -930,6 +947,15 @@
     "src": "src/routes/api/debug/books/+server.js",
     "isEntry": true
   },
+  "src/routes/api/emergency-login/+server.js": {
+    "file": "entries/endpoints/api/emergency-login/_server.js",
+    "name": "entries/endpoints/api/emergency-login/_server",
+    "src": "src/routes/api/emergency-login/+server.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "src/lib/auth.js"
+    ]
+  },
   "src/routes/api/engagement/+server.js": {
     "file": "entries/endpoints/api/engagement/_server.js",
     "name": "entries/endpoints/api/engagement/_server",
@@ -961,7 +987,10 @@
     "file": "entries/endpoints/api/narrator/_server.js",
     "name": "entries/endpoints/api/narrator/_server",
     "src": "src/routes/api/narrator/+server.js",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "src/lib/server/notify.js"
+    ]
   },
   "src/routes/api/newsletter/send-weekly/+server.js": {
     "file": "entries/endpoints/api/newsletter/send-weekly/_server.js",
@@ -969,7 +998,7 @@
     "src": "src/routes/api/newsletter/send-weekly/+server.js",
     "isEntry": true,
     "imports": [
-      "_mailgun.js"
+      "src/lib/server/mailgun.js"
     ]
   },
   "src/routes/api/newsletter/subscribe/+server.js": {
@@ -978,7 +1007,7 @@
     "src": "src/routes/api/newsletter/subscribe/+server.js",
     "isEntry": true,
     "imports": [
-      "_mailgun.js"
+      "src/lib/server/mailgun.js"
     ]
   },
   "src/routes/api/notifications/+server.js": {
@@ -1201,7 +1230,10 @@
     "file": "entries/endpoints/api/writings/_id_/comments/_server.js",
     "name": "entries/endpoints/api/writings/_id_/comments/_server",
     "src": "src/routes/api/writings/[id]/comments/+server.js",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "src/lib/server/notify.js"
+    ]
   },
   "src/routes/api/writings/save/+server.js": {
     "file": "entries/endpoints/api/writings/save/_server.js",

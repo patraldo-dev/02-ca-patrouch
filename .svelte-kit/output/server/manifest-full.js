@@ -10,7 +10,7 @@ return {
 	assets: new Set([".assetsignore","favicon.ico","robots.txt"]),
 	mimeTypes: {".txt":"text/plain"},
 	_: {
-		client: {start:"_app/immutable/entry/start.lCXcKzIk.js",app:"_app/immutable/entry/app.BVDnazcH.js",imports:["_app/immutable/entry/start.lCXcKzIk.js","_app/immutable/chunks/BKdWsvdG.js","_app/immutable/chunks/BXR04yJb.js","_app/immutable/chunks/C7wSchzS.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/BBzQ1gTY.js","_app/immutable/entry/app.BVDnazcH.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/C7wSchzS.js","_app/immutable/chunks/16EERJEz.js","_app/immutable/chunks/DTCNAND8.js","_app/immutable/chunks/DrUhxKce.js","_app/immutable/chunks/BoaBw_Xt.js","_app/immutable/chunks/BYHqxEaj.js","_app/immutable/chunks/BBzQ1gTY.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.BpxLzL_S.js",app:"_app/immutable/entry/app.DANgY2a_.js",imports:["_app/immutable/entry/start.BpxLzL_S.js","_app/immutable/chunks/IpB75WsZ.js","_app/immutable/chunks/BIVhEQ11.js","_app/immutable/chunks/C7wSchzS.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/BBzQ1gTY.js","_app/immutable/entry/app.DANgY2a_.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/C7wSchzS.js","_app/immutable/chunks/16EERJEz.js","_app/immutable/chunks/DTCNAND8.js","_app/immutable/chunks/DrUhxKce.js","_app/immutable/chunks/BoaBw_Xt.js","_app/immutable/chunks/BYHqxEaj.js","_app/immutable/chunks/BBzQ1gTY.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
@@ -133,6 +133,13 @@ return {
 				params: [],
 				page: null,
 				endpoint: __memo(() => import('./entries/endpoints/api/account/privacy/_server.js'))
+			},
+			{
+				id: "/api/account/reset-password",
+				pattern: /^\/api\/account\/reset-password\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/account/reset-password/_server.js'))
 			},
 			{
 				id: "/api/admin",
@@ -462,6 +469,13 @@ return {
 				params: [],
 				page: null,
 				endpoint: __memo(() => import('./entries/endpoints/api/debug/books/_server.js'))
+			},
+			{
+				id: "/api/emergency-login",
+				pattern: /^\/api\/emergency-login\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/emergency-login/_server.js'))
 			},
 			{
 				id: "/api/engagement",

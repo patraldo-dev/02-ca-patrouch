@@ -64,6 +64,9 @@
 	"/api/account/privacy": [
 		"src/routes/api/account/privacy/+server.js"
 	],
+	"/api/account/reset-password": [
+		"src/routes/api/account/reset-password/+server.js"
+	],
 	"/api/admin": [
 		"src/routes/api/admin/+layout.server.js",
 		"src/routes/api/admin/+server.js"
@@ -205,6 +208,9 @@
 	],
 	"/api/debug/books": [
 		"src/routes/api/debug/books/+server.js"
+	],
+	"/api/emergency-login": [
+		"src/routes/api/emergency-login/+server.js"
 	],
 	"/api/engagement": [
 		"src/routes/api/engagement/+server.js"

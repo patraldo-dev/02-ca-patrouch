@@ -81,6 +81,6 @@ ${c.footer}`;
   return sendMailgunEmail(to, c.subject, html, text, env);
 }
 export {
-  sendMailgunEmail as a,
-  sendDailyPromptEmail as s
+  sendDailyPromptEmail,
+  sendMailgunEmail
 };
