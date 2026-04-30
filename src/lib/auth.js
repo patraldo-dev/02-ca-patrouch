@@ -86,6 +86,21 @@ export function createAuth(env) {
       enabled: true,
       minPasswordLength: 8,
       autoSignIn: true,
+      sendResetPassword: async ({ user, token, url }, request) => {
+        const { sendMailgunEmail } = await import('$lib/server/mailgun.js');
+        const html = `
+          <div style="max-width:480px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;background:#faf9f7;padding:2rem;border-radius:12px;">
+            <div style="text-align:center;margin-bottom:2rem;"><h1 style="font-size:1.5rem;font-weight:400;color:#9a7b4f;margin:0;">Patrouch</h1></div>
+            <h2 style="font-size:1.2rem;color:#1a1a1a;">Reset your password</h2>
+            <p style="color:#666;font-size:0.95rem;">You requested a password reset. Click below to set a new one:</p>
+            <div style="text-align:center;margin:2rem 0;">
+              <a href="${url}" style="display:inline-block;padding:12px 32px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">Reset Password</a>
+            </div>
+            <p style="color:#999;font-size:0.75rem;text-align:center;">This link expires in 1 hour. If you didn't request this, ignore it.</p>
+          </div>
+        `;
+        await sendMailgunEmail(user.email, 'Reset your password — Patrouch', html, `Reset your password: ${url}`, { MAILGUN_API_KEY: env.MAILGUN_API_KEY, MAILGUN_DOMAIN: env.MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL });
+      },
     },
     socialProviders: {
       google: {
