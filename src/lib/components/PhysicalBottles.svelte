@@ -72,6 +72,7 @@
             const bounds = L.latLngBounds(physicalBottles.map(b => [b.current_lat, b.current_lon]));
             leafletMap.fitBounds(bounds.pad(0.3));
         }
+        setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 300);
     });
 
     function locateMe() {
