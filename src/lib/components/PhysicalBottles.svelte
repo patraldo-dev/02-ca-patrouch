@@ -299,8 +299,8 @@
 </div>
 
 <style>
-    .physical-container { position: relative; }
-    .physical-map { width: 100%; height: 500px; border-radius: 12px; border: 2px solid #c9a87c; position: relative; overflow: visible; }
+    .physical-container { position: relative; overflow: hidden; }
+    .physical-map { width: 100%; height: 500px; border-radius: 12px; border: 2px solid #c9a87c; position: relative; overflow: hidden; z-index: 1; }
     .locate-btn {
         position: absolute; top: 10px; left: 10px; z-index: 1000;
         background: #1c1917; color: #fff; border: 2px solid #c9a87c;

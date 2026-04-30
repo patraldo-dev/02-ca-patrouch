@@ -29,6 +29,7 @@
         max-width: 900px;
         margin: 0 auto;
         padding: 2rem 1rem;
+        overflow: hidden;
     }
     .back-link {
         display: inline-block;
