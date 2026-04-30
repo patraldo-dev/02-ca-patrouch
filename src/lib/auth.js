@@ -88,18 +88,25 @@ export function createAuth(env) {
       autoSignIn: true,
       sendResetPassword: async ({ user, token, url }, request) => {
         const { sendMailgunEmail } = await import('$lib/server/mailgun.js');
+        const acceptLang = request?.headers?.get('accept-language') || '';
+        const lang = acceptLang.startsWith('es') ? 'es' : acceptLang.startsWith('fr') ? 'fr' : 'en';
+        const t = {
+          en: { subject: 'Reset your password — Patrouch', title: 'Reset your password', body: 'You requested a password reset. Click below to set a new one:', btn: 'Reset Password', footer: 'This link expires in 1 hour. If you didn\'t request this, ignore it.' },
+          es: { subject: 'Restablece tu contraseña — Patrouch', title: 'Restablece tu contraseña', body: 'Solicitaste un cambio de contraseña. Haz clic abajo para establecer una nueva:', btn: 'Restablecer Contraseña', footer: 'Este enlace expira en 1 hora. Si no lo solicitaste, ignóralo.' },
+          fr: { subject: 'Réinitialisez votre mot de passe — Patrouch', title: 'Réinitialisez votre mot de passe', body: 'Vous avez demandé une réinitialisation de mot de passe. Cliquez ci-dessous pour en définir un nouveau:', btn: 'Réinitialiser', footer: 'Ce lien expire dans 1 heure. Si vous ne l\'avez pas demandé, ignorez-le.' }
+        }[lang];
         const html = `
           <div style="max-width:480px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;background:#faf9f7;padding:2rem;border-radius:12px;">
             <div style="text-align:center;margin-bottom:2rem;"><h1 style="font-size:1.5rem;font-weight:400;color:#9a7b4f;margin:0;">Patrouch</h1></div>
-            <h2 style="font-size:1.2rem;color:#1a1a1a;">Reset your password</h2>
-            <p style="color:#666;font-size:0.95rem;">You requested a password reset. Click below to set a new one:</p>
+            <h2 style="font-size:1.2rem;color:#1a1a1a;">${t.title}</h2>
+            <p style="color:#666;font-size:0.95rem;">${t.body}</p>
             <div style="text-align:center;margin:2rem 0;">
-              <a href="${url}" style="display:inline-block;padding:12px 32px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">Reset Password</a>
+              <a href="${url}" style="display:inline-block;padding:12px 32px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${t.btn}</a>
             </div>
-            <p style="color:#999;font-size:0.75rem;text-align:center;">This link expires in 1 hour. If you didn't request this, ignore it.</p>
+            <p style="color:#999;font-size:0.75rem;text-align:center;">${t.footer}</p>
           </div>
         `;
-        await sendMailgunEmail(user.email, 'Reset your password — Patrouch', html, `Reset your password: ${url}`, { MAILGUN_API_KEY: env.MAILGUN_API_KEY, MAILGUN_DOMAIN: env.MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL });
+        await sendMailgunEmail(user.email, t.subject, html, `${t.title}: ${url}`, { MAILGUN_API_KEY: env.MAILGUN_API_KEY, MAILGUN_DOMAIN: env.MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL });
       },
       onPasswordReset: async () => {
         return new Response(null, { status: 302, headers: { Location: '/login' } });
