@@ -249,21 +249,13 @@
                             {/if}
                         </div>
                         {:else}
-                        <div class="profile-switcher">
-                            <button class="profile-trigger" onclick={() => avatarMenuOpen = !avatarMenuOpen}>
+                        <a href="/account" class="profile-switcher">
                                 <span class="profile-avatar">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
                                 {#if data.bootyFuel > 0}
                                     <span class="nav-bean-badge">🫘{data.bootyFuel}</span>
                                 {/if}
                                 <span class="profile-name">{data.user.display_name || data.user.username}</span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-                            </button>
-                            {#if avatarMenuOpen}
-                            <div class="profile-dropdown">
-                                <a href="/account" class="profile-manage">{$t('common.nav.manage_profiles')}</a>
-                            </div>
-                            {/if}
-                        </div>
+                            </a>
                         {/if}
                         <button onclick={handleLogout} class="btn-glass">{$t('common.nav.logout')}</button>
                     {:else}
