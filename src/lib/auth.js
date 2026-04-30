@@ -90,6 +90,7 @@ export function createAuth(env) {
         const { sendMailgunEmail } = await import('$lib/server/mailgun.js');
         const acceptLang = request?.headers?.get('accept-language') || '';
         const lang = acceptLang.startsWith('fr') ? 'fr' : acceptLang.startsWith('en') ? 'en' : 'es';
+        const resetUrl = `https://patrouch.ca/reset-password?token=${token}`;
         const t = {
           en: { subject: 'Reset your password — Patrouch', title: 'Reset your password', body: 'You requested a password reset. Click below to set a new one:', btn: 'Reset Password', footer: 'This link expires in 1 hour. If you didn\'t request this, ignore it.' },
           es: { subject: 'Restablece tu contraseña — Patrouch', title: 'Restablece tu contraseña', body: 'Solicitaste un cambio de contraseña. Haz clic abajo para establecer una nueva:', btn: 'Restablecer Contraseña', footer: 'Este enlace expira en 1 hora. Si no lo solicitaste, ignóralo.' },
@@ -101,16 +102,17 @@ export function createAuth(env) {
             <h2 style="font-size:1.2rem;color:#1a1a1a;">${t.title}</h2>
             <p style="color:#666;font-size:0.95rem;">${t.body}</p>
             <div style="text-align:center;margin:2rem 0;">
-              <a href="${url}" style="display:inline-block;padding:12px 32px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${t.btn}</a>
+              <a href="${resetUrl}" style="display:inline-block;padding:12px 32px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${t.btn}</a>
             </div>
             <p style="color:#999;font-size:0.75rem;text-align:center;">${t.footer}</p>
           </div>
         `;
-        await sendMailgunEmail(user.email, t.subject, html, `${t.title}: ${url}`, { MAILGUN_API_KEY: env.MAILGUN_API_KEY, MAILGUN_DOMAIN: env.MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL });
+        await sendMailgunEmail(user.email, t.subject, html, `${t.title}: ${resetUrl}`, { MAILGUN_API_KEY: env.MAILGUN_API_KEY, MAILGUN_DOMAIN: env.MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL });
       },
       onPasswordReset: async () => {
         return new Response(null, { status: 302, headers: { Location: '/login' } });
       },
+    },
     },
     socialProviders: {
       google: {
