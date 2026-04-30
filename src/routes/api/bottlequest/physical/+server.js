@@ -50,9 +50,15 @@ export async function POST({ locals, platform, request }) {
     `).bind(player.username, now, player.username, bottle_id).run();
 
     await db.prepare(`
-        UPDATE bq_players SET fuel = fuel + ?, points = points + ?
+        UPDATE bq_players SET fuel = fuel + ?, points = points + ?, arbooty_points = arbooty_points + ?
         WHERE id = ?
-    `).bind(rewardFuel, rewardPoints, player.id).run();
+    `).bind(rewardFuel, rewardPoints, rewardPoints, player.id).run();
+
+    // Add arbooty to player's games if not already
+    await db.prepare(`
+        UPDATE bq_players SET games = CASE WHEN games LIKE '%arbooty%' THEN games ELSE games || ',arbooty' END
+        WHERE id = ? AND games NOT LIKE '%arbooty%'
+    `).bind(player.id).run();
 
     return json({
         success: true,

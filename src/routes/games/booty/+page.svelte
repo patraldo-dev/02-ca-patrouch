@@ -14,6 +14,7 @@
     let formContent = $state('');
     let formContentType = $state('short_story');
     let saving = $state(false);
+    let scoreTab = $state('general');
     let launching = $state(null);
     let launchPort = $state('port-pv');
     let showLaunchModal = $state(false);
@@ -1155,13 +1156,22 @@
     {#if data.players?.length}
     <div class="scoreboard-section">
         <h2 class="section-title">🏆 {$t('scoreboard.title')}</h2>
+        <div class="scoreboard-tabs">
+            <button class:active={scoreTab === 'general'} onclick={() => scoreTab = 'general'}>🌐 General</button>
+            <button class:active={scoreTab === 'booty'} onclick={() => scoreTab = 'booty'}>⚔️ Booty Battle</button>
+            <button class:active={scoreTab === 'arbooty'} onclick={() => scoreTab = 'arbooty'}>🗺️ Arbooty</button>
+        </div>
         <div class="scoreboard-list" role="list">
-            {#each [...data.players].sort((a, b) => (b.points || 0) - (a.points || 0)) as p, i}
+            {#each [...data.players].sort((a, b) => {
+                if (scoreTab === 'booty') return (b.booty_points || 0) - (a.booty_points || 0);
+                if (scoreTab === 'arbooty') return (b.arbooty_points || 0) - (a.arbooty_points || 0);
+                return (b.points || 0) - (a.points || 0);
+            }) as p, i}
                 <div class="score-row" role="listitem">
                     <span class="score-rank">{i + 1}</span>
                     <span class="score-type">{p.type === 'ai' ? '🤖' : p.solo ? '👤' : '👥'}</span>
                     <span class="score-name">{p.display_name || p.username}</span>
-                    <span class="score-pts">⭐ {p.points || 0}</span>
+                    <span class="score-pts">⭐ {scoreTab === 'booty' ? (p.booty_points || 0) : scoreTab === 'arbooty' ? (p.arbooty_points || 0) : (p.points || 0)}</span>
                     <span class="score-fuel">{formatBeans(p.fuel)}</span>
                 </div>
             {/each}
@@ -1578,6 +1588,10 @@
     .scoreboard-section { padding: 2rem 0 1rem; }
     .scoreboard-section h2 { font-family: var(--font-heading); font-size: 1.3rem; color: var(--accent); margin-bottom: 0.75rem; }
     .scoreboard-list { display: flex; flex-direction: column; gap: 0.35rem; }
+    .scoreboard-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .scoreboard-tabs button { padding: 0.4rem 0.8rem; border: 1px solid var(--border); border-radius: var(--radius, 8px); background: transparent; color: var(--text-dim); cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+    .scoreboard-tabs button.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+    .scoreboard-tabs button:hover:not(.active) { border-color: var(--accent); color: var(--text); }
     .score-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; background: var(--bs-surface); border-radius: 6px; font-size: 0.88rem; border: 1px solid transparent; transition: border-color 0.2s; }
     .score-row:first-child { border-color: var(--accent); background: rgba(201,168,124,0.08); }
     .score-rank { font-weight: 700; color: var(--bs-muted); width: 1.5rem; text-align: center; }
