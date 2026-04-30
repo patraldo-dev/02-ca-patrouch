@@ -107,6 +107,12 @@ Reply ONLY with valid JSON, no markdown.`;
             VALUES (?, ?, ?, ?, ?, ?)
         `).bind(id, title, narrative, event_type || 'flavor', dur, expiresSql).run();
 
+
+        // Notify players with game notifications on
+        try {
+            const { notifyAll } = await import("$lib/server/notify.js");
+            await notifyAll(db, { type: "narrator", title: "🌊 " + title, body: narrative });
+        } catch (e) { console.error("[narrator] notify failed:", e.message); }
         return json({ success: true, id });
     } catch (e) {
         return json({ error: e.message }, { status: 500 });

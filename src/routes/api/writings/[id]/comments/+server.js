@@ -137,5 +137,14 @@ export async function POST({ locals, params, request, platform }) {
         WHERE c.id = ?
     `).bind(commentId).first();
 
+
+    // Notify writing author about new comment
+    try {
+        const { notify } = await import("$lib/server/notify.js");
+        const writing = await db.prepare("SELECT user_id, title FROM writings WHERE id = ?").bind(writingId).first();
+        if (writing && writing.user_id !== locals.user.id) {
+            await notify(db, { user_id: writing.user_id, type: "comment", title: "💬 New comment", body: "Someone commented on: " + (writing.title || "your writing") });
+        }
+    } catch (e) { console.error("[comment] notify failed:", e.message); }
     return json({ comment: { ...newComment, liked: false } }, { status: 201 });
 }
