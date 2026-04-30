@@ -284,7 +284,7 @@
                     <p>{capturedContent.error}</p>
                 {:else}
                     <h2>🏴‍☠️ {capturedContent.bottle.title}</h2>
-                    <pre class="clue-content">{capturedContent.bottle.content}</pre>
+                    <pre class="clue-content">{capturedContent.bottle.content.replace(/\\n\s*/g, '\n').trim()}</pre>
                     {#if capturedContent.reward}
                         <div class="reward">
                             ⛽ +{capturedContent.reward.fuel} Combustible · 🏆 +{capturedContent.reward.points} Puntos
