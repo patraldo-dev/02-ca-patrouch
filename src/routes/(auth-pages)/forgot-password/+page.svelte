@@ -19,7 +19,7 @@
         success = '';
 
         try {
-            const response = await fetch('/api/auth/forgot-password', {
+            const response = await fetch('/api/auth/request-password-reset', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
