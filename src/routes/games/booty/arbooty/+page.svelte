@@ -19,12 +19,13 @@
     <a href="/games/booty" class="back-link">← {isFiesta ? 'Volver' : $t('booty.arbooty.back')}</a>
     <h1 class="page-title">
         {#if isFiesta}
-            🎉 <span class="title-accent fiesta">¡Modo Fiesta!</span>
+            🎉 <span class="title-accent fiesta">¡Fiesta de Victor!</span>
+            <p class="page-subtitle">🎂 69 años jóven 🎂</p>
         {:else}
             🏴‍☠️ Arbooty <span class="title-accent">— Búsqueda del Tesoro</span>
         {/if}
     </h1>
-    <p class="page-desc">{isFiesta ? 'Encuentra los mensajes escondidos en el espacio' : $t('booty.arbooty.description')}</p>
+    <p class="page-desc">{isFiesta ? 'Encuentra los mensajes de cumpleaños' : $t('booty.arbooty.description')}</p>
 
     {#if data.myPlayer}
         <button class="ar-toggle {mode}" onclick={() => showAR = !showAR}>
@@ -70,6 +71,13 @@
     }
     .title-accent.fiesta {
         color: #f472b6;
+    }
+    .page-subtitle {
+        font-size: 1.2rem;
+        color: #f472b6;
+        text-align: center;
+        margin: 0.5rem 0 0;
+        font-weight: 600;
     }
     .page-desc {
         color: var(--text-dim);

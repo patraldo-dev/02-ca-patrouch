@@ -25,8 +25,8 @@
         },
         fiesta: {
             icon: '🎂🍾🎉',
-            title: '¡Modo Fiesta!',
-            desc: 'Encuentra los mensajes escondidos',
+            title: '¡Fiesta de Victor!',
+            desc: '69 años jóven — encuentra los mensajes',
             accentColor: '#f472b6',
             accentRgb: '244,114,182',
             markerNear: '🍾',
