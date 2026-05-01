@@ -52,13 +52,15 @@ export async function POST({ locals, platform, request }) {
     const rewardFuel = isTreasure ? 250 : 25;
     const rewardPoints = isTreasure ? 500 : 50;
 
-    await db.prepare(`
+    const captureResult = await db.prepare(`
         UPDATE bottles SET status = 'found', found_by = ?, found_at = ?, opened_by = ?
         WHERE id = ? AND found_by IS NULL
     `).bind(player.username, now, player.username, bottle_id).run();
 
-    // Check if the atomic update actually matched a row
-    // If another player captured between our SELECT and UPDATE, this returns 0 changes
+    // Race condition: another player captured between SELECT and UPDATE
+    if (!captureResult.meta.changes) {
+        return json({ error: 'Ya fue capturada por otro jugador', race_condition: true }, { status: 409 });
+    }
 
     await db.prepare(`
         UPDATE bq_players SET fuel = fuel + ?, points = points + ?, arbooty_points = arbooty_points + ?
