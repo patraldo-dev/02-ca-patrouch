@@ -22,6 +22,7 @@ export async function GET({ locals, platform }) {
 }
 
 export async function POST({ locals, platform, request }) {
+    try {
     const db = platform?.env?.DB_book;
     const user = locals.user;
     if (!user || !db) return json({ error: 'Not authenticated' }, { status: 401 });
@@ -38,7 +39,7 @@ export async function POST({ locals, platform, request }) {
     ).bind(bottle_id, 'physical').first();
 
     if (!bottle) return json({ error: 'Bottle not found' }, { status: 404 });
-    if (bottle.found_by) return json({ error: 'Already captured', already_captured: true }, { status: 400 });
+    if (bottle.found_by) return json({ error: 'Ya fue capturada', already_captured: true }, { status: 400 });
 
     // Server-side geofencing
     const dist = haversine(lat, lon, bottle.current_lat, bottle.current_lon);
@@ -89,4 +90,8 @@ export async function POST({ locals, platform, request }) {
         bottle: { ...bottle, content, found_by: player.username, found_at: now },
         reward: { fuel: rewardFuel, points: rewardPoints }
     });
+    } catch (e) {
+        console.error('Physical capture error:', e.message, e.stack);
+        return json({ error: 'Internal error: ' + e.message }, { status: 500 });
+    }
 }
