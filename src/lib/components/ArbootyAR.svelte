@@ -3,7 +3,7 @@
     import { haversineDistance, calculateBearing, relativeBearing, CAPTURE_RADIUS_M, GPS_ACCURACY_THRESHOLD } from '$lib/geo.js';
 
     // Props — botellas vienen del server load, NO se fetchean aquí
-    let { bottles = [], onCapture } = $props();
+    let { bottles = [], onCapture, player } = $props();
 
     // State
     let videoEl;
@@ -18,6 +18,14 @@
 
     let cameraActive = $state(false);
     let capturing = $state(null);
+
+    // WebSocket — multiplayer proximity
+    let ws = $state(null);
+    let nearbyPlayers = $state([]);
+    let onlineCount = $state(0);
+    let proximityEvents = $state([]);
+    let locationInterval = null;
+    const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/chat/ws';
 
     // Computed markers
     let markers = $derived(
@@ -139,6 +147,68 @@
         }
     }
 
+    // ── WebSocket ──────────────────────────────────────────────────────
+
+    function connectWS() {
+        const username = player?.username || 'anonymous';
+        const displayName = player?.display_name || username;
+        const url = `${WS_URL}?username=${encodeURIComponent(username)}&display_name=${encodeURIComponent(displayName)}`;
+        try {
+            ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                // Start broadcasting location every 5s
+                locationInterval = setInterval(() => {
+                    if (ws?.readyState === WebSocket.OPEN && userPos && gpsReady) {
+                        ws.send(JSON.stringify({ type: 'location', lat: userPos.lat, lon: userPos.lon }));
+                    }
+                }, 5000);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    handleWSMessage(msg);
+                } catch {}
+            };
+
+            ws.onclose = () => { ws = null; };
+            ws.onerror = () => { ws = null; };
+        } catch (e) {
+            console.warn('WS connect failed:', e.message);
+        }
+    }
+
+    function handleWSMessage(msg) {
+        if (msg.type === 'proximity') {
+            // Show proximity notification
+            proximityEvents = [...proximityEvents.slice(-4), {
+                ...msg,
+                id: crypto.randomUUID(),
+                timestamp: Date.now()
+            }];
+            // Auto-dismiss after 8s
+            setTimeout(() => {
+                proximityEvents = proximityEvents.filter(e => e.id !== msg.id && Date.now() - e.timestamp < 8000);
+            }, 8000);
+        }
+        if (msg.type === 'online') {
+            nearbyPlayers = (msg.players || []).filter(p => p.hasLocation);
+            onlineCount = msg.count || 0;
+        }
+        if (msg.type === 'online_update') {
+            onlineCount = msg.count || 0;
+        }
+    }
+
+    function disconnectWS() {
+        if (locationInterval) { clearInterval(locationInterval); locationInterval = null; }
+        if (ws) { ws.close(); ws = null; }
+        nearbyPlayers = [];
+        onlineCount = 0;
+        proximityEvents = [];
+    }
+
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
     async function activate() {
@@ -149,9 +219,11 @@
         if (!cameraActive) return;
         startOrientation();
         startGPS();
+        connectWS();
     }
 
     function deactivate() {
+        disconnectWS();
         if (stream) {
             stream.getTracks().forEach(t => t.stop());
             stream = null;
@@ -243,6 +315,21 @@
                 GPS poco preciso (±{gpsAccuracy}m) — muévete a cielo abierto
             </div>
         {/if}
+
+        <!-- Online + nearby count -->
+        <div class="ar-hud-bottom">
+            <span class="hud-online">👥 {onlineCount} en línea</span>
+            {#if nearbyPlayers.length > 0}
+                <span class="hud-nearby">🎯 {nearbyPlayers.length} cerca</span>
+            {/if}
+        </div>
+
+        <!-- Proximity event notifications -->
+        {#each proximityEvents as evt (evt.id)}
+            <div class="proximity-toast {evt.event === 'enter' ? 'enter' : 'leave'}">
+                {evt.event === 'enter' ? '🟢' : '🔴'} {evt.message}
+            </div>
+        {/each}
 
         <!-- No bottles in view -->
         {#if markers.every(m => !m.visible)}
@@ -439,6 +526,52 @@
         font-size: 1.1rem;
         cursor: pointer;
         backdrop-filter: blur(4px);
+    }
+
+    .ar-hud-bottom {
+        position: absolute;
+        bottom: 1rem;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        z-index: 10;
+    }
+
+    .hud-online, .hud-nearby {
+        background: rgba(0,0,0,0.6);
+        color: rgba(255,255,255,0.85);
+        padding: 4px 12px;
+        border-radius: 99px;
+        font-size: 12px;
+        backdrop-filter: blur(4px);
+    }
+
+    .hud-nearby { color: #22c55e; }
+
+    .proximity-toast {
+        position: absolute;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        z-index: 15;
+        animation: slideIn 0.3s ease-out;
+        white-space: nowrap;
+        backdrop-filter: blur(4px);
+    }
+
+    .proximity-toast.enter { border-left: 3px solid #22c55e; }
+    .proximity-toast.leave { border-left: 3px solid #ef4444; }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
 
     @keyframes pulse {
