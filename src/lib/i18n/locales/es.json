@@ -840,7 +840,7 @@
   "bottles.type.video": "Video",
   "bottles.type.fanzine": "Fanzine",
   "bottles.type.illustrated_book": "Libro ilustrado",
-  "bottles.type.short_story": "Cuento",
+  "bottles.type.short_story": "Cuento Corto",
   "bottles.type.song": "Canción",
   "bottles.type.lyrics": "Letra",
   "bottles.stats_title": "Estadísticas",
@@ -995,12 +995,6 @@
   "booty.arbooty.card_desc": "Explora Puerto Vallarta y encuentra 5 botellas escondidas con GPS. ¡Sigue la cadena del tesoro!",
   "booty.arbooty.join_required": "Necesitas ser jugador de Booty Battle para participar.",
   "booty.arbooty.join_btn": "Unirse a Booty Battle",
-  "bottles": {
-    "type": {
-      "treasure_clue": "Pista del Tesoro",
-      "short_story": "Cuento Corto",
-      "poem": "Poema",
-      "message": "Mensaje"
-    }
-  }
+  "bottles": {},
+  "bottles.type.treasure_clue": "Pista del Tesoro"
 }
