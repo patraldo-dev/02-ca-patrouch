@@ -5,11 +5,13 @@ export async function GET({ platform }) {
     if (!db) return json({ events: [] });
 
     try {
-        const { results } = await db.prepare(`
-            SELECT * FROM narrator_events 
-            WHERE expires_at IS NULL OR expires_at > datetime('now')
-            ORDER BY created_at DESC LIMIT 5
-        `).all();
+        const url = new URL(platform?.request?.url || 'http://localhost');
+        const game = url.searchParams.get('game') || 'both';
+        let query = `SELECT * FROM narrator_events WHERE (expires_at IS NULL OR expires_at > datetime('now'))`;
+        if (game !== 'both') query += ` AND (target_game = 'both' OR target_game = ?)`;
+        query += ` ORDER BY created_at DESC LIMIT 5`;
+        const stmt = game !== 'both' ? db.prepare(query).bind(game) : db.prepare(query);
+        const { results } = await stmt.all();
         return json({ events: results || [] });
     } catch (e) {
         return json({ error: e.message }, { status: 500 });
@@ -85,6 +87,19 @@ Generate a JSON object with:
 - event_type: one of "flavor", "action", "challenge", "weather", "event"
 - duration_hours: 6 or 12
 
+- effects: JSON object with game mechanics that apply. Use these:
+  {"freeze_hours": 2} — all players paralyzed (siesta), no movement
+  {"fuel_bonus": 50} — all players gain fuel
+  {"capture_radius_mult": 2} — capture radius doubled
+  {"drift_speed_mult": 1.5} — bottles drift 50% faster
+  {"drift_speed_mult": 0.5} — bottles drift 50% slower (calm seas)
+  {"visibility": "fog"} — reduced map visibility
+  {"visibility": "clear"} — enhanced map visibility
+  {"bounty_player": "username"} — bonus for capturing that player's bottle
+  {"bonus_fuel_port": true} — players near a port get fuel
+
+- target_game: one of "booty", "arbooty", "both" — which game this event affects
+Always include at least one effect. The effect MUST relate to the narrative.
 Be creative. Be bold. Create events that make players WANT to check the game.`;
 
             const aiResp = await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
@@ -126,9 +141,9 @@ Be creative. Be bold. Create events that make players WANT to check the game.`;
         if (!nFr) nFr = narrative;
 
         await db.prepare(`
-            INSERT INTO narrator_events (id, title, narrative, event_type, duration_hours, expires_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(id, title, narrative, event_type || 'flavor', dur, expiresSql).run();
+            INSERT INTO narrator_events (id, title, narrative, event_type, duration_hours, expires_at, effects, target_game)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(id, title, narrative, event_type || 'flavor', dur, expiresSql, JSON.stringify(data.effects || {}), data.target_game || 'both').run();
 
 
         // Notify players with game notifications on
