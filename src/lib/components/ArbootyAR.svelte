@@ -16,6 +16,7 @@
 
     let cameraActive = $state(false);
     let capturing = $state(null);
+    let captured = $state(null); // { bottle, reward } on success
 
     // WebSocket
     let ws = $state(null);
@@ -123,7 +124,10 @@
                 body: JSON.stringify({ bottle_id: bottle.id, lat: userPos.lat, lon: userPos.lon }),
             });
             const result = await res.json();
-            if (result.success) { if (onCapture) onCapture(result); }
+            if (result.success) {
+                captured = { bottle: result.bottle, reward: result.reward };
+                if (onCapture) onCapture(result);
+            }
             else { alert(result.error || 'Error'); }
         } catch (e) { alert(`Error: ${e.message}`); }
         finally { capturing = null; }
@@ -181,7 +185,7 @@
         stopCamera();
         window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
         window.removeEventListener('deviceorientation', handleOrientation, true);
-        showAccuracyWarning = false; gpsAccuracy = null; userPos = null;
+        showAccuracyWarning = false; gpsAccuracy = null; userPos = null; captured = null;
     }
 
     onDestroy(deactivate);
@@ -287,6 +291,22 @@
         {/if}
 
         <button class="ar-close" onclick={deactivate}>✕</button>
+
+        <!-- Capture success modal -->
+        {#if captured}
+            <div class="capture-modal">
+                <div class="capture-modal-card">
+                    <h2>🏴‍☠️ {captured.bottle.title}</h2>
+                    <pre class="capture-content">{(captured.bottle.content || '').replace(/\\n\s*/g, '\n').trim()}</pre>
+                    {#if captured.reward}
+                        <div class="capture-reward">
+                            ⛽ +{captured.reward.fuel} Combustible · 🏆 +{captured.reward.points} Puntos
+                        </div>
+                    {/if}
+                    <button class="capture-close-btn" onclick={() => captured = null}>Cerrar</button>
+                </div>
+            </div>
+        {/if}
     {/if}
 </div>
 
@@ -556,5 +576,68 @@
     @keyframes pulse {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.15); }
+    }
+
+    .capture-modal {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.7);
+    }
+
+    .capture-modal-card {
+        background: var(--surface, #141417);
+        border: 1px solid rgba(201,168,124,0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-width: 340px;
+        width: 90%;
+        color: #fff;
+    }
+
+    .capture-modal-card h2 {
+        font-family: Playfair Display, serif;
+        font-size: 1.2rem;
+        margin: 0 0 1rem 0;
+        color: var(--accent, #c9a87c);
+    }
+
+    .capture-content {
+        background: rgba(0,0,0,0.4);
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 14px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin-bottom: 1rem;
+        max-height: 40vh;
+        overflow-y: auto;
+    }
+
+    .capture-reward {
+        background: rgba(201,168,124,0.1);
+        border: 1px solid rgba(201,168,124,0.3);
+        border-radius: 8px;
+        padding: 0.6rem;
+        text-align: center;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--accent, #c9a87c);
+    }
+
+    .capture-close-btn {
+        width: 100%;
+        padding: 0.7rem;
+        background: var(--accent, #c9a87c);
+        color: var(--bg, #09090b);
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
     }
 </style>
