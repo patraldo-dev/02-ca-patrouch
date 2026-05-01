@@ -31,6 +31,9 @@
         <button class="ar-toggle {mode}" onclick={() => showAR = !showAR}>
             {showAR ? '🗺️ Ver Mapa' : isFiesta ? '🎉 Activar Fiesta AR' : '🔭 Modo AR'}
         </button>
+        <a href="/games/booty/arbooty/create?mode={mode}" class="create-link">
+            {isFiesta ? '🎁 Esconder un Mensaje' : '🏴‍☠️ Lanzar una Botella'}
+        </a>
 
         {#if showAR}
             <ArbootyAR player={data.myPlayer} bottles={data.bottles} theme={mode} />
@@ -103,6 +106,17 @@
         border-color: #881337;
     }
     .ar-toggle:hover { opacity: 0.9; }
+    .create-link {
+        display: block;
+        text-align: center;
+        padding: 0.7rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .create-link:hover { color: var(--accent); }
     .join-prompt {
         text-align: center;
         padding: 3rem 1rem;

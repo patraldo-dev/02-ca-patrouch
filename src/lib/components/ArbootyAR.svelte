@@ -185,7 +185,10 @@
                 spawnConfetti();
                 if (onCapture) onCapture(result);
             }
-            else { alert(result.error || 'Error'); }
+            else if (result.already_captured) {
+                // Silently ignore — already got this one
+            }
+            else { alert(result.error || 'Error al capturar (' + res.status + ')'); }
         } catch (e) { alert(`Error: ${e.message}`); }
         finally { capturing = null; }
     }
