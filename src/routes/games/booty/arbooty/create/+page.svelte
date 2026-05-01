@@ -13,6 +13,7 @@
     let submitting = $state(false);
     let success = $state(null);
     let errorMsg = $state('');
+    let generating = $state(false);
 
     let mode = $derived($page.url.searchParams.get('mode') || 'fiesta');
 
@@ -80,6 +81,28 @@
         content = '';
         success = null;
     }
+
+    async function generateWithAI() {
+        if (generating) return;
+        generating = true;
+        errorMsg = '';
+        try {
+            const res = await fetch('/api/bottlequest/physical/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mode,
+                    theme: title || (mode === 'fiesta' ? 'cumpleaños' : 'botella')
+                })
+            });
+            const result = await res.json();
+            if (result.title) title = result.title;
+            if (result.content) content = result.content;
+        } catch (err) {
+            errorMsg = `Error IA: ${err.message}`;
+        }
+        generating = false;
+    }
 </script>
 
 <svelte:head>
@@ -106,7 +129,12 @@
             <div class="form-group">
                 <label for="content">Mensaje</label>
                 <textarea id="content" bind:value={content} placeholder="Escribe tu mensaje aquí..." rows="5" maxlength="2000" required></textarea>
-                <span class="char-count">{content.length}/2000</span>
+                <div class="textarea-actions">
+                    <span class="char-count">{content.length}/2000</span>
+                    <button type="button" class="ai-btn" onclick={generateWithAI} disabled={generating}>
+                        {generating ? '✨ Generando...' : '🤖 Generar con IA'}
+                    </button>
+                </div>
             </div>
 
             <div class="form-group gps-group">
@@ -212,6 +240,23 @@
         color: var(--text-dim);
         margin-top: 0.25rem;
     }
+    .textarea-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.25rem;
+    }
+    .ai-btn {
+        background: none;
+        border: 1px solid rgba(201,168,124,0.4);
+        color: #c9a87c;
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+    .ai-btn:hover { background: rgba(201,168,124,0.1); }
+    .ai-btn:disabled { opacity: 0.5; }
     .gps-group {
         background: var(--surface);
         padding: 1rem;
