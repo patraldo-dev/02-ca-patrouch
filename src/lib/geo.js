@@ -3,36 +3,31 @@
  * Shared between client components and server-side capture validation
  */
 
-const R_M = 6371000; // Earth radius in meters
-
-/**
- * Haversine distance between two coordinates in meters
- */
-export function haversine(lat1, lon1, lat2, lon2) {
+// Haversine distance in meters between two lat/lng points
+export function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371000; // Earth radius in meters
     const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2
-        + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
-        * Math.sin(dLon / 2) ** 2;
-    return R_M * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/**
- * Absolute bearing from point 1 to point 2 in degrees [0, 360)
- */
-export function bearing(lat1, lon1, lat2, lon2) {
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
-    const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180)
-        - Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
-    return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+// Bearing in degrees [0, 360) from point 1 to point 2
+export function calculateBearing(lat1, lng1, lat2, lng2) {
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const y = Math.sin(dLng) * Math.cos(φ2);
+    const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(dLng);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
 
-/**
- * Relative bearing from user heading to target.
- * Normalized to [-180, 180]: negative = left, positive = right.
- * Without normalization, markers "jump" when crossing 0°/360°.
- */
+// Relative bearing [-180, 180] for projecting onto screen
+// Negative = left of center, positive = right of center
 export function relativeBearing(userHeading, targetBearing) {
     let rel = targetBearing - userHeading;
     if (rel > 180) rel -= 360;

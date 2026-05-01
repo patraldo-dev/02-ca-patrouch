@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { haversine, CAPTURE_RADIUS_M } from '$lib/geo.js';
+import { haversineDistance as haversine, CAPTURE_RADIUS_M } from '$lib/geo.js';
 
 export async function GET({ locals, platform }) {
     const db = platform?.env?.DB_book;

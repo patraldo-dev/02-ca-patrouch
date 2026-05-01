@@ -1,5 +1,5 @@
 <script>
-    import { haversine, bearing, relativeBearing, CAPTURE_RADIUS_M, GPS_ACCURACY_THRESHOLD } from '$lib/geo.js';
+    import { haversineDistance, calculateBearing, relativeBearing, CAPTURE_RADIUS_M, GPS_ACCURACY_THRESHOLD } from '$lib/geo.js';
     let { player, bottles = [] } = $props();
 
     // Camera
@@ -20,8 +20,8 @@
     let bottleMarkers = $derived(
         bottles.map(bottle => {
             if (!myLat || !myLon || !bottle.current_lat || !bottle.current_lon) return null;
-            const bottleBearing = bearing(myLat, myLon, bottle.current_lat, bottle.current_lon);
-            const distance = haversine(myLat, myLon, bottle.current_lat, bottle.current_lon);
+            const bottleBearing = calculateBearing(myLat, myLon, bottle.current_lat, bottle.current_lon);
+            const distance = haversineDistance(myLat, myLon, bottle.current_lat, bottle.current_lon);
             const relAngle = relativeBearing(heading, bottleBearing);
             return { ...bottle, bottleBearing, distance, relAngle, captured: !!bottle.found_by };
         }).filter(Boolean)
