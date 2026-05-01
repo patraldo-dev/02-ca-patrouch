@@ -20,7 +20,7 @@
     <h1 class="page-title">
         {#if isFiesta}
             🎉 <span class="title-accent fiesta">¡Fiesta de Victor!</span>
-            <p class="page-subtitle">🎂 69 años jóven 🎂</p>
+            <p class="page-subtitle">🎂 60 años joven 🎂</p>
         {:else}
             🏴‍☠️ Arbooty <span class="title-accent">— Búsqueda del Tesoro</span>
         {/if}

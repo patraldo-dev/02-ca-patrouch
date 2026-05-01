@@ -26,7 +26,7 @@
         fiesta: {
             icon: '🎂🍾🎉',
             title: '¡Fiesta de Victor!',
-            desc: '69 años jóven — encuentra los mensajes',
+            desc: '60 años joven — encuentra los mensajes',
             accentColor: '#f472b6',
             accentRgb: '244,114,182',
             markerNear: '🍾',
