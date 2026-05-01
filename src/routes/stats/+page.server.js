@@ -3,7 +3,7 @@ import { getBadgeCatalog } from '$lib/server/badges.js';
 
 export async function load({ locals }) {
     const user = locals?.user;
-    if (!user) throw redirect(302, '/login');
+    if (!user) throw redirect(302, '/login?redirect=/stats');
 
     const db = locals.db;
     if (!db) return { user, writings: [], totalWords: 0, badges: getBadgeCatalog() };

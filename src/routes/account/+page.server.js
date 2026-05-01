@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 
 export async function load({ locals }) {
     const user = locals?.user;
-    if (!user) throw redirect(302, '/login');
+    if (!user) throw redirect(302, '/login?redirect=' + encodeURIComponent(url.pathname));
 
     const db = locals.db;
     if (!db) return {

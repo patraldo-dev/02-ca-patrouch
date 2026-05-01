@@ -58,6 +58,10 @@
                 </div>
             {/if}
 
+            {#if redirectTo !== '/'}
+                <div class="info-message">🔒 Inicia sesión para acceder a esta página</div>
+            {/if}
+
             <!-- OAuth Providers -->
             <div class="oauth-section">
                 <button type="button" class="btn-oauth btn-google" onclick={() => authClient.signIn.social({ provider: 'google' })}>
@@ -191,6 +195,7 @@
         border: 1px solid var(--border);
     }
 
+    .info-message { display: flex; align-items: center; gap: 8px; background: rgba(201,168,124,0.1); border: 1px solid rgba(201,168,124,0.3); color: var(--accent); padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; }
     /* OAuth buttons */
     .oauth-section { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
     .btn-oauth { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1rem; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; cursor: pointer; background: var(--surface, #141417); color: var(--text); font-family: var(--font-body, 'Inter', sans-serif); transition: border-color 0.2s; }
