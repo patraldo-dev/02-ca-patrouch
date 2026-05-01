@@ -34,7 +34,8 @@
             const bearing = calculateBearing(userPos.lat, userPos.lon, b.current_lat, b.current_lon);
             const rel = relativeBearing(heading, bearing);
             const fov = 60;
-            const xPercent = 50 + (rel / fov) * 100;
+            // Round to integer to prevent subpixel blur
+            const xPercent = Math.round(50 + (rel / fov) * 100);
             return {
                 ...b, dist, bearing, rel, xPercent,
                 visible: Math.abs(rel) < fov && !b.found_by,
@@ -424,14 +425,16 @@
     .bottle-marker {
         position: absolute;
         top: 30%;
-        transform: translateX(-50%);
+        margin-left: -55px; /* half of width ~110px — avoids translateX blur */
+        width: 110px;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 6px;
         pointer-events: none;
-        transition: left 0.15s ease-out, opacity 0.3s;
+        transition: left 0.1s steps(3);
         z-index: 5;
+        will-change: left;
     }
 
     .bottle-icon {
@@ -463,9 +466,7 @@
     }
 
     .bottle-label {
-        background: rgba(0,0,0,0.82);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: rgba(0,0,0,0.88);
         border: 1px solid rgba(201, 168, 124, 0.3);
         border-radius: 10px;
         padding: 6px 12px;
