@@ -997,10 +997,10 @@
   "booty.arbooty.join_btn": "Unirse a Booty Battle",
   "bottles": {
     "type": {
-      "bottles.type.treasure_clue": "Pista del Tesoro",
-      "bottles.type.short_story": "Cuento Corto",
-      "bottles.type.poem": "Poema",
-      "bottles.type.message": "Mensaje"
+      "treasure_clue": "Pista del Tesoro",
+      "short_story": "Cuento Corto",
+      "poem": "Poema",
+      "message": "Mensaje"
     }
   }
 }

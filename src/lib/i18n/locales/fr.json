@@ -1010,10 +1010,10 @@
   "booty.arbooty.join_btn": "Rejoindre Booty Battle",
   "bottles": {
     "type": {
-      "bottles.type.treasure_clue": "Indice au Trésor",
-      "bottles.type.short_story": "Nouvelle",
-      "bottles.type.poem": "Poème",
-      "bottles.type.message": "Message"
+      "treasure_clue": "Indice au Trésor",
+      "short_story": "Nouvelle",
+      "poem": "Poème",
+      "message": "Message"
     }
   }
 }
