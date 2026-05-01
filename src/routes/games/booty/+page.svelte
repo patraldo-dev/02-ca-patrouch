@@ -730,6 +730,10 @@
         <h2 class="text-xl font-bold mb-1" style="font-family:Playfair Display,serif">🏴☠️ {$t('booty.arbooty.title')}</h2>
         <p class="text-sm" style="color:var(--text-dim)">{$t('booty.arbooty.card_desc')}</p>
     </a>
+    <a href="/games/booty/arbooty?mode=fiesta" style="display:block;background:var(--surface);border:2px solid #881337;border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;text-decoration:none;color:var(--text);">
+        <h2 class="text-xl font-bold mb-1" style="font-family:Playfair Display,serif;color:#c9a87c">🎉 ¡Fiesta de Victor!</h2>
+        <p class="text-sm" style="color:var(--text-dim)">Encuentra mensajes escondidos con la cámara AR</p>
+    </a>
 {/if}
 
 <section class="bottles-page">
