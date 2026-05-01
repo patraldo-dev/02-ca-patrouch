@@ -1007,5 +1007,13 @@
   "booty.arbooty.back": "Retour à Booty Battle",
   "booty.arbooty.card_desc": "Explorez Puerto Vallarta et trouvez 5 bouteilles cachées avec le GPS.",
   "booty.arbooty.join_required": "Vous devez être joueur de Booty Battle pour participer.",
-  "booty.arbooty.join_btn": "Rejoindre Booty Battle"
+  "booty.arbooty.join_btn": "Rejoindre Booty Battle",
+  "bottles": {
+    "type": {
+      "bottles.type.treasure_clue": "Indice au Trésor",
+      "bottles.type.short_story": "Nouvelle",
+      "bottles.type.poem": "Poème",
+      "bottles.type.message": "Message"
+    }
+  }
 }
