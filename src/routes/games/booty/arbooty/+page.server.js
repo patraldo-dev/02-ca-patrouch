@@ -1,7 +1,8 @@
-export async function load({ locals, platform }) {
+export async function load({ locals, platform, url }) {
   const db = platform?.env?.DB_book;
   let myPlayer = null;
   let bottles = [];
+  const mode = url.searchParams.get('mode') || 'pirate';
 
   if (locals.user) {
     try {
@@ -11,12 +12,13 @@ export async function load({ locals, platform }) {
     }
   }
 
-  // Load physical bottles for AR markers
+  // Load physical bottles for AR markers — filtered by mode
   if (db) {
     try {
+      const prefix = mode === 'fiesta' ? 'fiesta-%' : 'phys-%';
       const result = await db.prepare(
-        "SELECT id, title, current_lat, current_lon, found_by FROM bottles WHERE id LIKE 'phys-%' ORDER BY id"
-      ).all();
+        "SELECT id, title, current_lat, current_lon, found_by FROM bottles WHERE id LIKE ? AND bottle_type = 'physical' AND is_test = 0 ORDER BY id"
+      ).bind(prefix).all();
       bottles = result.results || [];
     } catch (e) {
       console.error('Arbooty bottles load error:', e);
