@@ -73,10 +73,20 @@ export async function POST({ locals, platform, request }) {
         WHERE id = ? AND games NOT LIKE '%arbooty%'
     `).bind(player.id).run();
 
+    // Fetch content from R2 if marked
+    let content = bottle.content;
+    if (content.startsWith('[R2:') && content.endsWith(']')) {
+        const r2Key = content.slice(4, -1);
+        try {
+            const r2Obj = await platform.env.BOOTY_CONTENT.get(r2Key);
+            if (r2Obj) content = await r2Obj.text();
+        } catch (e) { /* fallback to D1 content */ }
+    }
+
     return json({
         success: true,
         message: `Physical bottle captured! +${rewardFuel} fuel, +${rewardPoints} points`,
-        bottle: { ...bottle, found_by: player.username, found_at: now },
+        bottle: { ...bottle, content, found_by: player.username, found_at: now },
         reward: { fuel: rewardFuel, points: rewardPoints }
     });
 }
