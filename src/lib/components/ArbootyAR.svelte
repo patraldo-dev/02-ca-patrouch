@@ -196,6 +196,10 @@
         return m.dist < 1000 ? `${Math.round(m.dist)}m` : `${(m.dist / 1000).toFixed(1)}km`;
     }
 
+    function decodeContent(c) {
+        return (c || '').replace(/\\n/g, '\n').trim();
+    }
+
     function isNearest(m) {
         return nearest && m.id === nearest.id;
     }
@@ -297,7 +301,7 @@
             <div class="capture-modal">
                 <div class="capture-modal-card">
                     <h2>🏴‍☠️ {captured.bottle.title}</h2>
-                    <pre class="capture-content">{(captured.bottle.content || '').replace(/\\n\s*/g, '\n').trim()}</pre>
+                    <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
                     {#if captured.reward}
                         <div class="capture-reward">
                             ⛽ +{captured.reward.fuel} Combustible · 🏆 +{captured.reward.points} Puntos
