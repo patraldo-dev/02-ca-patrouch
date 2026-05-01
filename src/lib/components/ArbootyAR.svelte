@@ -27,19 +27,19 @@
             icon: '🎂🍾🎉',
             title: '¡Fiesta de Victor!',
             desc: '60 años joven — encuentra los mensajes',
-            accentColor: '#f472b6',
-            accentRgb: '244,114,182',
+            accentColor: '#2563eb',
+            accentRgb: '37,99,235',
             markerNear: '🍾',
             markerRange: '🎂',
             markerFar: '🥂',
             captureText: '¡Abrir!',
             emptyText: 'Gira para buscar sorpresas 🎉',
-            compassColor: '#f472b6',
+            compassColor: '#c9a87c',
             modalIcon: '🎉',
-            captureBtnBg: '#a855f7',
-            captureBtnShadow: 'rgba(168,85,247,0.5)',
-            rangeStroke: '#f472b6',
-            rangeFill: 'rgba(244,114,182,0.2)',
+            captureBtnBg: '#2563eb',
+            captureBtnShadow: 'rgba(37,99,235,0.5)',
+            rangeStroke: '#c9a87c',
+            rangeFill: 'rgba(201,168,124,0.2)',
         }
     };
 
@@ -525,7 +525,7 @@
     }
 
     .ar-root.fiesta .info-nearest {
-        border-color: rgba(244,114,182,0.6);
+        border-color: rgba(37,99,235,0.5);
     }
 
     .info-far {
@@ -688,7 +688,7 @@
     }
 
     .capture-modal-card.fiesta {
-        border-color: rgba(244,114,182,0.4);
+        border-color: rgba(37,99,235,0.4);
     }
 
     .capture-modal-card h2 {
@@ -699,7 +699,7 @@
     }
 
     .capture-modal-card.fiesta h2 {
-        color: #f472b6;
+        color: #c9a87c;
     }
 
     .capture-content {
@@ -727,15 +727,15 @@
     }
 
     .fiesta-message {
-        background: rgba(168,85,247,0.15);
-        border: 1px solid rgba(168,85,247,0.3);
+        background: rgba(201,168,124,0.1);
+        border: 1px solid rgba(201,168,124,0.3);
         border-radius: 8px;
         padding: 0.8rem;
         text-align: center;
         font-weight: 700;
         font-size: 1.1rem;
         margin-bottom: 1rem;
-        color: #f472b6;
+        color: #c9a87c;
     }
 
     .capture-close-btn {

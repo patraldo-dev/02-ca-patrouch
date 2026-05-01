@@ -70,11 +70,11 @@
         color: var(--accent);
     }
     .title-accent.fiesta {
-        color: #f472b6;
+        color: #c9a87c;
     }
     .page-subtitle {
         font-size: 1.2rem;
-        color: #f472b6;
+        color: #c9a87c;
         text-align: center;
         margin: 0.5rem 0 0;
         font-weight: 600;
@@ -99,8 +99,8 @@
         transition: all 0.2s;
     }
     .ar-toggle.fiesta {
-        color: #f472b6;
-        border-color: #f472b6;
+        color: #2563eb;
+        border-color: #2563eb;
     }
     .ar-toggle:hover { opacity: 0.9; }
     .join-prompt {
