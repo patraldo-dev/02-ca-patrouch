@@ -174,7 +174,7 @@
             const res = await fetch('/api/bottlequest/physical', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bottle_id: nearbyBottle.id })
+                body: JSON.stringify({ bottle_id: nearbyBottle.id, lat: playerPos?.lat, lon: playerPos?.lon })
             });
             const result = await res.json();
             if (result.success) {

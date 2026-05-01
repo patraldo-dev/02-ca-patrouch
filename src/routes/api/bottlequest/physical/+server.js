@@ -1,5 +1,13 @@
 import { json } from '@sveltejs/kit';
 
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // meters
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export async function GET({ locals, platform }) {
     const db = platform?.env?.DB_book;
     const user = locals.user;
@@ -28,8 +36,9 @@ export async function POST({ locals, platform, request }) {
     const player = await db.prepare('SELECT id, username, points, fuel FROM bq_players WHERE username = ?').bind(user.username).first();
     if (!player) return json({ error: 'Not a player' }, { status: 403 });
 
-    const { bottle_id } = await request.json();
+    const { bottle_id, lat, lon } = await request.json();
     if (!bottle_id) return json({ error: 'Missing bottle_id' }, { status: 400 });
+    if (!lat || !lon) return json({ error: 'Missing coordinates — GPS required' }, { status: 400 });
 
     const bottle = await db.prepare(
         'SELECT id, status, found_by, current_lat, current_lon, content, title FROM bottles WHERE id = ? AND bottle_type = ? AND is_test = 0'
@@ -37,6 +46,13 @@ export async function POST({ locals, platform, request }) {
 
     if (!bottle) return json({ error: 'Bottle not found' }, { status: 404 });
     if (bottle.found_by) return json({ error: 'Already captured', already_captured: true }, { status: 400 });
+
+    // Server-side geofencing — 55m capture radius
+    const CAPTURE_RADIUS_M = 55;
+    const dist = haversine(lat, lon, bottle.current_lat, bottle.current_lon);
+    if (dist > CAPTURE_RADIUS_M) {
+        return json({ error: `Too far! ${Math.round(dist)}m away. Get within ${CAPTURE_RADIUS_M}m.`, distance: Math.round(dist), required: CAPTURE_RADIUS_M }, { status: 403 });
+    }
 
     const now = new Date().toISOString();
     // Bottle #5 is the treasure — bigger reward
