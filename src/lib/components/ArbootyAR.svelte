@@ -26,8 +26,8 @@
     const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/chat/ws';
 
     // Sort markers: nearest first, only show top 3
-    let markers = $derived(() => {
-        const m = bottles.map(b => {
+    let allMarkers = $derived(
+        bottles.map(b => {
             if (!userPos || !b.current_lat || !b.current_lon) return { ...b, visible: false, dist: Infinity };
             const dist = haversineDistance(userPos.lat, userPos.lon, b.current_lat, b.current_lon);
             const bearing = calculateBearing(userPos.lat, userPos.lon, b.current_lat, b.current_lon);
@@ -39,12 +39,14 @@
                 visible: Math.abs(rel) < fov && !b.found_by,
                 inRange: dist < CAPTURE_RADIUS_M,
             };
-        });
-        // Sort by distance, take top 3
-        return m.filter(b => b.visible).sort((a, b) => a.dist - b.dist).slice(0, 3);
-    });
+        })
+    );
 
-    let nearest = $derived(markers()[0] || null);
+    let markers = $derived(
+        allMarkers.filter(b => b.visible).sort((a, b) => a.dist - b.dist).slice(0, 3)
+    );
+
+    let nearest = $derived(markers[0] || null);
     let gpsReady = $derived(!showAccuracyWarning && gpsAccuracy !== null);
 
     // ── Camera ────────────────────────────────────────────────────────────
@@ -237,7 +239,7 @@
         </div>
 
         <!-- Markers — max 3, nearest is highlighted -->
-        {#each markers() as m (m.id)}
+        {#each markers as m (m.id)}
             <div class="ar-marker {isNearest(m) ? 'nearest' : 'far'}" style="left: {m.xPercent}%; top: {isNearest(m) ? 28 : 38}%;">
                 <svg viewBox="0 0 48 48" class="marker-svg {m.inRange ? 'pulse' : ''}">
                     {#if m.inRange}
@@ -280,7 +282,7 @@
             </div>
         {/each}
 
-        {#if markers().length === 0}
+        {#if markers.length === 0}
             <div class="no-bottles">Gira para buscar botellas 🧭</div>
         {/if}
 
