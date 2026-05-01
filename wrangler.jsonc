@@ -51,6 +51,10 @@
 		{
 			"binding": "R2_ASSETS",
 			"bucket_name": "patrouch-ca-assets"
+		},
+		{
+			"binding": "BOOTY_CONTENT",
+			"bucket_name": "booty-content"
 		}
 	],
 
