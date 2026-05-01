@@ -7,11 +7,13 @@
     let arActive = $state(false);
 
     // Sensors
-    let heading = $state(0);       // compass heading in degrees
+    let heading = $state(0);
     let myLat = $state(null);
     let myLon = $state(null);
     let accuracy = $state(null);
     let watching = $state(false);
+    let gpsWarning = $state(false);
+    let gpsReady = $state(false);
 
     // Computed bottle bearings
     let bottleMarkers = $derived(
@@ -37,7 +39,19 @@
             if ('geolocation' in navigator) {
                 watching = true;
                 navigator.geolocation.watchPosition(
-                    pos => { myLat = pos.coords.latitude; myLon = pos.coords.longitude; accuracy = pos.coords.accuracy; },
+                    pos => {
+                        const acc = pos.coords.accuracy;
+                        accuracy = acc;
+                        if (acc > 50) {
+                            gpsWarning = true;
+                            gpsReady = false;
+                            return;
+                        }
+                        gpsWarning = false;
+                        gpsReady = true;
+                        myLat = pos.coords.latitude;
+                        myLon = pos.coords.longitude;
+                    },
                     () => {},
                     { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
                 );
@@ -129,7 +143,13 @@
                 </div>
             </div>
             <div class="hud-info">
-                <span class="hud-gps">📍 {accuracy ? (accuracy < 30 ? 'GPS Bueno' : accuracy < 100 ? 'GPS Medio' : 'GPS Bajo') : 'Buscando GPS...'}</span>
+                {#if gpsWarning}
+                    <span class="hud-gps hud-warn">⚠️ GPS impreciso ({Math.round(accuracy)}m) — mueve al aire libre</span>
+                {:else if !gpsReady}
+                    <span class="hud-gps">📍 Buscando GPS...</span>
+                {:else}
+                    <span class="hud-gps hud-good">✅ GPS ({Math.round(accuracy)}m)</span>
+                {/if}
             </div>
         </div>
 
@@ -150,7 +170,9 @@
                     <span class="marker-dist">{bottle.distance < 1000 ? Math.round(bottle.distance) + 'm' : (bottle.distance / 1000).toFixed(1) + 'km'}</span>
                 </div>
                 {#if bottle.distance < 50 && !bottle.captured}
-                    <div class="marker-action">¡Capturar!</div>
+                    <div class="marker-action {gpsReady ? '' : 'disabled'}">
+                        {gpsReady ? '¡Capturar!' : 'GPS impreciso'}
+                    </div>
                 {/if}
             </div>
         {/each}
@@ -247,6 +269,8 @@
         padding: 4px 0;
     }
     .hud-gps {
+    .hud-warn { background: rgba(245, 158, 11, 0.8); }
+    .hud-good { background: rgba(34, 197, 94, 0.6); }
         background: rgba(0, 0, 0, 0.6);
         padding: 2px 10px;
         border-radius: 10px;
@@ -285,6 +309,7 @@
         margin-left: 4px;
     }
     .marker-action {
+    .marker-action.disabled { background: #666; color: #999; animation: none; }
         background: var(--accent);
         color: var(--bg);
         font-weight: 700;
