@@ -238,7 +238,7 @@
 
         <!-- Markers — max 3, nearest is highlighted -->
         {#each markers() as m (m.id)}
-            <div class="ar-marker {isNearest(m) ? 'nearest' : 'far'}" style="left: {m.xPercent}%px; top: {isNearest(m) ? 28 : 38}%;">
+            <div class="ar-marker {isNearest(m) ? 'nearest' : 'far'}" style="left: {m.xPercent}%; top: {isNearest(m) ? 28 : 38}%;">
                 <svg viewBox="0 0 48 48" class="marker-svg {m.inRange ? 'pulse' : ''}">
                     {#if m.inRange}
                         <circle cx="24" cy="24" r="22" fill="rgba(239,68,68,0.2)" stroke="#ef4444" stroke-width="2.5"/>
