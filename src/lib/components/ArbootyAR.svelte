@@ -43,6 +43,7 @@
         }
     };
 
+    let isFiesta = $derived(theme === 'fiesta');
     let t = $derived(themes[theme] || themes.pirate);
 
     let videoEl;
@@ -271,10 +272,10 @@
     {#if !cameraActive && !error}
         <div class="ar-overlay">
             <div class="ar-start">
+                <button class="start-btn" onclick={activate}>📸 {isFiesta ? 'Activar Fiesta' : 'Activar Cámara AR'}</button>
                 <div class="ar-icon">{t.icon}</div>
                 <p class="ar-title">{t.title}</p>
                 <p class="ar-desc">{t.desc}</p>
-                <button class="start-btn" onclick={activate}>📸 Activar Cámara AR</button>
                 <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
             </div>
         </div>
