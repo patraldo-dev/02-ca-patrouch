@@ -1,4 +1,5 @@
 <script>
+    import { haversine, bearing, relativeBearing, CAPTURE_RADIUS_M, GPS_ACCURACY_THRESHOLD } from '$lib/geo.js';
     let { player, bottles = [] } = $props();
 
     // Camera
@@ -17,12 +18,12 @@
 
     // Computed bottle bearings
     let bottleMarkers = $derived(
-        bottles.map(b => {
-            if (!myLat || !myLon || !b.current_lat || !b.current_lon) return null;
-            const bearing = calcBearing(myLat, myLon, b.current_lat, b.current_lon);
-            const distance = haversine(myLat, myLon, b.current_lat, b.current_lon);
-            const relAngle = ((bearing - heading) % 360 + 540) % 360 - 180; // -180 to 180
-            return { ...b, bearing, distance, relAngle, captured: !!b.found_by };
+        bottles.map(bottle => {
+            if (!myLat || !myLon || !bottle.current_lat || !bottle.current_lon) return null;
+            const bottleBearing = bearing(myLat, myLon, bottle.current_lat, bottle.current_lon);
+            const distance = haversine(myLat, myLon, bottle.current_lat, bottle.current_lon);
+            const relAngle = relativeBearing(heading, bottleBearing);
+            return { ...bottle, bottleBearing, distance, relAngle, captured: !!bottle.found_by };
         }).filter(Boolean)
     );
 
@@ -42,7 +43,7 @@
                     pos => {
                         const acc = pos.coords.accuracy;
                         accuracy = acc;
-                        if (acc > 50) {
+                        if (acc > GPS_ACCURACY_THRESHOLD) {
                             gpsWarning = true;
                             gpsReady = false;
                             return;
@@ -86,22 +87,6 @@
         } else if (e.absolute && e.alpha !== null) {
             heading = (360 - e.alpha) % 360;
         }
-    }
-
-    function calcBearing(lat1, lon1, lat2, lon2) {
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
-        const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
-                  Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
-        return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
-    }
-
-    function haversine(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1000; // meters
     }
 
     function markerStyle(relAngle, distance, captured) {

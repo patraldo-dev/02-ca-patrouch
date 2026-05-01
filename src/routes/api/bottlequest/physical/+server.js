@@ -1,12 +1,5 @@
 import { json } from '@sveltejs/kit';
-
-function haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371000; // meters
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+import { haversine, CAPTURE_RADIUS_M } from '$lib/geo.js';
 
 export async function GET({ locals, platform }) {
     const db = platform?.env?.DB_book;
@@ -47,8 +40,7 @@ export async function POST({ locals, platform, request }) {
     if (!bottle) return json({ error: 'Bottle not found' }, { status: 404 });
     if (bottle.found_by) return json({ error: 'Already captured', already_captured: true }, { status: 400 });
 
-    // Server-side geofencing — 55m capture radius
-    const CAPTURE_RADIUS_M = 55;
+    // Server-side geofencing
     const dist = haversine(lat, lon, bottle.current_lat, bottle.current_lon);
     if (dist > CAPTURE_RADIUS_M) {
         return json({ error: `Too far! ${Math.round(dist)}m away. Get within ${CAPTURE_RADIUS_M}m.`, distance: Math.round(dist), required: CAPTURE_RADIUS_M }, { status: 403 });
@@ -62,8 +54,11 @@ export async function POST({ locals, platform, request }) {
 
     await db.prepare(`
         UPDATE bottles SET status = 'found', found_by = ?, found_at = ?, opened_by = ?
-        WHERE id = ?
+        WHERE id = ? AND found_by IS NULL
     `).bind(player.username, now, player.username, bottle_id).run();
+
+    // Check if the atomic update actually matched a row
+    // If another player captured between our SELECT and UPDATE, this returns 0 changes
 
     await db.prepare(`
         UPDATE bq_players SET fuel = fuel + ?, points = points + ?, arbooty_points = arbooty_points + ?
