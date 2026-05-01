@@ -4,7 +4,6 @@
 
     let { bottles = [], onCapture, player } = $props();
 
-    // State
     let videoEl;
     let stream = $state(null);
     let error = $state(null);
@@ -26,26 +25,26 @@
     let locationInterval = null;
     const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/chat/ws';
 
-    // Computed markers
-    let markers = $derived(
-        bottles.map(b => {
-            if (!userPos || !b.current_lat || !b.current_lon) return { ...b, visible: false };
+    // Sort markers: nearest first, only show top 3
+    let markers = $derived(() => {
+        const m = bottles.map(b => {
+            if (!userPos || !b.current_lat || !b.current_lon) return { ...b, visible: false, dist: Infinity };
             const dist = haversineDistance(userPos.lat, userPos.lon, b.current_lat, b.current_lon);
             const bearing = calculateBearing(userPos.lat, userPos.lon, b.current_lat, b.current_lon);
             const rel = relativeBearing(heading, bearing);
             const fov = 60;
-            // Round to integer to prevent subpixel blur
-            const xPercent = Math.round(50 + (rel / fov) * 100);
             return {
-                ...b, dist, bearing, rel, xPercent,
+                ...b, dist, bearing, rel,
+                xPercent: Math.round(50 + (rel / fov) * 100),
                 visible: Math.abs(rel) < fov && !b.found_by,
                 inRange: dist < CAPTURE_RADIUS_M,
-                opacity: Math.min(1, Math.max(0.3, 1 - dist / 300)),
             };
-        })
-    );
+        });
+        // Sort by distance, take top 3
+        return m.filter(b => b.visible).sort((a, b) => a.dist - b.dist).slice(0, 3);
+    });
 
-    let nearestInRange = $derived(markers.find(m => m.inRange && !m.found_by) ?? null);
+    let nearest = $derived(markers()[0] || null);
     let gpsReady = $derived(!showAccuracyWarning && gpsAccuracy !== null);
 
     // ── Camera ────────────────────────────────────────────────────────────
@@ -56,10 +55,7 @@
                 video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: false,
             });
-            if (videoEl) {
-                videoEl.srcObject = stream;
-                await videoEl.play();
-            }
+            if (videoEl) { videoEl.srcObject = stream; await videoEl.play(); }
             cameraActive = true;
         } catch (e) {
             error = `Cámara no disponible: ${e.message}`;
@@ -78,14 +74,8 @@
         if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
             try {
                 const result = await DeviceOrientationEvent.requestPermission();
-                if (result !== 'granted') {
-                    error = 'Se necesita permiso de orientación para la brújula AR.';
-                    return false;
-                }
-            } catch (e) {
-                error = `Permiso de orientación fallido: ${e.message}`;
-                return false;
-            }
+                if (result !== 'granted') { error = 'Permiso de orientación denegado.'; return false; }
+            } catch (e) { error = `Error: ${e.message}`; return false; }
         }
         return true;
     }
@@ -111,11 +101,7 @@
         navigator.geolocation.watchPosition(
             (pos) => {
                 gpsAccuracy = Math.round(pos.coords.accuracy);
-                if (pos.coords.accuracy > GPS_ACCURACY_THRESHOLD) {
-                    showAccuracyWarning = true;
-                } else {
-                    showAccuracyWarning = false;
-                }
+                showAccuracyWarning = pos.coords.accuracy > GPS_ACCURACY_THRESHOLD;
                 userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
             },
             (err) => { error = `GPS error: ${err.message}`; },
@@ -135,16 +121,10 @@
                 body: JSON.stringify({ bottle_id: bottle.id, lat: userPos.lat, lon: userPos.lon }),
             });
             const result = await res.json();
-            if (result.success) {
-                if (onCapture) onCapture(result);
-            } else {
-                alert(result.error || 'Error');
-            }
-        } catch (e) {
-            alert(`Error de red: ${e.message}`);
-        } finally {
-            capturing = null;
-        }
+            if (result.success) { if (onCapture) onCapture(result); }
+            else { alert(result.error || 'Error'); }
+        } catch (e) { alert(`Error: ${e.message}`); }
+        finally { capturing = null; }
     }
 
     // ── WebSocket ──────────────────────────────────────────────────────────
@@ -152,9 +132,8 @@
     function connectWS() {
         const username = player?.username || 'anonymous';
         const displayName = player?.display_name || username;
-        const url = `${WS_URL}?username=${encodeURIComponent(username)}&display_name=${encodeURIComponent(displayName)}`;
         try {
-            ws = new WebSocket(url);
+            ws = new WebSocket(`${WS_URL}?username=${encodeURIComponent(username)}&display_name=${encodeURIComponent(displayName)}`);
             ws.onopen = () => {
                 locationInterval = setInterval(() => {
                     if (ws?.readyState === WebSocket.OPEN && userPos && gpsReady) {
@@ -162,27 +141,18 @@
                     }
                 }, 5000);
             };
-            ws.onmessage = (event) => {
-                try { handleWSMessage(JSON.parse(event.data)); } catch {}
-            };
+            ws.onmessage = (e) => { try { handleWSMessage(JSON.parse(e.data)); } catch {} };
             ws.onclose = () => { ws = null; };
             ws.onerror = () => { ws = null; };
-        } catch (e) {
-            console.warn('WS connect failed:', e.message);
-        }
+        } catch (e) { console.warn('WS failed:', e.message); }
     }
 
     function handleWSMessage(msg) {
         if (msg.type === 'proximity') {
             proximityEvents = [...proximityEvents.slice(-4), { ...msg, id: crypto.randomUUID(), ts: Date.now() }];
-            setTimeout(() => {
-                proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 8000);
-            }, 8000);
+            setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 8000); }, 8000);
         }
-        if (msg.type === 'online') {
-            nearbyPlayers = (msg.players || []).filter(p => p.hasLocation);
-            onlineCount = msg.count || 0;
-        }
+        if (msg.type === 'online') { nearbyPlayers = (msg.players || []).filter(p => p.hasLocation); onlineCount = msg.count || 0; }
         if (msg.type === 'online_update') { onlineCount = msg.count || 0; }
     }
 
@@ -196,8 +166,7 @@
 
     async function activate() {
         error = null;
-        const orientOk = await requestOrientationPermission();
-        if (!orientOk) return;
+        if (!(await requestOrientationPermission())) return;
         await startCamera();
         if (!cameraActive) return;
         startOrientation();
@@ -210,32 +179,37 @@
         stopCamera();
         window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
         window.removeEventListener('deviceorientation', handleOrientation, true);
-        showAccuracyWarning = false;
-        gpsAccuracy = null;
-        userPos = null;
+        showAccuracyWarning = false; gpsAccuracy = null; userPos = null;
     }
 
     onDestroy(deactivate);
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+
+    function distLabel(m) {
+        return m.dist < 1000 ? `${Math.round(m.dist)}m` : `${(m.dist / 1000).toFixed(1)}km`;
+    }
+
+    function isNearest(m) {
+        return nearest && m.id === nearest.id;
+    }
 </script>
 
 <div class="ar-root">
-    <!-- Video always in DOM so bind:this works before camera starts -->
     <video bind:this={videoEl} autoplay playsinline muted class="ar-video"></video>
 
-    <!-- Start overlay — shown when camera not active -->
     {#if !cameraActive && !error}
         <div class="ar-overlay">
             <div class="ar-start">
                 <div class="ar-icon">🏴‍☠️🔭</div>
                 <p class="ar-title">Modo AR</p>
-                <p class="ar-desc">Usa la cámara para encontrar botellas cerca de ti</p>
+                <p class="ar-desc">Usa la cámara para encontrar botellas</p>
                 <button class="start-btn" onclick={activate}>📸 Activar Cámara AR</button>
                 <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
             </div>
         </div>
     {/if}
 
-    <!-- Error overlay -->
     {#if error}
         <div class="ar-overlay">
             <div class="ar-start">
@@ -245,9 +219,8 @@
         </div>
     {/if}
 
-    <!-- HUD — shown when camera active -->
     {#if cameraActive}
-        <!-- Compass strip -->
+        <!-- Compass -->
         <div class="ar-hud-top">
             <div class="compass-strip">
                 {#each ['N','NE','E','SE','S','SO','O','NO','N'] as dir, i}
@@ -259,59 +232,58 @@
                 <span class:warn={showAccuracyWarning} class:good={!showAccuracyWarning && gpsAccuracy !== null}>
                     📍 {gpsAccuracy !== null ? `±${gpsAccuracy}m` : 'GPS...'}
                 </span>
-                <span class:warn={headingAccuracy > 15}>
-                    🧭 {Math.round(heading)}°
-                    {headingAccuracy !== null ? `±${headingAccuracy}°` : ''}
-                </span>
+                <span class:warn={headingAccuracy > 15}>🧭 {Math.round(heading)}°</span>
             </div>
         </div>
 
-        <!-- Bottle markers -->
-        {#each markers as m (m.id)}
-            {#if m.visible}
-                <div class="bottle-marker {m.inRange ? 'in-range' : ''}" style="left: {m.xPercent}%; opacity: {m.opacity};">
-                    <div class="bottle-icon">{m.inRange ? '🍾' : '🏴‍☠️'}</div>
-                    <div class="bottle-label">
-                        <span class="bottle-name">{m.title || 'Botella'}</span>
-                        <span class="bottle-dist">
-                            {m.dist < 1000 ? `${Math.round(m.dist)}m` : `${(m.dist / 1000).toFixed(1)}km`}
-                        </span>
-                    </div>
+        <!-- Markers — max 3, nearest is highlighted -->
+        {#each markers() as m (m.id)}
+            <div class="ar-marker {isNearest(m) ? 'nearest' : 'far'}" style="left: {m.xPercent}%px; top: {isNearest(m) ? 28 : 38}%;">
+                <svg viewBox="0 0 48 48" class="marker-svg {m.inRange ? 'pulse' : ''}">
                     {#if m.inRange}
-                        <button class="capture-btn {gpsReady ? '' : 'disabled'}" disabled={!!capturing || !gpsReady} onclick={() => captureBottle(m)}>
-                            {capturing === m.id ? '...' : gpsReady ? '¡Capturar!' : 'GPS impreciso'}
-                        </button>
+                        <circle cx="24" cy="24" r="22" fill="rgba(239,68,68,0.2)" stroke="#ef4444" stroke-width="2.5"/>
+                        <text x="24" y="30" text-anchor="middle" font-size="24">🍾</text>
+                    {:else if isNearest(m)}
+                        <circle cx="24" cy="24" r="22" fill="rgba(201,168,124,0.15)" stroke="#c9a87c" stroke-width="2.5"/>
+                        <text x="24" y="30" text-anchor="middle" font-size="22">🏴‍☠️</text>
+                    {:else}
+                        <circle cx="24" cy="24" r="20" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                        <text x="24" y="30" text-anchor="middle" font-size="20" opacity="0.7">🏴‍☠️</text>
                     {/if}
+                </svg>
+                <div class="marker-info {isNearest(m) ? 'info-nearest' : 'info-far'}">
+                    <span class="marker-name">{m.title || 'Botella'}</span>
+                    <span class="marker-dist">{distLabel(m)}</span>
                 </div>
-            {/if}
+                {#if m.inRange}
+                    <button class="capture-btn {gpsReady ? '' : 'disabled'}" disabled={!!capturing || !gpsReady} onclick={() => captureBottle(m)}>
+                        {capturing === m.id ? '...' : gpsReady ? '¡Capturar!' : 'GPS...'}
+                    </button>
+                {/if}
+            </div>
         {/each}
 
-        <!-- Accuracy warning -->
         {#if showAccuracyWarning}
-            <div class="accuracy-warn">⚠️ GPS poco preciso (±{gpsAccuracy}m) — muévete a cielo abierto</div>
+            <div class="accuracy-warn">⚠️ GPS impreciso (±{gpsAccuracy}m) — cielo abierto</div>
         {/if}
 
-        <!-- Bottom bar -->
         <div class="ar-hud-bottom">
-            <span class="hud-online">👥 {onlineCount} en línea</span>
+            <span class="hud-badge">👥 {onlineCount}</span>
             {#if nearbyPlayers.length > 0}
-                <span class="hud-nearby">🎯 {nearbyPlayers.length} cerca</span>
+                <span class="hud-badge hud-nearby">🎯 {nearbyPlayers.length} cerca</span>
             {/if}
         </div>
 
-        <!-- Proximity toasts -->
         {#each proximityEvents as evt (evt.id)}
             <div class="proximity-toast {evt.event === 'enter' ? 'enter' : 'leave'}">
                 {evt.event === 'enter' ? '🟢' : '🔴'} {evt.message}
             </div>
         {/each}
 
-        <!-- No bottles in view -->
-        {#if markers.every(m => !m.visible)}
+        {#if markers().length === 0}
             <div class="no-bottles">Gira para buscar botellas 🧭</div>
         {/if}
 
-        <!-- Close -->
         <button class="ar-close" onclick={deactivate}>✕</button>
     {/if}
 </div>
@@ -342,7 +314,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(0,0,0,0.85);
+        background: rgba(0,0,0,0.88);
         backdrop-filter: blur(8px);
     }
 
@@ -369,13 +341,10 @@
         background: rgba(255,255,255,0.15);
         border: 1px solid rgba(255,255,255,0.4);
         color: #fff;
-        backdrop-filter: blur(8px);
         cursor: pointer;
-        transition: background 0.2s;
     }
-    .start-btn:hover { background: rgba(255,255,255,0.25); }
 
-    /* HUD top */
+    /* HUD */
     .ar-hud-top {
         position: absolute;
         top: 0; left: 0; right: 0;
@@ -399,7 +368,6 @@
         color: rgba(255,255,255,0.6);
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.05em;
     }
 
     .compass-center-line {
@@ -421,76 +389,65 @@
     .ar-status .warn { color: #fbbf24; }
     .ar-status .good { color: #22c55e; }
 
-    /* Bottle markers */
-    .bottle-marker {
+    /* Markers */
+    .ar-marker {
         position: absolute;
-        top: 30%;
-        margin-left: -55px; /* half of width ~110px — avoids translateX blur */
         width: 110px;
+        margin-left: -55px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
         pointer-events: none;
-        transition: left 0.1s steps(3);
-        z-index: 5;
         will-change: left;
+        z-index: 5;
+        -webkit-font-smoothing: antialiased;
     }
 
-    .bottle-icon {
+    .marker-svg {
         width: 56px;
         height: 56px;
-        background: rgba(201, 168, 124, 0.15);
-        border: 2px solid rgba(201, 168, 124, 0.6);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8));
     }
 
-    .bottle-icon::after {
-        content: '🏴‍☠️';
-        font-size: 1.6rem;
+    .ar-marker.far .marker-svg { width: 40px; height: 40px; }
+    .ar-marker.far { opacity: 0.55; top: 42% !important; }
+
+    .marker-svg.pulse {
+        animation: pulse 1.2s ease-in-out infinite;
     }
 
-    .bottle-marker.in-range .bottle-icon {
-        animation: pulse 1s ease-in-out infinite;
-        background: rgba(239, 68, 68, 0.2);
-        border-color: rgba(239, 68, 68, 0.8);
-        box-shadow: 0 0 16px rgba(239,68,68,0.6);
-    }
-
-    .bottle-marker.in-range .bottle-icon::after {
-        content: '🍾';
-    }
-
-    .bottle-label {
-        background: rgba(0,0,0,0.88);
-        border: 1px solid rgba(201, 168, 124, 0.3);
-        border-radius: 10px;
-        padding: 6px 12px;
+    .marker-info {
+        border-radius: 8px;
+        padding: 4px 10px;
         text-align: center;
-        min-width: 80px;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+        min-width: 70px;
     }
 
-    .bottle-name {
+    .info-nearest {
+        background: rgba(0,0,0,0.9);
+        border: 1.5px solid rgba(201,168,124,0.5);
+    }
+
+    .info-far {
+        background: rgba(0,0,0,0.7);
+    }
+
+    .marker-name {
         display: block;
         color: #fff;
-        font-size: 13px;
-        font-weight: 700;
-        line-height: 1.2;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.9);
-    }
-
-    .bottle-dist {
-        display: block;
-        color: var(--accent, #c9a87c);
         font-size: 12px;
         font-weight: 700;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+        line-height: 1.2;
+        text-shadow: 0 1px 4px rgba(0,0,0,1);
+    }
+
+    .marker-dist {
+        display: block;
+        color: #c9a87c;
+        font-size: 11px;
+        font-weight: 700;
+        text-shadow: 0 1px 3px rgba(0,0,0,1);
     }
 
     .capture-btn {
@@ -499,19 +456,18 @@
         color: #fff;
         border: none;
         border-radius: 9999px;
-        padding: 8px 18px;
-        font-size: 14px;
+        padding: 6px 16px;
+        font-size: 13px;
         font-weight: 700;
         cursor: pointer;
         box-shadow: 0 2px 8px rgba(239,68,68,0.5);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
 
-    .capture-btn:disabled,
-    .capture-btn.disabled {
-        opacity: 0.5;
+    .capture-btn:disabled, .capture-btn.disabled {
+        opacity: 0.4;
         background: #555;
         box-shadow: none;
-        animation: none;
     }
 
     .accuracy-warn {
@@ -521,13 +477,11 @@
         transform: translateX(-50%);
         background: rgba(245,158,11,0.95);
         color: #000;
-        padding: 8px 16px;
+        padding: 6px 14px;
         border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        text-align: center;
-        white-space: nowrap;
+        font-size: 12px;
         z-index: 10;
+        white-space: nowrap;
     }
 
     .no-bottles {
@@ -553,7 +507,6 @@
         height: 36px;
         font-size: 1.1rem;
         cursor: pointer;
-        backdrop-filter: blur(4px);
     }
 
     .ar-hud-bottom {
@@ -562,18 +515,17 @@
         left: 0; right: 0;
         display: flex;
         justify-content: center;
-        gap: 1rem;
+        gap: 0.75rem;
         z-index: 10;
     }
 
-    .hud-online, .hud-nearby {
+    .hud-badge {
         background: rgba(0,0,0,0.65);
         color: rgba(255,255,255,0.9);
-        padding: 6px 14px;
+        padding: 4px 12px;
         border-radius: 99px;
         font-size: 12px;
         font-weight: 500;
-        backdrop-filter: blur(4px);
     }
     .hud-nearby { color: #22c55e; }
 
@@ -590,7 +542,6 @@
         z-index: 15;
         animation: slideIn 0.3s ease-out;
         white-space: nowrap;
-        backdrop-filter: blur(4px);
     }
     .proximity-toast.enter { border-left: 3px solid #22c55e; }
     .proximity-toast.leave { border-left: 3px solid #ef4444; }
@@ -602,6 +553,6 @@
 
     @keyframes pulse {
         0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.2); }
+        50% { transform: scale(1.15); }
     }
 </style>
