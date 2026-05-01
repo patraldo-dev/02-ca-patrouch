@@ -1,8 +1,10 @@
 <script>
     import { t } from '$lib/i18n';
     import PhysicalBottles from '$lib/components/PhysicalBottles.svelte';
+    import ArbootyAR from '$lib/components/ArbootyAR.svelte';
 
     let { data } = $props();
+    let showAR = $state(false);
 </script>
 
 <svelte:head>
@@ -15,7 +17,16 @@
     <p class="page-desc">{$t('booty.arbooty.description')}</p>
 
     {#if data.myPlayer}
-        <PhysicalBottles player={data.myPlayer} />
+        <!-- AR Mode Toggle -->
+        <button class="ar-toggle" onclick={() => showAR = !showAR}>
+            {showAR ? '🗺️ Ver Mapa' : '🔭 Modo AR'}
+        </button>
+
+        {#if showAR}
+            <ArbootyAR player={data.myPlayer} bottles={data.bottles} />
+        {:else}
+            <PhysicalBottles player={data.myPlayer} />
+        {/if}
     {:else}
         <div class="join-prompt">
             <p>{$t('booty.arbooty.join_required')}</p>
@@ -53,6 +64,21 @@
         font-size: 1rem;
         margin-bottom: 2rem;
     }
+    .ar-toggle {
+        display: block;
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--surface);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 1.5rem;
+        transition: all 0.2s;
+    }
+    .ar-toggle:hover { background: rgba(201, 168, 124, 0.1); }
     .join-prompt {
         text-align: center;
         padding: 3rem 1rem;
