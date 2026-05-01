@@ -2,7 +2,6 @@
     import { onMount, onDestroy } from 'svelte';
     import { haversineDistance, calculateBearing, relativeBearing, CAPTURE_RADIUS_M, GPS_ACCURACY_THRESHOLD } from '$lib/geo.js';
 
-    // Props — botellas vienen del server load, NO se fetchean aquí
     let { bottles = [], onCapture, player } = $props();
 
     // State
@@ -19,7 +18,7 @@
     let cameraActive = $state(false);
     let capturing = $state(null);
 
-    // WebSocket — multiplayer proximity
+    // WebSocket
     let ws = $state(null);
     let nearbyPlayers = $state([]);
     let onlineCount = $state(0);
@@ -37,14 +36,10 @@
             const fov = 60;
             const xPercent = 50 + (rel / fov) * 100;
             return {
-                ...b,
-                dist,
-                bearing,
-                rel,
-                xPercent,
+                ...b, dist, bearing, rel, xPercent,
                 visible: Math.abs(rel) < fov && !b.found_by,
                 inRange: dist < CAPTURE_RADIUS_M,
-                opacity: Math.min(1, Math.max(0.2, 1 - dist / 300)),
+                opacity: Math.min(1, Math.max(0.3, 1 - dist / 300)),
             };
         })
     );
@@ -52,7 +47,31 @@
     let nearestInRange = $derived(markers.find(m => m.inRange && !m.found_by) ?? null);
     let gpsReady = $derived(!showAccuracyWarning && gpsAccuracy !== null);
 
-    // ── Permissions ─────────────────────────────────────────────────────────
+    // ── Camera ────────────────────────────────────────────────────────────
+
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false,
+            });
+            if (videoEl) {
+                videoEl.srcObject = stream;
+                await videoEl.play();
+            }
+            cameraActive = true;
+        } catch (e) {
+            error = `Cámara no disponible: ${e.message}`;
+        }
+    }
+
+    function stopCamera() {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        if (videoEl) videoEl.srcObject = null;
+        cameraActive = false;
+    }
+
+    // ── Permissions ───────────────────────────────────────────────────────
 
     async function requestOrientationPermission() {
         if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
@@ -70,26 +89,21 @@
         return true;
     }
 
-    async function startCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-                audio: false,
-            });
-            await new Promise(r => setTimeout(r, 100)); // Wait for bind:this to resolve
-            if (videoEl) {
-                videoEl.srcObject = stream;
-                await videoEl.play();
-            }
-            cameraActive = true;
-        } catch (e) {
-            error = `Cámara no disponible: ${e.message}`;
-        }
-    }
+    // ── Sensors ────────────────────────────────────────────────────────────
 
     function startOrientation() {
         window.addEventListener('deviceorientationabsolute', handleOrientation, true);
         window.addEventListener('deviceorientation', handleOrientation, true);
+    }
+
+    function handleOrientation(e) {
+        if (e.absolute && e.alpha !== null) {
+            heading = (360 - e.alpha) % 360;
+            headingAccuracy = e.webkitCompassAccuracy ?? null;
+        } else if (e.webkitCompassHeading !== undefined) {
+            heading = e.webkitCompassHeading;
+            headingAccuracy = e.webkitCompassAccuracy;
+        }
     }
 
     function startGPS() {
@@ -108,18 +122,6 @@
         );
     }
 
-    // ── Sensors ────────────────────────────────────────────────────────────
-
-    function handleOrientation(e) {
-        if (e.absolute && e.alpha !== null) {
-            heading = (360 - e.alpha) % 360;
-            headingAccuracy = e.webkitCompassAccuracy ?? null;
-        } else if (e.webkitCompassHeading !== undefined) {
-            heading = e.webkitCompassHeading;
-            headingAccuracy = e.webkitCompassAccuracy;
-        }
-    }
-
     // ── Capture ────────────────────────────────────────────────────────────
 
     async function captureBottle(bottle) {
@@ -129,19 +131,13 @@
             const res = await fetch('/api/bottlequest/physical', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    bottle_id: bottle.id,
-                    lat: userPos.lat,
-                    lon: userPos.lon,
-                }),
+                body: JSON.stringify({ bottle_id: bottle.id, lat: userPos.lat, lon: userPos.lon }),
             });
             const result = await res.json();
             if (result.success) {
                 if (onCapture) onCapture(result);
-            } else if (result.error?.includes('Too far') || result.error?.includes('lejos')) {
-                alert(`${result.error} (${Math.round(result.distance)}m)`);
             } else {
-                alert(`Error: ${result.error}`);
+                alert(result.error || 'Error');
             }
         } catch (e) {
             alert(`Error de red: ${e.message}`);
@@ -150,7 +146,7 @@
         }
     }
 
-    // ── WebSocket ──────────────────────────────────────────────────────
+    // ── WebSocket ──────────────────────────────────────────────────────────
 
     function connectWS() {
         const username = player?.username || 'anonymous';
@@ -158,23 +154,16 @@
         const url = `${WS_URL}?username=${encodeURIComponent(username)}&display_name=${encodeURIComponent(displayName)}`;
         try {
             ws = new WebSocket(url);
-
             ws.onopen = () => {
-                // Start broadcasting location every 5s
                 locationInterval = setInterval(() => {
                     if (ws?.readyState === WebSocket.OPEN && userPos && gpsReady) {
                         ws.send(JSON.stringify({ type: 'location', lat: userPos.lat, lon: userPos.lon }));
                     }
                 }, 5000);
             };
-
             ws.onmessage = (event) => {
-                try {
-                    const msg = JSON.parse(event.data);
-                    handleWSMessage(msg);
-                } catch {}
+                try { handleWSMessage(JSON.parse(event.data)); } catch {}
             };
-
             ws.onclose = () => { ws = null; };
             ws.onerror = () => { ws = null; };
         } catch (e) {
@@ -184,32 +173,22 @@
 
     function handleWSMessage(msg) {
         if (msg.type === 'proximity') {
-            // Show proximity notification
-            proximityEvents = [...proximityEvents.slice(-4), {
-                ...msg,
-                id: crypto.randomUUID(),
-                timestamp: Date.now()
-            }];
-            // Auto-dismiss after 8s
+            proximityEvents = [...proximityEvents.slice(-4), { ...msg, id: crypto.randomUUID(), ts: Date.now() }];
             setTimeout(() => {
-                proximityEvents = proximityEvents.filter(e => e.id !== msg.id && Date.now() - e.timestamp < 8000);
+                proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 8000);
             }, 8000);
         }
         if (msg.type === 'online') {
             nearbyPlayers = (msg.players || []).filter(p => p.hasLocation);
             onlineCount = msg.count || 0;
         }
-        if (msg.type === 'online_update') {
-            onlineCount = msg.count || 0;
-        }
+        if (msg.type === 'online_update') { onlineCount = msg.count || 0; }
     }
 
     function disconnectWS() {
         if (locationInterval) { clearInterval(locationInterval); locationInterval = null; }
         if (ws) { ws.close(); ws = null; }
-        nearbyPlayers = [];
-        onlineCount = 0;
-        proximityEvents = [];
+        nearbyPlayers = []; onlineCount = 0; proximityEvents = [];
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
@@ -227,14 +206,9 @@
 
     function deactivate() {
         disconnectWS();
-        if (stream) {
-            stream.getTracks().forEach(t => t.stop());
-            stream = null;
-        }
-        if (videoEl) videoEl.srcObject = null;
+        stopCamera();
         window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
         window.removeEventListener('deviceorientation', handleOrientation, true);
-        cameraActive = false;
         showAccuracyWarning = false;
         gpsAccuracy = null;
         userPos = null;
@@ -243,39 +217,43 @@
     onDestroy(deactivate);
 </script>
 
-<!-- AR Overlay -->
 <div class="ar-root">
-    {#if error}
-        <div class="ar-start">
-            <span class="ar-error-text">⚠️ {error}</span>
-            <button class="start-btn" onclick={activate}>Reintentar</button>
-        </div>
-    {:else if !cameraActive}
-        <div class="ar-start">
-            <div class="ar-icon">🏴‍☠️🔭</div>
-            <p class="ar-title">Modo AR</p>
-            <p class="ar-desc">Usa la cámara para encontrar botellas cerca de ti</p>
-            <button class="start-btn" onclick={activate}>📸 Activar Cámara AR</button>
-            <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
-        </div>
-    {:else}
-        <!-- Camera feed -->
-        <video bind:this={videoEl} autoplay playsinline muted class="ar-video"></video>
+    <!-- Video always in DOM so bind:this works before camera starts -->
+    <video bind:this={videoEl} autoplay playsinline muted class="ar-video"></video>
 
-        <!-- HUD top bar -->
+    <!-- Start overlay — shown when camera not active -->
+    {#if !cameraActive && !error}
+        <div class="ar-overlay">
+            <div class="ar-start">
+                <div class="ar-icon">🏴‍☠️🔭</div>
+                <p class="ar-title">Modo AR</p>
+                <p class="ar-desc">Usa la cámara para encontrar botellas cerca de ti</p>
+                <button class="start-btn" onclick={activate}>📸 Activar Cámara AR</button>
+                <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
+            </div>
+        </div>
+    {/if}
+
+    <!-- Error overlay -->
+    {#if error}
+        <div class="ar-overlay">
+            <div class="ar-start">
+                <span class="ar-error-text">⚠️ {error}</span>
+                <button class="start-btn" onclick={activate}>Reintentar</button>
+            </div>
+        </div>
+    {/if}
+
+    <!-- HUD — shown when camera active -->
+    {#if cameraActive}
+        <!-- Compass strip -->
         <div class="ar-hud-top">
-            <!-- Compass strip — cardinals scroll with heading -->
             <div class="compass-strip">
                 {#each ['N','NE','E','SE','S','SO','O','NO','N'] as dir, i}
-                    <span
-                        class="compass-dir"
-                        style="left: {((i * 45 - heading + 720) % 360) / 360 * 200 - 50}%"
-                    >{dir}</span>
+                    <span class="compass-dir" style="left: {((i * 45 - heading + 720) % 360) / 360 * 200 - 50}%">{dir}</span>
                 {/each}
                 <div class="compass-center-line"></div>
             </div>
-
-            <!-- Status badges -->
             <div class="ar-status">
                 <span class:warn={showAccuracyWarning} class:good={!showAccuracyWarning && gpsAccuracy !== null}>
                     📍 {gpsAccuracy !== null ? `±${gpsAccuracy}m` : 'GPS...'}
@@ -290,21 +268,16 @@
         <!-- Bottle markers -->
         {#each markers as m (m.id)}
             {#if m.visible}
-                <div
-                    class="bottle-marker"
-                    class:in-range={m.inRange}
-                    style="left: {m.xPercent}%; opacity: {m.opacity};"
-                >
-                    <div class="bottle-icon">🍾</div>
-                    <div class="bottle-dist">
-                        {m.dist < 1000 ? `${Math.round(m.dist)}m` : `${(m.dist / 1000).toFixed(1)}km`}
+                <div class="bottle-marker {m.inRange ? 'in-range' : ''}" style="left: {m.xPercent}%; opacity: {m.opacity};">
+                    <div class="bottle-icon">{m.inRange ? '🍾' : '🏴‍☠️'}</div>
+                    <div class="bottle-label">
+                        <span class="bottle-name">{m.title || 'Botella'}</span>
+                        <span class="bottle-dist">
+                            {m.dist < 1000 ? `${Math.round(m.dist)}m` : `${(m.dist / 1000).toFixed(1)}km`}
+                        </span>
                     </div>
                     {#if m.inRange}
-                        <button
-                            class="capture-btn {gpsReady ? '' : 'disabled'}"
-                            disabled={!!capturing || !gpsReady}
-                            onclick={() => captureBottle(m)}
-                        >
+                        <button class="capture-btn {gpsReady ? '' : 'disabled'}" disabled={!!capturing || !gpsReady} onclick={() => captureBottle(m)}>
                             {capturing === m.id ? '...' : gpsReady ? '¡Capturar!' : 'GPS impreciso'}
                         </button>
                     {/if}
@@ -314,12 +287,10 @@
 
         <!-- Accuracy warning -->
         {#if showAccuracyWarning}
-            <div class="accuracy-warn">
-                GPS poco preciso (±{gpsAccuracy}m) — muévete a cielo abierto
-            </div>
+            <div class="accuracy-warn">⚠️ GPS poco preciso (±{gpsAccuracy}m) — muévete a cielo abierto</div>
         {/if}
 
-        <!-- Online + nearby count -->
+        <!-- Bottom bar -->
         <div class="ar-hud-bottom">
             <span class="hud-online">👥 {onlineCount} en línea</span>
             {#if nearbyPlayers.length > 0}
@@ -327,7 +298,7 @@
             {/if}
         </div>
 
-        <!-- Proximity event notifications -->
+        <!-- Proximity toasts -->
         {#each proximityEvents as evt (evt.id)}
             <div class="proximity-toast {evt.event === 'enter' ? 'enter' : 'leave'}">
                 {evt.event === 'enter' ? '🟢' : '🔴'} {evt.message}
@@ -339,7 +310,7 @@
             <div class="no-bottles">Gira para buscar botellas 🧭</div>
         {/if}
 
-        <!-- Close button -->
+        <!-- Close -->
         <button class="ar-close" onclick={deactivate}>✕</button>
     {/if}
 </div>
@@ -360,14 +331,24 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        z-index: 0;
+    }
+
+    .ar-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(8px);
     }
 
     .ar-start {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        height: 100%;
         gap: 0.75rem;
         color: #fff;
         text-align: center;
@@ -393,7 +374,7 @@
     }
     .start-btn:hover { background: rgba(255,255,255,0.25); }
 
-    /* HUD */
+    /* HUD top */
     .ar-hud-top {
         position: absolute;
         top: 0; left: 0; right: 0;
@@ -401,7 +382,7 @@
         flex-direction: column;
         gap: 0.25rem;
         padding: 0.5rem;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+        background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
         z-index: 10;
     }
 
@@ -416,16 +397,14 @@
         transform: translateX(-50%);
         color: rgba(255,255,255,0.6);
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: 0.05em;
-        top: 0;
     }
 
     .compass-center-line {
         position: absolute;
         left: 50%;
-        top: 0;
-        bottom: 0;
+        top: 0; bottom: 0;
         width: 2px;
         background: var(--accent, #c9a87c);
         transform: translateX(-50%);
@@ -434,41 +413,60 @@
     .ar-status {
         display: flex;
         gap: 1rem;
-        font-size: 11px;
-        color: rgba(255,255,255,0.85);
+        font-size: 12px;
+        color: rgba(255,255,255,0.9);
+        font-weight: 500;
     }
-
     .ar-status .warn { color: #fbbf24; }
     .ar-status .good { color: #22c55e; }
 
     /* Bottle markers */
     .bottle-marker {
         position: absolute;
-        top: 35%;
+        top: 30%;
         transform: translateX(-50%);
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
         pointer-events: none;
-        transition: opacity 0.3s;
+        transition: left 0.15s ease-out, opacity 0.3s;
         z-index: 5;
+    }
+
+    .bottle-icon {
+        font-size: 2.8rem;
+        filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8));
     }
 
     .bottle-marker.in-range .bottle-icon {
         animation: pulse 1s ease-in-out infinite;
-        filter: drop-shadow(0 0 8px #ef4444);
+        filter: drop-shadow(0 0 12px rgba(239,68,68,0.8));
     }
 
-    .bottle-icon { font-size: 2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+    .bottle-label {
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 10px;
+        padding: 6px 12px;
+        text-align: center;
+        min-width: 80px;
+    }
+
+    .bottle-name {
+        display: block;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
 
     .bottle-dist {
-        background: rgba(0,0,0,0.55);
-        color: #fff;
-        font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 99px;
-        backdrop-filter: blur(4px);
+        display: block;
+        color: var(--accent, #c9a87c);
+        font-size: 12px;
+        font-weight: 700;
     }
 
     .capture-btn {
@@ -477,17 +475,18 @@
         color: #fff;
         border: none;
         border-radius: 9999px;
-        padding: 6px 14px;
-        font-size: 13px;
-        font-weight: 600;
+        padding: 8px 18px;
+        font-size: 14px;
+        font-weight: 700;
         cursor: pointer;
-        margin-top: 4px;
+        box-shadow: 0 2px 8px rgba(239,68,68,0.5);
     }
 
     .capture-btn:disabled,
     .capture-btn.disabled {
         opacity: 0.5;
-        background: #666;
+        background: #555;
+        box-shadow: none;
         animation: none;
     }
 
@@ -496,11 +495,12 @@
         bottom: 5rem;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(245,158,11,0.9);
+        background: rgba(245,158,11,0.95);
         color: #000;
-        padding: 6px 14px;
+        padding: 8px 16px;
         border-radius: 8px;
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 500;
         text-align: center;
         white-space: nowrap;
         z-index: 10;
@@ -508,11 +508,12 @@
 
     .no-bottles {
         position: absolute;
-        bottom: 40%;
+        bottom: 35%;
         width: 100%;
         text-align: center;
         color: rgba(255,255,255,0.5);
-        font-size: 14px;
+        font-size: 15px;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.6);
     }
 
     .ar-close {
@@ -534,8 +535,7 @@
     .ar-hud-bottom {
         position: absolute;
         bottom: 1rem;
-        left: 0;
-        right: 0;
+        left: 0; right: 0;
         display: flex;
         justify-content: center;
         gap: 1rem;
@@ -543,14 +543,14 @@
     }
 
     .hud-online, .hud-nearby {
-        background: rgba(0,0,0,0.6);
-        color: rgba(255,255,255,0.85);
-        padding: 4px 12px;
+        background: rgba(0,0,0,0.65);
+        color: rgba(255,255,255,0.9);
+        padding: 6px 14px;
         border-radius: 99px;
         font-size: 12px;
+        font-weight: 500;
         backdrop-filter: blur(4px);
     }
-
     .hud-nearby { color: #22c55e; }
 
     .proximity-toast {
@@ -558,7 +558,7 @@
         top: 60px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0,0,0,0.8);
+        background: rgba(0,0,0,0.85);
         color: #fff;
         padding: 8px 16px;
         border-radius: 10px;
@@ -568,7 +568,6 @@
         white-space: nowrap;
         backdrop-filter: blur(4px);
     }
-
     .proximity-toast.enter { border-left: 3px solid #22c55e; }
     .proximity-toast.leave { border-left: 3px solid #ef4444; }
 
