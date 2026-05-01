@@ -99,8 +99,8 @@
         transition: all 0.2s;
     }
     .ar-toggle.fiesta {
-        color: #2563eb;
-        border-color: #2563eb;
+        color: #881337;
+        border-color: #881337;
     }
     .ar-toggle:hover { opacity: 0.9; }
     .join-prompt {
