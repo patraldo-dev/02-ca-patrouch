@@ -435,31 +435,53 @@
     }
 
     .bottle-icon {
-        font-size: 2.8rem;
-        filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8));
+        width: 56px;
+        height: 56px;
+        background: rgba(201, 168, 124, 0.15);
+        border: 2px solid rgba(201, 168, 124, 0.6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+    }
+
+    .bottle-icon::after {
+        content: '🏴‍☠️';
+        font-size: 1.6rem;
     }
 
     .bottle-marker.in-range .bottle-icon {
         animation: pulse 1s ease-in-out infinite;
-        filter: drop-shadow(0 0 12px rgba(239,68,68,0.8));
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.8);
+        box-shadow: 0 0 16px rgba(239,68,68,0.6);
+    }
+
+    .bottle-marker.in-range .bottle-icon::after {
+        content: '🍾';
     }
 
     .bottle-label {
-        background: rgba(0,0,0,0.75);
-        backdrop-filter: blur(6px);
-        border: 1px solid rgba(255,255,255,0.15);
+        background: rgba(0,0,0,0.82);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(201, 168, 124, 0.3);
         border-radius: 10px;
         padding: 6px 12px;
         text-align: center;
         min-width: 80px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .bottle-name {
         display: block;
         color: #fff;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 700;
         line-height: 1.2;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.9);
     }
 
     .bottle-dist {
@@ -467,6 +489,7 @@
         color: var(--accent, #c9a87c);
         font-size: 12px;
         font-weight: 700;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.9);
     }
 
     .capture-btn {
