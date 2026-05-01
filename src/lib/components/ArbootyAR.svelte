@@ -2,7 +2,48 @@
     import { onMount, onDestroy } from 'svelte';
     import { haversineDistance, calculateBearing, relativeBearing, CAPTURE_RADIUS_M, GPS_ACCURACY_THRESHOLD } from '$lib/geo.js';
 
-    let { bottles = [], onCapture, player } = $props();
+    let { bottles = [], onCapture, player, theme = 'pirate' } = $props();
+
+    const themes = {
+        pirate: {
+            icon: '🏴‍☠️🔭',
+            title: 'Modo AR',
+            desc: 'Usa la cámara para encontrar botellas',
+            accentColor: '#c9a87c',
+            accentRgb: '201,168,124',
+            markerNear: '🏴‍☠️',
+            markerRange: '🍾',
+            markerFar: '🏴‍☠️',
+            captureText: '¡Capturar!',
+            emptyText: 'Gira para buscar botellas 🧭',
+            compassColor: '#c9a87c',
+            modalIcon: '🏴‍☠️',
+            captureBtnBg: '#ef4444',
+            captureBtnShadow: 'rgba(239,68,68,0.5)',
+            rangeStroke: '#ef4444',
+            rangeFill: 'rgba(239,68,68,0.2)',
+        },
+        fiesta: {
+            icon: '🎂🍾🎉',
+            title: '¡Modo Fiesta!',
+            desc: 'Encuentra los mensajes escondidos',
+            accentColor: '#f472b6',
+            accentRgb: '244,114,182',
+            markerNear: '🍾',
+            markerRange: '🎂',
+            markerFar: '🥂',
+            captureText: '¡Abrir!',
+            emptyText: 'Gira para buscar sorpresas 🎉',
+            compassColor: '#f472b6',
+            modalIcon: '🎉',
+            captureBtnBg: '#a855f7',
+            captureBtnShadow: 'rgba(168,85,247,0.5)',
+            rangeStroke: '#f472b6',
+            rangeFill: 'rgba(244,114,182,0.2)',
+        }
+    };
+
+    let t = $derived(themes[theme] || themes.pirate);
 
     let videoEl;
     let stream = $state(null);
@@ -16,7 +57,22 @@
 
     let cameraActive = $state(false);
     let capturing = $state(null);
-    let captured = $state(null); // { bottle, reward } on success
+    let captured = $state(null);
+
+    // Confetti for fiesta
+    let confetti = $state([]);
+    function spawnConfetti() {
+        if (theme !== 'fiesta') return;
+        const emojis = ['🎉','🎊','🥳','🎈','⭐','✨','🎂','🍾','🎁'];
+        confetti = Array.from({ length: 20 }, () => ({
+            id: crypto.randomUUID(),
+            emoji: emojis[Math.floor(Math.random() * emojis.length)],
+            x: Math.random() * 100,
+            delay: Math.random() * 500,
+            duration: 1500 + Math.random() * 1000,
+        }));
+        setTimeout(() => { confetti = []; }, 3000);
+    }
 
     // WebSocket
     let ws = $state(null);
@@ -26,7 +82,7 @@
     let locationInterval = null;
     const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/chat/ws';
 
-    // Sort markers: nearest first, only show top 3
+    // Markers
     let allMarkers = $derived(
         bottles.map(b => {
             if (!userPos || !b.current_lat || !b.current_lon) return { ...b, visible: false, dist: Infinity };
@@ -126,6 +182,7 @@
             const result = await res.json();
             if (result.success) {
                 captured = { bottle: result.bottle, reward: result.reward };
+                spawnConfetti();
                 if (onCapture) onCapture(result);
             }
             else { alert(result.error || 'Error'); }
@@ -185,7 +242,7 @@
         stopCamera();
         window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
         window.removeEventListener('deviceorientation', handleOrientation, true);
-        showAccuracyWarning = false; gpsAccuracy = null; userPos = null; captured = null;
+        showAccuracyWarning = false; gpsAccuracy = null; userPos = null; captured = null; confetti = [];
     }
 
     onDestroy(deactivate);
@@ -205,15 +262,15 @@
     }
 </script>
 
-<div class="ar-root">
+<div class="ar-root {theme}">
     <video bind:this={videoEl} autoplay playsinline muted class="ar-video"></video>
 
     {#if !cameraActive && !error}
         <div class="ar-overlay">
             <div class="ar-start">
-                <div class="ar-icon">🏴‍☠️🔭</div>
-                <p class="ar-title">Modo AR</p>
-                <p class="ar-desc">Usa la cámara para encontrar botellas</p>
+                <div class="ar-icon">{t.icon}</div>
+                <p class="ar-title">{t.title}</p>
+                <p class="ar-desc">{t.desc}</p>
                 <button class="start-btn" onclick={activate}>📸 Activar Cámara AR</button>
                 <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
             </div>
@@ -236,7 +293,7 @@
                 {#each ['N','NE','E','SE','S','SO','O','NO','N'] as dir, i}
                     <span class="compass-dir" style="left: {((i * 45 - heading + 720) % 360) / 360 * 200 - 50}%">{dir}</span>
                 {/each}
-                <div class="compass-center-line"></div>
+                <div class="compass-center-line" style="background: {t.compassColor}"></div>
             </div>
             <div class="ar-status">
                 <span class:warn={showAccuracyWarning} class:good={!showAccuracyWarning && gpsAccuracy !== null}>
@@ -246,28 +303,33 @@
             </div>
         </div>
 
-        <!-- Markers — max 3, nearest is highlighted -->
+        <!-- Markers -->
         {#each markers as m (m.id)}
             <div class="ar-marker {isNearest(m) ? 'nearest' : 'far'}" style="left: {m.xPercent}%; top: {isNearest(m) ? 28 : 38}%;">
                 <svg viewBox="0 0 48 48" class="marker-svg {m.inRange ? 'pulse' : ''}">
                     {#if m.inRange}
-                        <circle cx="24" cy="24" r="22" fill="rgba(239,68,68,0.2)" stroke="#ef4444" stroke-width="2.5"/>
-                        <text x="24" y="30" text-anchor="middle" font-size="24">🍾</text>
+                        <circle cx="24" cy="24" r="22" fill={t.rangeFill} stroke={t.rangeStroke} stroke-width="2.5"/>
+                        <text x="24" y="30" text-anchor="middle" font-size="24">{t.markerRange}</text>
                     {:else if isNearest(m)}
-                        <circle cx="24" cy="24" r="22" fill="rgba(201,168,124,0.15)" stroke="#c9a87c" stroke-width="2.5"/>
-                        <text x="24" y="30" text-anchor="middle" font-size="22">🏴‍☠️</text>
+                        <circle cx="24" cy="24" r="22" fill="rgba({t.accentRgb},0.15)" stroke={t.accentColor} stroke-width="2.5"/>
+                        <text x="24" y="30" text-anchor="middle" font-size="22">{t.markerNear}</text>
                     {:else}
                         <circle cx="24" cy="24" r="20" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-                        <text x="24" y="30" text-anchor="middle" font-size="20" opacity="0.7">🏴‍☠️</text>
+                        <text x="24" y="30" text-anchor="middle" font-size="20" opacity="0.7">{t.markerFar}</text>
                     {/if}
                 </svg>
                 <div class="marker-info {isNearest(m) ? 'info-nearest' : 'info-far'}">
-                    <span class="marker-name">{m.title || 'Botella'}</span>
-                    <span class="marker-dist">{distLabel(m)}</span>
+                    <span class="marker-name">{m.title || (theme === 'fiesta' ? 'Sorpresa' : 'Botella')}</span>
+                    <span class="marker-dist" style="color: {t.accentColor}">{distLabel(m)}</span>
                 </div>
                 {#if m.inRange}
-                    <button class="capture-btn {gpsReady ? '' : 'disabled'}" disabled={!!capturing || !gpsReady} onclick={() => captureBottle(m)}>
-                        {capturing === m.id ? '...' : gpsReady ? '¡Capturar!' : 'GPS...'}
+                    <button
+                        class="capture-btn {theme}"
+                        style="background: {t.captureBtnBg}; box-shadow: 0 2px 8px {t.captureBtnShadow}"
+                        disabled={!!capturing || !gpsReady}
+                        onclick={() => captureBottle(m)}
+                    >
+                        {capturing === m.id ? '...' : gpsReady ? t.captureText : 'GPS...'}
                     </button>
                 {/if}
             </div>
@@ -291,23 +353,31 @@
         {/each}
 
         {#if markers.length === 0}
-            <div class="no-bottles">Gira para buscar botellas 🧭</div>
+            <div class="no-bottles">{t.emptyText}</div>
         {/if}
 
         <button class="ar-close" onclick={deactivate}>✕</button>
 
+        <!-- Confetti -->
+        {#each confetti as c (c.id)}
+            <span class="confetti-piece" style="left: {c.x}%; animation-delay: {c.delay}ms; animation-duration: {c.duration}ms;">{c.emoji}</span>
+        {/each}
+
         <!-- Capture success modal -->
         {#if captured}
             <div class="capture-modal">
-                <div class="capture-modal-card">
-                    <h2>🏴‍☠️ {captured.bottle.title}</h2>
+                <div class="capture-modal-card {theme}">
+                    <h2>{t.modalIcon} {captured.bottle.title}</h2>
                     <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
-                    {#if captured.reward}
+                    {#if captured.reward && theme !== 'fiesta'}
                         <div class="capture-reward">
                             ⛽ +{captured.reward.fuel} Combustible · 🏆 +{captured.reward.points} Puntos
                         </div>
                     {/if}
-                    <button class="capture-close-btn" onclick={() => captured = null}>Cerrar</button>
+                    {#if theme === 'fiesta'}
+                        <div class="fiesta-message">🎊 ¡Mensaje encontrado! 🎊</div>
+                    {/if}
+                    <button class="capture-close-btn {theme}" style="background: {t.accentColor}" onclick={() => captured = null}>Cerrar</button>
                 </div>
             </div>
         {/if}
@@ -401,7 +471,6 @@
         left: 50%;
         top: 0; bottom: 0;
         width: 2px;
-        background: var(--accent, #c9a87c);
         transform: translateX(-50%);
     }
 
@@ -455,6 +524,10 @@
         border: 1.5px solid rgba(201,168,124,0.5);
     }
 
+    .ar-root.fiesta .info-nearest {
+        border-color: rgba(244,114,182,0.6);
+    }
+
     .info-far {
         background: rgba(0,0,0,0.7);
     }
@@ -470,7 +543,6 @@
 
     .marker-dist {
         display: block;
-        color: #c9a87c;
         font-size: 11px;
         font-weight: 700;
         text-shadow: 0 1px 3px rgba(0,0,0,1);
@@ -478,7 +550,6 @@
 
     .capture-btn {
         pointer-events: all;
-        background: #ef4444;
         color: #fff;
         border: none;
         border-radius: 9999px;
@@ -486,14 +557,13 @@
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 2px 8px rgba(239,68,68,0.5);
         text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
 
     .capture-btn:disabled, .capture-btn.disabled {
         opacity: 0.4;
-        background: #555;
-        box-shadow: none;
+        background: #555 !important;
+        box-shadow: none !important;
     }
 
     .accuracy-warn {
@@ -572,6 +642,21 @@
     .proximity-toast.enter { border-left: 3px solid #22c55e; }
     .proximity-toast.leave { border-left: 3px solid #ef4444; }
 
+    /* Confetti */
+    .confetti-piece {
+        position: absolute;
+        top: -20px;
+        font-size: 1.5rem;
+        z-index: 25;
+        animation: confettiFall var(--duration, 2000ms) ease-in forwards;
+        pointer-events: none;
+    }
+
+    @keyframes confettiFall {
+        0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+        100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+    }
+
     @keyframes slideIn {
         from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
         to { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -602,11 +687,19 @@
         color: #fff;
     }
 
+    .capture-modal-card.fiesta {
+        border-color: rgba(244,114,182,0.4);
+    }
+
     .capture-modal-card h2 {
         font-family: Playfair Display, serif;
         font-size: 1.2rem;
         margin: 0 0 1rem 0;
         color: var(--accent, #c9a87c);
+    }
+
+    .capture-modal-card.fiesta h2 {
+        color: #f472b6;
     }
 
     .capture-content {
@@ -633,10 +726,21 @@
         color: var(--accent, #c9a87c);
     }
 
+    .fiesta-message {
+        background: rgba(168,85,247,0.15);
+        border: 1px solid rgba(168,85,247,0.3);
+        border-radius: 8px;
+        padding: 0.8rem;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #f472b6;
+    }
+
     .capture-close-btn {
         width: 100%;
         padding: 0.7rem;
-        background: var(--accent, #c9a87c);
         color: var(--bg, #09090b);
         border: none;
         border-radius: 8px;

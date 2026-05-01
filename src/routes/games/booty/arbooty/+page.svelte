@@ -1,36 +1,45 @@
 <script>
+    import { page } from '$app/stores';
     import { t } from '$lib/i18n';
     import PhysicalBottles from '$lib/components/PhysicalBottles.svelte';
     import ArbootyAR from '$lib/components/ArbootyAR.svelte';
 
     let { data } = $props();
     let showAR = $state(false);
+
+    let mode = $derived($page.url.searchParams.get('mode') || 'pirate');
+    let isFiesta = $derived(mode === 'fiesta');
 </script>
 
 <svelte:head>
-    <title>{$t('booty.arbooty.title')} — patrouch.ca</title>
+    <title>{isFiesta ? '🎉 Modo Fiesta' : $t('booty.arbooty.title')} — patrouch.ca</title>
 </svelte:head>
 
 <section class="bottles-page">
-    <a href="/games/booty" class="back-link">← {$t('booty.arbooty.back')}</a>
-    <h1 class="page-title">🏴☠️ Arbooty <span class="title-accent">— Búsqueda del Tesoro</span></h1>
-    <p class="page-desc">{$t('booty.arbooty.description')}</p>
+    <a href="/games/booty" class="back-link">← {isFiesta ? 'Volver' : $t('booty.arbooty.back')}</a>
+    <h1 class="page-title">
+        {#if isFiesta}
+            🎉 <span class="title-accent fiesta">¡Modo Fiesta!</span>
+        {:else}
+            🏴‍☠️ Arbooty <span class="title-accent">— Búsqueda del Tesoro</span>
+        {/if}
+    </h1>
+    <p class="page-desc">{isFiesta ? 'Encuentra los mensajes escondidos en el espacio' : $t('booty.arbooty.description')}</p>
 
     {#if data.myPlayer}
-        <!-- AR Mode Toggle -->
-        <button class="ar-toggle" onclick={() => showAR = !showAR}>
-            {showAR ? '🗺️ Ver Mapa' : '🔭 Modo AR'}
+        <button class="ar-toggle {mode}" onclick={() => showAR = !showAR}>
+            {showAR ? '🗺️ Ver Mapa' : isFiesta ? '🎉 Activar Fiesta AR' : '🔭 Modo AR'}
         </button>
 
         {#if showAR}
-            <ArbootyAR player={data.myPlayer} bottles={data.bottles} />
+            <ArbootyAR player={data.myPlayer} bottles={data.bottles} theme={mode} />
         {:else}
             <PhysicalBottles player={data.myPlayer} />
         {/if}
     {:else}
         <div class="join-prompt">
-            <p>{$t('booty.arbooty.join_required')}</p>
-            <a href="/games/booty" class="btn-accent">🏁 {$t('booty.arbooty.join_btn')}</a>
+            <p>{isFiesta ? 'Inicia sesión para encontrar mensajes' : $t('booty.arbooty.join_required')}</p>
+            <a href="/games/booty" class="btn-accent">🏁 {isFiesta ? 'Iniciar Sesión' : $t('booty.arbooty.join_btn')}</a>
         </div>
     {/if}
 </section>
@@ -59,6 +68,9 @@
     .title-accent {
         color: var(--accent);
     }
+    .title-accent.fiesta {
+        color: #f472b6;
+    }
     .page-desc {
         color: var(--text-dim);
         font-size: 1rem;
@@ -78,7 +90,11 @@
         margin-bottom: 1.5rem;
         transition: all 0.2s;
     }
-    .ar-toggle:hover { background: rgba(201, 168, 124, 0.1); }
+    .ar-toggle.fiesta {
+        color: #f472b6;
+        border-color: #f472b6;
+    }
+    .ar-toggle:hover { opacity: 0.9; }
     .join-prompt {
         text-align: center;
         padding: 3rem 1rem;
