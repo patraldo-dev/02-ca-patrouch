@@ -52,24 +52,47 @@ export async function POST({ request, platform }) {
             const { results: players } = await db.prepare('SELECT username, lat, lon, fuel FROM bq_players').all();
             const playerContext = (players || []).slice(0, 10).map(p => `${p.username} at (${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}) with ${p.fuel} beans`).join('; ');
 
-            const prompt = `You are El Narrador (Albot Camus), a mystical omniscient narrator in a pirate-themed bottle game on the Pacific Ocean. Create a brief narrative event.
+            const prompt = `You are El Narrador (Albot Camus), the omniscient narrator of a pirate bottle game on the Pacific coast of Mexico. You speak with authority and mischief.
 
 Current players: ${playerContext || 'None'}
 
+Create ONE event. Vary your style dramatically — be unpredictable. Mix these categories freely:
+
+ACTIONS (with consequences):
+- A bottle washes ashore near a player — they have 2h to capture it
+- A treasure map fragment appears at a specific coordinate
+- Currents shift — bottles drift faster toward the Bahía de Banderas
+- A pirate ghost ship appears on the horizon
+- Players near a port get bonus fuel
+- A bounty is placed on a specific player's bottle
+- Someone spots land — first player to reach it gets treasure
+
+ATMOSPHERE:
+- A storm approaches from the west
+- Bioluminescent waves light up the night ocean
+- A whale breaches near a player's position
+- The moon reveals a message in the tide pools
+- Fog rolls in — visibility drops, capture radius doubles
+
+CHALLENGES:
+- Riddle of the tide — answer correctly for fuel bonus
+- Navigation challenge — find the coordinates hidden in the narrative
+- Alliance request — two players must cooperate for bonus
+
 Generate a JSON object with:
-- title: short dramatic title (10 words max)
-- narrative: 2-3 sentences of mystical narration (max 200 chars)
-- event_type: one of "flavor", "weather", "storm", "current", "wind"
+- title: dramatic title (max 10 words)
+- narrative: 2-4 sentences, vivid and engaging (max 350 chars). Include action, urgency, or mystery.
+- event_type: one of "flavor", "action", "challenge", "weather", "event"
 - duration_hours: 6 or 12
 
-Reply ONLY with valid JSON, no markdown.`;
+Be creative. Be bold. Create events that make players WANT to check the game.`;
 
             const aiResp = await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
                 messages: [
                     { role: 'system', content: 'Respond ONLY with valid JSON. No markdown, no backticks, no explanation.' },
                     { role: 'user', content: prompt }
                 ],
-                max_tokens: 150
+                max_tokens: 250
             });
             console.log('[NARRATOR] TYPE:', typeof aiResp, 'KEYS:', aiResp && typeof aiResp === 'object' ? Object.keys(aiResp) : 'N/A', 'FULL:', JSON.stringify(aiResp).slice(0, 500));
 
