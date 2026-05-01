@@ -61,3 +61,4 @@ notes4env.txt
 .tern-port
 .svelte-kit/
 package-lock.json
+.wrangler/state/
