@@ -76,8 +76,11 @@
                 video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: false,
             });
-            videoEl.srcObject = stream;
-            await videoEl.play();
+            await new Promise(r => setTimeout(r, 100)); // Wait for bind:this to resolve
+            if (videoEl) {
+                videoEl.srcObject = stream;
+                await videoEl.play();
+            }
             cameraActive = true;
         } catch (e) {
             error = `Cámara no disponible: ${e.message}`;
