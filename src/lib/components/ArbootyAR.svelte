@@ -247,7 +247,16 @@
             playPing();
         }
         if (msg.type === 'online') { nearbyPlayers = (msg.players || []).filter(p => p.hasLocation); onlineCount = msg.count || 0; }
-        if (msg.type === 'online_update') { onlineCount = msg.count || 0; }
+        if (msg.type === 'online_update' && msg.username) {
+            onlineCount = msg.count || 0;
+            if (msg.username !== (player?.username || '')) {
+                const leaving = msg.action === 'leave';
+                const label = leaving ? '🔴' : '🟢';
+                const verb = leaving ? 'salió' : 'se unió';
+                proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: leaving ? 'leave' : 'join', message: `${label} ${msg.username} ${verb}`, ts: Date.now() }];
+                setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 4000); }, 4000);
+            }
+        }
     }
 
     function disconnectWS() {
