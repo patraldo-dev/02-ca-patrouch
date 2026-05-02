@@ -9,6 +9,7 @@
     let success = $state('');
     let isLoading = $state(false);
     let token = '';
+    let showPassword = $state(false);
 
     if (browser) {
         const url = new URL(window.location);
@@ -16,6 +17,21 @@
         if (!token) {
             error = $t('reset.error_token');
         }
+    }
+
+    function generatePassword() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+        let pw = '';
+        // ensure at least 1 of each: upper, lower, digit, special
+        pw += 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random() * 22)];
+        pw += 'abcdefghijkmnpqrstuvwxyz'[Math.floor(Math.random() * 23)];
+        pw += '23456789'[Math.floor(Math.random() * 8)];
+        pw += '!@#$%'[Math.floor(Math.random() * 5)];
+        for (let i = pw.length; i < 16; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+        // shuffle
+        pw = pw.split('').sort(() => Math.random() - 0.5).join('');
+        password = pw;
+        confirmPassword = pw;
     }
 
     async function handleReset(e) {
@@ -66,26 +82,36 @@
             <form onsubmit={handleReset}>
                 <div class="input-group">
                     <label for="password">{$t('reset.password_label')}</label>
-                    <input
-                        id="password"
-                        bind:value={password}
-                        type="password"
-                        placeholder="•••••••••••••••"
-                        required
-                        minlength="8"
-                        autocomplete="new-password"
-                    />
+                    <div class="input-row">
+                        <input
+                            id="password"
+                            bind:value={password}
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="•••••••••••••••"
+                            required
+                            minlength="8"
+                            autocomplete="new-password"
+                        />
+                        <button type="button" class="toggle-btn" onclick={() => showPassword = !showPassword}>
+                            {showPassword ? '🙈' : '👁️'}
+                        </button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="confirmPassword">{$t('reset.confirm_label')}</label>
-                    <input
-                        id="confirmPassword"
-                        bind:value={confirmPassword}
-                        type="password"
-                        placeholder="•••••••••••••••"
-                        required
-                        autocomplete="new-password"
-                    />
+                    <div class="input-row">
+                        <input
+                            id="confirmPassword"
+                            bind:value={confirmPassword}
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="•••••••••••••••"
+                            required
+                            autocomplete="new-password"
+                        />
+                        <button type="button" class="gen-btn" onclick={generatePassword} title="Generar contraseña">
+                            🎲
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" disabled={isLoading || !token}>
                     {isLoading ? $t('reset.submitting') : $t('reset.submit')}
@@ -126,8 +152,12 @@
         font-size: 0.85rem;
         margin-bottom: 0.5rem;
     }
-    .input-group input {
-        width: 100%;
+    .input-row {
+        display: flex;
+        gap: 6px;
+    }
+    .input-row input {
+        flex: 1;
         padding: 0.65rem 0.75rem;
         background: var(--bg);
         border: 2px solid var(--border);
@@ -138,7 +168,21 @@
         outline: none;
         transition: border-color 0.2s;
     }
-    .input-group input:focus {
+    .input-row input:focus {
+        border-color: var(--accent, #c9a87c);
+    }
+    .toggle-btn, .gen-btn {
+        background: var(--bg);
+        border: 2px solid var(--border);
+        border-radius: var(--radius, 8px);
+        padding: 0 0.6rem;
+        cursor: pointer;
+        font-size: 1.1rem;
+        line-height: 1;
+        color: var(--text);
+        transition: border-color 0.2s;
+    }
+    .toggle-btn:hover, .gen-btn:hover {
         border-color: var(--accent, #c9a87c);
     }
     button[type="submit"] {
