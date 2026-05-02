@@ -370,6 +370,9 @@
                 <button class="start-btn" onclick={activate}>📸 {isFiesta ? 'Activar Fiesta' : 'Activar Cámara AR'}</button>
                 <div class="ar-icon">{t.icon}</div>
                 <p class="ar-title">{t.title}</p>
+                {#if isFiesta}
+                    <p class="ar-subtitle">🎂 60 años joven 🎂</p>
+                {/if}
                 <p class="ar-desc">{t.desc}</p>
                 <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
             </div>
@@ -527,8 +530,9 @@
     }
 
     .ar-icon { font-size: 3rem; }
-    .ar-title { font-family: Playfair Display, serif; font-size: 1.5rem; margin: 0; }
-    .ar-desc { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 0; }
+    .ar-title { font-family: Playfair Display, serif; font-size: 1.5rem; margin: 0; text-align: center; }
+    .ar-desc { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 0; text-align: center; }
+    .ar-subtitle { color: #c9a87c; font-size: 1.1rem; margin: 0; text-align: center; font-weight: 600; }
     .ar-note { color: rgba(255,255,255,0.4); font-size: 0.75rem; margin: 0; }
     .ar-error-text { color: #fbbf24; font-size: 0.9rem; }
 
