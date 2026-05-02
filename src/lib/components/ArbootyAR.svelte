@@ -175,22 +175,27 @@
         if (capturing || !userPos || !gpsReady) return;
         capturing = bottle.id;
         try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
             const res = await fetch('/api/bottlequest/physical', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ bottle_id: bottle.id, lat: userPos.lat, lon: userPos.lon }),
+                signal: controller.signal
             });
+            clearTimeout(timeout);
             const result = await res.json();
             if (result.success) {
                 captured = { bottle: result.bottle, reward: result.reward };
                 spawnConfetti();
                 if (onCapture) onCapture(result);
             }
-            else if (result.already_captured) {
-                // Silently ignore — already got this one
-            }
+            else if (result.already_captured) {}
             else { alert(result.error || 'Error al capturar (' + res.status + ')'); }
-        } catch (e) { alert(`Error: ${e.message}`); }
+        } catch (e) {
+            if (e.name === 'AbortError') alert('Tiempo de espera agotado — intenta de nuevo');
+            else alert('Error: ' + e.message);
+        }
         finally { capturing = null; }
     }
 
