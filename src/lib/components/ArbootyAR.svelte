@@ -200,6 +200,10 @@
                 captured = { bottle: result.bottle, reward: result.reward };
                 spawnConfetti();
                 playCapture();
+                // Broadcast capture to other players
+                if (ws?.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella' }));
+                }
                 if (onCapture) onCapture(result);
             }
             else if (result.already_captured) {}
@@ -235,6 +239,11 @@
         if (msg.type === 'proximity') {
             proximityEvents = [...proximityEvents.slice(-4), { ...msg, id: crypto.randomUUID(), ts: Date.now() }];
             setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 8000); }, 8000);
+        }
+        if (msg.type === 'capture' && msg.username !== (player?.username || 'anonymous')) {
+            proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'capture', message: `🎉 ${msg.username} capturó «${msg.bottle_title}»`, ts: Date.now() }];
+            setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 6000); }, 6000);
+            playPing();
         }
         if (msg.type === 'online') { nearbyPlayers = (msg.players || []).filter(p => p.hasLocation); onlineCount = msg.count || 0; }
         if (msg.type === 'online_update') { onlineCount = msg.count || 0; }
