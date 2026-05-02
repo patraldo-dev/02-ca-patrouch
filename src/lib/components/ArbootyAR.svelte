@@ -4,6 +4,8 @@
 
     let { bottles = [], onCapture, player, theme = 'pirate' } = $props();
 
+    // $effect needs to be imported - it's a Svelte 5 rune, auto-available
+
     const themes = {
         pirate: {
             icon: '🏴‍☠️🔭',
@@ -108,6 +110,11 @@
     );
 
     let nearest = $derived(markers[0] || null);
+    let nearestWasInRange = $state(false);
+    $effect(() => {
+        if (nearest?.inRange && !nearestWasInRange) playPing();
+        nearestWasInRange = nearest?.inRange || false;
+    });
     let gpsReady = $derived(!showAccuracyWarning && gpsAccuracy !== null);
 
     // ── Camera ────────────────────────────────────────────────────────────
@@ -192,6 +199,7 @@
             if (result.success) {
                 captured = { bottle: result.bottle, reward: result.reward };
                 spawnConfetti();
+                playCapture();
                 if (onCapture) onCapture(result);
             }
             else if (result.already_captured) {}
@@ -259,6 +267,47 @@
     }
 
     onDestroy(deactivate);
+
+    // ── Sound FX ────────────────────────────────────────────────────────
+    let audioCtx = null;
+    function getAudioCtx() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
+    }
+
+    function playPing() {
+        try {
+            const ctx = getAudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.value = 880;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+        } catch {}
+    }
+
+    function playCapture() {
+        try {
+            const ctx = getAudioCtx();
+            const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.frequency.value = freq;
+                osc.type = 'triangle';
+                const t = ctx.currentTime + i * 0.12;
+                gain.gain.setValueAtTime(0.2, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+                osc.start(t);
+                osc.stop(t + 0.4);
+            });
+        } catch {}
+    }
 
     // ── Helpers ────────────────────────────────────────────────────────────
 
