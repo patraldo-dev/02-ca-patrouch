@@ -87,6 +87,7 @@
         color: var(--text-dim);
         font-size: 1rem;
         margin-bottom: 2rem;
+        text-align: center;
     }
     .ar-toggle {
         display: block;
