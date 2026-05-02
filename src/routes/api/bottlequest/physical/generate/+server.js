@@ -14,7 +14,7 @@ export async function POST({ platform, request }) {
     const prompt = prompts[mode] || prompts.pirate;
 
     try {
-        const response = await ai.run('@cf/mistral/mistral-small-3.1-24b-instruct', {
+        const response = await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 200
         });
