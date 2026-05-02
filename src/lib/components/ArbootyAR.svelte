@@ -229,7 +229,7 @@
                     if (ws?.readyState === WebSocket.OPEN && userPos && gpsReady) {
                         ws.send(JSON.stringify({ type: 'location', lat: userPos.lat, lon: userPos.lon }));
                     }
-                }, 5000);
+                }, 30000);
             };
             ws.onmessage = (e) => { try { handleWSMessage(JSON.parse(e.data)); } catch {} };
             ws.onclose = () => { ws = null; wsConnected = false; };
