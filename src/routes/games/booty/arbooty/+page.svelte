@@ -68,6 +68,7 @@
         font-size: 2rem;
         color: var(--text);
         margin-bottom: 0.5rem;
+        text-align: center;
     }
     .title-accent {
         color: var(--accent);
