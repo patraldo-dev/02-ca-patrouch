@@ -3,9 +3,14 @@
     import { t } from '$lib/i18n';
     import PhysicalBottles from '$lib/components/PhysicalBottles.svelte';
     import ArbootyAR from '$lib/components/ArbootyAR.svelte';
+    import FiestaScoreboard from '$lib/components/FiestaScoreboard.svelte';
 
     let { data } = $props();
     let showAR = $state(false);
+
+    $effect(() => {
+        if (data.myPlayer) window.__bqPlayer = data.myPlayer;
+    });
 
     let mode = $derived($page.url.searchParams.get('mode') || 'pirate');
     let isFiesta = $derived(mode === 'fiesta');
@@ -45,6 +50,10 @@
             <p>{isFiesta ? 'Inicia sesión para encontrar mensajes' : $t('booty.arbooty.join_required')}</p>
             <a href="/games/booty" class="btn-accent">🏁 {isFiesta ? 'Iniciar Sesión' : $t('booty.arbooty.join_btn')}</a>
         </div>
+    {/if}
+
+    {#if isFiesta}
+        <FiestaScoreboard />
     {/if}
 </section>
 
