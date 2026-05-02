@@ -52,6 +52,9 @@
 
     let heading = $state(0);
     let headingAccuracy = $state(null);
+    let useCompass = $state(true);
+    let touchStartX = 0;
+    let touchHeadingStart = 0;
     let userPos = $state(null);
     let gpsAccuracy = $state(null);
     let showAccuracyWarning = $state(false);
@@ -148,6 +151,7 @@
     }
 
     function handleOrientation(e) {
+        if (!useCompass) return;
         if (e.absolute && e.alpha !== null) {
             heading = (360 - e.alpha) % 360;
             headingAccuracy = e.webkitCompassAccuracy ?? null;
@@ -251,7 +255,7 @@
         stopCamera();
         window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
         window.removeEventListener('deviceorientation', handleOrientation, true);
-        showAccuracyWarning = false; gpsAccuracy = null; userPos = null; captured = null; confetti = [];
+        showAccuracyWarning = false; gpsAccuracy = null; userPos = null; captured = null; confetti = []; useCompass = true;
     }
 
     onDestroy(deactivate);
@@ -271,7 +275,15 @@
     }
 </script>
 
-<div class="ar-root {theme}">
+<div class="ar-root {theme}"
+    ontouchstart={(e) => { touchStartX = e.touches[0].clientX; touchHeadingStart = heading; }}
+    ontouchmove={(e) => {
+        const dx = e.touches[0].clientX - touchStartX;
+        heading = (touchHeadingStart - dx * 0.5 + 360) % 360;
+        useCompass = false;
+    }}
+    onmousedown={(e) => { touchStartX = e.clientX; touchHeadingStart = heading; const move = (ev) => { const dx = ev.clientX - touchStartX; heading = (touchHeadingStart - dx * 0.5 + 360) % 360; useCompass = false; }; const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); }; window.addEventListener('mousemove', move); window.addEventListener('mouseup', up); }}
+>
     <video bind:this={videoEl} autoplay playsinline muted class="ar-video"></video>
 
     {#if !cameraActive && !error}
@@ -308,7 +320,10 @@
                 <span class:warn={showAccuracyWarning} class:good={!showAccuracyWarning && gpsAccuracy !== null}>
                     📍 {gpsAccuracy !== null ? `±${gpsAccuracy}m` : 'GPS...'}
                 </span>
-                <span class:warn={headingAccuracy > 15}>🧭 {Math.round(heading)}°</span>
+                <span class:warn={headingAccuracy > 15}>🧭 {Math.round(heading)}° {#if !useCompass}(modo touch){/if}</span>
+            {#if !useCompass}
+                <button class="compass-btn" onclick={() => useCompass = true}>🧭 Brújula</button>
+            {/if}
             </div>
         </div>
 
@@ -492,6 +507,16 @@
     }
     .ar-status .warn { color: #fbbf24; }
     .ar-status .good { color: #22c55e; }
+    .compass-btn {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.3);
+        color: #fff;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 10px;
+        cursor: pointer;
+        pointer-events: all;
+    }
 
     /* Markers */
     .ar-marker {
