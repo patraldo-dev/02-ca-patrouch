@@ -219,6 +219,7 @@
     // ── WebSocket ──────────────────────────────────────────────────────────
 
     function connectWS() {
+        if (ws) { ws.close(); ws = null; }
         const username = player?.username || 'anonymous';
         const displayName = player?.display_name || username;
         try {
