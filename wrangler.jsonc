@@ -7,6 +7,7 @@
 	"name": "02-ca-patrouch",
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"compatibility_date": "2025-09-13",
+	"limits": { "cpu_ms": 30000 },
 	"compatibility_flags": [
 		"nodejs_als",
                 "nodejs_compat"
