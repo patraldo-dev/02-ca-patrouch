@@ -82,6 +82,7 @@
 
     // WebSocket
     let ws = $state(null);
+    let wsConnected = $state(false);
     let nearbyPlayers = $state([]);
     let onlineCount = $state(0);
     let proximityEvents = $state([]);
@@ -222,7 +223,7 @@
         const displayName = player?.display_name || username;
         try {
             ws = new WebSocket(`${WS_URL}?username=${encodeURIComponent(username)}&display_name=${encodeURIComponent(displayName)}`);
-            ws.onopen = () => {
+            ws.onopen = () => { wsConnected = true;
                 locationInterval = setInterval(() => {
                     if (ws?.readyState === WebSocket.OPEN && userPos && gpsReady) {
                         ws.send(JSON.stringify({ type: 'location', lat: userPos.lat, lon: userPos.lon }));
@@ -230,7 +231,7 @@
                 }, 5000);
             };
             ws.onmessage = (e) => { try { handleWSMessage(JSON.parse(e.data)); } catch {} };
-            ws.onclose = () => { ws = null; };
+            ws.onclose = () => { ws = null; wsConnected = false; };
             ws.onerror = () => { ws = null; };
         } catch (e) { console.warn('WS failed:', e.message); }
     }
@@ -252,7 +253,7 @@
     function disconnectWS() {
         if (locationInterval) { clearInterval(locationInterval); locationInterval = null; }
         if (ws) { ws.close(); ws = null; }
-        nearbyPlayers = []; onlineCount = 0; proximityEvents = [];
+        nearbyPlayers = []; onlineCount = 0; proximityEvents = []; wsConnected = false;
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
@@ -446,6 +447,9 @@
 
         <div class="ar-hud-bottom">
             <span class="hud-badge">👥 {onlineCount}</span>
+            {#if wsConnected}
+                <span class="hud-badge connected">🟢 En línea</span>
+            {/if}
             {#if nearbyPlayers.length > 0}
                 <span class="hud-badge hud-nearby">🎯 {nearbyPlayers.length} cerca</span>
             {/if}
