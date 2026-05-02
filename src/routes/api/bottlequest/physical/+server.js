@@ -79,7 +79,7 @@ export async function POST({ locals, platform, request }) {
     if (content.startsWith('[R2:') && content.endsWith(']')) {
         const r2Key = content.slice(4, -1);
         try {
-            const r2Obj = await platform.env.BOOTY_CONTENT.get(r2Key);
+            const r2Obj = await platform?.env?.BOOTY_CONTENT?.get(r2Key);
             if (r2Obj) content = await r2Obj.text();
         } catch (e) { /* fallback to D1 content */ }
     }
