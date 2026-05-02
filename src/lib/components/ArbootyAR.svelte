@@ -199,7 +199,7 @@
             if (result.success) {
                 captured = { bottle: result.bottle, reward: result.reward };
                 spawnConfetti();
-                playCapture();
+                playFanfare();
                 // Broadcast capture to other players
                 if (ws?.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella' }));
@@ -259,7 +259,7 @@
 
     async function activate() {
         error = null;
-        playCapture();
+        playFanfare();
         if (!(await requestOrientationPermission())) return;
         await startCamera();
         if (!cameraActive) return;
@@ -300,7 +300,7 @@
         } catch {}
     }
 
-    function playCapture() {
+    function playFanfare() {
         try {
             const ctx = getAudioCtx();
             const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
@@ -315,6 +315,25 @@
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
                 osc.start(t);
                 osc.stop(t + 0.4);
+            });
+        } catch {}
+    }
+
+    function playSadTrombone() {
+        try {
+            const ctx = getAudioCtx();
+            const notes = [440, 415, 392, 349]; // A4 Ab4 G4 F4 descending
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.frequency.value = freq;
+                osc.type = 'sawtooth';
+                const t = ctx.currentTime + i * 0.3;
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+                osc.start(t);
+                osc.stop(t + 0.6);
             });
         } catch {}
     }
