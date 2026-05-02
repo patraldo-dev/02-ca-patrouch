@@ -259,6 +259,7 @@
 
     async function activate() {
         error = null;
+        playCapture();
         if (!(await requestOrientationPermission())) return;
         await startCamera();
         if (!cameraActive) return;
