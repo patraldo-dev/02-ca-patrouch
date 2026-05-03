@@ -32,10 +32,12 @@
     </h1>
     <p class="page-desc">{isFiesta ? 'Encuentra los mensajes de cumpleaños' : $t('booty.arbooty.description')}</p>
 
-    {#if data.myPlayer}
+    {#if data.myPlayer || isFiesta}
+        {#if data.myPlayer}
         <a href="/games/booty/arbooty/create?mode={mode}" class="create-link">
             {isFiesta ? '🎁 Esconder un Mensaje' : '🏴‍☠️ Lanzar una Botella'}
         </a>
+        {/if}
         <button class="ar-toggle {mode}" onclick={() => showAR = !showAR}>
             {showAR ? '🗺️ Ver Mapa' : isFiesta ? '🎉 Activar Fiesta AR' : '🔭 Modo AR'}
         </button>

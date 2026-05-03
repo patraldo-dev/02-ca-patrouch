@@ -192,7 +192,7 @@
             const res = await fetch('/api/bottlequest/physical', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bottle_id: bottle.id, lat: userPos.lat, lon: userPos.lon }),
+                body: JSON.stringify({ bottle_id: bottle.id, lat: userPos.lat, lon: userPos.lon, nickname: effectivePlayer?.username }),
                 signal: controller.signal
             });
             clearTimeout(timeout);
@@ -268,7 +268,23 @@
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
+    // Nickname support for unauthenticated fiesta mode
+    let nickname = $state('');
+    let showNickModal = $state(false);
+    let effectivePlayer = $derived(player || (nickname ? { username: nickname, display_name: nickname } : null));
+    const isFiesta = $derived(theme === 'fiesta');
+
     async function activate() {
+        // For fiesta mode, allow unauthenticated play with nickname
+        if (!effectivePlayer && isFiesta) {
+            showNickModal = true;
+            return;
+        }
+        if (!effectivePlayer) {
+            window.location.href = '/login';
+            return;
+        }
+        showNickModal = false;
         error = null;
         playFanfare();
         if (!(await requestOrientationPermission())) return;
@@ -377,6 +393,16 @@
 
     {#if !cameraActive && !error}
         <div class="ar-overlay">
+            {#if showNickModal}
+                <div class="nick-modal">
+                    <div class="nick-card">
+                        <p class="nick-title">🎂 ¿Quién captura?</p>
+                        <input class="nick-input" bind:value={nickname} placeholder="Tu nombre..." maxlength="20" />
+                        <button class="start-btn" onclick={activate} disabled={!nickname.trim()}>🎉 ¡Jugar!</button>
+                        <button class="nick-skip" onclick={() => showNickModal = false}>Cancelar</button>
+                    </div>
+                </div>
+            {:else}
             <div class="ar-start">
                 <button class="start-btn" onclick={activate}>📸 {isFiesta ? 'Activar Fiesta' : 'Activar Cámara AR'}</button>
                 <div class="ar-icon">{t.icon}</div>
@@ -387,6 +413,8 @@
                 <p class="ar-desc">{t.desc}</p>
                 <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
             </div>
+            {/if}
+        </div>
         </div>
     {/if}
 
@@ -541,6 +569,53 @@
         color: #fff;
         text-align: center;
         padding: 2rem;
+    }
+    .nick-modal {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+    }
+    .nick-card {
+        background: #141417;
+        border: 1px solid rgba(201,168,124,0.4);
+        border-radius: 16px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        max-width: 300px;
+        width: 90%;
+    }
+    .nick-title {
+        color: #c9a87c;
+        font-family: Playfair Display, serif;
+        font-size: 1.3rem;
+        margin: 0 0 1rem 0;
+    }
+    .nick-input {
+        width: 100%;
+        padding: 0.6rem 0.8rem;
+        border: 2px solid rgba(201,168,124,0.3);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+        font-size: 1rem;
+        text-align: center;
+        outline: none;
+        margin-bottom: 1rem;
+        box-sizing: border-box;
+    }
+    .nick-input:focus { border-color: #c9a87c; }
+    .nick-skip {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.5);
+        cursor: pointer;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        padding: 0.3rem;
     }
 
     .ar-icon { font-size: 3rem; }

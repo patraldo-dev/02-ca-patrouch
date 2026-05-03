@@ -4,15 +4,7 @@ export async function load({ locals, platform, url }) {
   let bottles = [];
   const mode = url.searchParams.get('mode') || 'pirate';
 
-  if (locals.user) {
-    try {
-      myPlayer = await db.prepare('SELECT id, username, display_name, lat, lon FROM bq_players WHERE username = ? OR display_name = ?').bind(locals.user.username, locals.user.username).first();
-    } catch (e) {
-      console.error('Arbooty player load error:', e);
-    }
-  }
-
-  // Load physical bottles for AR markers — filtered by mode
+  // Load physical bottles — available to everyone for fiesta mode
   if (db) {
     try {
       const prefix = mode === 'fiesta' ? 'fiesta-%' : 'phys-%';
@@ -22,6 +14,19 @@ export async function load({ locals, platform, url }) {
       bottles = result.results || [];
     } catch (e) {
       console.error('Arbooty bottles load error:', e);
+    }
+  }
+
+  // Only load player data if authenticated
+  if (!locals.user && mode === 'fiesta') {
+    return { serverLocale: locals.locale || 'es', user: null, myPlayer: null, bottles };
+  }
+
+  if (locals.user) {
+    try {
+      myPlayer = await db.prepare('SELECT id, username, display_name, lat, lon FROM bq_players WHERE username = ? OR display_name = ?').bind(locals.user.username, locals.user.username).first();
+    } catch (e) {
+      console.error('Arbooty player load error:', e);
     }
   }
 
