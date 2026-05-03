@@ -197,13 +197,22 @@
             });
             clearTimeout(timeout);
             const result = await res.json();
-            if (result.success) {
-                captured = { bottle: result.bottle, reward: result.reward };
-                spawnConfetti();
-                playFanfare();
+            if (result.cooldown) {
+                // Show cooldown toast
+                proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'cooldown', message: result.error, ts: Date.now() }];
+                setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 3000); }, 3000);
+            }
+            else if (result.success) {
+                captured = { bottle: result.bottle, reward: result.reward, trap: result.trap };
+                if (result.trap) {
+                    playSadTrombone();
+                } else {
+                    spawnConfetti();
+                    playFanfare();
+                }
                 // Broadcast capture to other players
                 if (ws?.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella' }));
+                    ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella', trap: result.trap }));
                 }
                 if (onCapture) onCapture(result);
             }
@@ -243,9 +252,11 @@
             setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 8000); }, 8000);
         }
         if (msg.type === 'capture' && msg.username !== (player?.username || 'anonymous')) {
-            proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'capture', message: `🎉 ${msg.username} capturó «${msg.bottle_title}»`, ts: Date.now() }];
+            const icon = msg.trap ? '💀' : '🎉';
+            const verb = msg.trap ? 'cayó en aguafiestas' : 'capturó';
+            proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'capture', message: `${icon} ${msg.username} ${verb} «${msg.bottle_title}»`, ts: Date.now() }];
             setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 6000); }, 6000);
-            playPing();
+            if (msg.trap) playSadTrombone(); else playPing();
         }
         if (msg.type === 'online') { nearbyPlayers = (msg.players || []).filter(p => p.hasLocation); onlineCount = msg.count || 0; }
         if (msg.type === 'online_update' && msg.username) {
@@ -513,16 +524,22 @@
         <!-- Capture success modal -->
         {#if captured}
             <div class="capture-modal">
-                <div class="capture-modal-card {theme}">
-                    <h2>{t.modalIcon} {captured.bottle.title}</h2>
-                    <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
-                    {#if captured.reward && theme !== 'fiesta'}
-                        <div class="capture-reward">
-                            ⛽ +{captured.reward.fuel} Combustible · 🏆 +{captured.reward.points} Puntos
-                        </div>
-                    {/if}
-                    {#if theme === 'fiesta'}
-                        <div class="fiesta-message">🎊 ¡Mensaje encontrado! 🎊</div>
+                <div class="capture-modal-card {captured.trap ? 'trap' : theme}">
+                    {#if captured.trap}
+                        <h2>💀 ¡Aguafiestas!</h2>
+                        <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
+                        <div class="trap-penalty">-{captured.reward?.points || 50} puntos</div>
+                    {:else}
+                        <h2>{t.modalIcon} {captured.bottle.title}</h2>
+                        <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
+                        {#if captured.reward && theme !== 'fiesta'}
+                            <div class="capture-reward">
+                                ⛽ +{captured.reward.fuel} Combustible · 🏆 +{captured.reward.points} Puntos
+                            </div>
+                        {/if}
+                        {#if theme === 'fiesta'}
+                            <div class="fiesta-message">🎊 ¡Mensaje encontrado! 🎊</div>
+                        {/if}
                     {/if}
                     <button class="capture-close-btn {theme}" style="background: {t.accentColor}" onclick={() => captured = null}>Cerrar</button>
                 </div>
@@ -931,6 +948,9 @@
         color: var(--accent, #c9a87c);
     }
 
+    .capture-modal-card.trap { border-color: rgba(239,68,68,0.6) !important; }
+    .capture-modal-card.trap h2 { color: #f87171 !important; }
+    .trap-penalty { color: #f87171; font-size: 1.2rem; font-weight: 700; text-align: center; margin: 0.5rem 0; }
     .fiesta-message {
         background: rgba(201,168,124,0.1);
         border: 1px solid rgba(201,168,124,0.3);

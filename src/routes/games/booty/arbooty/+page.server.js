@@ -9,7 +9,7 @@ export async function load({ locals, platform, url }) {
     try {
       const prefix = mode === 'fiesta' ? 'fiesta-%' : 'phys-%';
       const result = await db.prepare(
-        "SELECT id, title, current_lat, current_lon, found_by FROM bottles WHERE id LIKE ? AND bottle_type = 'physical' AND is_test = 0 ORDER BY id"
+        "SELECT id, title, current_lat, current_lon, found_by, content_type FROM bottles WHERE id LIKE ? AND bottle_type = 'physical' AND is_test = 0 ORDER BY id"
       ).bind(prefix).all();
       bottles = result.results || [];
     } catch (e) {
