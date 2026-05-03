@@ -24,7 +24,7 @@ export async function POST({ platform, request }) {
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
-            return json({ title: parsed.title, content: parsed.content });
+            return json({ title: parsed.title, content: parsed.content, challenge: parsed.challenge || "" });
         }
         // Fallback: use raw text as content
         return json({ title: theme === 'cumpleaños' ? '🎂 Mensaje Especial' : '🏴‍☠️ Mensaje Misterioso', content: text.trim() });

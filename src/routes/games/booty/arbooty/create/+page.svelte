@@ -14,6 +14,7 @@
     let success = $state(null);
     let errorMsg = $state('');
     let generating = $state(false);
+    let challenge = $state('');
 
     let mode = $derived($page.url.searchParams.get('mode') || 'fiesta');
 
@@ -59,6 +60,7 @@
                 body: JSON.stringify({
                     title: title.trim(),
                     content: content.trim(),
+                    challenge: challenge.trim() || null,
                     lat: gpsLat,
                     lon: gpsLon,
                     mode
@@ -98,6 +100,7 @@
             const result = await res.json();
             if (result.title) title = result.title;
             if (result.content) content = result.content;
+            if (result.challenge) challenge = result.challenge;
         } catch (err) {
             errorMsg = `Error IA: ${err.message}`;
         }
@@ -135,6 +138,11 @@
                         {generating ? '✨ Generando...' : '🤖 Generar con IA'}
                     </button>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label for="challenge">🎯 Reto <span class="optional">(opcional)</span></label>
+                <textarea id="challenge" bind:value={challenge} placeholder="Ej: Canta el coro de tu canción favorita" rows="2" maxlength="500"></textarea>
             </div>
 
             <div class="form-group gps-group">
@@ -199,6 +207,7 @@
         color: var(--text);
         margin-bottom: 0.5rem;
     }
+    .optional { color: var(--text-dim); font-weight: 400; font-size: 0.8rem; }
     .page-desc {
         color: var(--text-dim);
         font-size: 0.95rem;

@@ -64,6 +64,7 @@
     let cameraActive = $state(false);
     let capturing = $state(null);
     let captured = $state(null);
+    let gamePaused = $state(false);
 
     // Confetti for fiesta
     let confetti = $state([]);
@@ -206,10 +207,11 @@
                 captured = { bottle: result.bottle, reward: result.reward, trap: result.trap, challenge: result.challenge };
                 if (result.trap) {
                     playSadTrombone();
-                } else {
+                } else if (result.challenge) {
                     spawnConfetti();
                     playFanfare();
-                }
+                    gamePaused = true;
+                } else {
                 // Broadcast capture to other players
                 if (ws?.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella', trap: result.trap, challenge: result.challenge }));
@@ -264,6 +266,9 @@
             proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'vote', message: `${icon} ${msg.username} ${verb}: «${msg.challenge}»`, ts: Date.now() }];
             setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 6000); }, 6000);
             if (msg.approved) playFanfare(); else playSadTrombone();
+        }
+        if (msg.type === 'pause') { gamePaused = true; }
+        if (msg.type === 'resume') { gamePaused = false; }
         }
         if (msg.type === 'online') { nearbyPlayers = (msg.players || []).filter(p => p.hasLocation); onlineCount = msg.count || 0; }
         if (msg.type === 'online_update' && msg.username) {
@@ -395,6 +400,13 @@
         captured = null;
     }
 
+    function resumeGame() {
+        gamePaused = false;
+        if (ws?.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'resume' }));
+        }
+    }
+
     function decodeContent(c) {
         return (c || '').replace(/\\n/g, '\n').trim();
     }
@@ -436,6 +448,18 @@
                 {/if}
                 <p class="ar-desc">{t.desc}</p>
                 <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
+                {#if isFiesta}
+                    <details class="rules-toggle">
+                        <summary>📋 ¿Cómo jugar?</summary>
+                        <div class="rules-card">
+                            <p><strong>🎯 Encuentra mensajes</strong> — camina y apunta con la cámara</p>
+                            <p><strong>🍾 Captura botellas</strong> — acércate y presiona capturar</p>
+                            <p><strong>⏳ Cooldown 60s</strong> — pasa el teléfono entre capturas</p>
+                            <p><strong>🎯 Retos</strong> — completa el desafío y el grupo vota</p>
+                            <p><strong>💀 ¡Cuidado!</strong> — hay mensajes aguafiestas (-50 pts)</p>
+                        </div>
+                    </details>
+                {/if}
             </div>
             {/if}
         </div>
@@ -490,7 +514,12 @@
                     <span class="marker-name">{m.title || (theme === 'fiesta' ? 'Sorpresa' : 'Botella')}</span>
                     <span class="marker-dist" style="color: {t.accentColor}">{distLabel(m)}</span>
                 </div>
-                {#if m.inRange}
+                {#if gamePaused}
+                    <div class="pause-overlay">
+                        <div class="pause-badge">⏸️ ¡Reto en curso!</div>
+                    </div>
+                    <button class="resume-btn" onclick={resumeGame}>▶️ Continuar</button>
+                {:else if m.inRange}
                     <button
                         class="capture-btn {theme}"
                         style="background: {t.captureBtnBg}; box-shadow: 0 2px 8px {t.captureBtnShadow}"
@@ -654,6 +683,26 @@
         margin-top: 0.5rem;
         padding: 0.3rem;
     }
+    .rules-toggle {
+        margin-top: 0.5rem;
+        text-align: left;
+        max-width: 280px;
+    }
+    .rules-toggle summary {
+        color: #c9a87c;
+        font-size: 0.85rem;
+        cursor: pointer;
+        margin-bottom: 0.5rem;
+    }
+    .rules-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(201,168,124,0.2);
+        border-radius: 8px;
+        padding: 0.75rem;
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.8);
+    }
+    .rules-card p { margin: 0.3rem 0; }
 
     .ar-icon { font-size: 3rem; }
     .ar-title { font-family: Playfair Display, serif; font-size: 1.5rem; margin: 0; text-align: center; }
@@ -806,6 +855,41 @@
         opacity: 0.4;
         background: #555 !important;
         box-shadow: none !important;
+    }
+    .pause-overlay {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.7);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        z-index: 40;
+        pointer-events: none;
+    }
+    .pause-badge {
+        color: #c9a87c;
+        font-family: Playfair Display, serif;
+        font-size: 1.3rem;
+        text-align: center;
+        animation: pulse-text 1.5s infinite;
+    }
+    @keyframes pulse-text { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .resume-btn {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #22c55e;
+        border: none;
+        border-radius: 9999px;
+        padding: 8px 20px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        z-index: 50;
+        pointer-events: all;
     }
 
     .accuracy-warn {

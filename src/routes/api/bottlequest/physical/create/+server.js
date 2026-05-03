@@ -5,7 +5,7 @@ export async function POST({ locals, platform, request }) {
     const user = locals.user;
     if (!user || !db) return json({ error: 'Not authenticated' }, { status: 401 });
 
-    const { title, content, lat, lon, mode = 'fiesta' } = await request.json();
+    const { title, content, lat, lon, mode = 'fiesta', challenge } = await request.json();
     if (!title || !content) return json({ error: 'Title and content required' }, { status: 400 });
     if (!lat || !lon) return json({ error: 'GPS location required' }, { status: 400 });
 
@@ -26,8 +26,8 @@ export async function POST({ locals, platform, request }) {
     // Insert bottle record — content points to R2
     await db.prepare(`
         INSERT INTO bottles (id, bottle_type, title, content, content_type, current_lat, current_lon, launch_lat, launch_lon, status, user_id, bottle_key, is_test)
-        VALUES (?, 'physical', ?, ?, 'message', ?, ?, ?, ?, 'launched', ?, ?, 0)
-    `).bind(bottleId, title, `[R2:${r2Key}]`, lat, lon, lat, lon, user.id, bottleKey).run();
+        VALUES (?, 'physical', ?, ?, ?, ?, ?, ?, ?, 'launched', ?, ?, 0)
+    `).bind(bottleId, title, `[R2:${r2Key}]`, challenge ? 'challenge' : 'message', lat, lon, lat, lon, user.id, bottleKey).run();
 
     return json({
         success: true,
