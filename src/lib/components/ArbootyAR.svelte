@@ -290,7 +290,6 @@
     let nickname = $state('');
     let showNickModal = $state(false);
     let effectivePlayer = $derived(player || (nickname ? { username: nickname, display_name: nickname } : null));
-    const isFiesta = $derived(theme === 'fiesta');
 
     async function activate() {
         // For fiesta mode, allow unauthenticated play with nickname
