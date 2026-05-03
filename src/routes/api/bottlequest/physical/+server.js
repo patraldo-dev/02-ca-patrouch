@@ -46,6 +46,7 @@ export async function POST({ locals, platform, request }) {
 
     const now = new Date().toISOString();
     const isTrap = bottle.content_type === 'trap';
+    const isChallenge = bottle.content_type === 'challenge';
 
     const captureResult = await db.prepare(
         'UPDATE bottles SET status = ?, found_by = ?, found_at = ?, opened_by = ? WHERE id = ? AND found_by IS NULL'
@@ -75,9 +76,10 @@ export async function POST({ locals, platform, request }) {
     return json({
         success: true,
         trap: isTrap,
+        challenge: isChallenge,
         bottle: { id: bottle.id, title: bottle.title, content, found_by: capturerName, found_at: now },
         reward: giveReward
-            ? isTrap ? { fuel: 0, points: -TRAP_PENALTY } : { fuel: 25, points: 50 }
+            ? isTrap ? { fuel: 0, points: -TRAP_PENALTY } : isChallenge ? { fuel: 25, points: 100 } : { fuel: 25, points: 50 }
             : null
     });
 }

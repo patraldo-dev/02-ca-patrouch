@@ -203,7 +203,7 @@
                 setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 3000); }, 3000);
             }
             else if (result.success) {
-                captured = { bottle: result.bottle, reward: result.reward, trap: result.trap };
+                captured = { bottle: result.bottle, reward: result.reward, trap: result.trap, challenge: result.challenge };
                 if (result.trap) {
                     playSadTrombone();
                 } else {
@@ -212,7 +212,7 @@
                 }
                 // Broadcast capture to other players
                 if (ws?.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella', trap: result.trap }));
+                    ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella', trap: result.trap, challenge: result.challenge }));
                 }
                 if (onCapture) onCapture(result);
             }
@@ -256,7 +256,14 @@
             const verb = msg.trap ? 'cayó en aguafiestas' : 'capturó';
             proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'capture', message: `${icon} ${msg.username} ${verb} «${msg.bottle_title}»`, ts: Date.now() }];
             setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 6000); }, 6000);
-            if (msg.trap) playSadTrombone(); else playPing();
+            if (msg.trap) playSadTrombone(); else if (msg.challenge) playFanfare(); else playPing();
+        }
+        if (msg.type === 'vote') {
+            const icon = msg.approved ? '✅' : '❌';
+            const verb = msg.approved ? 'cumplió' : 'falló';
+            proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'vote', message: `${icon} ${msg.username} ${verb}: «${msg.challenge}»`, ts: Date.now() }];
+            setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 6000); }, 6000);
+            if (msg.approved) playFanfare(); else playSadTrombone();
         }
         if (msg.type === 'online') { nearbyPlayers = (msg.players || []).filter(p => p.hasLocation); onlineCount = msg.count || 0; }
         if (msg.type === 'online_update' && msg.username) {
@@ -380,6 +387,13 @@
 
     function distLabel(m) {
         return m.dist < 1000 ? `${Math.round(m.dist)}m` : `${(m.dist / 1000).toFixed(1)}km`;
+    }
+
+    function voteChallenge(approved) {
+        if (ws?.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'vote', challenge: captured.bottle.title, approved }));
+        }
+        captured = null;
     }
 
     function decodeContent(c) {
@@ -529,6 +543,13 @@
                         <h2>💀 ¡Aguafiestas!</h2>
                         <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
                         <div class="trap-penalty">-{captured.reward?.points || 50} puntos</div>
+                    {:else if captured.challenge}
+                        <h2>🎯 ¡Reto!</h2>
+                        <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
+                        <div class="challenge-votes">
+                            <button class="vote-btn approve" onclick={() => voteChallenge(true)}>👍 ¡Lo logró!</button>
+                            <button class="vote-btn reject" onclick={() => voteChallenge(false)}>👎 Nope</button>
+                        </div>
                     {:else}
                         <h2>{t.modalIcon} {captured.bottle.title}</h2>
                         <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
@@ -950,6 +971,21 @@
 
     .capture-modal-card.trap { border-color: rgba(239,68,68,0.6) !important; }
     .capture-modal-card.trap h2 { color: #f87171 !important; }
+    .capture-modal-card.trap h2 + h2,
+    .capture-modal-card h2:has(+ pre) { }
+    .challenge-votes { display: flex; gap: 10px; justify-content: center; margin-top: 0.75rem; }
+    .vote-btn {
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: #fff;
+    }
+    .vote-btn.approve { background: #22c55e; }
+    .vote-btn.reject { background: #ef4444; }
+    .vote-btn:active { transform: scale(0.95); }
     .trap-penalty { color: #f87171; font-size: 1.2rem; font-weight: 700; text-align: center; margin: 0.5rem 0; }
     .fiesta-message {
         background: rgba(201,168,124,0.1);
