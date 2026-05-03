@@ -272,7 +272,6 @@
         }
         if (msg.type === 'pause') { gamePaused = true; }
         if (msg.type === 'resume') { gamePaused = false; }
-        }
         if (msg.type === 'online') { nearbyPlayers = (msg.players || []).filter(p => p.hasLocation); onlineCount = msg.count || 0; }
         if (msg.type === 'online_update' && msg.username) {
             onlineCount = msg.count || 0;
