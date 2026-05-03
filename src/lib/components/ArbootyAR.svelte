@@ -212,6 +212,9 @@
                     playFanfare();
                     gamePaused = true;
                 } else {
+                    spawnConfetti();
+                    playFanfare();
+                }
                 // Broadcast capture to other players
                 if (ws?.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella', trap: result.trap, challenge: result.challenge }));
@@ -462,7 +465,6 @@
                 {/if}
             </div>
             {/if}
-        </div>
         </div>
     {/if}
 
