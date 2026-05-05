@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { usePortal } from './usePortal.svelte.js';
-  import { getTheme } from './themes.js';
+  import { getTheme } from './themes.svelte.js';
 
   /**
    * TextContent — Renders floating text as a sprite in WebXR AR

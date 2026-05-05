@@ -1,8 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { usePortal } from './usePortal.svelte.js';
-  import { getTheme } from './themes.js';
-  import { createGestureController } from './gestureController.js';
+  import { getTheme } from './themes.svelte.js';
+  import { createGestureController } from './gestureController.svelte.js';
 
   /**
    * ImageContent — Loads and displays an image in WebXR AR

@@ -132,7 +132,7 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
       }
 
       // Reticle
-      const themeConfig = (await import('./themes.js')).getTheme(opts.theme || theme);
+      const themeConfig = (await import('./themes.svelte.js')).getTheme(opts.theme || theme);
       const reticleGeo = new THREE.RingGeometry(0.03, 0.05, 32);
       reticleGeo.rotateX(-Math.PI / 2);
       const reticleMat = new THREE.MeshBasicMaterial({ color: themeConfig.colors.reticle });

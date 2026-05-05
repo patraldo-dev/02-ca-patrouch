@@ -3,7 +3,7 @@
   import ARPortal from '$lib/ar/portal/ARPortal.svelte';
   import ImageContent from '$lib/ar/portal/ImageContent.svelte';
   import TextContent from '$lib/ar/portal/TextContent.svelte';
-  import { THEMES, classifyText } from '$lib/ar/portal/themes.js';
+  import { THEMES, classifyText } from '$lib/ar/portal/themes.svelte.js';
 
   let selectedTheme = $state('narrador');
   let contentType = $state('image');
