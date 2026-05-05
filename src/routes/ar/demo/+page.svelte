@@ -1,33 +1,51 @@
 <script>
-  import { tick } from 'svelte';
+  import { onMount } from 'svelte';
   import ARPortal from '$lib/ar/portal/ARPortal.svelte';
-  import ImageContent from '$lib/ar/portal/ImageContent.svelte';
   import TextContent from '$lib/ar/portal/TextContent.svelte';
+  import SpatialAudio from '$lib/ar/portal/SpatialAudio.svelte';
   import { THEMES, classifyText } from '$lib/ar/portal/themes.svelte.js';
+  import { haversineDistance, calculateBearing, relativeBearing } from '$lib/geo.js';
 
   let selectedTheme = $state('narrador');
-  let contentType = $state('image');
-  let imageUrl = $state('https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800');
+  let contentType = $state('text');
   let textInput = $state('En el umbral entre lo soñado y lo escrito, las palabras se materializan como constelaciones.');
-
   let classifiedThemes = $derived(classifyText(textInput));
   const themeList = Object.values(THEMES);
 
-  // Carousel state
+  // Spatial audio state
   let carouselEl = $state(null);
   let activeIndex = $state(themeList.findIndex(t => t.id === 'narrador'));
+  let portalInstance = null;
+  let narratorVideo = $state(null);
+
+  // Player position (would come from GeolocationAPI in real game)
+  let playerLat = 19.4326;
+  let playerLng = -99.1332;
+  let playerHeading = 0;
+
+  // Simulated portal location (would come from /api/ar/portals/nearby)
+  let portalLat = 19.4330;
+  let portalLng = -99.1330;
+
+  // Compute spatial audio direction
+  let spatialPosition = $derived.by(() => {
+    if (!portalInstance?.status || portalInstance.status !== 'ar-active') {
+      return { azimuth: 0, elevation: 0 };
+    }
+    const bearing = calculateBearing(playerLat, playerLng, portalLat, portalLng);
+    const relative = relativeBearing(playerHeading, bearing);
+    return { azimuth: relative, elevation: -5 }; // slightly below eye level
+  });
 
   function selectTheme(id) {
     selectedTheme = id;
     activeIndex = themeList.findIndex(t => t.id === id);
   }
 
-  // Scroll-snap centering with scale effect
   function handleScroll() {
     if (!carouselEl) return;
     const container = carouselEl;
     const scrollCenter = container.scrollLeft + container.clientWidth / 2;
-
     const items = container.querySelectorAll('.theme-card');
     items.forEach((item, i) => {
       const itemCenter = item.offsetLeft + item.offsetWidth / 2;
@@ -36,7 +54,6 @@
       const opacity = Math.max(0.45, 1 - distance * 0.7);
       item.style.transform = `scale(${scale})`;
       item.style.opacity = opacity;
-
       if (distance < 0.2) {
         activeIndex = i;
         selectedTheme = themeList[i].id;
@@ -53,6 +70,10 @@
       const scrollLeft = item.offsetLeft + item.offsetWidth / 2 - container.clientWidth / 2;
       carouselEl.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
+  }
+
+  function handlePortalReady(portal) {
+    portalInstance = portal;
   }
 </script>
 
@@ -93,7 +114,6 @@
     <div class="carousel-spacer"></div>
   </div>
 
-  <!-- Dot indicators -->
   <div class="dots">
     {#each themeList as t, i}
       <button
@@ -109,52 +129,53 @@
     <div class="config-row">
       <label>Contenido:</label>
       <div class="type-toggle">
-        <button class:active={contentType === 'image'} onclick={() => contentType = 'image'}>🖼 Imagen</button>
-        <button class:active={contentType === 'text'} onclick={() => contentType = 'text'}>📝 Texto</button>
+        <button class:active={contentType === 'text'} onclick={() => contentType = 'text'}>📝 Texto + Audio Espacial</button>
       </div>
     </div>
 
-    {#if contentType === 'image'}
-      <div class="config-row">
-        <label>URL de imagen:</label>
-        <input type="url" bind:value={imageUrl} placeholder="https://..." />
-      </div>
-    {:else}
-      <div class="config-row">
-        <label>Texto flotante (proclamación del Narrador):</label>
-        <textarea bind:value={textInput} rows="3"></textarea>
-      </div>
+    <div class="config-row">
+      <label>Proclamación del Narrador:</label>
+      <textarea bind:value={textInput} rows="3"></textarea>
+    </div>
 
-      {#if classifiedThemes.length > 0}
-        <div class="classification">
-          <span class="class-label">Detectado:</span>
-          {#each classifiedThemes.slice(0, 3) as c}
-            <button
-              class="detect-btn"
-              class:suggested={c.theme === selectedTheme}
-              onclick={() => scrollToTheme(themeList.findIndex(t => t.id === c.theme))}
-            >
-              {THEMES[c.theme].icon} {THEMES[c.theme].name}
-            </button>
-          {/each}
-        </div>
-      {/if}
+    {#if classifiedThemes.length > 0}
+      <div class="classification">
+        <span class="class-label">Detectado:</span>
+        {#each classifiedThemes.slice(0, 3) as c}
+          <button
+            class="detect-btn"
+            class:suggested={c.theme === selectedTheme}
+            onclick={() => scrollToTheme(themeList.findIndex(t => t.id === c.theme))}
+          >
+            {THEMES[c.theme].icon} {THEMES[c.theme].name}
+          </button>
+        {/each}
+      </div>
+    {/if}
+
+    <!-- Spatial Audio Info -->
+    {#if portalInstance?.status === 'ar-active'}
+      <div class="audio-info">
+        <span>🔊 Audio espacial: azimuth {spatialPosition.azimuth.toFixed(0)}°, elevation {spatialPosition.elevation}°</span>
+      </div>
     {/if}
   </div>
 
   <!-- Portal Launcher -->
-  {#if contentType === 'image'}
-    <ARPortal theme={selectedTheme} contentType="image">
-      {#snippet children(portal)}
-        <ImageContent portal={portal} imageUrl={imageUrl} theme={selectedTheme} />
-      {/snippet}
-    </ARPortal>
-  {:else}
-    <ARPortal theme={selectedTheme} contentType="text">
-      {#snippet children(portal)}
-        <TextContent portal={portal} text={textInput} theme={selectedTheme} />
-      {/snippet}
-    </ARPortal>
+  <ARPortal theme={selectedTheme} contentType="text">
+    {#snippet children(portal)}
+      <TextContent portal={portal} text={textInput} theme={selectedTheme} />
+    {/snippet}
+  </ARPortal>
+
+  <!-- Spatial Audio (connects when AR is active) -->
+  {#if portalInstance?.status === 'ar-active'}
+    <SpatialAudio
+      videoElement={narratorVideo}
+      azimuth={spatialPosition.azimuth}
+      elevation={spatialPosition.elevation}
+      active={portalInstance.status === 'ar-active'}
+    />
   {/if}
 </div>
 
@@ -184,7 +205,6 @@
     font-size: 0.85rem;
   }
 
-  /* ── Carousel ── */
   .carousel-wrapper {
     display: flex;
     align-items: center;
@@ -242,23 +262,10 @@
     pointer-events: none;
   }
 
-  .card-icon {
-    font-size: 2rem;
-    line-height: 1;
-  }
+  .card-icon { font-size: 2rem; line-height: 1; }
+  .card-name { font-weight: 700; font-size: 0.85rem; }
+  .card-desc { font-size: 0.65rem; color: #888; line-height: 1.2; }
 
-  .card-name {
-    font-weight: 700;
-    font-size: 0.85rem;
-  }
-
-  .card-desc {
-    font-size: 0.65rem;
-    color: #888;
-    line-height: 1.2;
-  }
-
-  /* ── Dots ── */
   .dots {
     display: flex;
     justify-content: center;
@@ -283,7 +290,6 @@
     border-radius: 4px;
   }
 
-  /* ── Config ── */
   .config {
     background: #f8f8f8;
     border-radius: 12px;
@@ -362,5 +368,14 @@
     border-color: #c9a87c;
     background: #fdf8f0;
     font-weight: 600;
+  }
+
+  .audio-info {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: #e8f5e9;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: #2e7d32;
   }
 </style>
