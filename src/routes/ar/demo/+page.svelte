@@ -198,12 +198,14 @@
 
   .theme-carousel {
     display: flex;
-    gap: 0.75rem;
+    gap: 1rem;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     padding: 0.5rem 0;
+    max-width: 480px;
+    margin: 0 auto;
   }
 
   .theme-carousel::-webkit-scrollbar {
@@ -212,7 +214,7 @@
 
   .theme-card {
     flex-shrink: 0;
-    width: 120px;
+    width: 140px;
     scroll-snap-align: center;
     border: 2px solid #e0e0e0;
     border-radius: 14px;
