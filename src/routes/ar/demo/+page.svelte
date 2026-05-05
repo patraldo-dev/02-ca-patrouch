@@ -7,73 +7,31 @@
   import { haversineDistance, calculateBearing, relativeBearing } from '$lib/geo.js';
 
   let selectedTheme = $state('narrador');
-  let contentType = $state('text');
   let textInput = $state('En el umbral entre lo soñado y lo escrito, las palabras se materializan como constelaciones.');
   let classifiedThemes = $derived(classifyText(textInput));
   const themeList = Object.values(THEMES);
 
-  // Spatial audio state
-  let carouselEl = $state(null);
-  let activeIndex = $state(themeList.findIndex(t => t.id === 'narrador'));
   let portalInstance = null;
   let narratorVideo = $state(null);
 
-  // Player position (would come from GeolocationAPI in real game)
+  // Spatial audio state (demo values — real game uses GeolocationAPI)
   let playerLat = 19.4326;
   let playerLng = -99.1332;
   let playerHeading = 0;
-
-  // Simulated portal location (would come from /api/ar/portals/nearby)
   let portalLat = 19.4330;
   let portalLng = -99.1330;
 
-  // Compute spatial audio direction
   let spatialPosition = $derived.by(() => {
     if (!portalInstance?.status || portalInstance.status !== 'ar-active') {
       return { azimuth: 0, elevation: 0 };
     }
     const bearing = calculateBearing(playerLat, playerLng, portalLat, portalLng);
     const relative = relativeBearing(playerHeading, bearing);
-    return { azimuth: relative, elevation: -5 }; // slightly below eye level
+    return { azimuth: relative, elevation: -5 };
   });
 
   function selectTheme(id) {
     selectedTheme = id;
-    activeIndex = themeList.findIndex(t => t.id === id);
-  }
-
-  function handleScroll() {
-    if (!carouselEl) return;
-    const container = carouselEl;
-    const scrollCenter = container.scrollLeft + container.clientWidth / 2;
-    const items = container.querySelectorAll('.theme-card');
-    items.forEach((item, i) => {
-      const itemCenter = item.offsetLeft + item.offsetWidth / 2;
-      const distance = Math.abs(scrollCenter - itemCenter) / container.clientWidth;
-      const scale = Math.max(0.78, 1 - distance * 0.4);
-      const opacity = Math.max(0.45, 1 - distance * 0.7);
-      item.style.transform = `scale(${scale})`;
-      item.style.opacity = opacity;
-      if (distance < 0.2) {
-        activeIndex = i;
-        selectedTheme = themeList[i].id;
-      }
-    });
-  }
-
-  async function scrollToTheme(index) {
-    if (!carouselEl) return;
-    selectTheme(themeList[index].id);
-    const item = carouselEl.querySelectorAll('.theme-card')[index];
-    if (item) {
-      const container = carouselEl;
-      const scrollLeft = item.offsetLeft + item.offsetWidth / 2 - container.clientWidth / 2;
-      carouselEl.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-    }
-  }
-
-  function handlePortalReady(portal) {
-    portalInstance = portal;
   }
 </script>
 
@@ -85,67 +43,39 @@
 <div class="demo-page">
   <div class="header">
     <h1>🦀 AR Portal</h1>
-    <p class="subtitle">Elige tu mundo literario</p>
+    <p class="subtitle">Choose your literary world</p>
   </div>
 
-  <!-- Horizontal Carousel -->
-  <div class="carousel-wrapper">
-    <div class="carousel-spacer"></div>
-    <div
-      class="theme-carousel"
-      bind:this={carouselEl}
-      onscroll={handleScroll}
-    >
-      {#each themeList as t, i}
-        <button
-          class="theme-card"
-          class:active={selectedTheme === t.id}
-          class:center={i === activeIndex}
-          onclick={() => scrollToTheme(i)}
-        >
-          <div class="card-inner">
-            <span class="card-icon">{t.icon}</span>
-            <span class="card-name">{t.name}</span>
-            <span class="card-desc">{t.description}</span>
-          </div>
-        </button>
-      {/each}
-    </div>
-    <div class="carousel-spacer"></div>
-  </div>
-
-  <div class="dots">
-    {#each themeList as t, i}
+  <!-- Theme Grid -->
+  <div class="theme-grid">
+    {#each themeList as t}
       <button
-        class="dot"
-        class:active={i === activeIndex}
-        onclick={() => scrollToTheme(i)}
-      ></button>
+        class="theme-btn"
+        class:active={selectedTheme === t.id}
+        onclick={() => selectTheme(t.id)}
+      >
+        <span class="theme-icon">{t.icon}</span>
+        <span class="theme-name">{t.name}</span>
+        <span class="theme-desc">{t.description}</span>
+      </button>
     {/each}
   </div>
 
   <!-- Content Config -->
   <div class="config">
     <div class="config-row">
-      <label>Contenido:</label>
-      <div class="type-toggle">
-        <button class:active={contentType === 'text'} onclick={() => contentType = 'text'}>📝 Texto + Audio Espacial</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <label>Proclamación del Narrador:</label>
+      <label>Narrator proclamation:</label>
       <textarea bind:value={textInput} rows="3"></textarea>
     </div>
 
     {#if classifiedThemes.length > 0}
       <div class="classification">
-        <span class="class-label">Detectado:</span>
+        <span class="class-label">Detected:</span>
         {#each classifiedThemes.slice(0, 3) as c}
           <button
             class="detect-btn"
             class:suggested={c.theme === selectedTheme}
-            onclick={() => scrollToTheme(themeList.findIndex(t => t.id === c.theme))}
+            onclick={() => selectTheme(c.theme)}
           >
             {THEMES[c.theme].icon} {THEMES[c.theme].name}
           </button>
@@ -153,10 +83,9 @@
       </div>
     {/if}
 
-    <!-- Spatial Audio Info -->
     {#if portalInstance?.status === 'ar-active'}
       <div class="audio-info">
-        <span>🔊 Audio espacial: azimuth {spatialPosition.azimuth.toFixed(0)}°, elevation {spatialPosition.elevation}°</span>
+        <span>🔊 Spatial audio: azimuth {spatialPosition.azimuth.toFixed(0)}°, elevation {spatialPosition.elevation}°</span>
       </div>
     {/if}
   </div>
@@ -181,125 +110,61 @@
 
 <style>
   .demo-page {
-    max-width: 100%;
+    max-width: 600px;
     margin: 0 auto;
-    padding: 1rem 0 0;
+    padding: 1.5rem;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
   .header {
     text-align: center;
-    margin-bottom: 1rem;
-    padding: 0 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  h1 {
-    font-size: 1.6rem;
-    font-weight: 700;
-    margin: 0 0 0.15rem;
+  h1 { font-size: 1.8rem; font-weight: 700; margin: 0 0 0.25rem; }
+  .subtitle { color: #888; margin: 0; font-size: 0.9rem; }
+
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  .subtitle {
-    color: #888;
-    margin: 0;
-    font-size: 0.85rem;
-  }
-
-  .carousel-wrapper {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.75rem;
-  }
-
-  .carousel-spacer {
-    flex-shrink: 0;
-    width: calc(50vw - 72px);
-  }
-
-  .theme-carousel {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: 0.5rem 0;
-    max-width: 480px;
-    margin: 0 auto;
-  }
-
-  .theme-carousel::-webkit-scrollbar {
-    display: none;
-  }
-
-  .theme-card {
-    flex-shrink: 0;
-    width: 140px;
-    scroll-snap-align: center;
-    border: 2px solid #e0e0e0;
-    border-radius: 14px;
-    background: white;
-    cursor: pointer;
-    transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.25s, border-color 0.2s;
-    transform-origin: center center;
-    font-family: inherit;
-    padding: 0;
-    text-align: center;
-  }
-
-  .theme-card.active {
-    border-color: #c9a87c;
-    background: #fdf8f0;
-    box-shadow: 0 4px 16px rgba(201, 168, 124, 0.35);
-  }
-
-  .card-inner {
+  .theme-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.15rem;
+    gap: 0.2rem;
     padding: 0.75rem 0.5rem;
-    pointer-events: none;
-  }
-
-  .card-icon { font-size: 2rem; line-height: 1; }
-  .card-name { font-weight: 700; font-size: 0.85rem; }
-  .card-desc { font-size: 0.65rem; color: #888; line-height: 1.2; }
-
-  .dots {
-    display: flex;
-    justify-content: center;
-    gap: 0.4rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: none;
-    background: #ddd;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: white;
     cursor: pointer;
-    padding: 0;
     transition: all 0.2s;
+    font-family: inherit;
   }
 
-  .dot.active {
-    background: #c9a87c;
-    width: 20px;
-    border-radius: 4px;
+  .theme-btn:hover { border-color: #c9a87c; }
+
+  .theme-btn.active {
+    border-color: #c9a87c;
+    background: #fdf8f0;
+    box-shadow: 0 2px 8px rgba(201, 168, 124, 0.3);
   }
+
+  .theme-icon { font-size: 1.8rem; }
+  .theme-name { font-weight: 600; font-size: 0.85rem; }
+  .theme-desc { font-size: 0.7rem; color: #888; text-align: center; }
 
   .config {
     background: #f8f8f8;
     border-radius: 12px;
     padding: 1rem;
-    margin: 0 1.5rem 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  .config-row {
-    margin-bottom: 0.75rem;
-  }
+  .config-row { margin-bottom: 0.75rem; }
 
   .config-row label {
     display: block;
@@ -308,7 +173,6 @@
     margin-bottom: 0.25rem;
   }
 
-  .config-row input,
   .config-row textarea {
     width: 100%;
     padding: 0.5rem;
@@ -319,28 +183,6 @@
     box-sizing: border-box;
   }
 
-  .type-toggle {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .type-toggle button {
-    flex: 1;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.2s;
-  }
-
-  .type-toggle button.active {
-    background: #c9a87c;
-    color: white;
-    border-color: #c9a87c;
-  }
-
   .classification {
     margin-top: 0.5rem;
     display: flex;
@@ -349,10 +191,7 @@
     align-items: center;
   }
 
-  .class-label {
-    font-size: 0.8rem;
-    color: #888;
-  }
+  .class-label { font-size: 0.8rem; color: #888; }
 
   .detect-btn {
     font-size: 0.75rem;
