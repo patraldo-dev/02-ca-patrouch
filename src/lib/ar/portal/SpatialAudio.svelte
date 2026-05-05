@@ -166,7 +166,4 @@
 </script>
 
 <!-- No visual output — this is a utility component -->
-<!-- Place alongside the video element in the parent template -->
-{#if active && videoElement}
-  <svelte:window on:focus={() => resume()} />
-{/if}
+<svelte:window on:focus={() => { if (active && audioContext?.state === 'suspended') resume(); }} />
