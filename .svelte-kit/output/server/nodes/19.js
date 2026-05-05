@@ -1,13 +1,10 @@
-import * as universal from '../entries/pages/card/_id_/_page.js';
-import * as server from '../entries/pages/card/_id_/_page.server.js';
+import * as server from '../entries/pages/audio/_page.server.js';
 
 export const index = 19;
 let component_cache;
-export const component = async () => component_cache ??= (await import('../entries/pages/card/_id_/_page.svelte.js')).default;
-export { universal };
-export const universal_id = "src/routes/card/[id]/+page.js";
+export const component = async () => component_cache ??= (await import('../entries/pages/audio/_page.svelte.js')).default;
 export { server };
-export const server_id = "src/routes/card/[id]/+page.server.js";
-export const imports = ["_app/immutable/nodes/19.BsJc0nfG.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/16EERJEz.js","_app/immutable/chunks/DTCNAND8.js","_app/immutable/chunks/o6q8Mtqc.js","_app/immutable/chunks/DAk3OZq9.js"];
-export const stylesheets = ["_app/immutable/assets/19.DjVKQRHL.css"];
+export const server_id = "src/routes/audio/+page.server.js";
+export const imports = ["_app/immutable/nodes/19.BpMARw_K.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/BGcckHsx.js","_app/immutable/chunks/B0CcSODA.js","_app/immutable/chunks/BouOLQ17.js","_app/immutable/chunks/DUY4pXWZ.js","_app/immutable/chunks/GMGyt3qk.js","_app/immutable/chunks/W9rxIS8D.js","_app/immutable/chunks/BXjXS4dR.js","_app/immutable/chunks/CbTIxrDF.js","_app/immutable/chunks/BMKc3Trk.js","_app/immutable/chunks/B1156oEb.js","_app/immutable/chunks/BzoXv4BV.js","_app/immutable/chunks/DMFRS776.js","_app/immutable/chunks/8ydyANTu.js","_app/immutable/chunks/Ez4ddWgA.js","_app/immutable/chunks/DkJaV5g-.js"];
+export const stylesheets = ["_app/immutable/assets/19.BrCY6BMg.css"];
 export const fonts = [];

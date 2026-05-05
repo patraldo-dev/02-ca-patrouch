@@ -46,13 +46,11 @@ declare module '$env/static/private' {
 	export const XCURSOR_SIZE: string;
 	export const SHLVL: string;
 	export const npm_config_noproxy: string;
-	export const VIPSHOME: string;
 	export const XCURSOR_SIZE_LOW_DENSITY: string;
 	export const SOMMELIER_VERSION: string;
 	export const HOME: string;
 	export const OLDPWD: string;
 	export const npm_package_json: string;
-	export const NODE_NO_WARNINGS: string;
 	export const MANAGERPID: string;
 	export const npm_config_userconfig: string;
 	export const npm_config_local_prefix: string;
@@ -193,13 +191,11 @@ declare module '$env/dynamic/private' {
 		XCURSOR_SIZE: string;
 		SHLVL: string;
 		npm_config_noproxy: string;
-		VIPSHOME: string;
 		XCURSOR_SIZE_LOW_DENSITY: string;
 		SOMMELIER_VERSION: string;
 		HOME: string;
 		OLDPWD: string;
 		npm_package_json: string;
-		NODE_NO_WARNINGS: string;
 		MANAGERPID: string;
 		npm_config_userconfig: string;
 		npm_config_local_prefix: string;

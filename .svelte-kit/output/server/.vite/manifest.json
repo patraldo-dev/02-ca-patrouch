@@ -34,6 +34,18 @@
       "_url.js"
     ]
   },
+  "_auth.js": {
+    "file": "chunks/auth.js",
+    "name": "auth",
+    "imports": [
+      "_url.js"
+    ],
+    "dynamicImports": [
+      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+      "src/lib/server/mailgun.js"
+    ]
+  },
   "_bottle-crypto.js": {
     "file": "chunks/bottle-crypto.js",
     "name": "bottle-crypto"
@@ -240,22 +252,8 @@
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "src/lib/auth.js",
+      "_auth.js",
       "_environment.js"
-    ]
-  },
-  "src/lib/auth.js": {
-    "file": "chunks/auth.js",
-    "name": "auth",
-    "src": "src/lib/auth.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "_url.js"
-    ],
-    "dynamicImports": [
-      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
-      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
-      "src/lib/server/mailgun.js"
     ]
   },
   "src/lib/server/mailgun.js": {
@@ -312,7 +310,7 @@
       "_auth-client.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.TO_lctqg.css"
+      "_app/immutable/assets/_page.CfKmfmvG.css"
     ]
   },
   "src/routes/(auth-pages)/signup/+page.svelte": {
@@ -755,7 +753,7 @@
     "src": "src/routes/api/auth/[...all]/+server.js",
     "isEntry": true,
     "imports": [
-      "src/lib/auth.js"
+      "_auth.js"
     ]
   },
   "src/routes/api/books/+server.js": {
@@ -830,6 +828,12 @@
     "src": "src/routes/api/bottlequest/drift/simulate/+server.js",
     "isEntry": true
   },
+  "src/routes/api/bottlequest/fiesta/scores/+server.js": {
+    "file": "entries/endpoints/api/bottlequest/fiesta/scores/_server.js",
+    "name": "entries/endpoints/api/bottlequest/fiesta/scores/_server",
+    "src": "src/routes/api/bottlequest/fiesta/scores/+server.js",
+    "isEntry": true
+  },
   "src/routes/api/bottlequest/fuel-request/+server.js": {
     "file": "entries/endpoints/api/bottlequest/fuel-request/_server.js",
     "name": "entries/endpoints/api/bottlequest/fuel-request/_server",
@@ -870,6 +874,18 @@
     "file": "entries/endpoints/api/bottlequest/physical/_server.js",
     "name": "entries/endpoints/api/bottlequest/physical/_server",
     "src": "src/routes/api/bottlequest/physical/+server.js",
+    "isEntry": true
+  },
+  "src/routes/api/bottlequest/physical/create/+server.js": {
+    "file": "entries/endpoints/api/bottlequest/physical/create/_server.js",
+    "name": "entries/endpoints/api/bottlequest/physical/create/_server",
+    "src": "src/routes/api/bottlequest/physical/create/+server.js",
+    "isEntry": true
+  },
+  "src/routes/api/bottlequest/physical/generate/+server.js": {
+    "file": "entries/endpoints/api/bottlequest/physical/generate/_server.js",
+    "name": "entries/endpoints/api/bottlequest/physical/generate/_server",
+    "src": "src/routes/api/bottlequest/physical/generate/+server.js",
     "isEntry": true
   },
   "src/routes/api/bottlequest/transfer/+server.js": {
@@ -946,15 +962,6 @@
     "name": "entries/endpoints/api/debug/books/_server",
     "src": "src/routes/api/debug/books/+server.js",
     "isEntry": true
-  },
-  "src/routes/api/emergency-login/+server.js": {
-    "file": "entries/endpoints/api/emergency-login/_server.js",
-    "name": "entries/endpoints/api/emergency-login/_server",
-    "src": "src/routes/api/emergency-login/+server.js",
-    "isEntry": true,
-    "dynamicImports": [
-      "src/lib/auth.js"
-    ]
   },
   "src/routes/api/engagement/+server.js": {
     "file": "entries/endpoints/api/engagement/_server.js",
@@ -1244,6 +1251,18 @@
       "_writing-stats.js"
     ]
   },
+  "src/routes/ar/demo/+page.svelte": {
+    "file": "entries/pages/ar/demo/_page.svelte.js",
+    "name": "entries/pages/ar/demo/_page.svelte",
+    "src": "src/routes/ar/demo/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_renderer.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_page.CWVj4OCh.css"
+    ]
+  },
   "src/routes/audio/+page.server.js": {
     "file": "entries/pages/audio/_page.server.js",
     "name": "entries/pages/audio/_page.server",
@@ -1377,7 +1396,7 @@
       "_state.svelte.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.D9B7Dpm2.css"
+      "_app/immutable/assets/_page.-d-xZGKP.css"
     ]
   },
   "src/routes/games/booty/arbooty/+page.js": {
@@ -1399,12 +1418,30 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
+      "_stores.js",
       "_index3.js",
       "_index-server.js",
       "_html.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.D72mi07c.css"
+      "_app/immutable/assets/_page.DucmNhLS.css"
+    ]
+  },
+  "src/routes/games/booty/arbooty/create/+page.svelte": {
+    "file": "entries/pages/games/booty/arbooty/create/_page.svelte.js",
+    "name": "entries/pages/games/booty/arbooty/create/_page.svelte",
+    "src": "src/routes/games/booty/arbooty/create/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_renderer.js",
+      "_exports.js",
+      "_utils2.js",
+      "_root.js",
+      "_state.svelte.js",
+      "_stores.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_page.BHEz0FO3.css"
     ]
   },
   "src/routes/images/[imageID]/+server.js": {
@@ -1510,7 +1547,7 @@
       "_index3.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.CspyvFJ5.css"
+      "_app/immutable/assets/_page.BOSkim1B.css"
     ]
   },
   "src/routes/reviews/+page.svelte": {

@@ -161,6 +161,9 @@
 	"/api/bottlequest/drift/simulate": [
 		"src/routes/api/bottlequest/drift/simulate/+server.js"
 	],
+	"/api/bottlequest/fiesta/scores": [
+		"src/routes/api/bottlequest/fiesta/scores/+server.js"
+	],
 	"/api/bottlequest/fuel-request": [
 		"src/routes/api/bottlequest/fuel-request/+server.js"
 	],
@@ -175,6 +178,12 @@
 	],
 	"/api/bottlequest/physical": [
 		"src/routes/api/bottlequest/physical/+server.js"
+	],
+	"/api/bottlequest/physical/create": [
+		"src/routes/api/bottlequest/physical/create/+server.js"
+	],
+	"/api/bottlequest/physical/generate": [
+		"src/routes/api/bottlequest/physical/generate/+server.js"
 	],
 	"/api/bottlequest/transfer": [
 		"src/routes/api/bottlequest/transfer/+server.js"
@@ -208,9 +217,6 @@
 	],
 	"/api/debug/books": [
 		"src/routes/api/debug/books/+server.js"
-	],
-	"/api/emergency-login": [
-		"src/routes/api/emergency-login/+server.js"
 	],
 	"/api/engagement": [
 		"src/routes/api/engagement/+server.js"
@@ -338,6 +344,10 @@
 	"/api/writings/[id]/comments": [
 		"src/routes/api/writings/[id]/comments/+server.js"
 	],
+	"/ar/demo": [
+		"src/routes/+layout.js",
+		"src/routes/+layout.server.js"
+	],
 	"/audio": [
 		"src/routes/audio/+page.server.js",
 		"src/routes/+layout.js",
@@ -380,6 +390,10 @@
 	"/games/booty/arbooty": [
 		"src/routes/games/booty/arbooty/+page.js",
 		"src/routes/games/booty/arbooty/+page.server.js",
+		"src/routes/+layout.js",
+		"src/routes/+layout.server.js"
+	],
+	"/games/booty/arbooty/create": [
 		"src/routes/+layout.js",
 		"src/routes/+layout.server.js"
 	],

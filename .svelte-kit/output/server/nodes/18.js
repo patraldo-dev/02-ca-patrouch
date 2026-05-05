@@ -1,10 +1,8 @@
-import * as server from '../entries/pages/audio/_page.server.js';
+
 
 export const index = 18;
 let component_cache;
-export const component = async () => component_cache ??= (await import('../entries/pages/audio/_page.svelte.js')).default;
-export { server };
-export const server_id = "src/routes/audio/+page.server.js";
-export const imports = ["_app/immutable/nodes/18.BzKJHvEE.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/C7wSchzS.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/BYHqxEaj.js","_app/immutable/chunks/BBzQ1gTY.js","_app/immutable/chunks/16EERJEz.js","_app/immutable/chunks/DTCNAND8.js","_app/immutable/chunks/DmT-1Ms3.js","_app/immutable/chunks/DAk3OZq9.js","_app/immutable/chunks/j_clqXuE.js","_app/immutable/chunks/C9unnt0N.js","_app/immutable/chunks/eLItx-_i.js","_app/immutable/chunks/IpB75WsZ.js","_app/immutable/chunks/BIVhEQ11.js"];
-export const stylesheets = ["_app/immutable/assets/18.BrCY6BMg.css"];
+export const component = async () => component_cache ??= (await import('../entries/pages/ar/demo/_page.svelte.js')).default;
+export const imports = ["_app/immutable/nodes/18.Cf9pmnx0.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/B0CcSODA.js","_app/immutable/chunks/BouOLQ17.js","_app/immutable/chunks/DUY4pXWZ.js","_app/immutable/chunks/BXjXS4dR.js","_app/immutable/chunks/CbTIxrDF.js","_app/immutable/chunks/BMKc3Trk.js","_app/immutable/chunks/DAiurb5_.js","_app/immutable/chunks/B1156oEb.js","_app/immutable/chunks/CcbwJF9L.js","_app/immutable/chunks/C7YJlRmi.js","_app/immutable/chunks/BzoXv4BV.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/BGcckHsx.js","_app/immutable/chunks/CXFzVcMB.js","_app/immutable/chunks/CGjzN7Mx.js","_app/immutable/chunks/mpdyRPX9.js","_app/immutable/chunks/GMGyt3qk.js","_app/immutable/chunks/W9rxIS8D.js"];
+export const stylesheets = ["_app/immutable/assets/18.CWVj4OCh.css"];
 export const fonts = [];

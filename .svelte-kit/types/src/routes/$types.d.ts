@@ -12,7 +12,7 @@ type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends 
 export type Snapshot<T = any> = Kit.Snapshot<T>;
 type PageServerParentData = EnsureDefined<LayoutServerData>;
 type PageParentData = EnsureDefined<LayoutData>;
-type LayoutRouteId = RouteId | "/" | "/(auth-pages)/forgot-password" | "/(auth-pages)/login" | "/(auth-pages)/signup" | "/account" | "/admin" | "/admin/analytics" | "/admin/bottles" | "/admin/invitations" | "/admin/users" | "/agora" | "/agora/community" | "/audio" | "/card/[id]" | "/confirmation-success" | "/evaluate" | "/games" | "/games/booty" | "/games/booty/arbooty" | "/invite/[token]" | "/privacy" | "/profile" | "/refine" | "/reset-password" | "/reviews" | "/stats" | "/terms" | "/test-upload" | "/test-utf8" | "/write" | "/write/[username]" | "/write/new" | "/writings" | "/writings/[id]" | "/writings/[id]/edit" | null
+type LayoutRouteId = RouteId | "/" | "/(auth-pages)/forgot-password" | "/(auth-pages)/login" | "/(auth-pages)/signup" | "/account" | "/admin" | "/admin/analytics" | "/admin/bottles" | "/admin/invitations" | "/admin/users" | "/agora" | "/agora/community" | "/ar/demo" | "/audio" | "/card/[id]" | "/confirmation-success" | "/evaluate" | "/games" | "/games/booty" | "/games/booty/arbooty" | "/games/booty/arbooty/create" | "/invite/[token]" | "/privacy" | "/profile" | "/refine" | "/reset-password" | "/reviews" | "/stats" | "/terms" | "/test-upload" | "/test-utf8" | "/write" | "/write/[username]" | "/write/new" | "/writings" | "/writings/[id]" | "/writings/[id]/edit" | null
 type LayoutParams = RouteParams & { id?: string; token?: string; username?: string }
 type LayoutServerParentData = EnsureDefined<{}>;
 type LayoutParentData = EnsureDefined<{}>;

@@ -56,6 +56,7 @@ function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;
     let { data } = $$props;
+    let scoreTab = "general";
     let launching = null;
     let fuelRequests = [];
     let requestAmount = "";
@@ -184,7 +185,7 @@ function _page($$renderer, $$props) {
     $$renderer2.push(`<!--]--></div></div> `);
     if (data.myPlayer) {
       $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<a href="/games/booty/arbooty" style="display:block;background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;text-decoration:none;color:var(--text);" class="svelte-1wyf3u8"><h2 class="text-xl font-bold mb-1 svelte-1wyf3u8" style="font-family:Playfair Display,serif">🏴☠️ ${escape_html(store_get($$store_subs ??= {}, "$t", t)("booty.arbooty.title"))}</h2> <p class="text-sm svelte-1wyf3u8" style="color:var(--text-dim)">${escape_html(store_get($$store_subs ??= {}, "$t", t)("booty.arbooty.card_desc"))}</p></a>`);
+      $$renderer2.push(`<a href="/games/booty/arbooty" style="display:block;background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;text-decoration:none;color:var(--text);" class="svelte-1wyf3u8"><h2 class="text-xl font-bold mb-1 svelte-1wyf3u8" style="font-family:Playfair Display,serif">🏴☠️ ${escape_html(store_get($$store_subs ??= {}, "$t", t)("booty.arbooty.title"))}</h2> <p class="text-sm svelte-1wyf3u8" style="color:var(--text-dim)">${escape_html(store_get($$store_subs ??= {}, "$t", t)("booty.arbooty.card_desc"))}</p></a> <a href="/games/booty/arbooty?mode=fiesta" style="display:block;background:var(--surface);border:2px solid #881337;border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;text-decoration:none;color:var(--text);" class="svelte-1wyf3u8"><h2 class="text-xl font-bold mb-1 svelte-1wyf3u8" style="font-family:Playfair Display,serif;color:#c9a87c">🎉 ¡Fiesta de Victor!</h2> <p class="text-sm svelte-1wyf3u8" style="color:var(--text-dim)">Encuentra mensajes escondidos con la cámara AR</p></a>`);
     } else {
       $$renderer2.push("<!--[-1-->");
     }
@@ -491,8 +492,10 @@ function _page($$renderer, $$props) {
     $$renderer2.push(`<!--]--> `);
     if (data.players?.length) {
       $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<div class="scoreboard-section svelte-1wyf3u8"><h2 class="section-title svelte-1wyf3u8">🏆 ${escape_html(store_get($$store_subs ??= {}, "$t", t)("scoreboard.title"))}</h2> <div class="scoreboard-list svelte-1wyf3u8" role="list"><!--[-->`);
-      const each_array_11 = ensure_array_like([...data.players].sort((a, b) => (b.points || 0) - (a.points || 0)));
+      $$renderer2.push(`<div class="scoreboard-section svelte-1wyf3u8"><h2 class="section-title svelte-1wyf3u8">🏆 ${escape_html(store_get($$store_subs ??= {}, "$t", t)("scoreboard.title"))}</h2> <div class="scoreboard-tabs svelte-1wyf3u8"><button${attr_class("svelte-1wyf3u8", void 0, { "active": scoreTab === "general" })}>🌐 General</button> <button${attr_class("svelte-1wyf3u8", void 0, { "active": scoreTab === "booty" })}>⚔️ Booty Battle</button> <button${attr_class("svelte-1wyf3u8", void 0, { "active": scoreTab === "arbooty" })}>🗺️ Arbooty</button></div> <div class="scoreboard-list svelte-1wyf3u8" role="list"><!--[-->`);
+      const each_array_11 = ensure_array_like([...data.players].sort((a, b) => {
+        return (b.points || 0) - (a.points || 0);
+      }));
       for (let i = 0, $$length = each_array_11.length; i < $$length; i++) {
         let p = each_array_11[i];
         $$renderer2.push(`<div class="score-row svelte-1wyf3u8" role="listitem"><span class="score-rank svelte-1wyf3u8">${escape_html(i + 1)}</span> <span class="score-type svelte-1wyf3u8">${escape_html(p.type === "ai" ? "🤖" : p.solo ? "👤" : "👥")}</span> <span class="score-name svelte-1wyf3u8">${escape_html(p.display_name || p.username)}</span> <span class="score-pts svelte-1wyf3u8">⭐ ${escape_html(p.points || 0)}</span> <span class="score-fuel svelte-1wyf3u8">${escape_html(formatBeans(p.fuel))}</span></div>`);
