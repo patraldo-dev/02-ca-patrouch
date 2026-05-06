@@ -205,7 +205,7 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
           }
         }
 
-        renderer.render(scene, camera);
+        renderer.render(scene, renderer.xr.getCamera());
       });
 
     } catch (e) {
