@@ -42,6 +42,11 @@
   });
 
   function selectTheme(id) { selectedTheme = id; }
+
+  function capturePortal(portal) {
+    portalInstance = portal;
+    return '';
+  }
 </script>
 
 <svelte:head>
@@ -108,7 +113,7 @@
       onExit={() => portalInstance = null}
     >
       {#snippet children(portal)}
-        {@const _portal = (portalInstance = portal, '')}
+        {@const _ = capturePortal(portal)}
         <TextContent {portal} text={textInput} theme={selectedTheme} />
       {/snippet}
     </ARPortal>
