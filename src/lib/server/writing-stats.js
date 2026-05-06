@@ -102,6 +102,38 @@ export async function getTodayData(db, ai, userId, locale = 'en') {
   };
 }
 
+/**
+ * Ensure a prompt exists in writing_prompts before using it as FK reference.
+ * Prevents SQLITE_CONSTRAINT_FOREIGNKEY on INSERT into daily_prompt_log.
+ */
+async function ensurePromptExists(db, prompt, today, locale) {
+  if (!prompt?.id) return null;
+  const exists = await db.prepare('SELECT 1 FROM writing_prompts WHERE id = ?').bind(prompt.id).first();
+  if (!exists) {
+    await db.prepare(
+      'INSERT INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
+    ).bind(prompt.id, prompt.prompt_text || '', today, prompt.category || 'free-writing', locale).run();
+  }
+  return prompt;
+}
+
+/**
+ * Safe INSERT into daily_prompt_log — ensures FK refs exist first.
+ */
+async function insertPromptLog(db, userId, promptId, today, action, locale, isCommunity) {
+  // Verify prompt exists
+  const promptExists = await db.prepare('SELECT 1 FROM writing_prompts WHERE id = ?').bind(promptId).first();
+  if (!promptExists) {
+    console.warn('FK safety: prompt', promptId, 'not found, inserting fallback');
+    await db.prepare(
+      'INSERT OR IGNORE INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
+    ).bind(promptId, '', today, 'free-writing', locale).run();
+  }
+  await db.prepare(
+    'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).bind(crypto.randomUUID(), userId, promptId, today, action, locale, isCommunity).run();
+}
+
 export async function handleAction(db, ai, userId, action, locale = 'en') {
   const today = getToday();
 
@@ -115,20 +147,20 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
       return { error: 'No passes remaining today', passesRemaining: 0 };
     }
 
-    const communityPrompt = await getOrCreateCommunityPrompt(db, ai, today, locale);
-    await db.prepare(
-      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).bind(crypto.randomUUID(), userId, communityPrompt.id, today, 'passed', locale, 1).run();
+    try {
+      const communityPrompt = await ensurePromptExists(db, await getOrCreateCommunityPrompt(db, ai, today, locale), today, locale);
+      if (communityPrompt) await insertPromptLog(db, userId, communityPrompt.id, today, 'passed', locale, 1);
+    } catch (err) {
+      console.error('Failed to log community prompt pass:', err);
+    }
 
     await updateStats(db, userId, 'passed');
 
-    const newPrompt = await getNewPromptForUser(db, ai, today, userId, locale);
+    const newPrompt = await ensurePromptExists(db, await getNewPromptForUser(db, ai, today, userId, locale), today, locale);
     const newRemaining = DAILY_PASS_LIMIT - passesUsed - 1;
 
     // Log the new personal prompt as shown so we don't repeat it
-    await db.prepare(
-      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).bind(crypto.randomUUID(), userId, newPrompt.id, today, 'passed', locale, 0).run();
+    if (newPrompt) await insertPromptLog(db, userId, newPrompt.id, today, 'passed', locale, 0);
 
     return {
       prompt: newPrompt,
@@ -176,19 +208,9 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
       isCommunity = 1;
     }
 
-    // Ensure prompt exists in writing_prompts before inserting log
-    if (currentPrompt.id) {
-      const exists = await db.prepare('SELECT 1 FROM writing_prompts WHERE id = ?').bind(currentPrompt.id).first();
-      if (!exists) {
-        await db.prepare(
-          'INSERT INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
-        ).bind(currentPrompt.id, currentPrompt.prompt_text || '', today, currentPrompt.category || 'free-writing', locale).run();
-      }
-    }
-
-    await db.prepare(
-      'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).bind(crypto.randomUUID(), userId, currentPrompt.id, today, 'accepted', locale, isCommunity).run();
+    // Ensure prompt exists and insert log entry safely
+    await ensurePromptExists(db, currentPrompt, today, locale);
+    await insertPromptLog(db, userId, currentPrompt.id, today, 'accepted', locale, isCommunity);
 
     await updateStats(db, userId, 'accepted');
 
