@@ -62,3 +62,4 @@ notes4env.txt
 .svelte-kit/
 package-lock.json
 .wrangler/state/
+.svelte-kit/
