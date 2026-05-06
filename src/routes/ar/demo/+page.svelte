@@ -108,10 +108,7 @@
       onExit={() => portalInstance = null}
     >
       {#snippet children(portal)}
-        <!-- Capture portal reference so portalInstance stays in sync -->
-        {#if portal && portalInstance !== portal}
-          {() => { portalInstance = portal; return ''; }()}
-        {/if}
+        {@const _portal = (portalInstance = portal, '')}
         <TextContent {portal} text={textInput} theme={selectedTheme} />
       {/snippet}
     </ARPortal>
