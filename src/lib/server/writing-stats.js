@@ -120,18 +120,26 @@ async function ensurePromptExists(db, prompt, today, locale) {
 /**
  * Safe INSERT into daily_prompt_log — ensures FK refs exist first.
  */
-async function insertPromptLog(db, userId, promptId, today, action, locale, isCommunity) {
+async function insertPromptLog(db, userId, promptId, today, action, locale) {
+  console.log('📋 insertPromptLog:', { promptId, action, locale });
+  
   // Verify prompt exists
   const promptExists = await db.prepare('SELECT 1 FROM writing_prompts WHERE id = ?').bind(promptId).first();
   if (!promptExists) {
-    console.warn('FK safety: prompt', promptId, 'not found, inserting fallback');
-    await db.prepare(
-      'INSERT OR IGNORE INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
-    ).bind(promptId, '', today, 'free-writing', locale).run();
+    console.warn('⚠️ FK safety: prompt', promptId, 'not found, inserting fallback');
+    try {
+      await db.prepare(
+        'INSERT OR IGNORE INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
+      ).bind(promptId, '', today, 'free-writing', locale).run();
+    } catch (e) {
+      console.error('❌ Fallback prompt insert failed:', e.message);
+    }
   }
+  
   await db.prepare(
-    'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).bind(crypto.randomUUID(), userId, promptId, today, action, locale, isCommunity).run();
+    'INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(crypto.randomUUID(), userId, promptId, today, action, locale).run();
+  console.log('✅ Prompt log inserted');
 }
 
 export async function handleAction(db, ai, userId, action, locale = 'en') {
@@ -149,7 +157,7 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
 
     try {
       const communityPrompt = await ensurePromptExists(db, await getOrCreateCommunityPrompt(db, ai, today, locale), today, locale);
-      if (communityPrompt) await insertPromptLog(db, userId, communityPrompt.id, today, 'passed', locale, 1);
+      if (communityPrompt) await insertPromptLog(db, userId, communityPrompt.id, today, 'passed', locale);
     } catch (err) {
       console.error('Failed to log community prompt pass:', err);
     }
@@ -160,7 +168,7 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
     const newRemaining = DAILY_PASS_LIMIT - passesUsed - 1;
 
     // Log the new personal prompt as shown so we don't repeat it
-    if (newPrompt) await insertPromptLog(db, userId, newPrompt.id, today, 'passed', locale, 0);
+    if (newPrompt) await insertPromptLog(db, userId, newPrompt.id, today, 'passed', locale);
 
     return {
       prompt: newPrompt,
@@ -210,7 +218,7 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
 
     // Ensure prompt exists and insert log entry safely
     await ensurePromptExists(db, currentPrompt, today, locale);
-    await insertPromptLog(db, userId, currentPrompt.id, today, 'accepted', locale, isCommunity);
+    await insertPromptLog(db, userId, currentPrompt.id, today, 'accepted', locale);
 
     await updateStats(db, userId, 'accepted');
 
