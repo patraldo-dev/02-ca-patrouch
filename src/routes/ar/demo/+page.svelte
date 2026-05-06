@@ -1,38 +1,47 @@
 <script>
   import { onMount } from 'svelte';
-  import ARPortal from '$lib/ar/portal/ARPortal.svelte';
-  import TextContent from '$lib/ar/portal/TextContent.svelte';
-  import SpatialAudio from '$lib/ar/portal/SpatialAudio.svelte';
   import { THEMES, classifyText } from '$lib/ar/portal/themes.js';
-  import { haversineDistance, calculateBearing, relativeBearing } from '$lib/geo.js';
+  import { calculateBearing, relativeBearing } from '$lib/geo.js';
 
+  // $state declarations first, before everything
+  let loaded = $state(false);
   let selectedTheme = $state('narrador');
   let textInput = $state('En el umbral entre lo soñado y lo escrito, las palabras se materializan como constelaciones.');
+  let portalInstance = $state(null);  // assigned via snippet callback
+  let narratorVideo = $state(null);
+
+  // Derived after state
   let classifiedThemes = $derived(classifyText(textInput));
   const themeList = Object.values(THEMES);
 
-  let portalInstance = null;
-  let narratorVideo = $state(null);
-
-  // Spatial audio state (demo values — real game uses GeolocationAPI)
-  let playerLat = 19.4326;
-  let playerLng = -99.1332;
-  let playerHeading = 0;
-  let portalLat = 19.4330;
-  let portalLng = -99.1330;
+  // Demo coords — real game uses GeolocationAPI
+  const playerLat = 19.4326, playerLng = -99.1332, playerHeading = 0;
+  const portalLat = 19.4330, portalLng = -99.1330;
 
   let spatialPosition = $derived.by(() => {
-    if (!portalInstance?.status || portalInstance.status !== 'ar-active') {
-      return { azimuth: 0, elevation: 0 };
-    }
+    if (portalInstance?.status !== 'ar-active') return { azimuth: 0, elevation: 0 };
     const bearing = calculateBearing(playerLat, playerLng, portalLat, portalLng);
-    const relative = relativeBearing(playerHeading, bearing);
-    return { azimuth: relative, elevation: -5 };
+    return { azimuth: relativeBearing(playerHeading, bearing), elevation: -5 };
   });
 
-  function selectTheme(id) {
-    selectedTheme = id;
-  }
+  // Lazy imports — don't load Three.js until after mount
+  let ARPortal = $state(null);
+  let TextContent = $state(null);
+  let SpatialAudio = $state(null);
+
+  onMount(async () => {
+    const [ap, tc, sa] = await Promise.all([
+      import('$lib/ar/portal/ARPortal.svelte'),
+      import('$lib/ar/portal/TextContent.svelte'),
+      import('$lib/ar/portal/SpatialAudio.svelte'),
+    ]);
+    ARPortal = ap.default;
+    TextContent = tc.default;
+    SpatialAudio = sa.default;
+    loaded = true;
+  });
+
+  function selectTheme(id) { selectedTheme = id; }
 </script>
 
 <svelte:head>
@@ -41,70 +50,80 @@
 </svelte:head>
 
 <div class="demo-page">
-  <div class="header">
-    <h1>🦀 AR Portal</h1>
-    <p class="subtitle">Choose your literary world</p>
-  </div>
-
-  <!-- Theme Grid -->
-  <div class="theme-grid">
-    {#each themeList as t}
-      <button
-        class="theme-btn"
-        class:active={selectedTheme === t.id}
-        onclick={() => selectTheme(t.id)}
-      >
-        <span class="theme-icon">{t.icon}</span>
-        <span class="theme-name">{t.name}</span>
-        <span class="theme-desc">{t.description}</span>
-      </button>
-    {/each}
-  </div>
-
-  <!-- Content Config -->
-  <div class="config">
-    <div class="config-row">
-      <label>Narrator proclamation:</label>
-      <textarea bind:value={textInput} rows="3"></textarea>
+  {#if !loaded}
+    <div style="padding:2rem;text-align:center;color:#888;">
+      <div class="spinner"></div>
+      <p>Cargando AR...</p>
+    </div>
+  {:else}
+    <div class="header">
+      <h1>🦀 AR Portal</h1>
+      <p class="subtitle">Choose your literary world</p>
     </div>
 
-    {#if classifiedThemes.length > 0}
-      <div class="classification">
-        <span class="class-label">Detected:</span>
-        {#each classifiedThemes.slice(0, 3) as c}
-          <button
-            class="detect-btn"
-            class:suggested={c.theme === selectedTheme}
-            onclick={() => selectTheme(c.theme)}
-          >
-            {THEMES[c.theme].icon} {THEMES[c.theme].name}
-          </button>
-        {/each}
+    <!-- Theme Grid -->
+    <div class="theme-grid">
+      {#each themeList as t}
+        <button
+          class="theme-btn"
+          class:active={selectedTheme === t.id}
+          onclick={() => selectTheme(t.id)}
+        >
+          <span class="theme-icon">{t.icon}</span>
+          <span class="theme-name">{t.name}</span>
+          <span class="theme-desc">{t.description}</span>
+        </button>
+      {/each}
+    </div>
+
+    <!-- Content Config -->
+    <div class="config">
+      <div class="config-row">
+        <label>Narrator proclamation:</label>
+        <textarea bind:value={textInput} rows="3"></textarea>
       </div>
-    {/if}
+      {#if classifiedThemes.length > 0}
+        <div class="classification">
+          <span class="class-label">Detected:</span>
+          {#each classifiedThemes.slice(0, 3) as c}
+            <button
+              class="detect-btn"
+              class:suggested={c.theme === selectedTheme}
+              onclick={() => selectTheme(c.theme)}
+            >{THEMES[c.theme].icon} {THEMES[c.theme].name}</button>
+          {/each}
+        </div>
+      {/if}
+      {#if portalInstance?.status === 'ar-active'}
+        <div class="audio-info">
+          🔊 Spatial: {spatialPosition.azimuth.toFixed(0)}° / {spatialPosition.elevation}°
+        </div>
+      {/if}
+    </div>
+
+    <!-- Portal — ARPortal loaded lazily, portalInstance captured via snippet -->
+    <ARPortal
+      theme={selectedTheme}
+      contentType="text"
+      onExit={() => portalInstance = null}
+    >
+      {#snippet children(portal)}
+        <!-- Capture portal reference so portalInstance stays in sync -->
+        {#if portal && portalInstance !== portal}
+          {() => { portalInstance = portal; return ''; }()}
+        {/if}
+        <TextContent {portal} text={textInput} theme={selectedTheme} />
+      {/snippet}
+    </ARPortal>
 
     {#if portalInstance?.status === 'ar-active'}
-      <div class="audio-info">
-        <span>🔊 Spatial audio: azimuth {spatialPosition.azimuth.toFixed(0)}°, elevation {spatialPosition.elevation}°</span>
-      </div>
+      <SpatialAudio
+        videoElement={narratorVideo}
+        azimuth={spatialPosition.azimuth}
+        elevation={spatialPosition.elevation}
+        active={true}
+      />
     {/if}
-  </div>
-
-  <!-- Portal Launcher -->
-  <ARPortal theme={selectedTheme} contentType="text">
-    {#snippet children(portal)}
-      <TextContent portal={portal} text={textInput} theme={selectedTheme} />
-    {/snippet}
-  </ARPortal>
-
-  <!-- Spatial Audio (connects when AR is active) -->
-  {#if portalInstance?.status === 'ar-active'}
-    <SpatialAudio
-      videoElement={narratorVideo}
-      azimuth={spatialPosition.azimuth}
-      elevation={spatialPosition.elevation}
-      active={portalInstance.status === 'ar-active'}
-    />
   {/if}
 </div>
 
@@ -217,4 +236,14 @@
     font-size: 0.8rem;
     color: #2e7d32;
   }
+
+.spinner {
+  width: 24px; height: 24px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #c9a87c;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 0.5rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
