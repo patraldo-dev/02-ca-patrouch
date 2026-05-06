@@ -24,20 +24,21 @@ const STATUS = {
  * @param {Function} [opts.onStatusChange] - Callback on status transitions
  * @returns {Object} Portal controller
  */
-export function usePortal({ theme = 'narrador', contentType = 'image', onStatusChange } = {}) {
+export function usePortal({ theme = 'narrador', contentType = 'image', onStatusChange, onExit } = {}) {
+  // REACTIVE — only what the template needs to observe
   let status = $state(STATUS.LOADING);
-  let session = $state(null);
-  let renderer = $state(null);
-  let scene = $state(null);
-  let camera = $state(null);
-  let hitTestSource = $state(null);
-  let lastHitPose = $state(null);
   let placed = $state(false);
   let error = $state(null);
 
-  // Content refs — set by content components
-  let contentMesh = $state(null);
-  let reticle = $state(null);
+  // NOT REACTIVE — Three.js objects, never $state (Proxy breaks .setAttribute etc)
+  let session = null;
+  let renderer = null;
+  let scene = null;
+  let camera = null;
+  let hitTestSource = null;
+  let lastHitPose = null;
+  let contentMesh = null;
+  let reticle = null;
 
   function setStatus(newStatus) {
     status = newStatus;
@@ -246,7 +247,7 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
     reticle = null;
 
     // Hard reset — AR changes GL context
-    window.location.replace('/');
+    onExit?.() ?? window.location.replace('/');
   }
 
   return {

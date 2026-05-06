@@ -24,6 +24,7 @@
     contentUrl = '',
     contentText = '',
     autoPlace = false,
+    onExit,
     children,
   } = $props();
 
@@ -37,6 +38,7 @@
     portal = usePortal({
       theme,
       contentType,
+      onExit,
     });
 
     const ready = await portal.init();

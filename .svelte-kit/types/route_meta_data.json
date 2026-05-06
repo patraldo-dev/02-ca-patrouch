@@ -125,6 +125,12 @@
 	"/api/analytics": [
 		"src/routes/api/analytics/+server.js"
 	],
+	"/api/ar/portals": [
+		"src/routes/api/ar/portals/+server.js"
+	],
+	"/api/ar/portals/nearby": [
+		"src/routes/api/ar/portals/nearby/+server.js"
+	],
 	"/api/auth/[...all]": [
 		"src/routes/api/auth/[...all]/+server.js"
 	],
@@ -345,6 +351,7 @@
 		"src/routes/api/writings/[id]/comments/+server.js"
 	],
 	"/ar/demo": [
+		"src/routes/ar/demo/+page.js",
 		"src/routes/+layout.js",
 		"src/routes/+layout.server.js"
 	],

@@ -10,7 +10,7 @@ return {
 	assets: new Set([".assetsignore","favicon.ico","robots.txt"]),
 	mimeTypes: {".txt":"text/plain"},
 	_: {
-		client: {start:"_app/immutable/entry/start.C05S7CZS.js",app:"_app/immutable/entry/app.Cew9e9zn.js",imports:["_app/immutable/entry/start.C05S7CZS.js","_app/immutable/chunks/Ez4ddWgA.js","_app/immutable/chunks/DkJaV5g-.js","_app/immutable/chunks/BGcckHsx.js","_app/immutable/chunks/B0CcSODA.js","_app/immutable/chunks/BouOLQ17.js","_app/immutable/chunks/DUY4pXWZ.js","_app/immutable/chunks/W9rxIS8D.js","_app/immutable/entry/app.Cew9e9zn.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/B0CcSODA.js","_app/immutable/chunks/BouOLQ17.js","_app/immutable/chunks/DUY4pXWZ.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/BGcckHsx.js","_app/immutable/chunks/BXjXS4dR.js","_app/immutable/chunks/CbTIxrDF.js","_app/immutable/chunks/DZc67b1Z.js","_app/immutable/chunks/mpdyRPX9.js","_app/immutable/chunks/GMGyt3qk.js","_app/immutable/chunks/W9rxIS8D.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.6l34EeOA.js",app:"_app/immutable/entry/app.COLyn673.js",imports:["_app/immutable/entry/start.6l34EeOA.js","_app/immutable/chunks/DCPge2M6.js","_app/immutable/chunks/D0C1hOej.js","_app/immutable/chunks/BGcckHsx.js","_app/immutable/chunks/B0CcSODA.js","_app/immutable/chunks/BouOLQ17.js","_app/immutable/chunks/DUY4pXWZ.js","_app/immutable/chunks/W9rxIS8D.js","_app/immutable/entry/app.COLyn673.js","_app/immutable/chunks/PPVm8Dsz.js","_app/immutable/chunks/B0CcSODA.js","_app/immutable/chunks/BouOLQ17.js","_app/immutable/chunks/DUY4pXWZ.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/BGcckHsx.js","_app/immutable/chunks/BXjXS4dR.js","_app/immutable/chunks/CbTIxrDF.js","_app/immutable/chunks/DZc67b1Z.js","_app/immutable/chunks/mpdyRPX9.js","_app/immutable/chunks/GMGyt3qk.js","_app/immutable/chunks/W9rxIS8D.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
@@ -275,6 +275,20 @@ return {
 				params: [],
 				page: null,
 				endpoint: __memo(() => import('./entries/endpoints/api/analytics/_server.js'))
+			},
+			{
+				id: "/api/ar/portals",
+				pattern: /^\/api\/ar\/portals\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/ar/portals/_server.js'))
+			},
+			{
+				id: "/api/ar/portals/nearby",
+				pattern: /^\/api\/ar\/portals\/nearby\/?$/,
+				params: [],
+				page: null,
+				endpoint: __memo(() => import('./entries/endpoints/api/ar/portals/nearby/_server.js'))
 			},
 			{
 				id: "/api/auth/[...all]",
