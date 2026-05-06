@@ -141,21 +141,20 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
 
   if (action === 'accepted') {
     console.log('🎯 ACCEPT - userId:', userId, 'locale:', locale, 'today:', today);
-    // or if no entries yet (accept community prompt)
+    // Check user's log entries for today+locale
     const logs = await db.prepare(
-      'SELECT action FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? ORDER BY created_at DESC'
+      'SELECT action, prompt_id, is_community FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? ORDER BY created_at DESC'
     ).bind(userId, today, locale).all();
-    const hasPassed = (logs.results || []).some(e => e.action === 'passed');
+    const entries = logs.results || [];
+    const hasPassed = entries.some(e => e.action === 'passed');
 
     let currentPrompt;
     let isCommunity;
 
     if (hasPassed) {
-      // Accept the last personal prompt that was shown (not generate a new one)
-      const lastPersonal = await db.prepare(
-        "SELECT prompt_id FROM daily_prompt_log WHERE user_id = ? AND prompt_date = ? AND locale = ? AND is_community = 0 AND action = 'passed' ORDER BY created_at DESC LIMIT 1"
-      ).bind(userId, today, locale).first();
-      if (lastPersonal?.prompt_id) {
+      // Accept the last personal prompt that was shown
+      const lastPersonal = entries.find(e => e.action === 'passed' && e.is_community === 0 && e.prompt_id);
+      if (lastPersonal) {
         const p = await db.prepare('SELECT id, prompt_text, category FROM writing_prompts WHERE id = ?').bind(lastPersonal.prompt_id).first();
         currentPrompt = p || await getNewPromptForUser(db, ai, today, userId, locale);
       } else {
@@ -164,8 +163,27 @@ export async function handleAction(db, ai, userId, action, locale = 'en') {
       isCommunity = 0;
     } else {
       // Accept the community prompt
-      currentPrompt = await getOrCreateCommunityPrompt(db, ai, today, locale);
+      try {
+        currentPrompt = await getOrCreateCommunityPrompt(db, ai, today, locale);
+      } catch (err) {
+        console.error('Community prompt generation failed:', err);
+        // Fallback: get any existing prompt for today
+        const fallback = await db.prepare(
+          "SELECT id, prompt_text, category FROM writing_prompts WHERE prompt_date = ? AND locale = ? LIMIT 1"
+        ).bind(today, locale).first();
+        currentPrompt = fallback || { id: crypto.randomUUID(), prompt_text: 'Escribe lo que quieras hoy.', category: 'free-writing' };
+      }
       isCommunity = 1;
+    }
+
+    // Ensure prompt exists in writing_prompts before inserting log
+    if (currentPrompt.id) {
+      const exists = await db.prepare('SELECT 1 FROM writing_prompts WHERE id = ?').bind(currentPrompt.id).first();
+      if (!exists) {
+        await db.prepare(
+          'INSERT INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
+        ).bind(currentPrompt.id, currentPrompt.prompt_text || '', today, currentPrompt.category || 'free-writing', locale).run();
+      }
     }
 
     await db.prepare(
