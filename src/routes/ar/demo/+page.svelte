@@ -24,10 +24,10 @@
     return { azimuth: relativeBearing(playerHeading, bearing), elevation: -5 };
   });
 
-  // Lazy imports — don't load Three.js until after mount
-  let ARPortal = $state(null);
-  let TextContent = $state(null);
-  let SpatialAudio = $state(null);
+  // Lazy imports — plain refs, NOT $state (Svelte proxies component constructors → breaks)
+  let ARPortal = null;
+  let TextContent = null;
+  let SpatialAudio = null;
 
   onMount(async () => {
     const [ap, tc, sa] = await Promise.all([
