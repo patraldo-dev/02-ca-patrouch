@@ -1,1 +1,1 @@
-export { default as component } from "../../../../src/routes/audio/+page.svelte";
+export { default as component } from "../../../../src/routes/agora/community/+page.svelte";

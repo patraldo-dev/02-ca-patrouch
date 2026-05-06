@@ -1,8 +1,10 @@
-
+import * as server from '../entries/pages/stats/_page.server.js';
 
 export const index = 34;
 let component_cache;
-export const component = async () => component_cache ??= (await import('../entries/pages/test-utf8/_page.svelte.js')).default;
-export const imports = ["_app/immutable/nodes/34.BnBn8PDm.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/gSxOzv2Y.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/16EERJEz.js","_app/immutable/chunks/DTCNAND8.js","_app/immutable/chunks/o6q8Mtqc.js","_app/immutable/chunks/j_clqXuE.js"];
-export const stylesheets = ["_app/immutable/assets/34.0lzRvZKa.css"];
+export const component = async () => component_cache ??= (await import('../entries/pages/stats/_page.svelte.js')).default;
+export { server };
+export const server_id = "src/routes/stats/+page.server.js";
+export const imports = ["_app/immutable/nodes/34.XRfvkUlV.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/COH9MEEV.js","_app/immutable/chunks/DGB_sTAZ.js","_app/immutable/chunks/BelQN5Eo.js","_app/immutable/chunks/CNZgEGEW.js","_app/immutable/chunks/CMjCajgg.js","_app/immutable/chunks/X_E6-_TU.js","_app/immutable/chunks/lj8Kp-za.js","_app/immutable/chunks/Ch8DY8Ft.js","_app/immutable/chunks/BnKHZF6D.js","_app/immutable/chunks/4PyPdDUi.js","_app/immutable/chunks/rUh0QOfW.js","_app/immutable/chunks/Cc5fsE6q.js","_app/immutable/chunks/CCw70eET.js","_app/immutable/chunks/BsIzlKNo.js","_app/immutable/chunks/C7YJlRmi.js","_app/immutable/chunks/Df9Pyfl2.js","_app/immutable/chunks/CQpzdJg2.js"];
+export const stylesheets = ["_app/immutable/assets/BadgeTrophyCase.D3Gr7r2L.css","_app/immutable/assets/34.tfn-m5Pj.css"];
 export const fonts = [];

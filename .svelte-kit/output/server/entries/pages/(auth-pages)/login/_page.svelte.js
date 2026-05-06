@@ -1,10 +1,11 @@
-import { e as escape_html, b as store_get, c as attr, u as unsubscribe_stores } from "../../../../chunks/renderer.js";
+import { e as escape_html, b as store_get, c as attr, u as unsubscribe_stores, d as derived } from "../../../../chunks/renderer.js";
 import { t } from "../../../../chunks/index3.js";
 import "../../../../chunks/auth-client.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;
     let { data } = $$props;
+    let redirectTo = derived(() => data?.redirectTo || "/");
     let error = data?.errorMessage || "";
     let isLoading = false;
     let identifier = "";
@@ -13,6 +14,13 @@ function _page($$renderer, $$props) {
     if (error) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="error-message svelte-1l3oj45"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#ef4444"></circle><path d="M12 8V12" stroke="white" stroke-width="2" stroke-linecap="round"></path><path d="M12 16H12.01" stroke="white" stroke-width="2" stroke-linecap="round"></path></svg> <span>${escape_html(error)}</span></div>`);
+    } else {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> `);
+    if (redirectTo() !== "/") {
+      $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<div class="info-message svelte-1l3oj45">🔒 Inicia sesión para acceder a esta página</div>`);
     } else {
       $$renderer2.push("<!--[-1-->");
     }

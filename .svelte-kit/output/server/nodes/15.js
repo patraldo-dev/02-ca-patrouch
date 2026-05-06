@@ -1,10 +1,8 @@
-import * as server from '../entries/pages/admin/users/_page.server.js';
+
 
 export const index = 15;
 let component_cache;
-export const component = async () => component_cache ??= (await import('../entries/pages/admin/users/_page.svelte.js')).default;
-export { server };
-export const server_id = "src/routes/admin/users/+page.server.js";
-export const imports = ["_app/immutable/nodes/15.JX4F711d.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/BYHqxEaj.js","_app/immutable/chunks/BBzQ1gTY.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/16EERJEz.js","_app/immutable/chunks/DTCNAND8.js","_app/immutable/chunks/DmT-1Ms3.js","_app/immutable/chunks/o6q8Mtqc.js","_app/immutable/chunks/DAk3OZq9.js","_app/immutable/chunks/wP0qf2A5.js","_app/immutable/chunks/C7YJlRmi.js","_app/immutable/chunks/eLItx-_i.js"];
-export const stylesheets = ["_app/immutable/assets/15.ZDl7R65l.css"];
+export const component = async () => component_cache ??= (await import('../entries/pages/admin/invitations/_page.svelte.js')).default;
+export const imports = ["_app/immutable/nodes/15.CF31n3LV.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/COH9MEEV.js","_app/immutable/chunks/DGB_sTAZ.js","_app/immutable/chunks/BelQN5Eo.js","_app/immutable/chunks/CNZgEGEW.js","_app/immutable/chunks/CMjCajgg.js","_app/immutable/chunks/4PyPdDUi.js","_app/immutable/chunks/rUh0QOfW.js","_app/immutable/chunks/Cc5fsE6q.js","_app/immutable/chunks/CCw70eET.js","_app/immutable/chunks/Cn4rZ9ik.js","_app/immutable/chunks/CJdjuNHu.js","_app/immutable/chunks/lj8Kp-za.js","_app/immutable/chunks/BYodYbKz.js","_app/immutable/chunks/CIWSSOto.js","_app/immutable/chunks/DZcxTGg-.js","_app/immutable/chunks/BnKHZF6D.js"];
+export const stylesheets = ["_app/immutable/assets/15.Bltb2H2S.css"];
 export const fonts = [];

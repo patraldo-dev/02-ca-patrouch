@@ -2,7 +2,7 @@
 
 export const index = 29;
 let component_cache;
-export const component = async () => component_cache ??= (await import('../entries/pages/reset-password/_page.svelte.js')).default;
-export const imports = ["_app/immutable/nodes/29.Cmn4Tndx.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/C_ypCbr-.js","_app/immutable/chunks/BYHqxEaj.js","_app/immutable/chunks/BBzQ1gTY.js","_app/immutable/chunks/DhFLis_7.js","_app/immutable/chunks/D60XAhtd.js","_app/immutable/chunks/16EERJEz.js","_app/immutable/chunks/DTCNAND8.js","_app/immutable/chunks/DAk3OZq9.js","_app/immutable/chunks/j_clqXuE.js","_app/immutable/chunks/eLItx-_i.js"];
-export const stylesheets = ["_app/immutable/assets/29.CspyvFJ5.css"];
+export const component = async () => component_cache ??= (await import('../entries/pages/privacy/_page.svelte.js')).default;
+export const imports = ["_app/immutable/nodes/29.inF6Ur35.js","_app/immutable/chunks/DsnmJJEf.js","_app/immutable/chunks/B4ixXWAk.js","_app/immutable/chunks/COH9MEEV.js","_app/immutable/chunks/DGB_sTAZ.js","_app/immutable/chunks/BelQN5Eo.js","_app/immutable/chunks/CNZgEGEW.js","_app/immutable/chunks/CMjCajgg.js","_app/immutable/chunks/KysIWkLj.js","_app/immutable/chunks/X_E6-_TU.js","_app/immutable/chunks/CiHobX1K.js","_app/immutable/chunks/lj8Kp-za.js"];
+export const stylesheets = ["_app/immutable/assets/29.DxsL0Fpj.css"];
 export const fonts = [];

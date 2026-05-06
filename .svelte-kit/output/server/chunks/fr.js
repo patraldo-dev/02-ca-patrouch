@@ -1,4 +1,5 @@
 const common$2 = { "nav": { "stats": "Stats" } };
+const bottles$2 = {};
 const en = {
   "common.nav.home": "Home",
   "common.nav.about": "About",
@@ -1004,9 +1005,12 @@ const en = {
   "booty.arbooty.back": "Back to Booty Battle",
   "booty.arbooty.card_desc": "Explore Puerto Vallarta and find 5 hidden bottles with GPS. Follow the treasure hunt chain!",
   "booty.arbooty.join_required": "You need to be a Booty Battle player to participate.",
-  "booty.arbooty.join_btn": "Join Booty Battle"
+  "booty.arbooty.join_btn": "Join Booty Battle",
+  bottles: bottles$2,
+  "bottles.type.treasure_clue": " Treasure Clue"
 };
 const common$1 = { "nav": { "stats": "Estadísticas" } };
+const bottles$1 = {};
 const es = {
   "common.nav.home": "Inicio",
   "common.nav.about": "Acerca de",
@@ -1849,7 +1853,7 @@ const es = {
   "bottles.type.video": "Video",
   "bottles.type.fanzine": "Fanzine",
   "bottles.type.illustrated_book": "Libro ilustrado",
-  "bottles.type.short_story": "Cuento",
+  "bottles.type.short_story": "Cuento Corto",
   "bottles.type.song": "Canción",
   "bottles.type.lyrics": "Letra",
   "bottles.stats_title": "Estadísticas",
@@ -1999,9 +2003,12 @@ const es = {
   "booty.arbooty.back": "Volver a Booty Battle",
   "booty.arbooty.card_desc": "Explora Puerto Vallarta y encuentra 5 botellas escondidas con GPS. ¡Sigue la cadena del tesoro!",
   "booty.arbooty.join_required": "Necesitas ser jugador de Booty Battle para participar.",
-  "booty.arbooty.join_btn": "Unirse a Booty Battle"
+  "booty.arbooty.join_btn": "Unirse a Booty Battle",
+  bottles: bottles$1,
+  "bottles.type.treasure_clue": "Pista del Tesoro"
 };
 const common = { "nav": { "stats": "Statistiques" } };
+const bottles = {};
 const fr = {
   "common.nav.home": "Accueil",
   "common.nav.about": "À propos",
@@ -3007,7 +3014,9 @@ const fr = {
   "booty.arbooty.back": "Retour à Booty Battle",
   "booty.arbooty.card_desc": "Explorez Puerto Vallarta et trouvez 5 bouteilles cachées avec le GPS.",
   "booty.arbooty.join_required": "Vous devez être joueur de Booty Battle pour participer.",
-  "booty.arbooty.join_btn": "Rejoindre Booty Battle"
+  "booty.arbooty.join_btn": "Rejoindre Booty Battle",
+  bottles,
+  "bottles.type.treasure_clue": "Indice au Trésor"
 };
 export {
   en as a,
