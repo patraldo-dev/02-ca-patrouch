@@ -3,7 +3,7 @@
   import ARPortal from '$lib/ar/portal/ARPortal.svelte';
   import TextContent from '$lib/ar/portal/TextContent.svelte';
   import SpatialAudio from '$lib/ar/portal/SpatialAudio.svelte';
-  import { THEMES, classifyText } from '$lib/ar/portal/themes.svelte.js';
+  import { THEMES, classifyText } from '$lib/ar/portal/themes.js';
   import { haversineDistance, calculateBearing, relativeBearing } from '$lib/geo.js';
 
   let selectedTheme = $state('narrador');
