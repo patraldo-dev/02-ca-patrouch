@@ -24,7 +24,7 @@
 
   let status = $state('idle'); // idle | loading | ready | error
   let errorMsg = $state('');
-  let texture = $state(null);
+  let texture = null;
   let mesh = null;
 
   onMount(async () => {
