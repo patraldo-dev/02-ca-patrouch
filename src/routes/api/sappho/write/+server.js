@@ -57,7 +57,7 @@ export async function POST({ request, platform }) {
 
         // Generate writing via Cloudflare Workers AI
         const systemPrompt = SAPPHO_PERSONAS[locale] || SAPPHO_PERSONAS.en;
-        const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await ai.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: `Prompt: ${prompt.prompt_text}\n\nWrite your response:` }
