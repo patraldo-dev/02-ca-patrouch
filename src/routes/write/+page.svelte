@@ -302,7 +302,7 @@
     let exhaustedPasses = $derived(passesRemaining <= 0 && !acceptedToday);
 
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
-    function formatDate(d) { if (!d) return ''; const num = typeof d === 'number' ? d : Number(d); const ts = !isNaN(num) ? num : d.replace(' ', 'T'); return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    function formatDate(d) { if (!d) return ''; let ms; if (typeof d === 'number') { ms = d < 1e12 ? d * 1000 : d; } else { const num = Number(d); ms = (!isNaN(num) && String(d).trim() === String(num)) ? (num < 1e12 ? num * 1000 : num) : new Date(d.replace(' ', 'T')).getTime(); } const date = new Date(ms); if (isNaN(date.getTime())) return ''; return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 </script>
 
 <div class="write-page">
