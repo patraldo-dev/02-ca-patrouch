@@ -1,4 +1,6 @@
-// src/db/auth-schema.js — Drizzle schema matching better-auth-schema.sql
+// src/db/auth-schema.js — Better Auth schema
+// NOTE: Better Auth uses the 'users' table (not 'user').
+// Do NOT change sqliteTable('users') back to 'user' — all 18+ app tables FK to users(id).
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('users', {
