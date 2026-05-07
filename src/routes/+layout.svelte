@@ -30,7 +30,7 @@
     /** @type {import('./$types').LayoutData} */
     let { data, children } = $props();
 
-    beforeNavigate(() => { mobileMenuOpen = false; tallerOpen = false; });
+    beforeNavigate(() => { mobileMenuOpen = false; tallerOpen = false; avatarMenuOpen = false; });
 
     let mobileMenuOpen = $state(false);
     let currentTheme = $state(getTheme());
@@ -276,12 +276,20 @@
                 </span>
             </button>
             {#if data.user}
-            <a href="/account" class="mobile-avatar-btn desktop-hide" title={activeDisplayName}>
-                <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
-                {#if data.bootyFuel > 0}
-                    <span class="mobile-bean-badge">🫘{data.bootyFuel}</span>
+            <div class="mobile-avatar-wrap desktop-hide">
+                <button class="mobile-avatar-btn" onclick={() => avatarMenuOpen = !avatarMenuOpen} title={activeDisplayName}>
+                    <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
+                    {#if data.bootyFuel > 0}
+                        <span class="mobile-bean-badge">🫘{data.bootyFuel}</span>
+                    {/if}
+                </button>
+                {#if avatarMenuOpen}
+                    <div class="avatar-dropdown">
+                        <a href="/account" onclick={() => avatarMenuOpen = false}>{$t('common.nav.manage_profiles')}</a>
+                        <button onclick={() => { avatarMenuOpen = false; handleLogout(); }}>{$t('common.nav.logout')}</button>
+                    </div>
                 {/if}
-            </a>
+            </div>
             <div class="mobile-bell desktop-hide">
                 <NotificationBell />
             </div>
@@ -784,7 +792,20 @@
 
     .block { display: block; width: 100%; text-align: center; }
 
-    .mobile-avatar-btn { display: flex; align-items: center; padding: 0; text-decoration: none; }
+    .mobile-avatar-btn { display: flex; align-items: center; padding: 0; text-decoration: none; background: none; border: none; cursor: pointer; color: inherit; }
+    .mobile-avatar-wrap { position: relative; }
+    .avatar-dropdown {
+        position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000;
+        background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+        min-width: 160px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .avatar-dropdown a, .avatar-dropdown button {
+        display: block; width: 100%; padding: 0.7rem 1rem; text-align: left;
+        background: none; border: none; color: var(--text); font-family: var(--font-body);
+        font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: background 0.15s;
+    }
+    .avatar-dropdown a:hover, .avatar-dropdown button:hover { background: var(--bg); }
+    .avatar-dropdown button { color: var(--text-dim); }
     .mobile-stats-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); text-decoration: none; font-size: 0.8rem; transition: all 0.2s; }
     .mobile-stats-btn:hover { border-color: var(--accent); color: var(--accent); }
     .mobile-avatar-btn .profile-avatar { border: 2px solid var(--accent); }
