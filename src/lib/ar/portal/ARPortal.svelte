@@ -28,7 +28,7 @@
     children,
   } = $props();
 
-  let portal = null;
+  let portal = $state(null);
   let touchOverlay = null;
   let gestureController = null;
   let uiContainer = null;
