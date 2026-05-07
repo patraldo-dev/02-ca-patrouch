@@ -610,6 +610,8 @@
   "signup.password_mismatch": "Las contraseñas no coinciden.",
   "signup.creating": "Creando cuenta...",
   "signup.button": "Crear Cuenta",
+  "signup.username_taken": "Username already taken",
+  "signup.email_taken": "Ese correo ya está registrado",
   "signup.have_account": "¿Ya tienes una cuenta?",
   "signup.login_link": "Inicia sesión",
   "signup.success": "¡Cuenta creada! Revisa tu correo para confirmar tu dirección.",

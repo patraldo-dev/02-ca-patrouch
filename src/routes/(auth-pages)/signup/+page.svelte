@@ -27,6 +27,28 @@
     let error = $state('');
     let success = $state('');
     let isLoading = $state(false);
+    let usernameStatus = $state('idle'); // 'idle' | 'checking' | 'taken' | 'available'
+    let emailStatus = $state('idle');
+    let checkTimer = $state(null);
+
+    async function checkAvailability(field, value) {
+        if (!value || value.length < 3) return;
+        const status = field === 'username' ? 'usernameStatus' : 'emailStatus';
+        $state.snapshot({})[status] === undefined;
+        if (field === 'username') usernameStatus = 'checking'; else emailStatus = 'checking';
+
+        clearTimeout(checkTimer);
+        checkTimer = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/check-availability?field=${field}&value=${encodeURIComponent(value)}`);
+                const data = await res.json();
+                if (field === 'username') usernameStatus = data.available ? 'available' : 'taken';
+                else emailStatus = data.available ? 'available' : 'taken';
+            } catch {
+                if (field === 'username') usernameStatus = 'idle'; else emailStatus = 'idle';
+            }
+        }, 400);
+    }
 
     async function handleSignup() {
         if (!isAdult) {
@@ -35,6 +57,14 @@
         }
         if (password !== confirmPassword) {
             error = $t('signup.password_mismatch');
+            return;
+        }
+        if (usernameStatus === 'taken') {
+            error = $t('signup.username_taken');
+            return;
+        }
+        if (emailStatus === 'taken') {
+            error = $t('signup.email_taken');
             return;
         }
 
@@ -118,11 +148,15 @@
 
         <div>
             <label for="username">{$t('signup.username')}</label>
-            <input id="username" bind:value={username} type="text" required placeholder={$t('signup.username_placeholder')} minlength="3" maxlength="32" />
+            <input id="username" bind:value={username} type="text" required placeholder={$t('signup.username_placeholder')} minlength="3" maxlength="32" oninput={() => { usernameStatus = 'idle'; checkAvailability('username', username); }} onblur={() => checkAvailability('username', username)} />
+            {#if usernameStatus === 'taken'}<span class="field-error">{$t('signup.username_taken')}</span>{/if}
+            {#if usernameStatus === 'available'}<span class="field-ok">✓</span>{/if}
         </div>
         <div>
             <label for="email">{$t('signup.email')}</label>
-            <input id="email" bind:value={email} type="email" required placeholder={$t('signup.email_placeholder')} />
+            <input id="email" bind:value={email} type="email" required placeholder={$t('signup.email_placeholder')} oninput={() => { emailStatus = 'idle'; if (email.includes('@')) checkAvailability('email', email); }} onblur={() => { if (email.includes('@')) checkAvailability('email', email); }} />
+            {#if emailStatus === 'taken'}<span class="field-error">{$t('signup.email_taken')}</span>{/if}
+            {#if emailStatus === 'available'}<span class="field-ok">✓</span>{/if}
         </div>
         <div>
             <label for="password">{$t('signup.password')}</label>
@@ -237,6 +271,21 @@
         color: #ef4444;
         font-size: 0.85rem;
         margin: 0;
+    }
+
+    .field-error {
+        display: block;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.2rem;
+        text-align: left;
+    }
+    .field-ok {
+        display: block;
+        color: #4ade80;
+        font-size: 0.85rem;
+        margin-top: 0.2rem;
+        text-align: left;
     }
 
     input {

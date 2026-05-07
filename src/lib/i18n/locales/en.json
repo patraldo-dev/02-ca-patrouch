@@ -624,6 +624,8 @@
   "signup.password_mismatch": "Passwords do not match.",
   "signup.creating": "Creating account...",
   "signup.button": "Create Account",
+  "signup.username_taken": "Username already taken",
+  "signup.email_taken": "Email already registered",
   "signup.have_account": "Already have an account?",
   "signup.login_link": "Log in",
   "signup.success": "Account created! Check your email to verify your address.",
