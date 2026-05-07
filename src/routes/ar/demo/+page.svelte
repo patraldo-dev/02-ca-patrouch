@@ -24,10 +24,9 @@
     return { azimuth: relativeBearing(playerHeading, bearing), elevation: -5 };
   });
 
-  // Lazy imports — plain refs, NOT $state (Svelte proxies component constructors → breaks)
-  let ARPortal = null;
-  let TextContent = null;
-  let SpatialAudio = null;
+  // Lazy imports — $state wrapper so Svelte tracks the assignment,
+  // but component constructors themselves are never proxied (just property reads)
+  let components = $state(null);
 
   onMount(async () => {
     const [ap, tc, sa] = await Promise.all([
@@ -35,9 +34,11 @@
       import('$lib/ar/portal/TextContent.svelte'),
       import('$lib/ar/portal/SpatialAudio.svelte'),
     ]);
-    ARPortal = ap.default;
-    TextContent = tc.default;
-    SpatialAudio = sa.default;
+    components = {
+      ARPortal: ap.default,
+      TextContent: tc.default,
+      SpatialAudio: sa.default,
+    };
     loaded = true;
   });
 
@@ -61,6 +62,7 @@
       <p>Cargando AR...</p>
     </div>
   {:else}
+    {@const { ARPortal, TextContent, SpatialAudio } = components}
     <div class="header">
       <h1>🦀 AR Portal</h1>
       <p class="subtitle">Choose your literary world</p>
