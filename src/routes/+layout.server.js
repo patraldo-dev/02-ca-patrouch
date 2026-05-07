@@ -35,6 +35,11 @@ export async function load({ locals, cookies }) {
         var userData = await db.prepare(
             'SELECT image FROM users WHERE id = ?'
         ).bind(user.id).first().catch(() => null);
+        if (!userData) {
+            userData = await db.prepare(
+                'SELECT avatar_url as image FROM users WHERE id = ?'
+            ).bind(user.id).first().catch(() => null);
+        }
 
         var profileAvatar = await db.prepare(
             'SELECT avatar_url FROM profiles WHERE user_id = ? AND is_active = 1'

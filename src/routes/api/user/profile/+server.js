@@ -46,7 +46,10 @@ export async function PUT({ locals, request }) {
 
     if (updates.length > 0) {
         values.push(user.id);
-        await db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+        await db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run().catch((e) => {
+            // Column mismatch — BA migration may not have name/image columns yet
+            console.error('Failed to update users table:', e.message);
+        });
     }
 
     // Bio is stored in profiles table, not in Better Auth user

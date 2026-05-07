@@ -12,10 +12,18 @@ export async function load({ locals }) {
         isBQPlayer: false
     };
 
-    // Load auth user data
-    const baUser = await db.prepare(
-        'SELECT name as display_name, image as avatar_url, createdAt, email FROM users WHERE id = ?'
-    ).bind(user.id).first();
+    // Load auth user data — columns vary based on Better Auth migration
+    let baUser;
+    try {
+        baUser = await db.prepare(
+            'SELECT name as display_name, image as avatar_url, createdAt, email FROM users WHERE id = ?'
+        ).bind(user.id).first();
+    } catch (e) {
+        // Fallback: pre-Better Auth column names
+        baUser = await db.prepare(
+            'SELECT username as display_name, NULL as avatar_url, created_at as createdAt, email FROM users WHERE id = ?'
+        ).bind(user.id).first();
+    }
 
     // Load profile data
     let profileRow;
