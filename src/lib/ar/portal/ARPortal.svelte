@@ -39,11 +39,6 @@
      if (!ready) return;
     });
 
-    const ready = await portal.init();
-
-    if (!ready) return;
-  });
-
   function handleLaunch() {
     // Create touch overlay
     touchOverlay = document.createElement('div');
