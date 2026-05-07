@@ -119,7 +119,7 @@
 
     async function shareResult() {
         if (!currentResult) return;
-        const shareText = `AI Writing Evaluation — Patrouch\n\n${currentResult.evaluation.slice(0, 500)}`;
+        const shareText = `AI Writing Evaluation — Patrouch\n\n${currentResult.evaluation}`;
         if (navigator.share) {
             try {
                 await navigator.share({ title: 'Patrouch Evaluation', text: shareText });
