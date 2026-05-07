@@ -43,7 +43,15 @@ export async function generatePromptFromImage(ai, imageUrl, locale = 'en') {
         fr: 'Écris le prompt en français.',
     };
 
-    const systemPrompt = `You are a creative writing prompt generator. Look at this artwork and craft a single, evocative writing prompt inspired by it. The prompt should be 1-2 sentences, open-ended, and invite the writer to explore emotions, stories, or perspectives suggested by the image. ${localeInstructions[locale] || localeInstructions.en}`;
+    const systemPrompt = `You are a creative writing prompt generator. Look at this artwork and craft a single, evocative writing prompt inspired by it.
+
+RULES:
+- Write exactly 1-2 sentences. No more.
+- Do NOT repeat yourself or rephrase the same idea.
+- Do NOT explain your reasoning or describe what you see.
+- Output ONLY the final prompt text. No preamble, no quotes, no labels.
+- The prompt should be open-ended, inviting the writer to explore emotions or stories suggested by the image.
+${localeInstructions[locale] || localeInstructions.en}`;
 
     try {
         // Use thumbnail (200x300) for AI vision — faster, less data
@@ -66,15 +74,44 @@ export async function generatePromptFromImage(ai, imageUrl, locale = 'en') {
                     role: 'user',
                     content: [
                         { type: 'image_url', image_url: { url: dataUrl } },
-                        { type: 'text', text: `${systemPrompt}\n\nGenerate a creative writing prompt inspired by this artwork.` }
+                        { type: 'text', text: `Generate a creative writing prompt inspired by this artwork.` }
                     ]
                 }
             ],
-            max_tokens: 200,
+            max_tokens: 100,
+            temperature: 0.7,
         });
 
-        const text = response?.response || response?.[0]?.response || '';
-        return text.trim();
+        let text = response?.response || response?.[0]?.response || '';
+        text = text.trim();
+
+        // Strip quotes wrapping the entire text
+        if (text.startsWith('"') && text.endsWith('"')) text = text.slice(1, -1);
+        if (text.startsWith("'") && text.endsWith("'")) text = text.slice(1, -1);
+
+        // Strip any label prefixes (e.g. "Prompt:", "Writing prompt:")
+        text = text.replace(/^(Writing\s+)?Prompt\s*[:\-–—]\s*/i, '');
+
+        // Remove near-duplicate sentences
+        const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+        const unique = [];
+        for (const s of sentences) {
+            const norm = s.trim().toLowerCase().replace(/[^a-záéíóúàèìòùëïüâêîôûñç\s]/g, '');
+            if (!unique.some(u => {
+                const uNorm = u.toLowerCase().replace(/[^a-záéíóúàèìòùëïüâêîôûñç\s]/g, '');
+                // Skip if >70% of words overlap
+                const uWords = new Set(uNorm.split(/\s+/));
+                const sWords = new Set(norm.split(/\s+/));
+                const intersection = [...sWords].filter(w => uWords.has(w));
+                return intersection.length / Math.max(sWords.size, 1) > 0.7;
+            })) {
+                unique.push(s.trim());
+            }
+        }
+        text = unique.join(' ').trim();
+
+        // If we still have nothing, return null
+        return text.length > 10 ? text : null;
     } catch (err) {
         console.error('Vision model error:', err.message);
         return null;
