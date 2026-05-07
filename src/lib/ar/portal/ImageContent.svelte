@@ -1,6 +1,5 @@
 <script>
   import { onMount } from 'svelte';
-  import { usePortal } from './usePortal.svelte.js';
   import { getTheme } from './themes.js';
   import { createGestureController } from './gestureController.svelte.js';
 
@@ -9,7 +8,7 @@
    * Must be used as a child of ARPortal or standalone with a portal instance.
    *
    * Props:
-   *   portal - usePortal instance (or null to create own)
+   *   portal - portal instance (or null to create own)
    *   imageUrl - URL of the image to display
    *   theme - Theme ID
    *   width - Display width in AR space (meters, default 0.5)

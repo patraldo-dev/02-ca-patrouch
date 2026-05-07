@@ -1,6 +1,5 @@
 <script>
   import { onMount } from 'svelte';
-  import { usePortal } from './usePortal.svelte.js';
   import { getTheme } from './themes.js';
 
   /**
