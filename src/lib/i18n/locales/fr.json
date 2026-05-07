@@ -752,7 +752,7 @@
   "evaluate.words": "caractères",
   "evaluate.edit_prompt": "Modifier",
   "evaluate.save_prompt": "Sauvegarder",
-  "evaluate.reset_prompt": "Réinitialiser"
+  "evaluate.reset_prompt": "Réinitialiser",
   "pages.admin.sections.users.roles.member": "Membre",
   "refine.title": "Affiner",
   "refine.description": "Affinez votre écriture avec l'assistance de l'IA",

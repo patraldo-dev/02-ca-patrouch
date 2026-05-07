@@ -766,7 +766,7 @@
   "evaluate.words": "characters",
   "evaluate.edit_prompt": "Edit",
   "evaluate.save_prompt": "Save",
-  "evaluate.reset_prompt": "Reset"
+  "evaluate.reset_prompt": "Reset",
   "pages.admin.sections.users.roles.member": "Member",
   "refine.title": "Refine",
   "refine.description": "Polish your writing with AI assistance",
