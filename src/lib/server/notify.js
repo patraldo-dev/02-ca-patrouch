@@ -17,7 +17,7 @@ export async function notifyAll(db, { type, title, body, meta }) {
     if (!db) return;
     try {
         const { results } = await db.prepare(
-            'SELECT id FROM "user" WHERE id IN (SELECT DISTINCT user_id FROM notification_preferences WHERE game = 1)'
+            'SELECT id FROM users WHERE id IN (SELECT DISTINCT user_id FROM notification_preferences WHERE game = 1)'
         ).all();
         for (const u of (results || [])) {
             await notify(db, { user_id: u.id, type, title, body, meta });

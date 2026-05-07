@@ -94,7 +94,7 @@ export async function POST({ locals, request, platform }) {
         // Update user image in D1
         const db = locals.db;
         if (db) {
-            await db.prepare('UPDATE "user" SET image = ? WHERE id = ?').bind(avatarUrl, user.id).run();
+            await db.prepare('UPDATE users SET image = ? WHERE id = ?').bind(avatarUrl, user.id).run();
             await db.prepare('UPDATE profiles SET avatar_url = ? WHERE user_id = ? AND is_active = 1').bind(avatarUrl, user.id).run().catch(() => {});
         }
 

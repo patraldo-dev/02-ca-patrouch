@@ -33,7 +33,7 @@ export async function load({ locals, cookies }) {
 
         // Get avatar from profile or user table
         var userData = await db.prepare(
-            'SELECT image FROM "user" WHERE id = ?'
+            'SELECT image FROM users WHERE id = ?'
         ).bind(user.id).first().catch(() => null);
 
         var profileAvatar = await db.prepare(

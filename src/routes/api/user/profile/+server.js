@@ -46,7 +46,7 @@ export async function PUT({ locals, request }) {
 
     if (updates.length > 0) {
         values.push(user.id);
-        await db.prepare(`UPDATE "user" SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+        await db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
     }
 
     // Bio is stored in profiles table, not in Better Auth user

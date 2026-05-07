@@ -14,7 +14,7 @@ export async function load({ locals }) {
 
     // Load auth user data
     const baUser = await db.prepare(
-        'SELECT name as display_name, image as avatar_url, createdAt, email FROM "user" WHERE id = ?'
+        'SELECT name as display_name, image as avatar_url, createdAt, email FROM users WHERE id = ?'
     ).bind(user.id).first();
 
     // Load profile data
