@@ -120,7 +120,7 @@ async function ensurePromptExists(db, prompt, today, locale) {
 /**
  * Safe INSERT into daily_prompt_log — ensures FK refs exist first.
  */
-async function insertPromptLog(db, userId, promptId, today, action, locale) {
+async function insertPromptLog(db, userId, promptId, today, action, locale, isCommunity = 0) {
   console.log('📋 insertPromptLog:', { promptId, action, locale, isCommunity });
   
   // Verify prompt exists
