@@ -28,17 +28,15 @@
     children,
   } = $props();
 
-  let portal = $state(null);
+  let portal = usePortal({ theme, contentType, onExit });
   let touchOverlay = null;
   let gestureController = null;
   let uiContainer = null;
   let themeConfig = $derived(getTheme(theme));
 
   onMount(async () => {
-    portal = usePortal({
-      theme,
-      contentType,
-      onExit,
+     const ready = await portal.init();
+     if (!ready) return;
     });
 
     const ready = await portal.init();
@@ -146,9 +144,6 @@
     </div>
   {/if}
 
-{#if portal && typeof portal === 'object' && !('nodeType' in portal)}
-  {@render children?.(portal)}
-{/if}
 
   <!-- Slot for content setup callback / custom UI -->
   {@render children?.(portal)}
