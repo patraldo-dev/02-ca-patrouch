@@ -131,6 +131,19 @@ export function createAuth(env) {
         maxAge: 5 * 60,
       },
     },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (userData) => {
+            if (!userData.username) {
+              const base = userData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '_');
+              userData.username = `${base}_${Math.random().toString(36).slice(2, 6)}`;
+            }
+            return { data: userData };
+          }
+        }
+      }
+    },
     trustedOrigins: [
       'https://patrouch.ca',
       'https://*.chef-tech.workers.dev',

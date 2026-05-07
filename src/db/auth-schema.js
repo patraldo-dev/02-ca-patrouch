@@ -1,9 +1,9 @@
 // src/db/auth-schema.js — Drizzle schema matching better-auth-schema.sql
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
-export const user = sqliteTable('user', {
+export const user = sqliteTable('users', {
   id: text('id').primaryKey(),
-  name: text('name').notNull(),
+  name: text('name'),
   email: text('email').notNull().unique(),
   emailVerified: integer('emailVerified', { mode: 'boolean' }),
   image: text('image'),
