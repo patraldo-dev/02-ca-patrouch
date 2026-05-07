@@ -146,6 +146,10 @@
     </div>
   {/if}
 
+{#if portal && typeof portal === 'object' && !('nodeType' in portal)}
+  {@render children?.(portal)}
+{/if}
+
   <!-- Slot for content setup callback / custom UI -->
   {@render children?.(portal)}
 </div>
