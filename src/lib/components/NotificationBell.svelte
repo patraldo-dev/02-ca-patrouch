@@ -135,7 +135,7 @@
                     {#each notifications as n (n.id)}
                         <button class="notification-item" onclick={() => markRead(n.id)}>
                             <div class="notification-title">{n.title}</div>
-                            <div class="notification-body">{(n.body || '').slice(0, 80)}{(n.body || '').length > 80 ? '…' : ''}</div>
+                            <div class="notification-body">{n.body || ''}</div>
                             <div class="notification-time">{timeAgo(n.created_at)}</div>
                         </button>
                     {/each}
@@ -189,8 +189,8 @@
         position: absolute;
         top: calc(100% + 0.5rem);
         right: 0;
-        width: 320px;
-        max-height: 400px;
+        width: min(380px, 90vw);
+        max-height: 70vh;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 12px;
@@ -231,7 +231,7 @@
 
     .notification-list {
         overflow-y: auto;
-        max-height: 340px;
+        max-height: calc(70vh - 4rem);
     }
 
     .empty-state {
