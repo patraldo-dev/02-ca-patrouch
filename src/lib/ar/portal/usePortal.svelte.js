@@ -57,7 +57,11 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
 
     try {
       const THREE = await import('three');
-      const supported = await navigator.xr.isSessionSupported('immersive-ar');
+      const xrCheck = navigator.xr.isSessionSupported('immersive-ar');
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('XR check timed out')), 5000)
+      );
+      const supported = await Promise.race([xrCheck, timeout]);
 
       if (!supported) {
         setStatus(STATUS.UNSUPPORTED);
