@@ -126,7 +126,7 @@
 
     async function shareResult() {
         if (!currentResult) return;
-        const shareText = currentResult.refinedText.slice(0, 500);
+        const shareText = currentResult.refinedText;
         if (navigator.share) {
             try {
                 await navigator.share({ title: 'Patrouch — Refined Text', text: shareText });
