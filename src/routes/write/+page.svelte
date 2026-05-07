@@ -302,7 +302,7 @@
     let exhaustedPasses = $derived(passesRemaining <= 0 && !acceptedToday);
 
     function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
-    function formatDate(d) { if (!d) return ''; const s = d.replace(' ', 'T'); return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    function formatDate(d) { if (!d) return ''; const num = typeof d === 'number' ? d : Number(d); const ts = !isNaN(num) ? num : d.replace(' ', 'T'); return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 </script>
 
 <div class="write-page">

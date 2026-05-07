@@ -7,7 +7,11 @@
 
     function formatDate(d) {
         if (!d) return '';
-        return new Date(d + 'T12:00:00').toLocaleDateString($locale || 'en', { month: 'long', year: 'numeric' });
+        const num = typeof d === 'number' ? d : Number(d);
+        const ts = !isNaN(num) ? num : d;
+        const date = new Date(ts);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString($locale || 'en', { month: 'long', year: 'numeric' });
     }
 
     function excerpt(text) {
