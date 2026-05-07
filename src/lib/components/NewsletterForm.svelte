@@ -1,7 +1,7 @@
 <!-- src/lib/components/NewsletterForm.svelte -->
 <script>
+    import { t, getLocale } from '$lib/i18n';
     import { page } from '$app/stores';
-    import { getLocale } from '$lib/i18n';
 
     let email = $state('');
     let friendEmails = $state('');
@@ -32,10 +32,10 @@
         if (ok) {
             subscribedEmails = [...subscribedEmails, userEmail];
             needsConfirmation = true;
-            message = result.message || 'Check your email to confirm.';
+            message = result.message || $t('common.newsletter.success_message');
             isSuccess = true;
         } else {
-            message = result.error || 'Subscription failed.';
+            message = result.error || $t('common.newsletter.error_message');
             isSuccess = false;
         }
         isSubmitting = false;
@@ -48,31 +48,33 @@
 
         const addrs = raw.split(/[\s,;]+/).filter(a => a.includes('@'));
         if (addrs.length === 0) {
-            message = 'Enter at least one valid email.';
+            message = $t('common.newsletter.error_email_empty');
             isSuccess = false;
             return;
         }
 
         isSubmitting = true;
         message = '';
-        const results = [];
+        let successes = 0;
+        const errors = [];
 
         for (const addr of addrs) {
             const { ok, result } = await subscribeEmail(addr);
-            results.push({ email: addr, ok, error: result.error });
-            if (ok) subscribedEmails = [...subscribedEmails, addr];
+            if (ok) {
+                successes++;
+                subscribedEmails = [...subscribedEmails, addr];
+            } else {
+                errors.push(result.error);
+            }
         }
-
-        const successes = results.filter(r => r.ok).length;
-        const failures = results.filter(r => !r.ok);
 
         if (successes > 0) {
             needsConfirmation = true;
             isSuccess = true;
-            message = `${successes} invitation${successes > 1 ? 's' : ''} sent!`;
+            message = `${successes} invitation(s) sent.`;
         }
-        if (failures.length > 0) {
-            message += (message ? ' ' : '') + failures.map(f => `${f.email}: ${f.error}`).join('. ');
+        if (errors.length > 0) {
+            message += (message ? ' ' : '') + errors.join('. ');
         }
 
         friendEmails = '';
@@ -82,7 +84,7 @@
     async function handleSubmitGuest(e) {
         e.preventDefault();
         if (!email) {
-            message = 'Email is required';
+            message = $t('common.newsletter.error_email_empty');
             return;
         }
         isSubmitting = true;
@@ -91,78 +93,76 @@
         if (ok) {
             isSuccess = true;
             needsConfirmation = true;
-            message = result.message || 'Check your email to confirm.';
+            message = result.message || $t('common.newsletter.success_message');
             email = '';
         } else {
             isSuccess = false;
-            message = result.error || 'Subscription failed.';
+            message = result.error || $t('common.newsletter.error_message');
         }
         isSubmitting = false;
     }
 </script>
 
 <div class="newsletter-form">
-    <h3>Daily Spark ✨</h3>
-    <p>{isLoggedIn ? 'One click to your weekly writing prompt.' : 'Get the weekly writing prompt in your inbox.'}</p>
+    <h3>{$t('common.newsletter.title')}</h3>
+    <p>{isLoggedIn ? $t('common.newsletter.logged_in_description') : $t('common.newsletter.guest_description')}</p>
 
     {#if message}
         <div class="message" class:success={isSuccess} class:error={!isSuccess}>
             {message}
             {#if needsConfirmation}
-                <p class="confirmation-note">Check your inbox to confirm.</p>
+                <p class="confirmation-note">{$t('common.newsletter.confirmation_note')}</p>
             {/if}
         </div>
     {/if}
 
     {#if isLoggedIn}
-        <!-- Logged-in user flow -->
         <div class="logged-in-flow">
             {#if !subscribedEmails.includes(userEmail)}
                 <button class="subscribe-btn" onclick={handleSubscribeUser} disabled={isSubmitting}>
                     {#if isSubmitting}
-                        Subscribing…
+                        {$t('common.newsletter.subscribing_button')}
                     {:else}
-                        ✉️ Subscribe with {userEmail}
+                        {$t('common.newsletter.subscribe_with')} {userEmail}
                     {/if}
                 </button>
             {:else}
-                <div class="subscribed-badge">✅ Subscribed as {userEmail}</div>
+                <div class="subscribed-badge">{$t('common.newsletter.subscribed_as')} {userEmail}</div>
             {/if}
 
             {#if !showFriendInput}
                 <button class="invite-btn" onclick={() => showFriendInput = true}>
-                    + Invite a friend
+                    {$t('common.newsletter.invite_friend')}
                 </button>
             {:else}
                 <form onsubmit={handleSubscribeFriend} class="friend-form">
                     <input
                         type="text"
                         bind:value={friendEmails}
-                        placeholder="friend@email.com, another@email.com"
+                        placeholder={$t('common.newsletter.friend_placeholder')}
                         disabled={isSubmitting}
                     />
                     <button type="submit" disabled={isSubmitting || !friendEmails.trim()}>
-                        {isSubmitting ? 'Sending…' : 'Send invitations'}
+                        {isSubmitting ? '…' : $t('common.newsletter.send_invitations')}
                     </button>
                 </form>
             {/if}
         </div>
     {:else}
-        <!-- Guest flow -->
         <form onsubmit={handleSubmitGuest}>
             <div class="input-group">
                 <input
                     type="email"
                     bind:value={email}
-                    placeholder="your@email.com"
+                    placeholder={$t('common.newsletter.email_placeholder')}
                     required
                     disabled={isSubmitting}
                 />
                 <button type="submit" disabled={isSubmitting}>
                     {#if isSubmitting}
-                        Subscribing…
+                        {$t('common.newsletter.subscribing_button')}
                     {:else}
-                        Subscribe
+                        {$t('common.newsletter.subscribe_button')}
                     {/if}
                 </button>
             </div>
