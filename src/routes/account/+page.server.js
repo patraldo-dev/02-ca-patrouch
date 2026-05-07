@@ -44,12 +44,17 @@ export async function load({ locals }) {
         profileAvatar = pa?.avatar_url || '';
     } catch (e) {}
 
-    // Format member_since — D1 returns epoch as string like "1776974583.0"
+    // Format member_since — could be ISO string or epoch seconds
     let member_since = '';
     const rawDate = baUser?.createdAt ?? baUser?.created_at ?? user?.createdAt;
     if (rawDate != null) {
-        const ms = parseFloat(rawDate) * 1000;
-        const d = new Date(ms);
+        let d;
+        if (typeof rawDate === 'number' || (typeof rawDate === 'string' && rawDate.trim().match(/^\d+(\.\d+)?$/))) {
+            const epoch = typeof rawDate === 'number' ? rawDate : parseFloat(rawDate);
+            d = new Date(epoch < 1e12 ? epoch * 1000 : epoch);
+        } else {
+            d = new Date(rawDate.replace(' ', 'T'));
+        }
         if (!isNaN(d.getTime())) {
             member_since = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
         }
