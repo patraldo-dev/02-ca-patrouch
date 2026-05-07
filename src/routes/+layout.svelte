@@ -19,7 +19,7 @@
     // Track page views on navigation
     if (browser) {
         $effect(() => {
-            document.documentElement.lang = $locale || 'en';
+            document.documentElement.lang = $locale || 'es';
         });
         $effect(() => {
             const path = $page.url.pathname;
@@ -151,11 +151,10 @@
 
 <svelte:head>
     <title>Patrouch</title>
-    <html lang={$locale || 'en'} />
-    <meta name="description" content={getSeoMeta($page.url.pathname, $locale || 'en').description} />
+    <meta name="description" content={getSeoMeta($page.url.pathname, $locale || 'es').description} />
     <link rel="canonical" href={"https://patrouch.ca" + $page.url.pathname} />
     <meta property="og:title" content="Patrouch — A Space for Writing" />
-    <meta property="og:description" content={getSeoMeta($page.url.pathname, $locale || 'en').description} />
+    <meta property="og:description" content={getSeoMeta($page.url.pathname, $locale || 'es').description} />
     <meta property="og:url" content={"https://patrouch.ca" + $page.url.pathname} />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content={$locale === 'es' ? 'es_MX' : $locale === 'fr' ? 'fr_FR' : 'en_US'} />
