@@ -136,7 +136,7 @@ async function insertPromptLog(db, userId, promptId, today, action, locale, isCo
     }
   }
 await db.prepare(
-    `INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community = 0)
+    `INSERT INTO daily_prompt_log (id, user_id, prompt_id, prompt_date, action, locale, is_community)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
 ).bind(crypto.randomUUID(), userId, promptId, today, action, locale, isCommunity ? 1 : 0).run();
   console.log('✅ Prompt log inserted');
