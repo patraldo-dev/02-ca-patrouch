@@ -12,7 +12,7 @@ export async function POST({ request, platform, locals }) {
     const db = platform.env.DB_book;
 
     try {
-        const { text, locale = 'en' } = await request.json();
+        const { text, locale = 'en', systemPrompt: customSystemPrompt } = await request.json();
 
         if (!text || text.trim().length < 50) {
             return json({ error: 'Text must be at least 50 characters' }, { status: 400 });
@@ -38,7 +38,7 @@ export async function POST({ request, platform, locals }) {
 
         };
 
-        const system = systems[locale] || systems.en;
+        const system = customSystemPrompt?.trim() || systems[locale] || systems.en;
         const label = labels[locale] || labels.en;
         const prompt = `${label}:\n---\n${text}`;
 

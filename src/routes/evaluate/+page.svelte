@@ -20,6 +20,8 @@
     let history = $state([]);
     let promptVisible = $state(false);
     let systemPrompts = $state(null);
+    let customPrompt = $state('');
+    let promptEditing = $state(false);
     let showHistory = $state(false);
     let expandedHistoryId = $state(null);
 
@@ -34,6 +36,8 @@
                 const res = await fetch('/api/taller/prompts');
                 if (res.ok) systemPrompts = await res.json();
             } catch {}
+            const savedPrompt = localStorage.getItem('evaluate_custom_prompt_' + locale);
+            if (savedPrompt) customPrompt = savedPrompt;
         }
     });
 
@@ -58,10 +62,12 @@
 
         isLoading = true;
         try {
+            const body = { text, locale };
+            if (customPrompt.trim()) body.systemPrompt = customPrompt.trim();
             const res = await fetch('/api/evaluate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, locale })
+                body: JSON.stringify(body)
             });
 
             const data = await res.json();
@@ -263,8 +269,25 @@
             {#if promptVisible}
                 {#if systemPrompts}
                 <div class="prompt-box">
-                    <h4>{$t('taller.evaluate_prompt_label')}</h4>
-                    <pre>{systemPrompts.evaluate[locale || 'en']}</pre>
+                    <div class="prompt-box-header">
+                        <h4>{$t('taller.evaluate_prompt_label')}</h4>
+                        {#if !promptEditing}
+                            <button class="btn-small" onclick={() => { customPrompt = systemPrompts.evaluate[locale || 'en']; promptEditing = true; }}>✏️ {$t('evaluate.edit_prompt') || 'Editar'}</button>
+                        {:else}
+                            <div class="prompt-edit-actions">
+                                <button class="btn-small" onclick={() => { localStorage.setItem('evaluate_custom_prompt_' + locale, customPrompt); promptEditing = false; }}>💾 {$t('evaluate.save_prompt') || 'Guardar'}</button>
+                                <button class="btn-small" onclick={() => { localStorage.removeItem('evaluate_custom_prompt_' + locale); customPrompt = ''; promptEditing = false; }}>↩️ {$t('evaluate.reset_prompt') || 'Restaurar'}</button>
+                            </div>
+                        {/if}
+                    </div>
+                    {#if promptEditing}
+                        <textarea class="prompt-textarea" bind:value={customPrompt} rows="12" placeholder="System prompt..."></textarea>
+                    {:else}
+                        <pre>{systemPrompts.evaluate[locale || 'en']}</pre>
+                        {#if customPrompt}
+                            <div class="custom-badge">✏️ Prompt personalizado activo</div>
+                        {/if}
+                    {/if}
                 </div>
                 {/if}
             {/if}
@@ -544,6 +567,39 @@
         gap: 0.75rem;
         margin-top: 2rem;
         flex-wrap: wrap;
+    }
+
+    /* Prompt inspector */
+    .prompt-box-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+    .prompt-box-header h4 { margin: 0; }
+    .prompt-edit-actions { display: flex; gap: 0.5rem; }
+    .prompt-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        line-height: 1.6;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+    .prompt-textarea:focus { outline: none; border-color: var(--accent); }
+    .custom-badge {
+        margin-top: 0.75rem;
+        padding: 0.4rem 0.75rem;
+        background: rgba(201,168,124,0.1);
+        color: var(--accent);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        text-align: center;
     }
 
     @media (max-width: 640px) {

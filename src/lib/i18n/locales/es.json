@@ -750,6 +750,9 @@
   "write.view.evaluate": "Evaluar",
   "write.view.audio": "Generar Audio",
   "evaluate.words": "caracteres",
+  "evaluate.edit_prompt": "Editar",
+  "evaluate.save_prompt": "Guardar",
+  "evaluate.reset_prompt": "Restaurar"
   "pages.admin.sections.users.roles.member": "Miembro",
   "refine.title": "Refinar",
   "refine.description": "Pule tu escritura con asistencia de IA",
