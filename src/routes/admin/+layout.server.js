@@ -1,14 +1,6 @@
-// src/routes/admin/+layout.server.js
-import { redirect, error } from '@sveltejs/kit'; // ✅ Import error
+import { requireRole } from '$lib/server/require-role.js';
 
-export async function load({ locals }) {
-    if (!locals.user) {
-        throw redirect(302, '/login');
-    }
-    
-    if (locals.user.role !== 'admin') {
-        throw error(403, 'Admin access required');
-    }
-
+export async function load({ locals, url }) {
+    await requireRole(locals, ['admin'], url);
     return { user: locals.user };
 }

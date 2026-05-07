@@ -9,6 +9,10 @@ export async function load({ locals, cookies }) {
     let activeProfile = null;
 
     if (db && user) {
+        // Fresh role from DB (Better Auth caches role in session token)
+        const freshRole = await db.prepare('SELECT role FROM users WHERE id = ?').bind(user.id).first().catch(() => null);
+        if (freshRole?.role) user.role = freshRole.role;
+
         const { count } = (await db.prepare(`SELECT COUNT(*) as count FROM profiles WHERE user_id = ?`).bind(user.id).first()) || { count: 0 };
 
         if (count === 0) {

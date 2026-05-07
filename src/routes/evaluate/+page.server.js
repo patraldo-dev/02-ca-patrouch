@@ -1,14 +1,7 @@
-import { redirect, error } from '@sveltejs/kit';
+import { requireRole } from '$lib/server/require-role.js';
 
-export async function load({ locals }) {
-    if (!locals.user) {
-        throw redirect(302, '/login?redirect=' + encodeURIComponent(url.pathname));
-    }
+export async function load({ locals, url }) {
+    await requireRole(locals, ['member', 'admin'], url);
 
-    const user = locals.user;
-    if (user.role !== 'member' && user.role !== 'admin') {
-        throw error(403, 'Member access required');
-    }
-
-    return { user, serverLocale: locals.locale || 'es' };
+    return { user: locals.user, serverLocale: locals.locale || 'es' };
 }
