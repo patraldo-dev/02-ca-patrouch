@@ -192,8 +192,7 @@
                     </div>
                     {/if}
                 </div>
-                {/if}
-                {#if data?.user && data.user.role !== 'admin' && data.user.role !== 'member'}
+                {:else}
                 <span class="taller-teaser" title={tallerOpen ? '' : 'Members only'} onclick={() => tallerOpen = !tallerOpen}>{$t('common.nav.taller')}</span>
                 {#if tallerOpen}
                 <div class="taller-teaser-menu">
@@ -310,8 +309,7 @@
                 <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
                 <a href="/refine" onclick={toggleMobileMenu}>{$t('common.nav.refine')}</a>
                 <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
-                {/if}
-                {#if data?.user && data.user.role !== 'admin' && data.user.role !== 'member'}
+                {:else}
                 <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>
                 <span class="mobile-taller-coming">{$t('common.nav.evaluate')} ✦</span>
                 <span class="mobile-taller-coming">{$t('common.nav.refine')} ✦</span>
