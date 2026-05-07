@@ -58,6 +58,15 @@ export async function load({ locals, cookies }) {
         }
     }
 
+    // Check newsletter subscription status for logged-in users
+    let newsletterSubscribed = false;
+    if (user) {
+        const sub = await locals.db.prepare(
+            'SELECT confirmed FROM subscribers WHERE email = ? AND type = ? AND confirmed = 1'
+        ).bind(user.email, 'daily-prompt').first().catch(() => null);
+        newsletterSubscribed = !!sub;
+    }
+
     let onboarding_completed = true;
     if (user) {
         const ob = await locals.db.prepare(
@@ -72,6 +81,7 @@ export async function load({ locals, cookies }) {
         activeProfile,
         onboarding_completed,
         bootyFuel: bootyPlayer?.fuel || 0,
-        avatarUrl: profileAvatar?.avatar_url || userData?.image || null
+        avatarUrl: profileAvatar?.avatar_url || userData?.image || null,
+        newsletterSubscribed
     };
 }

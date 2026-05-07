@@ -14,6 +14,7 @@
 
     let isLoggedIn = $derived(!!$page.data?.user);
     let userEmail = $derived($page.data?.user?.email || '');
+    let isSubscribed = $state($page.data?.newsletterSubscribed || false);
 
     async function subscribeEmail(addr) {
         const response = await fetch('/api/newsletter/subscribe', {
@@ -31,10 +32,15 @@
         const { ok, result } = await subscribeEmail(userEmail);
         if (ok) {
             subscribedEmails = [...subscribedEmails, userEmail];
+            isSubscribed = true;
             needsConfirmation = true;
             message = result.message || $t('common.newsletter.success_message');
             isSuccess = true;
         } else {
+            // Already subscribed from server — update local state
+            if (result.error === 'Already subscribed') {
+                isSubscribed = true;
+            }
             message = result.error || $t('common.newsletter.error_message');
             isSuccess = false;
         }
@@ -118,7 +124,7 @@
 
     {#if isLoggedIn}
         <div class="logged-in-flow">
-            {#if !subscribedEmails.includes(userEmail)}
+            {#if !isSubscribed}
                 <button class="subscribe-btn" onclick={handleSubscribeUser} disabled={isSubmitting}>
                     {#if isSubmitting}
                         {$t('common.newsletter.subscribing_button')}
