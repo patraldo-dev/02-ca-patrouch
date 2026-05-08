@@ -231,7 +231,16 @@
     ];
 
     let cellLabel = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.label || '?');
-    let cellCost = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.cost || 1);
+    let baseCellCost = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.cost || 1);
+
+    // Brent multiplier: >10% change = 1.2x, <-10% = 0.8x, else 1.0x
+    let brentMult = $derived(() => {
+        const change = data.market?.brent_change || 0;
+        if (change > 10) return 1.2;
+        if (change < -10) return 0.8;
+        return 1.0;
+    });
+    let cellCost = $derived(Math.ceil(baseCellCost * brentMult()));
 
     async function loadNavmesh() {
         if (navmeshData) return navmeshData;
@@ -1275,6 +1284,7 @@
                 <div class="zoom-label">Zoom: <strong>{currentZoom}</strong></div>
                 <div class="zoom-label">Celda: <strong>{cellLabel}</strong></div>
                 <div class="zoom-label">Costo: <strong class="fuel-cost">{cellCost} fuel</strong></div>
+                <div class="zoom-label">Brent: <strong>${data.market?.brent_price?.toFixed(0) || '73'}</strong> <span style="color: {(data.market?.brent_change || 0) > 0 ? '#ef4444' : (data.market?.brent_change || 0) < 0 ? '#22c55e' : '#888'}">{(data.market?.brent_change || 0) > 0 ? '▲' : (data.market?.brent_change || 0) < 0 ? '▼' : '—'}</span></div>
                 <div class="zoom-label" style="color: {navVisible ? '#c9a87c' : '#888'}">Navmesh: {navVisible ? 'ON' : 'OFF'}</div>
             </div>
         </div>

@@ -125,15 +125,31 @@ export async function POST({ request, locals, platform }) {
         const distKm = haversineKm(fromLat, fromLon, target_lat, target_lon);
 
         // Get market data for base cost
-        const market = await db.prepare(`SELECT cost_per_km FROM bq_market WHERE id = 'daily'`).first();
+        const market = await db.prepare(`SELECT cost_per_km, brent_price, brent_change FROM bq_market WHERE id = 'daily'`).first();
         const baseCostPerKm = market?.cost_per_km || 0.73;
+
+        // Brent dynamic multiplier
+        const brentChange = market?.brent_change || 0;
+        let brentMult = 1.0;
+        if (brentChange > 10) brentMult = 1.2;
+        else if (brentChange < -10) brentMult = 0.8;
+
+        // Zoom-tier cost multiplier (logarithmic grid)
+        // Approximate zoom from distance: short = high zoom (cheap), long = low zoom (expensive)
+        let zoomCostMult = 1; // default: ~100m tier
+        if (distKm > 50) zoomCostMult = 10000;     // ~500km tier
+        else if (distKm > 10) zoomCostMult = 1000;  // ~100km tier
+        else if (distKm > 2) zoomCostMult = 100;    // ~20km tier
+        else if (distKm > 0.5) zoomCostMult = 10;   // ~5km tier
+        else if (distKm > 0.1) zoomCostMult = 10;   // ~1km tier
+        else zoomCostMult = 1;                       // ~100m and below
 
         // Calculate cost
         const speedMult = SPEED_MULT[speed];
         const zoneMult = getZoneMult(distDeg);
         const compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
         const nightMult = getNightMult(target_lon);
-        const fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult);
+        const fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * brentMult * zoomCostMult);
 
         const totalFuel = (player.fuel || 0) + (player.checkin_fuel || 0);
         if (totalFuel < fuelCost) {
