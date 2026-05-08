@@ -102,7 +102,21 @@ Reply ONLY with JSON:
             max_tokens: 250
         });
 
-        const aiText = typeof aiRes?.response === 'string' ? aiRes.response : (aiRes?.result?.response || JSON.stringify(aiRes?.response || ''));
+        // Workers AI returns response in different shapes depending on model
+        // @cf/mistral returns: { response: string } or { result: { response: string } }
+        let aiText = '';
+        if (typeof aiRes?.response === 'string') {
+            aiText = aiRes.response;
+        } else if (typeof aiRes?.result?.response === 'string') {
+            aiText = aiRes.result.response;
+        } else if (typeof aiRes === 'string') {
+            aiText = aiRes;
+        } else {
+            // Fallback: try to extract any string from the response object
+            aiText = JSON.stringify(aiRes);
+        }
+
+        if (typeof aiText !== 'string') aiText = JSON.stringify(aiText);
         const jsonMatch = aiText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return json({ reply: '¡Ay, el código del mar me falló! Intenta de nuevo.', action: 'unknown' });
 
