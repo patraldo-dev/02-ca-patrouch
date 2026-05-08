@@ -215,6 +215,22 @@
     let navmeshLayer = null;
     let navmeshData = null;
     let selectedTriangle = $state(null);
+    let currentZoom = $state(4);
+
+    // Zoom level → cell size + cost
+    const ZOOM_TIERS = [
+        { minZoom: 17, cellDeg: 0.0001, label: '~10m', cost: 1 },
+        { minZoom: 15, cellDeg: 0.0005, label: '~50m', cost: 1 },
+        { minZoom: 13, cellDeg: 0.002, label: '~200m', cost: 10 },
+        { minZoom: 11, cellDeg: 0.01, label: '~1km', cost: 10 },
+        { minZoom: 9, cellDeg: 0.05, label: '~5km', cost: 100 },
+        { minZoom: 7, cellDeg: 0.2, label: '~20km', cost: 100 },
+        { minZoom: 5, cellDeg: 1.0, label: '~100km', cost: 1000 },
+        { minZoom: 0, cellDeg: 5.0, label: '~500km', cost: 10000 },
+    ];
+
+    let cellLabel = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.label || '?');
+    let cellCost = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.cost || 1);
 
     async function loadNavmesh() {
         if (navmeshData) return navmeshData;
@@ -319,6 +335,18 @@
             zoom: 4,
             zoomControl: true,
             attributionControl: false
+        });
+
+        // Track zoom level
+        currentZoom = mapInstance.getZoom();
+        mapInstance.on('zoomend', () => { currentZoom = mapInstance.getZoom(); });
+
+        // Auto-load navmesh when zoomed into PV area
+        mapInstance.on('moveend', async () => {
+            const center = mapInstance.getCenter();
+            if (center.lat > 20.4 && center.lat < 21.0 && center.lng > -105.7 && center.lng < -105.0) {
+                if (!navVisible) await toggleNavmesh();
+            }
         });
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -1161,6 +1189,13 @@
             <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
         </div>
         <div class="map-container" bind:this={mapEl}>
+            <!-- Zoom level cost overlay -->
+            <div class="zoom-overlay">
+                <div class="zoom-label">Zoom: <strong>{currentZoom}</strong></div>
+                <div class="zoom-label">Celda: <strong>{cellLabel}</strong></div>
+                <div class="zoom-label">Costo: <strong class="fuel-cost">{cellCost} fuel</strong></div>
+                <div class="zoom-label" style="color: {navVisible ? '#c9a87c' : '#888'}">Navmesh: {navVisible ? 'ON' : 'OFF'}</div>
+            </div>
         </div>
         {#if data.player}
         <BootyChat username={data.player.username} displayName={data.player.display_name} />
@@ -1603,8 +1638,16 @@
     .btn-chat-speed { background: var(--bs-ocean); color: #fff; border: none; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
     .btn-chat-speed:disabled { opacity: 0.4; }
     .btn-chat-cancel { background: transparent; border: 1px solid var(--muted); color: var(--muted); padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
-    .map-container { height: 450px; border-radius: 12px; overflow: hidden; border: 1px solid var(--bs-border); cursor: crosshair; }
+    .map-container { height: 450px; border-radius: 12px; overflow: hidden; border: 1px solid var(--bs-border); cursor: crosshair; position: relative; }
     .map-container:fullscreen { height: 100vh; border-radius: 0; border: none; }
+    .zoom-overlay {
+        position: absolute; top: 10px; right: 10px; z-index: 1000;
+        background: rgba(9,9,11,0.85); backdrop-filter: blur(8px);
+        border-radius: 8px; padding: 8px 12px;
+        font-size: 0.75rem; color: #d4c9a8; line-height: 1.6;
+        pointer-events: none; border: 1px solid rgba(201,168,124,0.2);
+    }
+    .zoom-overlay .fuel-cost { color: #f59e0b; }
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
     .section-header h2 { margin: 0; }
     .btn-sm { background: rgba(255,255,255,0.1); border: 1px solid var(--bs-border); color: var(--text); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
