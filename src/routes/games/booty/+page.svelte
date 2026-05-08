@@ -1657,6 +1657,9 @@
                 {#if data.player}
                 <div class="zoom-label" style="color: #f59e0b">Fuel: {(data.player.fuel || 0) + (data.player.checkin_fuel || 0)}</div>
                 {/if}
+                {#if narratorEvent?.event_type !== 'flavor'}
+                <div class="zoom-label" style="color: #ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
+                {/if}
             </div>
         </div>
         {#if data.player}

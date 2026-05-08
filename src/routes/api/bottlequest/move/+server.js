@@ -75,6 +75,10 @@ export async function POST({ request, locals, platform }) {
         const player = await db.prepare(
             `SELECT id, lat, lon, fuel, type, paralyzed_until, checkin_fuel FROM bq_players WHERE username = ?`
         ).bind(locals.user.username).first();
+
+        // Narrator event modifiers (populated during event check)
+        let speedPenaltyMult = 1.0;
+        let fuelPenaltyAmount = 0;
         if (!player) return json({ error: 'No player found' }, { status: 404 });
 
         // Check paralysis
@@ -85,32 +89,67 @@ export async function POST({ request, locals, platform }) {
             }
         }
 
-        // Check narrator weather/storm events affecting this zone
+        // Check ALL active narrator events (not just weather/storm)
         const { results: activeEvents } = await db.prepare(`
             SELECT * FROM narrator_events
-            WHERE event_type IN ('weather', 'storm')
-            AND (duration_hours IS NULL OR datetime(started_at, '+' || duration_hours || ' hours') > datetime('now'))
+            WHERE (expires_at IS NULL OR expires_at > datetime('now'))
             AND started_at <= datetime('now')
         `).all();
 
-        for (const event of activeEvents || []) {
-            if (!event.affected_zone) continue;
-            let zoneLat, zoneLon, zoneRadius;
-            try {
-                const zone = JSON.parse(event.affected_zone);
-                zoneLat = zone.lat; zoneLon = zone.lon; zoneRadius = zone.radius || 2;
-            } catch { continue; }
+        const playerType = player.type || 'human'; // 'human' or 'ai'
 
-            const distToZone = haversineKm(fromLat, fromLon, zoneLat, zoneLon);
-            if (distToZone < zoneRadius) {
-                // Albot Camus has spoken — movement blocked in this zone
+        for (const event of activeEvents || []) {
+            // Parse effects
+            let effects = {};
+            try { effects = JSON.parse(event.effects || '{}'); } catch {}
+
+            // Check if event targets this player type
+            const targetPlayers = event.target_players || 'all';
+            if (targetPlayers !== 'all' && targetPlayers !== playerType) continue; // not targeted
+
+            // Check if event is zone-specific
+            if (event.affected_zone) {
+                let zoneLat, zoneLon, zoneRadius;
+                try {
+                    const zone = JSON.parse(event.affected_zone);
+                    zoneLat = zone.lat; zoneLon = zone.lon; zoneRadius = zone.radius || 2;
+                } catch { continue; }
+
+                const distToZone = haversineKm(fromLat, fromLon, zoneLat, zoneLon);
+                if (distToZone > zoneRadius) continue; // not in zone
+            }
+
+            // Apply effects
+            const noMove = effects.no_move === true;
+            const noVision = effects.no_vision === true;
+            const halfSpeed = effects.half_speed === true;
+            const fuelPenalty = effects.fuel_penalty || 0;
+
+            // AI-specific: if no_vision, AI can't navigate
+            if (noVision && playerType === 'ai') {
                 return json({
-                    error: `El Narrador decrees: ${event.title || 'Movement forbidden in this zone'}`,
+                    error: `LIDAR/CV offline — ${event.title}`,
                     event: event.title,
                     event_narrative: event.narrative,
-                    blocked: true
+                    blocked: true,
+                    reason: 'no_vision'
                 }, { status: 403 });
             }
+
+            // Universal: no_move blocks everyone
+            if (noMove) {
+                return json({
+                    error: `El Narrador decrees: ${event.title}`,
+                    event: event.title,
+                    event_narrative: event.narrative,
+                    blocked: true,
+                    reason: 'no_move'
+                }, { status: 403 });
+            }
+
+            // Apply speed/cost modifiers (stored for later use in cost calc)
+            if (halfSpeed) speedPenaltyMult = 2.0; // doubles fuel cost
+            if (fuelPenalty) fuelPenaltyAmount += fuelPenalty;
         }
 
         const fromLat = player.lat;
@@ -144,14 +183,14 @@ export async function POST({ request, locals, platform }) {
             const tierMult = distKm > 50 ? 10000 : distKm > 10 ? 1000 : distKm > 2 ? 100 : distKm > 0.5 ? 10 : 1;
             const speedMult = SPEED_MULT[speed];
             const nightMult = getNightMult(target_lon);
-            fuelCost = Math.ceil(path_steps * tierMult * speedMult * nightMult * brentMult);
+            fuelCost = Math.ceil(path_steps * tierMult * speedMult * nightMult * brentMult * speedPenaltyMult) + fuelPenaltyAmount;
         } else {
             // Legacy distance-based cost
             const speedMult = SPEED_MULT[speed];
             const zoneMult = getZoneMult(distDeg);
             const compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
             const nightMult = getNightMult(target_lon);
-            fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * brentMult);
+            fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * brentMult * speedPenaltyMult) + fuelPenaltyAmount;
         }
 
         const totalFuel = (player.fuel || 0) + (player.checkin_fuel || 0);
