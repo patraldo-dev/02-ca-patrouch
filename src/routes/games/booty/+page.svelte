@@ -306,7 +306,7 @@
 
         navmeshLayer.addTo(mapInstance);
         navVisible = true;
-        mapInstance.flyTo([20.6063, -105.2355], 16, { duration: 1.5 });
+        mapInstance.flyTo([20.6042, -105.2328], 16, { duration: 1.5 });
         drawDynamicGrid();
         drawMovementRange();
     }
@@ -736,7 +736,7 @@
         document.head.appendChild(css);
 
         mapInstance = L.map(mapEl, {
-            center: [20.6063, -105.2355],
+            center: [20.6042, -105.2328],
             zoom: 16,
             zoomControl: true,
             attributionControl: false
@@ -867,7 +867,7 @@
         if (pvPts.length > 3) {
             mapInstance.fitBounds(L.latLngBounds(pvPts).pad(0.3));
         } else {
-            mapInstance.setView([20.6063, -105.2355], 16);
+            mapInstance.setView([20.6042, -105.2328], 16);
         }
     });
 
