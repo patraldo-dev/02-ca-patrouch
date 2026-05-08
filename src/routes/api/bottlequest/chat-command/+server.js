@@ -102,7 +102,7 @@ Reply ONLY with JSON:
             max_tokens: 250
         });
 
-        const aiText = aiRes?.response || '';
+        const aiText = typeof aiRes?.response === 'string' ? aiRes.response : (aiRes?.result?.response || JSON.stringify(aiRes?.response || ''));
         const jsonMatch = aiText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return json({ reply: '¡Ay, el código del mar me falló! Intenta de nuevo.', action: 'unknown' });
 
