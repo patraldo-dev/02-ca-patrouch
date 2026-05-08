@@ -735,17 +735,44 @@
         css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
         document.head.appendChild(css);
 
+        // Only allow zoom levels that map to grid tiers
+        const VALID_ZOOMS = [17, 15, 13, 11, 9, 7, 5];
+        const MIN_ZOOM = 5;
+        const MAX_ZOOM = 18;
+
         mapInstance = L.map(mapEl, {
             center: [20.6035, -105.2390],
-            zoom: 16,
+            zoom: 15,
             zoomControl: true,
-            attributionControl: false
+            attributionControl: false,
+            minZoom: MIN_ZOOM,
+            maxZoom: MAX_ZOOM,
+            // Keep map within PV area bounds
+            maxBounds: [[19.5, -107.5], [22.0, -103.0]],
+            maxBoundsViscosity: 0.9
         });
 
-        // Track zoom level
-        currentZoom = mapInstance.getZoom();
+        // Snap zoom to nearest valid tier level
+        function snapZoom(zoom) {
+            if (VALID_ZOOMS.includes(Math.round(zoom))) return Math.round(zoom);
+            // Find nearest valid zoom
+            let best = VALID_ZOOMS[0];
+            let bestDist = Math.abs(zoom - best);
+            for (const z of VALID_ZOOMS) {
+                if (Math.abs(zoom - z) < bestDist) { bestDist = Math.abs(zoom - z); best = z; }
+            }
+            return best;
+        }
+
+        // Track zoom level and snap to valid tiers
+        currentZoom = snapZoom(mapInstance.getZoom());
         mapInstance.on('zoomend', () => {
-            currentZoom = mapInstance.getZoom();
+            const rawZoom = mapInstance.getZoom();
+            const snapped = snapZoom(rawZoom);
+            if (Math.round(rawZoom) !== snapped) {
+                mapInstance.setZoom(snapped, { animate: false });
+            }
+            currentZoom = snapped;
             if (navVisible) drawDynamicGrid();
             drawMovementRange();
         });
