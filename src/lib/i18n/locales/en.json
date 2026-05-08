@@ -1023,5 +1023,6 @@
   "booty.arbooty.join_btn": "Join Booty Battle",
   "bottles": {},
   "bottles.type.treasure_clue": " Treasure Clue",
-  "booty.login_required": "Log in to move"
+  "booty.login_required": "Log in to move",
+  "booty.command_placeholder": "Say move 10 points west, or chase the nearest bottle"
 }

@@ -1010,5 +1010,6 @@
   "booty.arbooty.join_btn": "Unirse a Booty Battle",
   "bottles": {},
   "bottles.type.treasure_clue": "Pista del Tesoro",
-  "booty.login_required": "Inicia sesion para moverte"
+  "booty.login_required": "Inicia sesion para moverte",
+  "booty.command_placeholder": "Di muevete 10 puntos al oeste, o persigue la botella mas cercana"
 }

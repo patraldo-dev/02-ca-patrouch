@@ -1635,7 +1635,7 @@
             {/if}
         </div>
         <form onsubmit={(e) => { e.preventDefault(); sendChatCommand(); }} class="chat-form">
-            <input type="text" bind:value={chatInput} placeholder={"Say go to San Diego or chase the bottle"} class="chat-input" disabled={chatLoading} />
+            <input type="text" bind:value={chatInput} placeholder={get(t)('booty.command_placeholder')} class="chat-input" disabled={chatLoading} />
             {#if data.user}
             <button type="button" class="btn-chat-send {voiceListening ? 'voice-active' : ''}" onclick={toggleVoiceCommand} title="Voice command" aria-label="Voice command">🎙️</button>
             {/if}
