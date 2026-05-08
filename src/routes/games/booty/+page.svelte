@@ -295,7 +295,7 @@
 
         navmeshLayer.addTo(mapInstance);
         navVisible = true;
-        mapInstance.flyTo([20.65, -105.35], 13, { duration: 1.5 });
+        mapInstance.flyTo([20.6063, -105.2355], 16, { duration: 1.5 });
         drawDynamicGrid();
     }
 
@@ -418,8 +418,8 @@
         document.head.appendChild(css);
 
         mapInstance = L.map(mapEl, {
-            center: [15, -115],
-            zoom: 4,
+            center: [20.6063, -105.2355],
+            zoom: 16,
             zoomControl: true,
             attributionControl: false
         });
