@@ -401,44 +401,159 @@
     }
 
     // Draw movement range circle based on player fuel
+    // Draw movement range — Dijkstra (zoom ≥ 14) or circle (zoom ≤ 13)
+    let rangePolygon = null;
+
     function drawMovementRange() {
         if (!mapInstance || !leafletLib || !data.player) return;
         const L = leafletLib;
 
         // Remove previous range
         if (rangeCircle) { mapInstance.removeLayer(rangeCircle); rangeCircle = null; }
+        if (rangePolygon) { mapInstance.removeLayer(rangePolygon); rangePolygon = null; }
 
         const playerFuel = (data.player?.fuel || 0) + (data.player?.checkin_fuel || 0);
         if (playerFuel <= 0) return;
 
-        // How many cells can we afford at current zoom tier?
         const tier = ZOOM_TIERS.find(t => currentZoom >= t.minZoom);
         if (!tier) return;
-        const cellsCanAfford = Math.floor(playerFuel / tier.cost);
-
-        // Each cell = tier.cellDeg degrees. Radius in degrees ≈ cellsCanAfford × cellDeg
-        // But cap it so it doesn't go insane
-        const radiusDeg = Math.min(cellsCanAfford * tier.cellDeg, 5.0); // max ~550km
-
-        // Convert to meters for Leaflet circle (approx: 1° ≈ 111km)
-        const radiusKm = radiusDeg * 111;
-        const radiusM = radiusKm * 1000;
 
         const playerLat = data.player.lat || 20.6063;
         const playerLon = data.player.lon || -105.2355;
 
-        rangeCircle = L.circle([playerLat, playerLon], {
-            radius: radiusM,
-            color: 'rgba(201,168,124,0.5)',
-            fillColor: 'rgba(201,168,124,0.08)',
-            fillOpacity: 0.08,
-            weight: 1.5,
-            dashArray: '6, 4',
-        }).addTo(mapInstance);
+        if (currentZoom >= 14 && navmeshData) {
+            // === DIJKSTRA on navmesh ===
+            const startTri = findTriangle(playerLat, playerLon);
+            if (!startTri) return;
 
-        rangeCircle.bindTooltip(`Alcance: ${radiusKm < 1 ? (radiusKm * 1000).toFixed(0) + 'm' : radiusKm.toFixed(1) + 'km'} (${cellsCanAfford} pasos)`, {
-            permanent: false, direction: 'top', className: 'nav-tri-label'
-        });
+            const stepsCanAfford = Math.floor(playerFuel / tier.cost);
+            const visited = new Map(); // triId → steps remaining
+            const queue = [{ id: startTri.id, steps: 0 }];
+            const reachable = new Set();
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (visited.has(current.id) && visited.get(current.id) <= current.steps) continue;
+                visited.set(current.id, current.steps);
+
+                if (current.steps > stepsCanAfford) continue;
+                reachable.add(current.id);
+
+                // Expand neighbors
+                for (const neighborId of (navmeshData.adjacency[current.id] || [])) {
+                    if (navmeshData.triangles[neighborId].n !== 1) continue; // skip obstacles
+                    if (!visited.has(neighborId) || visited.get(neighborId) > current.steps + 1) {
+                        queue.push({ id: neighborId, steps: current.steps + 1 });
+                    }
+                }
+            }
+
+            if (reachable.size === 0) return;
+
+            // Build polygon outline from reachable triangles
+            // Collect all boundary edges (edges shared with non-reachable triangles)
+            const outlinePoints = [];
+            const edgeSet = new Set();
+
+            for (const triId of reachable) {
+                const tri = navmeshData.triangles[triId];
+                const v = tri.v; // [[lon,lat], [lon,lat], [lon,lat]]
+                for (let i = 0; i < 3; i++) {
+                    const j = (i + 1) % 3;
+                    const edgeKey = v[i][0] < v[j][0] || (v[i][0] === v[j][0] && v[i][1] < v[j][1])
+                        ? `${v[i][0]},${v[i][1]}-${v[j][0]},${v[j][1]}`
+                        : `${v[j][0]},${v[j][1]}-${v[i][0]},${v[i][1]}`;
+
+                    // Check if neighbor across this edge is also reachable
+                    // Simple: if edge is shared with a non-reachable tri, it's a boundary
+                    let isBoundary = false;
+                    for (const neighborId of (navmeshData.adjacency[triId] || [])) {
+                        if (!reachable.has(neighborId)) {
+                            // Check if this edge belongs to this neighbor
+                            const nTri = navmeshData.triangles[neighborId];
+                            const nv = nTri.v;
+                            // Check if any edge of neighbor matches this edge
+                            for (let ni = 0; ni < 3; ni++) {
+                                const nj = (ni + 1) % 3;
+                                const nEdgeKey = nv[ni][0] < nv[nj][0] || (nv[ni][0] === nv[nj][0] && nv[ni][1] < nv[nj][1])
+                                    ? `${nv[ni][0]},${nv[ni][1]}-${nv[nj][0]},${nv[nj][1]}`
+                                    : `${nv[nj][0]},${nv[nj][1]}-${nv[ni][0]},${nv[ni][1]}`;
+                                if (nEdgeKey === edgeKey) {
+                                    isBoundary = true;
+                                    break;
+                                }
+                            }
+                            if (isBoundary) break;
+                        }
+                    }
+                    // Also boundary if no neighbor (outer edge of navmesh)
+                    const neighbors = navmeshData.adjacency[triId] || [];
+                    if (neighbors.length < 3 && !isBoundary) {
+                        // Could be outer boundary — check if any neighbor shares this edge
+                        let shared = false;
+                        for (const nId of neighbors) {
+                            if (reachable.has(nId)) {
+                                const nTri = navmeshData.triangles[nId];
+                                const nv = nTri.v;
+                                for (let ni = 0; ni < 3; ni++) {
+                                    const nj = (ni + 1) % 3;
+                                    const nKey = nv[ni][0] < nv[nj][0] || (nv[ni][0] === nv[nj][0] && nv[ni][1] < nv[nj][1])
+                                        ? `${nv[ni][0]},${nv[ni][1]}-${nv[nj][0]},${nv[nj][1]}`
+                                        : `${nv[nj][0]},${nv[nj][1]}-${nv[ni][0]},${nv[ni][1]}`;
+                                    if (nKey === edgeKey) { shared = true; break; }
+                                }
+                            }
+                        }
+                        if (!shared) isBoundary = true;
+                    }
+
+                    if (isBoundary) {
+                        outlinePoints.push([v[i][1], v[i][0]]); // [lat, lon]
+                        outlinePoints.push([v[j][1], v[j][0]]);
+                    }
+                }
+            }
+
+            if (outlinePoints.length > 2) {
+                // Sort points to form a rough polygon (convex hull approximation)
+                const center = outlinePoints.reduce((acc, p) => [acc[0] + p[0], acc[1] + p[1]], [0, 0]).map(v => v / outlinePoints.length);
+                outlinePoints.sort((a, b) => {
+                    return Math.atan2(a[0] - center[0], a[1] - center[1]) - Math.atan2(b[0] - center[0], b[1] - center[1]);
+                });
+                outlinePoints.push(outlinePoints[0]); // close
+
+                rangePolygon = L.polygon(outlinePoints, {
+                    color: 'rgba(201,168,124,0.5)',
+                    fillColor: 'rgba(201,168,124,0.1)',
+                    fillOpacity: 0.1,
+                    weight: 1.5,
+                    dashArray: '6, 4',
+                }).addTo(mapInstance);
+
+                rangePolygon.bindTooltip(`Alcance: ${reachable.size} triángulos · ${stepsCanAfford} pasos`, {
+                    permanent: false, direction: 'top', className: 'nav-tri-label'
+                });
+            }
+        } else {
+            // === CIRCLE for low zoom ===
+            const cellsCanAfford = Math.floor(playerFuel / tier.cost);
+            const radiusDeg = Math.min(cellsCanAfford * tier.cellDeg, 5.0);
+            const radiusKm = radiusDeg * 111;
+            const radiusM = radiusKm * 1000;
+
+            rangeCircle = L.circle([playerLat, playerLon], {
+                radius: radiusM,
+                color: 'rgba(201,168,124,0.5)',
+                fillColor: 'rgba(201,168,124,0.08)',
+                fillOpacity: 0.08,
+                weight: 1.5,
+                dashArray: '6, 4',
+            }).addTo(mapInstance);
+
+            rangeCircle.bindTooltip(`Alcance: ~${radiusKm < 1 ? (radiusKm * 1000).toFixed(0) + 'm' : radiusKm.toFixed(0) + 'km'}`, {
+                permanent: false, direction: 'top', className: 'nav-tri-label'
+            });
+        }
     }
 
     // A* pathfinding on navmesh adjacency
