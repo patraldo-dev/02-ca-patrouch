@@ -5,11 +5,9 @@
   const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 
   const ARTWORKS = [
-    { id: 'f8a136eb-363e-4a24-0f54-70bb4f4bf800', title: 'Mujer' },
-    { id: '26fe40df-7745-41dc-7491-97cb36a32f00', title: 'Blue Alien King' },
-    { id: '75b29e1a-2d22-4ef7-af19-2f7e3828bd00', title: 'Green Alien King' },
-    { id: '65dfe0b8-5b3f-4501-a3ee-c99d301a1800', title: 'Yellow Alien King' },
-    { id: 'd4969f09-777d-46a4-f167-db56837e5300', title: 'Brown Alien King' },
+    { id: '12c79899-fb93-4885-508f-d2da0a2fbf00', title: 'Hans' },
+    { id: 'bd4602b0-149d-42f8-e872-f697b64c7d00', title: 'Barzango' },
+    { id: '5c7fb409-1aa2-45a9-8466-296077e18e00', title: 'Alena la Alien' },
   ];
 
   function segmentUrl(imageId, width = 512) {
@@ -26,7 +24,7 @@
   // Semicircular arrangement — all visible from camera at z=6
   const placements = ARTWORKS.map((_, i) => {
     const n = ARTWORKS.length;
-    const angle = ((i / (n - 1)) - 0.5) * Math.PI * 0.8; // -72° to +72°
+    const angle = ((i / (n - 1)) - 0.5) * Math.PI * 0.6; // -54° to +54°
     return {
       angle,
       radius: 4,
