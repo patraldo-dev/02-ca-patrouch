@@ -8,6 +8,7 @@
     { id: '12c79899-fb93-4885-508f-d2da0a2fbf00', title: 'Hans' },
     { id: 'bd4602b0-149d-42f8-e872-f697b64c7d00', title: 'Barzango' },
     { id: '5c7fb409-1aa2-45a9-8466-296077e18e00', title: 'Alena la Alien' },
+    { id: 'f8a136eb-363e-4a24-0f54-70bb4f4bf800', title: 'Mujer' },
   ];
 
   function segmentUrl(imageId, width = 512) {
