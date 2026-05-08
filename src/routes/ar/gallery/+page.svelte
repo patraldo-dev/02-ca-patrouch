@@ -23,16 +23,20 @@
   let animationId;
   let mouseX = 0, mouseY = 0;
 
-  // Orbit angles for each artwork — spread them in a spiral
-  const placements = ARTWORKS.map((_, i) => ({
-    angle: (i / ARTWORKS.length) * Math.PI * 2,
-    radius: 3 + i * 0.6,
-    y: -0.5 + i * 0.5,
-    rotSpeed: 0.001 + Math.random() * 0.002,
-    bobSpeed: 0.5 + Math.random() * 0.5,
-    bobAmp: 0.1 + Math.random() * 0.15,
-    baseY: -0.5 + i * 0.5,
-  }));
+  // Semicircular arrangement — all visible from camera at z=6
+  const placements = ARTWORKS.map((_, i) => {
+    const n = ARTWORKS.length;
+    const angle = ((i / (n - 1)) - 0.5) * Math.PI * 0.8; // -72° to +72°
+    return {
+      angle,
+      radius: 4,
+      y: 0,
+      rotSpeed: 0.0008 + Math.random() * 0.001,
+      bobSpeed: 0.4 + Math.random() * 0.4,
+      bobAmp: 0.12 + Math.random() * 0.1,
+      baseY: 0,
+    };
+  });
 
   onMount(async () => {
     if (!browser) return;
@@ -43,10 +47,10 @@
 
     // Dark space background
     scene.background = new THREE.Color(0x09090b);
-    scene.fog = new THREE.Fog(0x09090b, 8, 20);
+    scene.fog = new THREE.Fog(0x09090b, 12, 25);
 
-    camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(0, 1, 6);
+    camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 0.5, 8);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -86,23 +90,44 @@
           const aspect = texture.image.height / texture.image.width;
           const planeH = 2 * aspect;
           const geometry = new THREE.PlaneGeometry(2, planeH);
+          // Canvas-based cleanup: boost contrast on alpha channel to remove residual paper
+          const canvas = document.createElement('canvas');
+          canvas.width = texture.image.width;
+          canvas.height = texture.image.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(texture.image, 0, 0);
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const pix = imgData.data;
+          for (let j = 0; j < pix.length; j += 4) {
+            // If pixel has some transparency, push it harder toward fully transparent or opaque
+            if (pix[j + 3] < 200) {
+              pix[j + 3] = pix[j + 3] < 80 ? 0 : Math.min(255, pix[j + 3] * 1.8);
+            }
+            // Also kill near-white pixels that are likely paper residue
+            const brightness = (pix[j] + pix[j+1] + pix[j+2]) / 3;
+            if (brightness > 220 && pix[j + 3] > 0 && pix[j + 3] < 230) {
+              pix[j + 3] = 0;
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+          const cleanTexture = new THREE.CanvasTexture(canvas);
+          cleanTexture.colorSpace = THREE.SRGBColorSpace;
+
           const material = new THREE.MeshStandardMaterial({
-            map: texture,
+            map: cleanTexture,
             transparent: true,
             side: THREE.DoubleSide,
             roughness: 0.8,
             metalness: 0.1,
-            alphaTest: 0.01,
+            alphaTest: 0.05,
           });
 
           const mesh = new THREE.Mesh(geometry, material);
-          mesh.position.set(
-            Math.cos(placement.angle) * placement.radius,
-            placement.y,
-            Math.sin(placement.angle) * placement.radius
-          );
-          // Face toward center
-          mesh.lookAt(0, mesh.position.y, 0);
+          const px = Math.sin(placement.angle) * placement.radius;
+          const pz = Math.cos(placement.angle) * placement.radius - placement.radius;
+          mesh.position.set(px, placement.baseY, pz);
+          // Face toward camera
+          mesh.lookAt(0, mesh.position.y, 8);
           mesh.userData = { index: i, title: artwork.title, ...placement };
 
           scene.add(mesh);
