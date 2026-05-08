@@ -862,8 +862,12 @@
         }
 
         const allPts = [...launchedBottles.map(b => [b.current_lat, b.current_lon]), ...playerPts, ...botPts];
-        if (allPts.length) {
-            mapInstance.fitBounds(L.latLngBounds(allPts).pad(0.3));
+        // Only fitBounds if points are in the PV area, otherwise stay centered on pier
+        const pvPts = allPts.filter(p => p[0] > 19 && p[0] < 23 && p[1] > -110 && p[1] < -100);
+        if (pvPts.length > 3) {
+            mapInstance.fitBounds(L.latLngBounds(pvPts).pad(0.3));
+        } else {
+            mapInstance.setView([20.6063, -105.2355], 16);
         }
     });
 
