@@ -213,6 +213,7 @@
     // Navmesh
     let navVisible = $state(false);
     let navmeshLayer = null;
+    let dynamicGridLayer = null;
     let navmeshData = null;
     let selectedTriangle = $state(null);
     let currentZoom = $state(4);
@@ -286,6 +287,83 @@
         navmeshLayer.addTo(mapInstance);
         navVisible = true;
         mapInstance.flyTo([20.65, -105.35], 13, { duration: 1.5 });
+        drawDynamicGrid();
+    }
+
+    // Draw zoom-responsive grid over navmesh area
+    function drawDynamicGrid() {
+        if (!mapInstance || !leafletLib) return;
+        const L = leafletLib;
+
+        // Remove previous grid
+        if (dynamicGridLayer) { mapInstance.removeLayer(dynamicGridLayer); dynamicGridLayer = null; }
+
+        const tier = ZOOM_TIERS.find(t => currentZoom >= t.minZoom);
+        if (!tier) return;
+
+        const cellDeg = tier.cellDeg;
+        const bounds = mapInstance.getBounds();
+        const sw = bounds.getSouthWest();
+        const ne = bounds.getNorthEast();
+
+        // Add padding
+        const padLat = (ne.lat - sw.lat) * 0.1;
+        const padLon = (ne.lng - sw.lng) * 0.1;
+        const minLat = sw.lat - padLat;
+        const maxLat = ne.lat + padLat;
+        const minLon = sw.lng - padLon;
+        const maxLon = ne.lng + padLon;
+
+        // Limit cells to prevent performance issues
+        const cols = Math.ceil((maxLon - minLon) / cellDeg);
+        const rows = Math.ceil((maxLat - minLat) / cellDeg);
+        if (cols * rows > 2000) return; // too many cells, skip
+
+        dynamicGridLayer = L.layerGroup();
+
+        const startCol = Math.floor(minLon / cellDeg);
+        const endCol = Math.ceil(maxLon / cellDeg);
+        const startRow = Math.floor(minLat / cellDeg);
+        const endRow = Math.ceil(maxLat / cellDeg);
+
+        for (let col = startCol; col <= endCol; col++) {
+            for (let row = startRow; row <= endRow; row++) {
+                const south = row * cellDeg;
+                const north = (row + 1) * cellDeg;
+                const west = col * cellDeg;
+                const east = (col + 1) * cellDeg;
+
+                // Only draw if in PV area
+                if (south > 21.0 || north < 20.4 || east < -105.7 || west > -105.0) continue;
+
+                const isOcean = south < 20.65 || west > -105.35; // simplified check
+                const color = isOcean ? 'rgba(100,180,255,0.25)' : 'rgba(180,120,80,0.2)';
+                const fillColor = isOcean ? 'rgba(60,140,220,0.04)' : 'rgba(120,80,40,0.06)';
+
+                const rect = L.rectangle([[south, west], [north, east]], {
+                    color,
+                    fillColor,
+                    weight: 0.5,
+                    fillOpacity: isOcean ? 0.04 : 0.06,
+                    interactive: true,
+                });
+
+                rect.bindTooltip(`${tier.label} · ${tier.cost} fuel`, {
+                    direction: 'top', className: 'nav-tri-label', opacity: 0.8,
+                    sticky: true,
+                });
+
+                rect.on('click', () => {
+                    selectedTriangle = `grid:${col},${row}`;
+                    rect.setStyle({ fillColor: 'rgba(201,168,124,0.3)', fillOpacity: 0.3, weight: 1.5, color: '#c9a87c' });
+                    showToast(`${tier.label} move · ${tier.cost} fuel`);
+                });
+
+                dynamicGridLayer.addLayer(rect);
+            }
+        }
+
+        dynamicGridLayer.addTo(mapInstance);
     }
 
     function flyToPlayer(player) {
@@ -339,7 +417,10 @@
 
         // Track zoom level
         currentZoom = mapInstance.getZoom();
-        mapInstance.on('zoomend', () => { currentZoom = mapInstance.getZoom(); });
+        mapInstance.on('zoomend', () => {
+            currentZoom = mapInstance.getZoom();
+            if (navVisible) drawDynamicGrid();
+        });
 
         // Auto-load navmesh when zoomed into PV area
         mapInstance.on('moveend', async () => {
