@@ -208,6 +208,69 @@
         document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
     });
     let mapInstance = $state(null);
+    let leafletLib = null;
+
+    // Navmesh
+    let navVisible = $state(false);
+    let navmeshLayer = null;
+    let navmeshData = null;
+    let selectedTriangle = $state(null);
+
+    async function loadNavmesh() {
+        if (navmeshData) return navmeshData;
+        const res = await fetch('/navmesh/pv-navmesh.json');
+        navmeshData = await res.json();
+        return navmeshData;
+    }
+
+    async function toggleNavmesh() {
+        if (!mapInstance || !leafletLib) return;
+        const L = leafletLib;
+        if (navVisible) {
+            if (navmeshLayer) { mapInstance.removeLayer(navmeshLayer); navmeshLayer = null; }
+            navVisible = false;
+            return;
+        }
+        const nav = await loadNavmesh();
+        navmeshLayer = L.layerGroup();
+
+        for (const tri of nav.triangles) {
+            const coords = tri.v.map(([lon, lat]) => [lat, lon]);
+            coords.push(coords[0]);
+            const navigable = tri.n === 1;
+            const polygon = L.polygon(coords, {
+                color: navigable ? 'rgba(100,180,255,0.3)' : 'rgba(180,120,80,0.15)',
+                fillColor: navigable ? 'rgba(60,140,220,0.08)' : 'rgba(120,80,40,0.12)',
+                weight: navigable ? 0.8 : 0.4,
+                fillOpacity: navigable ? 0.08 : 0.12,
+                interactive: navigable,
+            });
+
+            if (navigable) {
+                polygon.bindTooltip(`T${tri.id}`, {
+                    direction: 'top', className: 'nav-tri-label', opacity: 0.7
+                });
+                polygon.on('click', () => {
+                    selectedTriangle = tri.id;
+                    polygon.setStyle({ fillColor: 'rgba(201,168,124,0.4)', fillOpacity: 0.4, weight: 2, color: '#c9a87c' });
+                });
+                polygon.on('mouseover', () => {
+                    if (selectedTriangle !== tri.id)
+                        polygon.setStyle({ fillColor: 'rgba(100,180,255,0.2)', fillOpacity: 0.2 });
+                });
+                polygon.on('mouseout', () => {
+                    if (selectedTriangle !== tri.id)
+                        polygon.setStyle({ fillColor: 'rgba(60,140,220,0.08)', fillOpacity: 0.08 });
+                });
+            }
+
+            navmeshLayer.addLayer(polygon);
+        }
+
+        navmeshLayer.addTo(mapInstance);
+        navVisible = true;
+        mapInstance.flyTo([20.65, -105.35], 13, { duration: 1.5 });
+    }
 
     function flyToPlayer(player) {
         if (mapInstance) mapInstance.flyTo([player.lat, player.lon], 6, { duration: 1.5 });
@@ -244,6 +307,7 @@
         if (!browser) return;
 
         const L = (await import('leaflet')).default;
+        leafletLib = L;
         // Load Leaflet CSS dynamically to avoid global style conflicts
         const css = document.createElement('link');
         css.rel = 'stylesheet';
@@ -262,7 +326,6 @@
         }).addTo(mapInstance);
 
         L.control.attribution({ prefix: false }).addAttribution('© OpenStreetMap © CartoDB').addTo(mapInstance);
-
         for (const bottle of data.bottles) {
             if (!bottle.current_lat || !bottle.current_lon) continue;
 
@@ -1094,6 +1157,7 @@
     <div class="section">
         <div class="section-header">
             <h2>{$t('bottles.map_title')}</h2>
+            <button class="btn-sm" onclick={() => toggleNavmesh()} title="Toggle Navmesh">🗺️</button>
             <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
         </div>
         <div class="map-container" bind:this={mapEl}>
