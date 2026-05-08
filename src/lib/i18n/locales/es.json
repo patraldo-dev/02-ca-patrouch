@@ -1011,5 +1011,7 @@
   "bottles": {},
   "bottles.type.treasure_clue": "Pista del Tesoro",
   "booty.login_required": "Inicia sesion para moverte",
-  "booty.command_placeholder": "Di muevete 10 puntos al oeste, o persigue la botella mas cercana"
+  "booty.command_placeholder": "Di muevete 10 puntos al oeste, o persigue la botella mas cercana",
+  "booty.fly_to_me": "Volar a mi posicion",
+  "booty.flying_to_position": "Volando a tu posicion"
 }

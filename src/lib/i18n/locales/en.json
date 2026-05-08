@@ -1024,5 +1024,7 @@
   "bottles": {},
   "bottles.type.treasure_clue": " Treasure Clue",
   "booty.login_required": "Log in to move",
-  "booty.command_placeholder": "Say move 10 points west, or chase the nearest bottle"
+  "booty.command_placeholder": "Say move 10 points west, or chase the nearest bottle",
+  "booty.fly_to_me": "Fly to my position",
+  "booty.flying_to_position": "Flying to your position"
 }

@@ -1024,5 +1024,7 @@
   "bottles": {},
   "bottles.type.treasure_clue": "Indice au Trésor",
   "booty.login_required": "Connectez-vous pour vous deplacer",
-  "booty.command_placeholder": "Dites avancer de 10 points a l ouest, ou poursuivre la bouteille la plus proche"
+  "booty.command_placeholder": "Dites avancer de 10 points a l ouest, ou poursuivre la bouteille la plus proche",
+  "booty.fly_to_me": "Aller a ma position",
+  "booty.flying_to_position": "Vol vers votre position"
 }

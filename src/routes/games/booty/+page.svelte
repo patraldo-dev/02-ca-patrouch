@@ -972,6 +972,21 @@
         chatLoading = true;
         chatHistory = [...chatHistory, { role: 'user', text: msg }];
         chatInput = '';
+
+        // Local commands — don't need AI
+        const lowerMsg = msg.toLowerCase();
+        if (lowerMsg.match(/^(fly|ve|vas|go|aller|vuela|llévame|llevame|where am i|dónde estoy|donde estoy|my location|mi ubicaci[oó]n)/)) {
+            if (mapInstance && data.myPlayer) {
+                mapInstance.flyTo([data.myPlayer.lat, data.myPlayer.lon], 15, { duration: 1.5 });
+                chatHistory = [...chatHistory, { role: 'bot', text: `🧭 ${get(t)('booty.flying_to_position')} (${data.myPlayer.lat.toFixed(4)}, ${data.myPlayer.lon.toFixed(4)})` }];
+            } else {
+                chatHistory = [...chatHistory, { role: 'bot', text: '⚠️ ' + (get(t)('booty.login_required') || 'Log in first') }];
+            }
+            chatLoading = false;
+            if (chatMessagesEl) chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+            return;
+        }
+
         try {
             const res = await fetch('/api/bottlequest/chat-command', {
                 method: 'POST', credentials: 'include',
@@ -1675,6 +1690,7 @@
         <div class="section-header">
             <h2>{$t('bottles.map_title')}</h2>
             <button class="btn-sm" onclick={() => toggleNavmesh()} title="Toggle Navmesh">🗺️</button>
+            <button class="btn-sm btn-fly-me" onclick={() => { if (mapInstance && data.myPlayer) mapInstance.flyTo([data.myPlayer.lat, data.myPlayer.lon], 15, { duration: 1.5 }); }} title={get(t)('booty.fly_to_me')}>🧭</button>
             <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
         </div>
         <div class="map-container" bind:this={mapEl}>
