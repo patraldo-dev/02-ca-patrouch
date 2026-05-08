@@ -89,36 +89,10 @@
           const aspect = texture.image.height / texture.image.width;
           const planeH = 2 * aspect;
           const geometry = new THREE.PlaneGeometry(2, planeH);
-          // Canvas-based cleanup: boost contrast on alpha channel to remove residual paper
-          const canvas = document.createElement('canvas');
-          canvas.width = texture.image.width;
-          canvas.height = texture.image.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(texture.image, 0, 0);
-          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const pix = imgData.data;
-          for (let j = 0; j < pix.length; j += 4) {
-            // If pixel has some transparency, push it harder toward fully transparent or opaque
-            if (pix[j + 3] < 200) {
-              pix[j + 3] = pix[j + 3] < 80 ? 0 : Math.min(255, pix[j + 3] * 1.8);
-            }
-            // Also kill near-white pixels that are likely paper residue
-            const brightness = (pix[j] + pix[j+1] + pix[j+2]) / 3;
-            if (brightness > 220 && pix[j + 3] > 0 && pix[j + 3] < 230) {
-              pix[j + 3] = 0;
-            }
-          }
-          ctx.putImageData(imgData, 0, 0);
-          const cleanTexture = new THREE.CanvasTexture(canvas);
-          cleanTexture.colorSpace = THREE.SRGBColorSpace;
-
-          const material = new THREE.MeshStandardMaterial({
-            map: cleanTexture,
+          const material = new THREE.MeshBasicMaterial({
+            map: texture,
             transparent: true,
             side: THREE.DoubleSide,
-            roughness: 0.8,
-            metalness: 0.1,
-            alphaTest: 0.05,
           });
 
           const mesh = new THREE.Mesh(geometry, material);
