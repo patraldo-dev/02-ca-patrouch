@@ -1022,5 +1022,6 @@
   "booty.arbooty.join_required": "You need to be a Booty Battle player to participate.",
   "booty.arbooty.join_btn": "Join Booty Battle",
   "bottles": {},
-  "bottles.type.treasure_clue": " Treasure Clue"
+  "bottles.type.treasure_clue": " Treasure Clue",
+  "booty.login_required": "Log in to move"
 }

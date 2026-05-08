@@ -1009,5 +1009,6 @@
   "booty.arbooty.join_required": "Necesitas ser jugador de Booty Battle para participar.",
   "booty.arbooty.join_btn": "Unirse a Booty Battle",
   "bottles": {},
-  "bottles.type.treasure_clue": "Pista del Tesoro"
+  "bottles.type.treasure_clue": "Pista del Tesoro",
+  "booty.login_required": "Inicia sesion para moverte"
 }

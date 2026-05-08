@@ -405,21 +405,21 @@
     let rangePolygon = null;
 
     function drawMovementRange() {
-        if (!mapInstance || !leafletLib || !data.player) return;
+        if (!mapInstance || !leafletLib || !data.myPlayer) return;
         const L = leafletLib;
 
         // Remove previous range
         if (rangeCircle) { mapInstance.removeLayer(rangeCircle); rangeCircle = null; }
         if (rangePolygon) { mapInstance.removeLayer(rangePolygon); rangePolygon = null; }
 
-        const playerFuel = (data.player?.fuel || 0) + (data.player?.checkin_fuel || 0);
+        const playerFuel = (data.myPlayer?.fuel || 0) + (data.myPlayer?.checkin_fuel || 0);
         if (playerFuel <= 0) return;
 
         const tier = ZOOM_TIERS.find(t => currentZoom >= t.minZoom);
         if (!tier) return;
 
-        const playerLat = data.player.lat || 20.6063;
-        const playerLon = data.player.lon || -105.2355;
+        const playerLat = data.myPlayer.lat || 20.6063;
+        const playerLon = data.myPlayer.lon || -105.2355;
 
         if (currentZoom >= 14 && navmeshData) {
             // === DIJKSTRA on navmesh ===
@@ -613,10 +613,10 @@
     let movePreview = $state(null); // { steps, cost, pathCoords, targetLat, targetLon }
 
     async function calculatePath(targetLat, targetLon) {
-        if (!data.player) { showToast('Log in to move'); return; }
+        if (!data.myPlayer) { showToast(get(t)('booty.login_required') || 'Log in to move'); return; }
 
         // Find player's current triangle
-        const playerTri = findTriangle(data.player.lat, data.player.lon);
+        const playerTri = findTriangle(data.myPlayer.lat, data.myPlayer.lon);
         const targetTri = findTriangle(targetLat, targetLon);
 
         if (!playerTri) { showToast('You\'re not on the navmesh'); return; }
@@ -644,7 +644,7 @@
         const moveCount = path.length - 1;
         const totalCost = moveCount * cellCost;
         const distKm = haversine(pathCoords[0][0], pathCoords[0][1], pathCoords[pathCoords.length - 1][0], pathCoords[pathCoords.length - 1][1]);
-        const playerFuel = (data.player?.fuel || 0) + (data.player?.checkin_fuel || 0);
+        const playerFuel = (data.myPlayer?.fuel || 0) + (data.myPlayer?.checkin_fuel || 0);
         const canAfford = playerFuel >= totalCost;
 
         movePreview = {
@@ -986,9 +986,9 @@
 
     // Click-to-move on map
     $effect(() => {
-        if (!mapInstance || !data.player) return;
+        if (!mapInstance || !data.myPlayer) return;
         mapInstance.on('click', (e) => {
-            if (!data.player) return;
+            if (!data.myPlayer) return;
             moveTarget = { lat: parseFloat(e.latlng.lat.toFixed(5)), lon: parseFloat(e.latlng.lng.toFixed(5)) };
         });
     });
@@ -1658,16 +1658,16 @@
                 <div class="zoom-label">Costo: <strong class="fuel-cost">{cellCost} fuel</strong></div>
                 <div class="zoom-label">Brent: <strong>${data.market?.brent_price?.toFixed(0) || '73'}</strong> <span style="color: {(data.market?.brent_change || 0) > 0 ? '#ef4444' : (data.market?.brent_change || 0) < 0 ? '#22c55e' : '#888'}">{(data.market?.brent_change || 0) > 0 ? '▲' : (data.market?.brent_change || 0) < 0 ? '▼' : '—'}</span></div>
                 <div class="zoom-label" style="color: {navVisible ? '#c9a87c' : '#888'}">Navmesh: {navVisible ? 'ON' : 'OFF'}</div>
-                {#if data.player}
-                <div class="zoom-label" style="color: #f59e0b">Fuel: {(data.player.fuel || 0) + (data.player.checkin_fuel || 0)}</div>
+                {#if data.myPlayer}
+                <div class="zoom-label" style="color: #f59e0b">Fuel: {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}</div>
                 {/if}
                 {#if narratorEvent?.event_type !== 'flavor'}
                 <div class="zoom-label" style="color: #ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
                 {/if}
             </div>
         </div>
-        {#if data.player}
-        <BootyChat username={data.player.username} displayName={data.player.display_name} />
+        {#if data.myPlayer}
+        <BootyChat username={data.myPlayer.username} displayName={data.myPlayer.display_name} />
         {/if}
     </div>
 
