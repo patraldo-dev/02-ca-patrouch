@@ -214,6 +214,7 @@
     let navVisible = $state(false);
     let navmeshLayer = null;
     let dynamicGridLayer = null;
+    let rangeCircle = null; // movement range overlay
     let navmeshData = null;
     let selectedTriangle = $state(null);
     let pathStart = $state(null); // { lat, lon }
@@ -307,6 +308,7 @@
         navVisible = true;
         mapInstance.flyTo([20.6063, -105.2355], 16, { duration: 1.5 });
         drawDynamicGrid();
+        drawMovementRange();
     }
 
     // Draw zoom-responsive grid over navmesh area
@@ -396,6 +398,47 @@
 
     function flyToBottle(bottle) {
         if (mapInstance && bottle.current_lat) mapInstance.flyTo([bottle.current_lat, bottle.current_lon], 8, { duration: 1.5 });
+    }
+
+    // Draw movement range circle based on player fuel
+    function drawMovementRange() {
+        if (!mapInstance || !leafletLib || !data.player) return;
+        const L = leafletLib;
+
+        // Remove previous range
+        if (rangeCircle) { mapInstance.removeLayer(rangeCircle); rangeCircle = null; }
+
+        const playerFuel = (data.player?.fuel || 0) + (data.player?.checkin_fuel || 0);
+        if (playerFuel <= 0) return;
+
+        // How many cells can we afford at current zoom tier?
+        const tier = ZOOM_TIERS.find(t => currentZoom >= t.minZoom);
+        if (!tier) return;
+        const cellsCanAfford = Math.floor(playerFuel / tier.cost);
+
+        // Each cell = tier.cellDeg degrees. Radius in degrees ≈ cellsCanAfford × cellDeg
+        // But cap it so it doesn't go insane
+        const radiusDeg = Math.min(cellsCanAfford * tier.cellDeg, 5.0); // max ~550km
+
+        // Convert to meters for Leaflet circle (approx: 1° ≈ 111km)
+        const radiusKm = radiusDeg * 111;
+        const radiusM = radiusKm * 1000;
+
+        const playerLat = data.player.lat || 20.6063;
+        const playerLon = data.player.lon || -105.2355;
+
+        rangeCircle = L.circle([playerLat, playerLon], {
+            radius: radiusM,
+            color: 'rgba(201,168,124,0.5)',
+            fillColor: 'rgba(201,168,124,0.08)',
+            fillOpacity: 0.08,
+            weight: 1.5,
+            dashArray: '6, 4',
+        }).addTo(mapInstance);
+
+        rangeCircle.bindTooltip(`Alcance: ${radiusKm < 1 ? (radiusKm * 1000).toFixed(0) + 'm' : radiusKm.toFixed(1) + 'km'} (${cellsCanAfford} pasos)`, {
+            permanent: false, direction: 'top', className: 'nav-tri-label'
+        });
     }
 
     // A* pathfinding on navmesh adjacency
@@ -526,7 +569,8 @@
             if (res.ok) {
                 showToast(`Moved! Fuel: -${result.fuel_cost}`);
                 if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
-                invalidateAll();
+                await invalidateAll();
+                drawMovementRange();
             } else {
                 showToast(result.error || 'Move failed');
             }
@@ -588,6 +632,7 @@
         mapInstance.on('zoomend', () => {
             currentZoom = mapInstance.getZoom();
             if (navVisible) drawDynamicGrid();
+            drawMovementRange();
         });
 
         // Auto-load navmesh when zoomed into PV area
@@ -1494,6 +1539,9 @@
                 <div class="zoom-label">Costo: <strong class="fuel-cost">{cellCost} fuel</strong></div>
                 <div class="zoom-label">Brent: <strong>${data.market?.brent_price?.toFixed(0) || '73'}</strong> <span style="color: {(data.market?.brent_change || 0) > 0 ? '#ef4444' : (data.market?.brent_change || 0) < 0 ? '#22c55e' : '#888'}">{(data.market?.brent_change || 0) > 0 ? '▲' : (data.market?.brent_change || 0) < 0 ? '▼' : '—'}</span></div>
                 <div class="zoom-label" style="color: {navVisible ? '#c9a87c' : '#888'}">Navmesh: {navVisible ? 'ON' : 'OFF'}</div>
+                {#if data.player}
+                <div class="zoom-label" style="color: #f59e0b">Fuel: {(data.player.fuel || 0) + (data.player.checkin_fuel || 0)}</div>
+                {/if}
             </div>
         </div>
         {#if data.player}
