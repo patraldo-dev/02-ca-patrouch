@@ -216,6 +216,10 @@
     let dynamicGridLayer = null;
     let navmeshData = null;
     let selectedTriangle = $state(null);
+    let pathStart = $state(null); // { lat, lon }
+    let pathEnd = $state(null);   // { lat, lon }
+    let pathLine = null;
+    let pathTriangles = []; // ordered triangle IDs for the route
     let currentZoom = $state(4);
 
     // Zoom level → cell size + cost
@@ -277,8 +281,14 @@
                     direction: 'top', className: 'nav-tri-label', opacity: 0.7
                 });
                 polygon.on('click', () => {
+                    const prevSelected = selectedTriangle;
                     selectedTriangle = tri.id;
                     polygon.setStyle({ fillColor: 'rgba(201,168,124,0.4)', fillOpacity: 0.4, weight: 2, color: '#c9a87c' });
+
+                    // If clicking same triangle as before, move there
+                    if (prevSelected !== null && prevSelected !== tri.id) {
+                        moveOnNavmesh(tri.c[1], tri.c[0]);
+                    }
                 });
                 polygon.on('mouseover', () => {
                     if (selectedTriangle !== tri.id)
@@ -363,9 +373,14 @@
                 });
 
                 rect.on('click', () => {
+                    const prevSelected = selectedTriangle;
                     selectedTriangle = `grid:${col},${row}`;
                     rect.setStyle({ fillColor: 'rgba(201,168,124,0.3)', fillOpacity: 0.3, weight: 1.5, color: '#c9a87c' });
-                    showToast(`${tier.label} move · ${tier.cost} fuel`);
+
+                    // Move to center of this cell
+                    const targetLat = (south + north) / 2;
+                    const targetLon = (west + east) / 2;
+                    moveOnNavmesh(targetLat, targetLon);
                 });
 
                 dynamicGridLayer.addLayer(rect);
@@ -381,6 +396,118 @@
 
     function flyToBottle(bottle) {
         if (mapInstance && bottle.current_lat) mapInstance.flyTo([bottle.current_lat, bottle.current_lon], 8, { duration: 1.5 });
+    }
+
+    // A* pathfinding on navmesh adjacency
+    function findTriangle(lat, lon) {
+        if (!navmeshData) return null;
+        let best = null, bestDist = Infinity;
+        for (const tri of navmeshData.triangles) {
+            if (tri.n !== 1) continue; // skip non-navigable
+            const dx = tri.c[0] - lon;
+            const dy = tri.c[1] - lat;
+            const d = dx * dx + dy * dy;
+            if (d < bestDist) { bestDist = d; best = tri; }
+        }
+        return best;
+    }
+
+    function astarNavmesh(fromId, toId) {
+        if (!navmeshData) return null;
+        const adj = navmeshData.adjacency;
+        const tris = navmeshData.triangles;
+        const toTri = tris[toId];
+        if (!toTri) return null;
+
+        // Priority queue (simple sorted array)
+        const open = [{ id: fromId, g: 0, f: 0, path: [fromId] }];
+        const visited = new Set();
+
+        while (open.length > 0) {
+            open.sort((a, b) => a.f - b.f);
+            const current = open.shift();
+            if (current.id === toId) return current.path;
+            if (visited.has(current.id)) continue;
+            visited.add(current.id);
+
+            for (const neighborId of (adj[current.id] || [])) {
+                if (visited.has(neighborId)) continue;
+                if (tris[neighborId].n !== 1) continue; // skip obstacles
+
+                const nTri = tris[neighborId];
+                const dx = nTri.c[0] - tris[current.id].c[0];
+                const dy = nTri.c[1] - tris[current.id].c[1];
+                const edgeCost = Math.sqrt(dx * dx + dy * dy);
+                const g = current.g + edgeCost;
+
+                // Heuristic: straight-line distance to goal
+                const hx = nTri.c[0] - toTri.c[0];
+                const hy = nTri.c[1] - toTri.c[1];
+                const h = Math.sqrt(hx * hx + hy * hy);
+
+                open.push({ id: neighborId, g, f: g + h, path: [...current.path, neighborId] });
+            }
+        }
+        return null; // no path
+    }
+
+    async function moveOnNavmesh(targetLat, targetLon) {
+        if (!data.player) { showToast('Log in to move'); return; }
+
+        // Find player's current triangle
+        const playerTri = findTriangle(data.player.lat, data.player.lon);
+        const targetTri = findTriangle(targetLat, targetLon);
+
+        if (!playerTri) { showToast('You\'re not on the navmesh'); return; }
+        if (!targetTri) { showToast('Target not on navmesh'); return; }
+        if (playerTri.id === targetTri.id) { showToast('Already here'); return; }
+
+        // A* pathfinding
+        const path = astarNavmesh(playerTri.id, targetTri.id);
+        if (!path) { showToast('No path found — blocked by land'); return; }
+
+        pathTriangles = path;
+
+        // Draw path on map
+        if (pathLine && mapInstance) mapInstance.removeLayer(pathLine);
+        const pathCoords = path.map(tid => {
+            const t = navmeshData.triangles[tid];
+            return [t.c[1], t.c[0]]; // [lat, lon]
+        });
+        const L = leafletLib;
+        pathLine = L.polyline(pathCoords, {
+            color: '#c9a87c', weight: 3, opacity: 0.8, dashArray: '8, 4'
+        }).addTo(mapInstance);
+
+        // Calculate fuel cost: number of triangles × zoom tier cost
+        const moveCount = path.length - 1;
+        const totalCost = moveCount * cellCost;
+        showToast(`Path: ${moveCount} steps · ${totalCost} fuel`);
+
+        // Execute move via API
+        try {
+            const res = await fetch('/api/bottlequest/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target_lat: targetLat,
+                    target_lon: targetLon,
+                    speed: 'sail',
+                    path_steps: path.length - 1
+                })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                showToast(`Moved! Fuel: -${result.fuel_cost}`);
+                invalidateAll();
+            } else {
+                showToast(result.error || 'Move failed');
+                if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
+            }
+        } catch (e) {
+            showToast('Move error');
+            if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
+        }
     }
 
     // Haversine

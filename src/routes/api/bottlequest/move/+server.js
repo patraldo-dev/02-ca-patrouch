@@ -63,7 +63,7 @@ export async function POST({ request, locals, platform }) {
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { target_lat, target_lon, speed = 'sail', bottle_id } = await request.json();
+        const { target_lat, target_lon, speed = 'sail', bottle_id, path_steps } = await request.json();
         if (target_lat == null || target_lon == null) {
             return json({ error: 'target_lat and target_lon required' }, { status: 400 });
         }
@@ -134,22 +134,25 @@ export async function POST({ request, locals, platform }) {
         if (brentChange > 10) brentMult = 1.2;
         else if (brentChange < -10) brentMult = 0.8;
 
-        // Zoom-tier cost multiplier (logarithmic grid)
-        // Approximate zoom from distance: short = high zoom (cheap), long = low zoom (expensive)
-        let zoomCostMult = 1; // default: ~100m tier
-        if (distKm > 50) zoomCostMult = 10000;     // ~500km tier
-        else if (distKm > 10) zoomCostMult = 1000;  // ~100km tier
-        else if (distKm > 2) zoomCostMult = 100;    // ~20km tier
-        else if (distKm > 0.5) zoomCostMult = 10;   // ~5km tier
-        else if (distKm > 0.1) zoomCostMult = 10;   // ~1km tier
-        else zoomCostMult = 1;                       // ~100m and below
+        // Brent dynamic multiplier
+        // If navmesh path provided, use step-based cost (steps × tier cost × brent)
+        // Otherwise fall back to distance-based cost
+        let fuelCost;
 
-        // Calculate cost
-        const speedMult = SPEED_MULT[speed];
-        const zoneMult = getZoneMult(distDeg);
-        const compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
-        const nightMult = getNightMult(target_lon);
-        const fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * brentMult * zoomCostMult);
+        if (path_steps && path_steps > 0) {
+            // Navmesh-based: each step = 1 base cost, scaled by zoom tier (from distance) and Brent
+            const tierMult = distKm > 50 ? 10000 : distKm > 10 ? 1000 : distKm > 2 ? 100 : distKm > 0.5 ? 10 : 1;
+            const speedMult = SPEED_MULT[speed];
+            const nightMult = getNightMult(target_lon);
+            fuelCost = Math.ceil(path_steps * tierMult * speedMult * nightMult * brentMult);
+        } else {
+            // Legacy distance-based cost
+            const speedMult = SPEED_MULT[speed];
+            const zoneMult = getZoneMult(distDeg);
+            const compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
+            const nightMult = getNightMult(target_lon);
+            fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * brentMult);
+        }
 
         const totalFuel = (player.fuel || 0) + (player.checkin_fuel || 0);
         if (totalFuel < fuelCost) {
