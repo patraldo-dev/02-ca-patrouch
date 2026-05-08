@@ -287,7 +287,7 @@
 
                     // If clicking same triangle as before, move there
                     if (prevSelected !== null && prevSelected !== tri.id) {
-                        moveOnNavmesh(tri.c[1], tri.c[0]);
+                        calculatePath(tri.c[1], tri.c[0]);
                     }
                 });
                 polygon.on('mouseover', () => {
@@ -380,7 +380,7 @@
                     // Move to center of this cell
                     const targetLat = (south + north) / 2;
                     const targetLon = (west + east) / 2;
-                    moveOnNavmesh(targetLat, targetLon);
+                    calculatePath(targetLat, targetLon);
                 });
 
                 dynamicGridLayer.addLayer(rect);
@@ -451,7 +451,10 @@
         return null; // no path
     }
 
-    async function moveOnNavmesh(targetLat, targetLon) {
+    let showMoveModal = $state(false);
+    let movePreview = $state(null); // { steps, cost, pathCoords, targetLat, targetLon }
+
+    async function calculatePath(targetLat, targetLon) {
         if (!data.player) { showToast('Log in to move'); return; }
 
         // Find player's current triangle
@@ -464,7 +467,7 @@
 
         // A* pathfinding
         const path = astarNavmesh(playerTri.id, targetTri.id);
-        if (!path) { showToast('No path found — blocked by land'); return; }
+        if (!path) { showToast('No path — blocked by land'); return; }
 
         pathTriangles = path;
 
@@ -472,42 +475,71 @@
         if (pathLine && mapInstance) mapInstance.removeLayer(pathLine);
         const pathCoords = path.map(tid => {
             const t = navmeshData.triangles[tid];
-            return [t.c[1], t.c[0]]; // [lat, lon]
+            return [t.c[1], t.c[0]];
         });
         const L = leafletLib;
         pathLine = L.polyline(pathCoords, {
             color: '#c9a87c', weight: 3, opacity: 0.8, dashArray: '8, 4'
         }).addTo(mapInstance);
 
-        // Calculate fuel cost: number of triangles × zoom tier cost
+        // Calculate cost
         const moveCount = path.length - 1;
         const totalCost = moveCount * cellCost;
-        showToast(`Path: ${moveCount} steps · ${totalCost} fuel`);
+        const distKm = haversine(pathCoords[0][0], pathCoords[0][1], pathCoords[pathCoords.length - 1][0], pathCoords[pathCoords.length - 1][1]);
+        const playerFuel = (data.player?.fuel || 0) + (data.player?.checkin_fuel || 0);
+        const canAfford = playerFuel >= totalCost;
 
-        // Execute move via API
+        movePreview = {
+            steps: moveCount,
+            cost: totalCost,
+            distKm: distKm.toFixed(2),
+            pathCoords,
+            targetLat,
+            targetLon,
+            path,
+            playerFuel,
+            canAfford,
+            brentPrice: data.market?.brent_price || 73,
+            brentChange: data.market?.brent_change || 0,
+            brentMult: brentMult(),
+            cellLabel,
+        };
+        showMoveModal = true;
+    }
+
+    async function executeMove() {
+        if (!movePreview) return;
+        showMoveModal = false;
+
         try {
             const res = await fetch('/api/bottlequest/move', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    target_lat: targetLat,
-                    target_lon: targetLon,
+                    target_lat: movePreview.targetLat,
+                    target_lon: movePreview.targetLon,
                     speed: 'sail',
-                    path_steps: path.length - 1
+                    path_steps: movePreview.steps
                 })
             });
             const result = await res.json();
             if (res.ok) {
                 showToast(`Moved! Fuel: -${result.fuel_cost}`);
+                if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
                 invalidateAll();
             } else {
                 showToast(result.error || 'Move failed');
-                if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
             }
         } catch (e) {
             showToast('Move error');
-            if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
         }
+        movePreview = null;
+    }
+
+    function cancelMove() {
+        showMoveModal = false;
+        if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
+        movePreview = null;
     }
 
     // Haversine
@@ -1241,6 +1273,55 @@
     </div>
     {/if}
 
+    <!-- Move Confirmation Modal -->
+    {#if showMoveModal && movePreview}
+    <div class="modal-overlay" onclick={cancelMove}></div>
+    <div class="modal-card move-modal">
+        <button class="btn-cancel" onclick={cancelMove}>✕</button>
+        <h2>⛵ ¿Mover o no mover?</h2>
+
+        <div class="move-breakdown">
+            <div class="move-row">
+                <span class="move-label">Pasos</span>
+                <span class="move-value">{movePreview.steps} triángulos</span>
+            </div>
+            <div class="move-row">
+                <span class="move-label">Distancia</span>
+                <span class="move-value">{movePreview.distKm} km</span>
+            </div>
+            <div class="move-row">
+                <span class="move-label">Tier</span>
+                <span class="move-value">{movePreview.cellLabel}</span>
+            </div>
+            <div class="move-row">
+                <span class="move-label">Brent</span>
+                <span class="move-value">${movePreview.brentPrice} <span style="color: {movePreview.brentChange > 0 ? '#ef4444' : movePreview.brentChange < 0 ? '#22c55e' : '#888'}">{movePreview.brentChange > 0 ? '▲' : movePreview.brentChange < 0 ? '▼' : '—'}</span> (×{movePreview.brentMult})</span>
+            </div>
+            <div class="move-divider"></div>
+            <div class="move-row move-total">
+                <span class="move-label">Costo total</span>
+                <span class="move-value" style="color: {movePreview.canAfford ? '#f59e0b' : '#ef4444'}">{movePreview.cost} fuel</span>
+            </div>
+            <div class="move-row">
+                <span class="move-label">Tu fuel</span>
+                <span class="move-value">{movePreview.playerFuel}</span>
+            </div>
+            {#if !movePreview.canAfford}
+            <div class="move-warning">⚠️ No tienes suficiente fuel</div>
+            {/if}
+        </div>
+
+        <div class="move-actions">
+            <button class="btn btn-accent" onclick={executeMove} disabled={!movePreview.canAfford}>
+                ⛵ Mover ({movePreview.cost} fuel)
+            </button>
+            <button class="btn btn-cancel-move" onclick={cancelMove}>
+                ✋ No mover
+            </button>
+        </div>
+    </div>
+    {/if}
+
     <!-- Bet Modal -->
     {#if showBetModal && betBottle && betPlayer}
     <div class="modal-overlay" onclick={() => showBetModal = false}></div>
@@ -1697,6 +1778,16 @@
 
     /* Join Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; }
+    .move-modal { max-width: 380px; text-align: center; }
+    .move-modal h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: #d4c9a8; margin-bottom: 1rem; }
+    .move-breakdown { background: rgba(20,20,23,0.6); border-radius: 8px; padding: 12px; margin-bottom: 1rem; }
+    .move-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; color: #a1a1aa; }
+    .move-total .move-value { font-weight: 700; font-size: 1rem; }
+    .move-divider { border-top: 1px solid rgba(201,168,124,0.2); margin: 8px 0; }
+    .move-warning { color: #ef4444; font-size: 0.85rem; margin-top: 8px; font-weight: 600; }
+    .move-actions { display: flex; gap: 12px; justify-content: center; }
+    .btn-cancel-move { background: rgba(161,161,170,0.15); color: #a1a1aa; border: 1px solid rgba(161,161,170,0.2); border-radius: 8px; padding: 8px 20px; cursor: pointer; font-size: 0.9rem; }
+    .btn-cancel-move:hover { background: rgba(161,161,170,0.25); }
     .modal-box { background: var(--bs-surface); border: 1px solid rgba(239,68,68,0.15); border-radius: 16px; padding: 2rem; max-width: 500px; width: calc(100% - 2rem); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
     .modal-box h2 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--bs-fg); margin-bottom: 0.5rem; }
     .beached-modal-box { max-width: 560px; max-height: 80vh; overflow-y: auto; }
