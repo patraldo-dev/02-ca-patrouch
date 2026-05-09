@@ -225,14 +225,13 @@
 
     // Zoom level → cell size + cost
     const ZOOM_TIERS = [
-        { minZoom: 17, cellDeg: 0.0001, label: '~10m', cost: 1 },
-        { minZoom: 15, cellDeg: 0.0005, label: '~50m', cost: 1 },
-        { minZoom: 13, cellDeg: 0.002, label: '~200m', cost: 10 },
-        { minZoom: 11, cellDeg: 0.01, label: '~1km', cost: 10 },
-        { minZoom: 9, cellDeg: 0.05, label: '~5km', cost: 100 },
-        { minZoom: 7, cellDeg: 0.2, label: '~20km', cost: 100 },
-        { minZoom: 5, cellDeg: 1.0, label: '~100km', cost: 1000 },
-        { minZoom: 0, cellDeg: 5.0, label: '~500km', cost: 10000 },
+        { minZoom: 17, cellDeg: 0.0001, label: '~10m',   cost: 1 },
+        { minZoom: 15, cellDeg: 0.0005, label: '~50m',   cost: 10 },
+        { minZoom: 13, cellDeg: 0.002,  label: '~200m',  cost: 100 },
+        { minZoom: 11, cellDeg: 0.01,   label: '~1km',   cost: 1000 },
+        { minZoom: 9,  cellDeg: 0.05,   label: '~5km',   cost: 10000 },
+        { minZoom: 7,  cellDeg: 0.2,    label: '~20km',  cost: 100000 },
+        { minZoom: 5,  cellDeg: 1.0,    label: '~100km', cost: 1000000 },
     ];
 
     let cellLabel = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.label || '?');

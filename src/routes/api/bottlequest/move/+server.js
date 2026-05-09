@@ -180,7 +180,7 @@ export async function POST({ request, locals, platform }) {
 
         if (path_steps && path_steps > 0) {
             // Navmesh-based: each step = 1 base cost, scaled by zoom tier (from distance) and Brent
-            const tierMult = distKm > 50 ? 10000 : distKm > 10 ? 1000 : distKm > 2 ? 100 : distKm > 0.5 ? 10 : 1;
+            const tierMult = distKm > 100 ? 1000000 : distKm > 20 ? 100000 : distKm > 5 ? 10000 : distKm > 1 ? 1000 : distKm > 0.2 ? 100 : distKm > 0.05 ? 10 : 1;
             const speedMult = SPEED_MULT[speed];
             const nightMult = getNightMult(target_lon);
             fuelCost = Math.ceil(path_steps * tierMult * speedMult * nightMult * brentMult * speedPenaltyMult) + fuelPenaltyAmount;
