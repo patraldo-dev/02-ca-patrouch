@@ -70,7 +70,8 @@ export async function sendDailyPromptEmail(to, prompt, locale, env) {
     };
 
     const c = content[locale] || content.en;
-    const promptUrl = 'https://patrouch.ca/write';
+    const sparkParam = encodeURIComponent(prompt);
+    const promptUrl = `https://patrouch.ca/write?spark=${sparkParam}`;
 
     const html = `
         <div style="max-width:480px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;background:#faf9f7;padding:2rem;border-radius:12px;">

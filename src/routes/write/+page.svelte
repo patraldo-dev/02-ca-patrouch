@@ -15,6 +15,10 @@
 
     let { data } = $props();
 
+    // Check for ?spark= from newsletter email
+    let urlSearchParams = $derived(browser ? new URLSearchParams(window.location.search) : null);
+    let sparkFromEmail = $derived(urlSearchParams?.get('spark') || null);
+
     // Inspiration ticker — slow continuous marquee
     let quotes = $state(data.tickerQuotes || []);
     onMount(() => {
@@ -28,8 +32,8 @@
     let showBadges = $state(false);
 
     // Initialize from server-side load
-    let prompt = $state(data.prompt || null);
-    let promptSource = $state(data.promptSource || 'community');
+    let prompt = $state(sparkFromEmail ? { id: null, prompt_text: sparkFromEmail, category: 'spark-dominical' } : (data.prompt || null));
+    let promptSource = $state(sparkFromEmail ? 'newsletter' : (data.promptSource || 'community'));
     let userAction = $state(data.userAction || null);
     let promptId = $state(data.acceptedPromptId || null);
     let passesRemaining = $state(data.passesRemaining || 3);
@@ -151,16 +155,48 @@
             if (res.ok) {
                 const d = await res.json();
                 if (action === 'passed') {
-                    prompt = d.prompt;
-                    promptSource = d.promptSource || 'personal';
-                    passesRemaining = d.passesRemaining;
-                    passesUsed = d.passesUsed;
+                    // If passing on a newsletter spark, clear it and load normal prompt
+                    if (sparkFromEmail) {
+                        sparkFromEmail = null;
+                        if (browser) {
+                            const url = new URL(window.location);
+                            url.searchParams.delete('spark');
+                            window.history.replaceState({}, '', url);
+                        }
+                        // Fetch fresh today data
+                        try {
+                            const res = await fetch('/api/write/today');
+                            if (res.ok) {
+                                const d = await res.json();
+                                prompt = d.prompt;
+                                promptSource = d.promptSource || 'community';
+                                passesRemaining = d.passesRemaining;
+                                passesUsed = d.passesUsed;
+                            }
+                        } catch {}
+                    } else {
+                        prompt = d.prompt;
+                        promptSource = d.promptSource || 'personal';
+                        passesRemaining = d.passesRemaining;
+                        passesUsed = d.passesUsed;
+                    }
                     userAction = null;
                     loadStats();
                     track('pass_prompt', prompt?.id);
                 } else if (action === 'accepted') {
                     userAction = 'accepted';
-                    promptId = d.promptId;
+                    // If accepting newsletter spark, use its text as the prompt
+                    if (sparkFromEmail) {
+                        promptId = null; // no DB prompt for newsletter sparks
+                        sparkFromEmail = null;
+                        if (browser) {
+                            const url = new URL(window.location);
+                            url.searchParams.delete('spark');
+                            window.history.replaceState({}, '', url);
+                        }
+                    } else {
+                        promptId = d.promptId;
+                    }
                     editorTitle = '';
                     editorContent = '';
                     loadStats();
