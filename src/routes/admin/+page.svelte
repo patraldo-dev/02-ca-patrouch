@@ -33,6 +33,15 @@
             </div>
         </section>
 
+        <!-- Landmarks -->
+        <section class="admin-card">
+            <h2>Tour Landmarks</h2>
+            <p class="card-desc">Manage coordinates and points for the WebXR tour map</p>
+            <div class="admin-actions">
+                <a href="/admin/landmarks" class="btn-primary">Manage Landmarks</a>
+            </div>
+        </section>
+
     </div>
 
     <div class="admin-footer">
