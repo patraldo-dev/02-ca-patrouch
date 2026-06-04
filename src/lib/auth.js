@@ -118,6 +118,8 @@ onPasswordReset: async () => {
       },
       requireEmailVerification: true,
 sendVerificationEmail: async ({ user, url }, request) => {
+  console.log('[sendVerificationEmail] called for:', user.email, 'url:', url);
+
         const { sendVerificationEmail } = await import('$lib/server/mailgun.js');
         const verifyUrl = url.includes('callbackURL') ? url : `${url}&callbackURL=/write`;
         await sendVerificationEmail(user.email, verifyUrl, {
