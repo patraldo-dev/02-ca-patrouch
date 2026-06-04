@@ -136,8 +136,10 @@ export function createAuth(env) {
         create: {
           before: async (userData) => {
             if (!userData.username) {
-              const base = userData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '_');
-              userData.username = `${base}_${Math.random().toString(36).slice(2, 6)}`;
+              userData.username = userData.name || (() => {
+                const base = userData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '_');
+                return `${base}_${Math.random().toString(36).slice(2, 6)}`;
+              })();
             }
             return { data: userData };
           }
