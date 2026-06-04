@@ -117,9 +117,9 @@ onPasswordReset: async () => {
         return new Response(null, { status: 302, headers: { Location: '/login' } });
       },
       requireEmailVerification: true,
-      sendVerificationEmail: async ({ user, token }, request) => {
+sendVerificationEmail: async ({ user, url }, request) => {
         const { sendVerificationEmail } = await import('$lib/server/mailgun.js');
-        const verifyUrl = `https://patrouch.ca/api/auth/verify-email?token=${token}&callbackURL=/write`;
+        const verifyUrl = url.includes('callbackURL') ? url : `${url}&callbackURL=/write`;
         await sendVerificationEmail(user.email, verifyUrl, {
           MAILGUN_API_KEY: env.MAILGUN_API_KEY,
           MAILGUN_DOMAIN: env.MAILGUN_DOMAIN,
