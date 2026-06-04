@@ -86,6 +86,10 @@ export function createAuth(env) {
       enabled: true,
       minPasswordLength: 8,
       autoSignIn: true,
+      password: {
+    hash: hashPassword,
+    verify: ({ hash, password }) => verifyPassword(hash, password),
+  },
       sendResetPassword: async ({ user, token, url }, request) => {
         const { sendMailgunEmail } = await import('$lib/server/mailgun.js');
         const acceptLang = request?.headers?.get('accept-language') || '';
@@ -135,6 +139,8 @@ export function createAuth(env) {
       user: {
         create: {
           before: async (userData) => {
+        console.log('[databaseHooks] user.create.before called:', userData.email);
+
             if (!userData.username) {
               userData.username = userData.name || (() => {
                 const base = userData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '_');

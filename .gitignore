@@ -63,3 +63,4 @@ notes4env.txt
 package-lock.json
 .wrangler/state/
 .svelte-kit/
+backup-users-*.sql
