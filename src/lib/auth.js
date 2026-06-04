@@ -123,7 +123,7 @@ onPasswordReset: async () => {
       sendVerificationEmail: async ({ user, url }) => {
         console.log('[sendVerificationEmail] called for:', user.email);
         const { sendVerificationEmail } = await import('$lib/server/mailgun.js');
-        const verifyUrl = url.includes('callbackURL') ? url : `${url}&callbackURL=/write`;
+        const verifyUrl = url.replace(/callbackURL=[^&]*/, 'callbackURL=%2Fwrite');
         await sendVerificationEmail(user.email, verifyUrl, {
           MAILGUN_API_KEY: env.MAILGUN_API_KEY,
           MAILGUN_DOMAIN: env.MAILGUN_DOMAIN,
