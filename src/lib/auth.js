@@ -113,8 +113,18 @@ export function createAuth(env) {
         `;
         await sendMailgunEmail(user.email, t.subject, html, `${t.title}: ${resetUrl}`, { MAILGUN_API_KEY: env.MAILGUN_API_KEY, MAILGUN_DOMAIN: env.MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL });
       },
-      onPasswordReset: async () => {
+onPasswordReset: async () => {
         return new Response(null, { status: 302, headers: { Location: '/login' } });
+      },
+      requireEmailVerification: true,
+      sendVerificationEmail: async ({ user, token }, request) => {
+        const { sendVerificationEmail } = await import('$lib/server/mailgun.js');
+        const verifyUrl = `https://patrouch.ca/api/auth/verify-email?token=${token}&callbackURL=/write`;
+        await sendVerificationEmail(user.email, verifyUrl, {
+          MAILGUN_API_KEY: env.MAILGUN_API_KEY,
+          MAILGUN_DOMAIN: env.MAILGUN_DOMAIN,
+          MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL,
+        });
       },
     },
     socialProviders: {

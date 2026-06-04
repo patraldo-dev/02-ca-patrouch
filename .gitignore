@@ -64,3 +64,5 @@ package-lock.json
 .wrangler/state/
 .svelte-kit/
 backup-users-*.sql
+backup-*.sql
+*.sql.bak
