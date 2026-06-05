@@ -179,7 +179,6 @@
             <p class="error-text">{error}</p>
         {/if}
         <button type="submit" disabled={isLoading}>
-        <button type="submit" disabled={isLoading}>
             {isLoading ? $t('signup.creating') : $t('signup.button')}
         </button>
     </form>
