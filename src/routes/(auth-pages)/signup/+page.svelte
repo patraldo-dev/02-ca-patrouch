@@ -170,7 +170,7 @@
         </div>
         {/if}
         <div class="checkbox-group">
-            <input type="checkbox" id="adult" bind:checked={isAdult} required disabled={isLoading} />
+            <input type="checkbox" id="adult" bind:checked={isAdult} disabled={isLoading} />
             <label for="adult">{$t('signup.adult_confirm')}</label>
         </div>
         <p class="privacy-note">{$t('signup.privacy_note')}</p>
