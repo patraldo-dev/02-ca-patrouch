@@ -2177,24 +2177,24 @@
     .status-sunk { background: #2e1a1a; color: #ef4444; }
 
     /* Map */
-    .chat-command { background: var(--surface, #141417); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 1.5rem; overflow: hidden; }
+    .chat-command { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1.5rem; overflow: hidden; }
     .chat-messages { max-height: 120px; overflow-y: auto; padding: 0.5rem 0.75rem; font-size: 0.8rem; }
     .chat-msg { padding: 0.25rem 0; line-height: 1.3; }
     .chat-msg.user { color: var(--text); }
     .chat-msg.bot { color: var(--muted); font-style: italic; }
-    .chat-form { display: flex; border-top: 1px solid rgba(255,255,255,0.08); align-items: stretch; }
-    .chat-input { flex: 1; padding: 0.6rem 0.75rem; background: rgba(0,0,0,0.2); border: none; color: var(--text, #fafafa); font-size: 0.9rem; outline: none; font-family: inherit; min-width: 0; }
-    .chat-input::placeholder { color: var(--muted, #71717a); opacity: 0.7; }
-    .chat-input:focus { background: rgba(0,0,0,0.3); }
-    .btn-chat-send { background: var(--accent, #c9a87c); border: none; color: #09090b; padding: 0.5rem 0.75rem; cursor: pointer; font-size: 1rem; border-radius: 0; min-width: 40px; font-weight: 600; }
+    .chat-form { display: flex; border-top: 1px solid var(--border); align-items: stretch; }
+    .chat-input { flex: 1; padding: 0.6rem 0.75rem; background: var(--bg); border: none; color: var(--text); font-size: 0.9rem; outline: none; font-family: inherit; min-width: 0; }
+    .chat-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+    .chat-input:focus { background: var(--surface-raised); }
+    .btn-chat-send { background: var(--accent); border: none; color: var(--bg); padding: 0.5rem 0.75rem; cursor: pointer; font-size: 1rem; border-radius: 0; min-width: 40px; font-weight: 600; }
     .btn-chat-send:hover:not(:disabled) { opacity: 0.85; }
     .narrator-speak { background: rgba(255,255,255,0.1); border: none; color: var(--accent); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; margin-top: 0.4rem; }
     .narrator-speak:hover { background: rgba(255,255,255,0.2); }
     .narrator-speak.narrator-playing { animation: micPulse 1.5s infinite; color: #ef4444; }
     .voice-active { animation: micPulse 1.5s infinite; color: #ef4444; }
     @keyframes micPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .btn-chat-voice { background: transparent; border: none; color: var(--accent, #c9a87c); padding: 0.5rem 0.75rem; cursor: pointer; font-size: 1rem; border-radius: 0; min-width: 40px; opacity: 0.7; }
-    .btn-chat-voice:hover { color: var(--text); }
+    .btn-chat-voice { background: transparent; border: none; color: var(--accent); padding: 0.5rem 0.75rem; cursor: pointer; font-size: 1rem; border-radius: 0; min-width: 40px; opacity: 0.7; }
+    .btn-chat-voice:hover { color: var(--text); opacity: 1; }
     .btn-chat-voice:disabled { opacity: 0.4; cursor: default; }
     .btn-chat-send:disabled { opacity: 0.4; cursor: default; }
     .chat-move-confirm { background: var(--surface, #141417); border: 1px solid var(--accent, #c9a87c); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 1rem; font-size: 0.8rem; }
