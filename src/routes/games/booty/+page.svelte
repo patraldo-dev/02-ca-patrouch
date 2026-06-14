@@ -305,7 +305,7 @@
 
         navmeshLayer.addTo(mapInstance);
         navVisible = true;
-        mapInstance.flyTo([20.6035, -105.2390], 16, { duration: 1.5 });
+        // Don't override map position — let the caller decide where to fly
         drawDynamicGrid();
         drawMovementRange();
     }
@@ -1708,10 +1708,6 @@
 
     <!-- Chat Command -->
     <div class="chat-command">
-        <!-- DEBUG: remove after fixing -->
-        <div style="padding:0.25rem 0.5rem;font-size:0.7rem;color:var(--text-muted);border-bottom:1px solid var(--border)">
-            myPlayer: {data.myPlayer ? `${data.myPlayer.username} @ ${data.myPlayer.lat},${data.myPlayer.lon}` : 'NULL'} | user: {data.user?.username || 'none'}
-        </div>
         <div class="chat-messages" bind:this={chatMessagesEl}>
             {#if chatHistory.length}
                 {#each chatHistory as msg}
