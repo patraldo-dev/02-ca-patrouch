@@ -24,7 +24,7 @@ export async function load({ locals, platform, url }) {
 
   if (locals.user) {
     try {
-      myPlayer = await db.prepare('SELECT id, username, display_name, lat, lon FROM bq_players WHERE username = ? OR display_name = ?').bind(locals.user.username, locals.user.username).first();
+      myPlayer = await db.prepare('SELECT id, username, display_name, lat, lon FROM bq_players WHERE username = ?').bind(locals.user.username).first();
     } catch (e) {
       console.error('Arbooty player load error:', e);
     }
