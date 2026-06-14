@@ -4,7 +4,6 @@
     import { get } from 'svelte/store';
     import { browser } from '$app/environment';
     import { invalidateAll } from '$app/navigation';
-    import BootyChat from '$lib/components/BootyChat.svelte';
 
     let { data } = $props();
 
@@ -1726,9 +1725,9 @@
             {/if}
         </div>
         <form onsubmit={(e) => { e.preventDefault(); sendChatCommand(); }} class="chat-form">
-            <input type="text" bind:value={chatInput} placeholder={get(t)('booty.command_placeholder')} class="chat-input" disabled={chatLoading} />
+            <input type="text" bind:value={chatInput} placeholder={get(t)('booty.command_placeholder')} class="chat-input" disabled={chatLoading} onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendChatCommand(); } }} />
             <button type="button" class="btn-chat-voice {voiceListening ? 'voice-active' : ''}" onclick={toggleVoiceCommand} title="Voice command" aria-label="Voice command" disabled={chatLoading}>🎙️</button>
-            <button type="submit" class="btn-chat-send" disabled={chatLoading || !chatInput.trim()} title="Send" aria-label="Send">➤</button>
+            <button type="submit" class="btn-chat-send" disabled={chatLoading || !chatInput.trim()} title="Send" aria-label="Send" onclick={(e) => { e.preventDefault(); sendChatCommand(); }}>➤</button>
         </form>
     </div>
 
@@ -1762,9 +1761,6 @@
                 </div>
             {/if}
         </div>
-        {#if data.myPlayer}
-        <BootyChat username={data.myPlayer.username} displayName={data.myPlayer.display_name} />
-        {/if}
     </div>
 
     <!-- Beached / Found bottles (public) -->
