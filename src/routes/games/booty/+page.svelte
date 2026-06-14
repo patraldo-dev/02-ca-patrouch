@@ -368,7 +368,7 @@
                     interactive: true,
                 });
 
-                rect.bindTooltip(`${tier.label} · ${tier.cost} fuel`, {
+                rect.bindTooltip(`${tier.label} · ${tier.cost} 🫘`, {
                     direction: 'top', className: 'nav-tri-label', opacity: 0.8,
                     sticky: true,
                 });
@@ -681,7 +681,7 @@
             });
             const result = await res.json();
             if (res.ok) {
-                showToast(`Moved! Fuel: -${result.cost}`);
+                showToast(`Moved! -${result.cost} 🫘`);
                 if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
                 await invalidateAll();
                 drawMovementRange();
@@ -917,6 +917,7 @@
     let narratorText = $derived(narratorEvent ? (() => { const loc = data.serverLocale || 'es'; if (loc === 'es' && narratorEvent.narrative_es) return narratorEvent.narrative_es; if (loc === 'fr' && narratorEvent.narrative_fr) return narratorEvent.narrative_fr; return narratorEvent.narrative; })() : '');
 
     let narratorSpeaking = $state(false);
+    let showMapInfo = $state(false);
     let currentAudio = $state(null);
     async function speakNarrator(text) {
         if (narratorSpeaking) return;
@@ -1210,7 +1211,7 @@
                 body: JSON.stringify({ request_id: reqId })
             });
             const d = await res.json();
-            showToast(d.success ? 'Fuel sent!' : d.error);
+            showToast(d.success ? '🫘 Sent!' : d.error);
             if (d.success) await invalidateAll();
         } catch { showToast('Failed'); }
     }
@@ -1274,29 +1275,25 @@
     <title>{$t('games.find_the_bottle')} — Patrouch</title>
 </svelte:head>
 
-<!-- Market Ticker Tape -->
-<div class="ticker-tape" role="status" aria-label="Market prices">
+<!-- Ticker Tape -->
+<div class="ticker-tape" role="status" aria-label="Game status">
     <div class="ticker-content">
+        {#if data.myPlayer}
         <span class="ticker-item">
-            🫘 BRENT <span class="ticker-value">{data.market?.brent_price?.toFixed(2) || '73.00'}</span>
-            <span class="ticker-change" class:ticker-up={data.market?.brent_change > 0} class:ticker-down={data.market?.brent_change < 0}>
-                {data.market?.brent_change > 0 ? '▲' : data.market?.brent_change < 0 ? '▼' : '—'}
-            </span>
+            🫘 <span class="ticker-value">{formatBeans((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</span>
+        </span>
+        <span class="ticker-divider">│</span>
+        {/if}
+        <span class="ticker-item">
+            🏴‍☠️ <span class="ticker-value">{data.playersInPursuit}</span> en persecución
         </span>
         <span class="ticker-divider">│</span>
         <span class="ticker-item">
-            🏦 FED <span class="ticker-value">{data.market?.fed_rate?.toFixed(2) || '5.25'}%</span>
-            <span class="ticker-change" class:ticker-up={data.market?.fed_change > 0} class:ticker-down={data.market?.fed_change < 0}>
-                {data.market?.fed_change > 0 ? '▲' : data.market?.fed_change < 0 ? '▼' : '—'}
-            </span>
+            🤖 <span class="ticker-value">{data.bots?.length || 0}</span> Booty Bots activos
         </span>
         <span class="ticker-divider">│</span>
         <span class="ticker-item">
-            🚢 <span class="ticker-value">{data.market?.cost_per_km?.toFixed(2) || '0.73'}</span> beans/km
-        </span>
-        <span class="ticker-divider">│</span>
-        <span class="ticker-item">
-            🤖 FEE <span class="ticker-value">{data.market?.fed_rate?.toFixed(2) || '5.25'}%</span>
+            🚢 <span class="ticker-value">{data.bottles?.length || 0}</span> botellas
         </span>
         {#if data.odds?.length && data.odds[0]?.odds?.length}
             <span class="ticker-divider">│</span>
@@ -1545,20 +1542,20 @@
             <div class="move-divider"></div>
             <div class="move-row move-total">
                 <span class="move-label">Costo total</span>
-                <span class="move-value" style="color: {movePreview.canAfford ? '#f59e0b' : '#ef4444'}">{movePreview.cost} fuel</span>
+                <span class="move-value" style="color: {movePreview.canAfford ? '#f59e0b' : '#ef4444'}">{movePreview.cost} 🫘</span>
             </div>
             <div class="move-row">
-                <span class="move-label">Tu fuel</span>
+                <span class="move-label">Tus 🫘</span>
                 <span class="move-value">{movePreview.playerFuel}</span>
             </div>
             {#if !movePreview.canAfford}
-            <div class="move-warning">⚠️ No tienes suficiente fuel</div>
+            <div class="move-warning">⚠️ No tienes suficientes 🫘</div>
             {/if}
         </div>
 
         <div class="move-actions">
             <button class="btn btn-accent" onclick={executeMove} disabled={!movePreview.canAfford}>
-                ⛵ Mover ({movePreview.cost} fuel)
+                ⛵ Mover ({movePreview.cost} 🫘)
             </button>
             <button class="btn btn-cancel-move" onclick={cancelMove}>
                 ✋ No mover
@@ -1731,20 +1728,26 @@
             <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
         </div>
         <div class="map-container" bind:this={mapEl}>
-            <!-- Zoom level cost overlay -->
-            <div class="zoom-overlay">
-                <div class="zoom-label">Zoom: <strong>{currentZoom}</strong></div>
-                <div class="zoom-label">Celda: <strong>{cellLabel}</strong></div>
-                <div class="zoom-label">Costo: <strong class="fuel-cost">{cellCost} fuel</strong></div>
-                <div class="zoom-label">Brent: <strong>${data.market?.brent_price?.toFixed(0) || '73'}</strong> <span style="color: {(data.market?.brent_change || 0) > 0 ? '#ef4444' : (data.market?.brent_change || 0) < 0 ? '#22c55e' : '#888'}">{(data.market?.brent_change || 0) > 0 ? '▲' : (data.market?.brent_change || 0) < 0 ? '▼' : '—'}</span></div>
-                <div class="zoom-label" style="color: {navVisible ? '#c9a87c' : '#888'}">Navmesh: {navVisible ? 'ON' : 'OFF'}</div>
+            <!-- Minimal map badge -->
+            <button class="map-badge" onclick={() => showMapInfo = !showMapInfo} title="Map info">
                 {#if data.myPlayer}
-                <div class="zoom-label" style="color: #f59e0b">Fuel: {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}</div>
+                    🫘 {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}
                 {/if}
                 {#if narratorEvent?.event_type !== 'flavor'}
-                <div class="zoom-label" style="color: #ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
+                    <span style="color:#ef4444"> ⚠️</span>
                 {/if}
-            </div>
+                <span style="opacity:0.5;font-size:0.65rem">{showMapInfo ? '▲' : '▼'}</span>
+            </button>
+            {#if showMapInfo}
+                <div class="map-info-panel">
+                    {#if data.myPlayer}
+                    <div>🫘 <strong>{formatBeans((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</strong></div>
+                    {/if}
+                    {#if narratorEvent?.event_type !== 'flavor'}
+                    <div style="color:#ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
+                    {/if}
+                </div>
+            {/if}
         </div>
         {#if data.myPlayer}
         <BootyChat username={data.myPlayer.username} displayName={data.myPlayer.display_name} />
@@ -1899,7 +1902,7 @@
         <button class="btn-join" onclick={doTransfer} disabled={transferSending || !transferTarget || !transferAmount || parseInt(transferAmount) < 1}>
             {transferSending ? 'Sending...' : 'Send 🫘'}
         </button>
-        <p class="transfer-limit">Daily limit: 50% of your fuel</p>
+        <p class="transfer-limit">Daily limit: 50% of your 🫘</p>
     </div>
     {/if}
 
@@ -2204,14 +2207,23 @@
     .btn-chat-cancel { background: transparent; border: 1px solid var(--muted); color: var(--muted); padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
     .map-container { height: 450px; border-radius: 12px; overflow: hidden; border: 1px solid var(--bs-border); cursor: crosshair; position: relative; }
     .map-container:fullscreen { height: 100vh; border-radius: 0; border: none; }
-    .zoom-overlay {
+    .map-badge {
         position: absolute; top: 10px; right: 10px; z-index: 1000;
-        background: rgba(9,9,11,0.85); backdrop-filter: blur(8px);
-        border-radius: 8px; padding: 8px 12px;
-        font-size: 0.75rem; color: #d4c9a8; line-height: 1.6;
-        pointer-events: none; border: 1px solid rgba(201,168,124,0.2);
+        background: var(--surface, #141417); backdrop-filter: blur(8px);
+        border: 1px solid var(--border, #27272a);
+        border-radius: 20px; padding: 4px 12px;
+        font-size: 0.8rem; color: var(--text); cursor: pointer;
+        display: flex; align-items: center; gap: 0.4rem;
+        transition: opacity 0.2s;
     }
-    .zoom-overlay .fuel-cost { color: #f59e0b; }
+    .map-badge:hover { opacity: 0.85; }
+    .map-info-panel {
+        position: absolute; top: 44px; right: 10px; z-index: 1000;
+        background: var(--surface, #141417); backdrop-filter: blur(8px);
+        border: 1px solid var(--border, #27272a);
+        border-radius: 8px; padding: 8px 12px;
+        font-size: 0.75rem; color: var(--text); line-height: 1.8;
+    }
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
     .section-header h2 { margin: 0; }
     .btn-sm { background: rgba(255,255,255,0.1); border: 1px solid var(--bs-border); color: var(--text); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
