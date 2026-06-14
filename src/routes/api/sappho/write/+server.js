@@ -46,16 +46,6 @@ export async function POST({ request, platform }) {
             return json({ error: 'No community prompt found for today', locale, date: today });
         }
 
-        // Check if Sappho already wrote today for this locale
-        const existing = await db.prepare(`
-            SELECT id FROM writings
-            WHERE user_id = ? AND locale = ? AND DATE(created_at) = ? AND status = 'published'
-        `).bind(SAPPHO_USER_ID, locale, today).first();
-
-        if (existing) {
-            return json({ message: 'Sappho already wrote today', locale, date: today, writingId: existing.id });
-        }
-
         // Generate writing via Cloudflare Workers AI
         const systemPrompt = SAPPHO_PERSONAS[locale] || SAPPHO_PERSONAS.en;
         const response = await ai.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
