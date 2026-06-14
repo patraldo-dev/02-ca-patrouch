@@ -739,9 +739,15 @@
         const MIN_ZOOM = 5;
         const MAX_ZOOM = 18;
 
+        // Center on player if logged in, otherwise Los Muertos Pier
+        const initCenter = data.myPlayer?.lat != null && data.myPlayer?.lon != null
+            ? [data.myPlayer.lat, data.myPlayer.lon]
+            : [20.6035, -105.2390];
+        const initZoom = data.myPlayer ? 16 : 14;
+
         mapInstance = L.map(mapEl, {
-            center: [20.6035, -105.2390],
-            zoom: 15,
+            center: initCenter,
+            zoom: initZoom,
             zoomControl: true,
             attributionControl: false,
             minZoom: MIN_ZOOM,
