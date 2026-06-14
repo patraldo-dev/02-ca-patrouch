@@ -83,5 +83,5 @@ export async function POST({ locals, platform }) {
     }
 
     await logTransaction(db, { player_id: player.id, type: "checkin", amount: 10, detail: `Daily check-in (streak ${streak})` });
-    return json({ success: true, message: "+10 🟡" + (streak > 1 ? " (" + streak + "🔥)" : ""), streak, bean: { type: "lemon", amount: 10 } });
+    return json({ success: true, message: "+10 🟡" + (streak > 1 ? " (" + streak + "🔥)" : ""), streak, bonus: { amount: 10 } });
 }

@@ -3,7 +3,7 @@ import { json } from '@sveltejs/kit';
 /**
  * GET: List all Booty Bots (public)
  * POST: Execute bot AI decisions (cron only, auth required)
- * PATCH: Hijack a bot (member+, costs beans)
+ * PATCH: Hijack a bot (member+, costs funds)
  */
 
 const BOT_BEHAVIORS = {
@@ -68,7 +68,7 @@ export async function POST({ request, platform, locals }) {
             const brent = market?.brent_price || 73;
             const cost = Math.ceil(distKm * (brent / 100) * 0.5); // Bots pay half cost
 
-            if (bot.beans < cost) return json({ error: 'Insufficient beans', bot: bot.username, cost });
+            if (bot.beans < cost) return json({ error: 'Insufficient funds', bot: bot.username, cost });
 
             await db.prepare('UPDATE bq_booty_bots SET lat = ?, lon = ?, beans = beans - ? WHERE id = ?')
                 .bind(targetLat, targetLon, cost, botId).run();
@@ -117,7 +117,7 @@ export async function PATCH({ request, locals, platform }) {
         // Check player beans
         const player = await db.prepare('SELECT fuel FROM bq_players WHERE username = ?').bind(locals.user.username).first();
         if (!player || player.fuel < cost) {
-            return json({ error: `Need ${cost} beans to hijack for ${hours}h. You have ${player?.fuel || 0}.` }, { status: 400 });
+            return json({ error: `Need ${cost} to hijack for ${hours}h. You have ${player?.fuel || 0}.` }, { status: 400 });
         }
 
         const until = new Date(Date.now() + hours * 3600000).toISOString();

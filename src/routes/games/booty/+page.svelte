@@ -156,7 +156,7 @@
         return `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
     }
 
-    function formatBeans(total) {
+    function formatPrice(total) {
         total = total || 0;
         const licorice = Math.floor(total / 1000000);
         const r1 = total % 1000000;
@@ -887,7 +887,7 @@
                 iconSize: [32, 32], iconAnchor: [16, 16]
             });
             const bm = L.marker([bot.lat, bot.lon], { icon }).addTo(mapInstance);
-            bm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${bot.name}</strong>${isHijacked ? '<br><span style="color:#c9a87c">⚓ Captured by ' + bot.hijacked_by + '</span>' : '<br><span style="color:#ef4444">🏴‍☠️ Booty Bot</span>'}<br><span style="color:#555;font-size:0.85em">🍷 ${bot.beans} · 🍾 ${bot.captured_bottles} captures</span></div>`);
+            bm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${bot.name}</strong>${isHijacked ? '<br><span style="color:#c9a87c">⚓ Captured by ' + bot.hijacked_by + '</span>' : '<br><span style="color:#ef4444">🏴‍☠️ Booty Bot</span>'}<br><span style="color:#555;font-size:0.85em">🍷 $${bot.beans} · 🍾 ${bot.captured_bottles} captures</span></div>`);
             bm.bindTooltip(bot.name, {
                 permanent: true, direction: 'top', offset: [0, -16], className: 'bot-label'
             });
@@ -1280,7 +1280,7 @@
     <div class="ticker-content">
         {#if data.myPlayer}
         <span class="ticker-item">
-            {$t('booty.price')} <span class="ticker-value">{formatBeans((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</span>
+            {$t('booty.price')} <span class="ticker-value">{formatPrice((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</span>
         </span>
         <span class="ticker-divider">│</span>
         {/if}
@@ -1383,7 +1383,7 @@
     </div>
     {/if}
 
-    <!-- Bean Requests -->
+    <!-- Support Requests -->
     {#if data.myPlayer}
     <details class="accordion-section">
         <summary class="accordion-header">
@@ -1754,7 +1754,7 @@
             {#if showMapInfo}
                 <div class="map-info-panel">
                     {#if data.myPlayer}
-                    <div>{$t('booty.price')}: <strong>{formatBeans((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</strong></div>
+                    <div>{$t('booty.price')}: <strong>{formatPrice((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</strong></div>
                     {/if}
                     {#if narratorEvent?.event_type !== 'flavor'}
                     <div style="color:#ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
@@ -1847,7 +1847,7 @@
                     <span class="score-type">{p.type === 'ai' ? '🤖' : p.solo ? '👤' : '👥'}</span>
                     <span class="score-name">{p.display_name || p.username}</span>
                     <span class="score-pts">⭐ {scoreTab === 'booty' ? (p.booty_points || 0) : scoreTab === 'arbooty' ? (p.arbooty_points || 0) : (p.points || 0)}</span>
-                    <span class="score-fuel">{formatBeans(p.fuel)}</span>
+                    <span class="score-fuel">{formatPrice(p.fuel)}</span>
                 </div>
             {/each}
         </div>
@@ -1879,7 +1879,7 @@
                         <div class="detail-row"><span>📍 Port</span><span>{player.port_name || 'Unknown'}</span></div>
                         <div class="detail-row"><span>{formatSolarTime(player.lon)}</span><span>{player.lat ? formatCoords(player.lat, player.lon) : '—'}</span></div>
                         <div class="detail-row"><span>⭐ Points</span><span>{player.points || 0}</span></div>
-                        <div class="detail-row"><span>{$t('booty.price')}</span><span>{formatBeans(player.fuel)}</span></div>
+                        <div class="detail-row"><span>{$t('booty.price')}</span><span>{formatPrice(player.fuel)}</span></div>
                         {#if player.nearestDist !== null}
                             <button class="bottle-link" onclick={(e) => { e.stopPropagation(); flyToBottle(player.nearestBottle); }}>
                                 🍾 Nearest: {player.nearestDist.toFixed(0)} km

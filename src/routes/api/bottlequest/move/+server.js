@@ -250,7 +250,7 @@ export async function POST({ request, locals, platform }) {
                         await db.prepare(`UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`)
                             .bind(captureBonus, captureBonus, player.id).run();
                         await db.prepare(`UPDATE bq_bean_inventory SET amount = amount + 2 WHERE player_id = ? AND bean_type = 'licorice'`).bind(player.id).run();
-                        captured = { bottle_id: bottle.id, title: bottle.title, bonus: captureBonus, beans: { type: 'licorice', amount: 2 } };
+                        captured = { bottle_id: bottle.id, title: bottle.title, bonus: captureBonus, reward: { amount: 2 } };
 
                         // Resolve all bets on this bottle
                         try {

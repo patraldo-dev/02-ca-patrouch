@@ -5,7 +5,7 @@ import { json } from '@sveltejs/kit';
 // Called by OpenClaw cron every 6 hours
 
 // Asimov Rules:
-// 1. Bot cannot harm humans (no kill, no paralyze, max 10% beans stolen per cycle)
+// 1. Bot cannot harm humans (no kill, no paralyze, max 10% funds stolen per cycle)
 // 2. Bot must obey hijacked human (unless conflicts with Rule 1)
 // 3. Bot must protect itself (unless conflicts with Rule 1 or 2)
 
@@ -93,22 +93,22 @@ export async function POST({ request, platform }) {
 
 CURRENT SITUATION:
 - Your position: ${bot.lat}, ${bot.lon}
-- Your beans: ${bot.beans}
+- Your funds: ${bot.beans}
 - Brent crude price: $${brent} per barrel (movement cost = brent/100 per km)
 - Active bottles: ${JSON.stringify(bottles.map(b => ({ id: b.id, title: b.title, lat: b.current_lat, lon: b.current_lon })))}
-- Nearby humans: ${JSON.stringify(players.map(p => ({ name: p.display_name || p.username, lat: p.lat, lon: p.lon, beans: p.fuel })))}
+- Nearby humans: ${JSON.stringify(players.map(p => ({ name: p.display_name || p.username, lat: p.lat, lon: p.lon, funds: p.fuel })))}
 
 RECENT WRITINGS FROM PLAYERS:
 ${writingsText.slice(0, 2000)}
 
 ASIMOV RULES (you MUST follow):
-1. Never harm humans - no killing, no paralyzing, max 10% beans stolen per cycle
+1. Never harm humans - no killing, no paralyzing, max 10% funds stolen per cycle
 2. Obey your hijacker if any (unless it violates Rule 1)
 3. Protect yourself (unless it violates Rule 1 or 2)
 
 Decide your action. Reply with ONLY valid JSON:
 {
-  "action": "move" | "idle" | "comment" | "steal_beans" | "sabotage",
+  "action": "move" | "idle" | "comment" | "steal" | "sabotage",
   "target_lat": <number or null>,
   "target_lon": <number or null>,
   "target_player": "<username or null>",
@@ -164,11 +164,11 @@ Decide your action. Reply with ONLY valid JSON:
                     result.cost = cost;
                 } else {
                     result.moved = false;
-                    result.reason = 'insufficient beans';
+                    result.reason = 'insufficient funds';
                 }
             }
 
-            if (decision.action === 'steal_beans' && decision.target_player) {
+            if (decision.action === 'steal' && decision.target_player) {
                 // ASIMOV RULE 1: max 10% per cycle
                 const target = players.find(p => p.username === decision.target_player);
                 if (target && target.fuel > 0) {
@@ -213,7 +213,7 @@ Decide your action. Reply with ONLY valid JSON:
                         await db.prepare('UPDATE bq_booty_bots SET beans = 0 WHERE id = ?').bind(a.id).run();
                         results.push({ combat: true, winner: b.name, loser: a.name, action: 'respawn' });
                     } else {
-                        // Draw - both lose beans
+                        // Draw - both lose funds
                         await db.prepare('UPDATE bq_booty_bots SET beans = 0 WHERE id IN (?, ?)').bind(a.id, b.id).run();
                         results.push({ combat: true, draw: true, bots: [a.name, b.name] });
                     }

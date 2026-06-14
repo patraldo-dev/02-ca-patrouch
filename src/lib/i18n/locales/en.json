@@ -577,7 +577,7 @@
   "onboarding.step2_title": "The Agora 🏛️",
   "onboarding.step2_body": "Share your writings with the community. Discover what others have written. And play \"Spot the AI\" — can you tell which writings are AI-generated?",
   "onboarding.step2b_title": "Booty Battle 🏴‍☠️",
-  "onboarding.step2b_body": "An ocean keyword battle where humans face AI players and pirate bots. Capture bottles, trade writings, and submit to the will of Albot Camus — or ignore him at your own peril! Jelly Beans are currency.",
+  "onboarding.step2b_body": "An ocean keyword battle where humans face AI players and pirate bots. Capture bottles, trade writings, and submit to the will of Albot Camus — or ignore him at your own peril! Real market prices are currency.",
   "onboarding.step3_title": "The Workshop (Taller) 🔧",
   "onboarding.step3_body": "Your writing streaks, word counts, and milestones are all tracked. Earn badges as you grow. Every word counts!",
   "onboarding.step3_member": "True",
@@ -1044,7 +1044,9 @@
   "booty.bottles_details": "View details",
   "booty.marketplace_title": "Marketplace",
   "booty.betting_title": "Betting Board",
-  "booty.requests_title": "Requests",
+  "booty.requests_title": "Support",
   "booty.scoreboard_title": "Scoreboard",
-  "booty.players_title": "Players"
+  "booty.players_title": "Players",
+  "booty.support_request": "Request support",
+  "booty.support_give": "Send support"
 }

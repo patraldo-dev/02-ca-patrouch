@@ -214,7 +214,7 @@ Reply ONLY with raw JSON, no markdown fences:
             const cheapestCost = Math.min(result.estimated_cost.drift, result.estimated_cost.sail, result.estimated_cost.motor);
             if (totalBeans < cheapestCost) {
                 result.action = 'blocked';
-                result.reply = `🫘 ¡No tienes suficientes Jelly Beans! Necesitas al menos ${cheapestCost} pero solo tienes ${totalBeans}. Haz check-in o pide beans a otro jugador.`;
+                result.reply = `No tienes suficientes fondos. Necesitas ${cheapestCost} pero solo tienes ${totalBeans}. Haz check-in o solicita apoyo.`;
                 result.beans_needed = cheapestCost;
                 result.beans_current = totalBeans;
             }

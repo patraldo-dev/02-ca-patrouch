@@ -892,7 +892,7 @@
   "onboarding.step2_body": "Comparte tus escritos con la comunidad. Descubre lo que otros han escrito. Y juega \"Encuentra al AI\" — ¿puedes decir cuáles escritos son generados por IA?",
   "onboarding.step2_title": "El Agora 🏛️",
   "onboarding.step2b_title": "Booty Battle 🏴‍☠️",
-  "onboarding.step2b_body": "Una batalla de palabras en el Pacífico donde humanos enfrentan jugadores IA y bots piratas. Captura botellas, comercia escritos, y sométete a la voluntad de Albot Camus — o ignóralo bajo tu propio riesgo. ¡Las Jelly Beans son moneda!",
+  "onboarding.step2b_body": "Una batalla de palabras en el Pacífico donde humanos enfrentan jugadores IA y bots piratas. Captura botellas, comercia escritos, y sométete a la voluntad de Albot Camus — o ignóralo bajo tu propio riesgo. ¡Los precios reales del mercado son moneda!",
   "onboarding.step3_member": "True",
   "onboarding.step5_title": "¿Listo para Escribir?",
   "onboarding.step5_body": "Tu primer prompt te espera. Acepta y empieza a escribir — o explora el Agora para ver lo que la comunidad está creando.",
@@ -1031,7 +1031,9 @@
   "booty.bottles_details": "Ver detalles",
   "booty.marketplace_title": "Mercado",
   "booty.betting_title": "Apuestas",
-  "booty.requests_title": "Solicitudes",
+  "booty.requests_title": "Soporte",
   "booty.scoreboard_title": "Marcador",
-  "booty.players_title": "Jugadores"
+  "booty.players_title": "Jugadores",
+  "booty.support_request": "Solicitar apoyo",
+  "booty.support_give": "Enviar apoyo"
 }

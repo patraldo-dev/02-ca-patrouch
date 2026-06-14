@@ -892,7 +892,7 @@
   "onboarding.step2_body": "Partage tes écrits avec la communauté. Découvre ce que les autres ont écrit. Et joue à « Trouve l'IA » — peux-tu dire quels écrits sont générés par IA ?",
   "onboarding.step2_title": "L'Agora 🏛️",
   "onboarding.step2b_title": "Booty Battle 🏴‍☠️",
-  "onboarding.step2b_body": "Une bataille de mots dans le Pacifique où les humains affrontent des joueurs IA et des bots pirates. Capturez des bouteilles, échangez des écrits, et soumettez-vous à la volonté d'Albot Camus — ou ignorez-le à vos risques et périls ! Les Jelly Beans sont la monnaie.",
+  "onboarding.step2b_body": "Une bataille de mots dans le Pacifique où les humains affrontent des joueurs IA et des bots pirates. Capturez des bouteilles, échangez des écrits, et soumettez-vous à la volonté d'Albot Camus — ou ignorez-le à vos risques et périls ! Les prix reels du marche sont la monnaie.",
   "onboarding.step3_member": "True",
   "onboarding.step5_title": "Prêt à Écrire ?",
   "onboarding.step5_body": "Votre premier prompt vous attend. Acceptez et commencez à écrire — ou explorez l'Agora pour voir ce que la communauté crée.",
@@ -1044,7 +1044,9 @@
   "booty.bottles_details": "Voir details",
   "booty.marketplace_title": "Marche",
   "booty.betting_title": "Paris",
-  "booty.requests_title": "Demandes",
+  "booty.requests_title": "Soutien",
   "booty.scoreboard_title": "Classement",
-  "booty.players_title": "Joueurs"
+  "booty.players_title": "Joueurs",
+  "booty.support_request": "Demander soutien",
+  "booty.support_give": "Envoyer soutien"
 }

@@ -71,13 +71,13 @@ export async function PATCH({ request, locals, platform }) {
         if (!req) return json({ error: 'Request not found or already fulfilled' }, { status: 404 });
         if (req.player_id === donor.id) return json({ error: "Can't fulfill your own request" }, { status: 400 });
 
-        if (donor.fuel < req.amount) return json({ error: `Insufficient beans. Need ${req.amount}, have ${donor.fuel}` }, { status: 400 });
+        if (donor.fuel < req.amount) return json({ error: `Insufficient funds. Need ${req.amount}, have ${donor.fuel}` }, { status: 400 });
 
         await db.prepare(`UPDATE bq_players SET fuel = fuel - ? WHERE id = ?`).bind(req.amount, donor.id).run();
         await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(req.amount, req.player_id).run();
         await db.prepare(`UPDATE bq_fuel_requests SET status = 'fulfilled', fulfilled_by = ?, fulfilled_at = datetime('now') WHERE id = ?`).bind(donor.id, request_id).run();
 
-    await logTransaction(db, { player_id: player.id, type: 'fuel_request', amount: 0, detail: `Requested ${amount} beans` });
+    await logTransaction(db, { player_id: player.id, type: 'fuel_request', amount: 0, detail: `Requested ${amount}` });
         return json({ success: true, sent: req.amount });
     } catch (e) {
         return json({ error: e.message }, { status: 500 });
