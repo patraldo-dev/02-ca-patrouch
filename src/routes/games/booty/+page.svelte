@@ -1729,7 +1729,7 @@
         </div>
         <div class="map-container" bind:this={mapEl}>
             <!-- Minimal map badge -->
-            <button class="map-badge" onclick={() => showMapInfo = !showMapInfo} title={$t('booty.price')}">
+            <button class="map-badge" onclick={() => showMapInfo = !showMapInfo} title={$t('booty.price')}>
                 {#if data.myPlayer}
                     {$t('booty.price')}: {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}
                 {/if}
