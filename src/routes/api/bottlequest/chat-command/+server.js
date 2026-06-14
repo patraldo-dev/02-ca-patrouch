@@ -12,7 +12,7 @@ export async function POST({ request, locals, platform }) {
 
     try {
         // Fetch context for AI parsing
-        const player = await db.prepare('SELECT username, lat, lon, fuel, checkin_fuel FROM bq_players WHERE username = ?').bind(user.username).first();
+        const player = await db.prepare('SELECT username, lat, lon, fuel, checkin_fuel, paralyzed_until FROM bq_players WHERE username = ?').bind(user.username).first();
         if (!player) return json({ error: 'Not a player' }, { status: 404 });
 
         const { results: bottles } = await db.prepare(`
@@ -70,17 +70,21 @@ CONTEXT:
 PLAYER SAID: "${message}"
 
 Possible actions:
-1. "move" - player wants to go somewhere. Find the best matching coordinates from ports, bottles, players, or relative directions.
+1. "move" - player wants to go somewhere. Match coordinates from ports, bottles, players, OR relative directions.
+   - Relative directions: "west/east/north/south" ± offset. "20 points west" = subtract from longitude. "5 north" = add to latitude.
+   - 1 degree lat ≈ 111km. 1 degree lon ≈ 111km × cos(lat).
+   - "points" = degrees unless clearly something else.
+   - Calculate target_lat/target_lon from player's current position.
 2. "info" - player asks about status, bottles, players, distance, weather.
 3. "greet" - player says hi or casual stuff.
 4. "unknown" - can't determine intent.
 
-For "move": calculate approximate fuel cost (distance_km × cost_per_km × speed_mult). Speed: drift=0.5, sail=1, motor=4.
+For "move": ALWAYS provide target_lat and target_lon as numbers.
 For "info": provide a helpful answer about the game state.
 For "greet": respond as a pirate navigator.
 For "unknown": ask what they want to do.
 
-Reply ONLY with JSON:
+Reply ONLY with raw JSON, no markdown fences:
 {
   "action": "move" | "info" | "greet" | "unknown",
   "target_lat": <number or null>,
@@ -117,10 +121,14 @@ Reply ONLY with JSON:
         }
 
         if (typeof aiText !== 'string') aiText = JSON.stringify(aiText);
+        // Strip markdown code fences if model wrapped JSON
+        aiText = aiText.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim();
         const jsonMatch = aiText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return json({ reply: '¡Ay, el código del mar me falló! Intenta de nuevo.', action: 'unknown' });
 
-        const result = JSON.parse(jsonMatch[0]);
+        let result;
+        try { result = JSON.parse(jsonMatch[0]); }
+        catch { return json({ reply: '¡La brújula está descalibrada! Intenta de nuevo.', action: 'unknown' }); }
 
         // If action is "move" and we have coords, also suggest a speed
         if (result.action === 'move' && result.target_lat && result.target_lon) {

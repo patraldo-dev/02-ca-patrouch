@@ -1016,8 +1016,8 @@
             const d = await res.json();
             if (d.error) { showToast(d.error); chatHistory = [...chatHistory, { role: 'bot', text: '⚠️ ' + d.error }]; }
             else {
-                showToast(d.message || `Moved!`);
-                chatHistory = [...chatHistory, { role: 'bot', text: `✅ ${d.message || 'Moved successfully!'}` }];
+                showToast(`Moved! -${d.cost} 🫘`);
+                chatHistory = [...chatHistory, { role: 'bot', text: `✅ Moved! Cost: ${d.cost} 🫘` }];
                 pendingMove = null;
                 await invalidateAll();
             }
