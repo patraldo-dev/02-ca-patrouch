@@ -76,10 +76,15 @@ export async function POST({ request, locals, platform }) {
             `SELECT id, lat, lon, fuel, type, paralyzed_until, checkin_fuel FROM bq_players WHERE username = ?`
         ).bind(locals.user.username).first();
 
+        if (!player) return json({ error: 'No player found' }, { status: 404 });
+
+        // Player position — needed by narrator event zone checks below
+        const fromLat = player.lat;
+        const fromLon = player.lon;
+
         // Narrator event modifiers (populated during event check)
         let speedPenaltyMult = 1.0;
         let fuelPenaltyAmount = 0;
-        if (!player) return json({ error: 'No player found' }, { status: 404 });
 
         // Check paralysis
         if (player.paralyzed_until) {
@@ -152,8 +157,6 @@ export async function POST({ request, locals, platform }) {
             if (fuelPenalty) fuelPenaltyAmount += fuelPenalty;
         }
 
-        const fromLat = player.lat;
-        const fromLon = player.lon;
         const distDeg = degDist(fromLat, fromLon, target_lat, target_lon);
 
         if (distDeg < 0.000001) {
@@ -177,19 +180,22 @@ export async function POST({ request, locals, platform }) {
         // If navmesh path provided, use step-based cost (steps × tier cost × brent)
         // Otherwise fall back to distance-based cost
         let fuelCost;
+        let speedMult, zoneMult, compMult, nightMult;
 
         if (path_steps && path_steps > 0) {
             // Navmesh-based: each step = 1 base cost, scaled by zoom tier (from distance) and Brent
             const tierMult = distKm > 100 ? 1000000 : distKm > 20 ? 100000 : distKm > 5 ? 10000 : distKm > 1 ? 1000 : distKm > 0.2 ? 100 : distKm > 0.05 ? 10 : 1;
-            const speedMult = SPEED_MULT[speed];
-            const nightMult = getNightMult(target_lon);
+            speedMult = SPEED_MULT[speed];
+            nightMult = getNightMult(target_lon);
+            zoneMult = null;
+            compMult = null;
             fuelCost = Math.ceil(path_steps * tierMult * speedMult * nightMult * brentMult * speedPenaltyMult) + fuelPenaltyAmount;
         } else {
             // Legacy distance-based cost
-            const speedMult = SPEED_MULT[speed];
-            const zoneMult = getZoneMult(distDeg);
-            const compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
-            const nightMult = getNightMult(target_lon);
+            speedMult = SPEED_MULT[speed];
+            zoneMult = getZoneMult(distDeg);
+            compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
+            nightMult = getNightMult(target_lon);
             fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * brentMult * speedPenaltyMult) + fuelPenaltyAmount;
         }
 
