@@ -41,7 +41,7 @@ export async function handle({ event, resolve }) {
             event.locals.session = session.session;
             event.locals.user = {
                 id: session.user.id,
-                username: session.user.email?.split('@')[0] || session.user.name || 'unknown',
+                username: session.user.username || session.user.email?.split('@')[0] || session.user.name || 'unknown',
                 email: session.user.email,
                 email_verified: session.user.emailVerified,
                 role: session.user.role || 'user',

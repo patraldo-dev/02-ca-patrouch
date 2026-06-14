@@ -72,9 +72,17 @@ export async function POST({ request, locals, platform }) {
         }
 
         // Find player
-        const player = await db.prepare(
+        let player = await db.prepare(
             `SELECT id, lat, lon, fuel, type, paralyzed_until, checkin_fuel FROM bq_players WHERE username = ?`
         ).bind(locals.user.username).first();
+        if (!player && locals.user.email) {
+            const emailPrefix = locals.user.email.split('@')[0];
+            if (emailPrefix !== locals.user.username) {
+                player = await db.prepare(
+                    `SELECT id, lat, lon, fuel, type, paralyzed_until, checkin_fuel FROM bq_players WHERE username = ?`
+                ).bind(emailPrefix).first();
+            }
+        }
 
         if (!player) return json({ error: 'No player found' }, { status: 404 });
 

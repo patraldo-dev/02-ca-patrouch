@@ -12,7 +12,13 @@ export async function POST({ request, locals, platform }) {
 
     try {
         // Fetch context for AI parsing
-        const player = await db.prepare('SELECT username, lat, lon, fuel, checkin_fuel, paralyzed_until FROM bq_players WHERE username = ?').bind(user.username).first();
+        let player = await db.prepare('SELECT username, lat, lon, fuel, checkin_fuel, paralyzed_until FROM bq_players WHERE username = ?').bind(user.username).first();
+        if (!player && user.email) {
+            const emailPrefix = user.email.split('@')[0];
+            if (emailPrefix !== user.username) {
+                player = await db.prepare('SELECT username, lat, lon, fuel, checkin_fuel, paralyzed_until FROM bq_players WHERE username = ?').bind(emailPrefix).first();
+            }
+        }
         if (!player) return json({ error: 'Not a player' }, { status: 404 });
 
         const { results: bottles } = await db.prepare(`
