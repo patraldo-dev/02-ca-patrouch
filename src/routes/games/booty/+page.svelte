@@ -681,7 +681,7 @@
             });
             const result = await res.json();
             if (res.ok) {
-                showToast(`Moved! Fuel: -${result.fuel_cost}`);
+                showToast(`Moved! Fuel: -${result.cost}`);
                 if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
                 await invalidateAll();
                 drawMovementRange();
@@ -1045,7 +1045,7 @@
             });
             const d = await res.json();
             if (d.error) { showToast(d.error); }
-            else { showToast(d.message || `Moved! -${d.fuel_cost} 🫘`); moveTarget = null; await invalidateAll(); }
+            else { showToast(d.message || `Moved! -${d.cost} 🫘`); moveTarget = null; await invalidateAll(); }
         } catch { showToast('Move failed'); }
         moveLoading = false;
     }
