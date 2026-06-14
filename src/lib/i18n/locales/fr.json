@@ -1026,5 +1026,13 @@
   "booty.login_required": "Connectez-vous pour vous deplacer",
   "booty.command_placeholder": "Dites avancer de 10 points a l ouest, ou poursuivre la bouteille la plus proche",
   "booty.fly_to_me": "Aller a ma position",
-  "booty.flying_to_position": "Vol vers votre position"
+  "booty.flying_to_position": "Vol vers votre position",
+  "booty.price": "Prix",
+  "booty.your_price": "Votre prix",
+  "booty.not_enough": "Pas assez",
+  "booty.daily_limit": "Limite quotidienne: 50% de votre prix",
+  "booty.sent": "Prix envoye!",
+  "booty.moved_cost": "Deplace! -{n}",
+  "booty.move_btn": "⛵ Deplacer ({n})",
+  "booty.request": "Demander"
 }

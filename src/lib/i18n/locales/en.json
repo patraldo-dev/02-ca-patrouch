@@ -1026,5 +1026,13 @@
   "booty.login_required": "Log in to move",
   "booty.command_placeholder": "Say move 10 points west, or chase the nearest bottle",
   "booty.fly_to_me": "Fly to my position",
-  "booty.flying_to_position": "Flying to your position"
+  "booty.flying_to_position": "Flying to your position",
+  "booty.price": "Price",
+  "booty.your_price": "Your price",
+  "booty.not_enough": "Not enough",
+  "booty.daily_limit": "Daily limit: 50% of your price",
+  "booty.sent": "Price sent!",
+  "booty.moved_cost": "Moved! -{n}",
+  "booty.move_btn": "⛵ Move ({n})",
+  "booty.request": "Request"
 }

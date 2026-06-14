@@ -368,7 +368,7 @@
                     interactive: true,
                 });
 
-                rect.bindTooltip(`${tier.label} · ${tier.cost} 🫘`, {
+                rect.bindTooltip(`${tier.label} · ${tier.cost}`, {
                     direction: 'top', className: 'nav-tri-label', opacity: 0.8,
                     sticky: true,
                 });
@@ -681,7 +681,7 @@
             });
             const result = await res.json();
             if (res.ok) {
-                showToast(`Moved! -${result.cost} 🫘`);
+                showToast($t('booty.moved_cost', { n: result.cost }));
                 if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
                 await invalidateAll();
                 drawMovementRange();
@@ -887,7 +887,7 @@
                 iconSize: [32, 32], iconAnchor: [16, 16]
             });
             const bm = L.marker([bot.lat, bot.lon], { icon }).addTo(mapInstance);
-            bm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${bot.name}</strong>${isHijacked ? '<br><span style="color:#c9a87c">⚓ Captured by ' + bot.hijacked_by + '</span>' : '<br><span style="color:#ef4444">🏴‍☠️ Booty Bot</span>'}<br><span style="color:#555;font-size:0.85em">🍷 ${bot.beans} beans · 🍾 ${bot.captured_bottles} captures</span></div>`);
+            bm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${bot.name}</strong>${isHijacked ? '<br><span style="color:#c9a87c">⚓ Captured by ' + bot.hijacked_by + '</span>' : '<br><span style="color:#ef4444">🏴‍☠️ Booty Bot</span>'}<br><span style="color:#555;font-size:0.85em">🍷 ${bot.beans} · 🍾 ${bot.captured_bottles} captures</span></div>`);
             bm.bindTooltip(bot.name, {
                 permanent: true, direction: 'top', offset: [0, -16], className: 'bot-label'
             });
@@ -1057,8 +1057,8 @@
             const d = await res.json();
             if (d.error) { showToast(d.error); chatHistory = [...chatHistory, { role: 'bot', text: '⚠️ ' + d.error }]; }
             else {
-                showToast(`Moved! -${d.cost} 🫘`);
-                chatHistory = [...chatHistory, { role: 'bot', text: `✅ Moved! Cost: ${d.cost} 🫘` }];
+                showToast($t('booty.moved_cost', { n: d.cost }));
+                chatHistory = [...chatHistory, { role: 'bot', text: `✅ ${$t('booty.moved_cost', { n: d.cost })}` }];
                 pendingMove = null;
                 await invalidateAll();
             }
@@ -1086,7 +1086,7 @@
             });
             const d = await res.json();
             if (d.error) { showToast(d.error); }
-            else { showToast(d.message || `Moved! -${d.cost} 🫘`); moveTarget = null; await invalidateAll(); }
+            else { showToast($t('booty.moved_cost', { n: d.cost })); moveTarget = null; await invalidateAll(); }
         } catch { showToast('Move failed'); }
         moveLoading = false;
     }
@@ -1211,7 +1211,7 @@
                 body: JSON.stringify({ request_id: reqId })
             });
             const d = await res.json();
-            showToast(d.success ? '🫘 Sent!' : d.error);
+            showToast(d.success ? $t('booty.sent') : d.error);
             if (d.success) await invalidateAll();
         } catch { showToast('Failed'); }
     }
@@ -1245,7 +1245,7 @@
             if (d.success) {
                 checkedIn = true;
                 streakCount = d.streak || streakCount + 1;
-                showToast(d.message || '+10 🫘');
+                showToast(d.message || `+10 ${$t('booty.price')}`);
             }
         } catch {}
         checkinLoading = false;
@@ -1280,7 +1280,7 @@
     <div class="ticker-content">
         {#if data.myPlayer}
         <span class="ticker-item">
-            🫘 <span class="ticker-value">{formatBeans((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</span>
+            {$t('booty.price')} <span class="ticker-value">{formatBeans((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</span>
         </span>
         <span class="ticker-divider">│</span>
         {/if}
@@ -1391,8 +1391,8 @@
             <div class="fuel-request-form">
                 <div class="request-row">
                     <input type="number" bind:value={requestAmount} min="1" max="50" placeholder="Amount (1-50)" class="transfer-input" style="flex:1" />
-                    <input type="text" bind:value={requestMsg} maxlength="140" placeholder="Why do you need beans?" class="transfer-input" style="flex:2" />
-                    <button class="btn-transfer" onclick={requestFuel} disabled={requestingFuel}>{requestingFuel ? '...' : 'Request 🫘'}</button>
+                    <input type="text" bind:value={requestMsg} maxlength="140" placeholder={$t('booty.request') + '...'} class="transfer-input" style="flex:2" />
+                    <button class="btn-transfer" onclick={requestFuel} disabled={requestingFuel}>{requestingFuel ? '...' : $t('booty.request')}</button>
                 </div>
                 <p class="transfer-limit">Max 1 request/day · Albot Camus may reward the desperate</p>
             </div>
@@ -1404,11 +1404,11 @@
                         <div class="request-info">
                             <strong>{req.display_name || req.username}</strong>
                             <span class="request-port">📍 {req.port_name || '?'}</span>
-                            <span class="request-amount">{req.type === 'ai' ? '🤖' : '👤'} requesting 🫘 {req.amount}</span>
+                            <span class="request-amount">{req.type === 'ai' ? '🤖' : '👤'} {$t('booty.request').toLowerCase()} {req.amount}</span>
                             {#if req.message}<span class="request-msg">"{req.message}"</span>{/if}
                         </div>
                         {#if data.myPlayer && req.player_id !== data.myPlayer.id}
-                            <button class="btn-fulfill" onclick={() => fulfillRequest(req.id)}>Give 🫘</button>
+                            <button class="btn-fulfill" onclick={() => fulfillRequest(req.id)}>{$t('booty.sent')}</button>
                         {/if}
                     </div>
                 {/each}
@@ -1436,13 +1436,13 @@
                     <div class="listing-card">
                         <div class="listing-header">
                             <span class="listing-title">📖 {listing.title || 'Untitled'}</span>
-                            <span class="listing-price" >🫘 {listing.price}</span>
+                            <span class="listing-price" >{listing.price}</span>
                         </div>
                         <div class="listing-meta">by {listing.seller_name || listing.author_name} · 📍 {listing.seller_port || '?'}</div>
                         <div class="listing-excerpt">{listing.excerpt || '...'}</div>
                         {#if listing.resale_count > 0}<div class="listing-resale">🔄 Resold {listing.resale_count}x · 10% royalty to author</div>{/if}
                         {#if data.myPlayer && listing.seller_player_id !== data.myPlayer.id}
-                            <button class="btn-buy" onclick={() => buyListing(listing.id)}>Buy for 🫘 {listing.price}</button>
+                            <button class="btn-buy" onclick={() => buyListing(listing.id)}>{$t('booty.price')}: {listing.price}</button>
                         {/if}
                     </div>
                 {/each}
@@ -1541,21 +1541,21 @@
             </div>
             <div class="move-divider"></div>
             <div class="move-row move-total">
-                <span class="move-label">Costo total</span>
-                <span class="move-value" style="color: {movePreview.canAfford ? '#f59e0b' : '#ef4444'}">{movePreview.cost} 🫘</span>
+                <span class="move-label">{$t('booty.price')}</span>
+                <span class="move-value" style="color: {movePreview.canAfford ? '#f59e0b' : '#ef4444'}">{movePreview.cost}</span>
             </div>
             <div class="move-row">
-                <span class="move-label">Tus 🫘</span>
+                <span class="move-label">{$t('booty.your_price')}</span>
                 <span class="move-value">{movePreview.playerFuel}</span>
             </div>
             {#if !movePreview.canAfford}
-            <div class="move-warning">⚠️ No tienes suficientes 🫘</div>
+            <div class="move-warning">⚠️ {$t('booty.not_enough')}</div>
             {/if}
         </div>
 
         <div class="move-actions">
             <button class="btn btn-accent" onclick={executeMove} disabled={!movePreview.canAfford}>
-                ⛵ Mover ({movePreview.cost} 🫘)
+                ⛵ {$t('booty.move_btn', { n: movePreview.cost })}
             </button>
             <button class="btn btn-cancel-move" onclick={cancelMove}>
                 ✋ No mover
@@ -1575,12 +1575,12 @@
             <div><strong>On:</strong> {betPlayer.display_name || betPlayer.username}</div>
             <div><strong>Odds:</strong> {betPlayer._odds || '?'}×</div>
         </div>
-        <label class="transfer-label">Amount (🫘)</label>
+        <label class="transfer-label">{$t('booty.price')}</label>
         <input type="number" bind:value={betAmount} min="1" placeholder="5" class="transfer-input" />
         {#if betAmount}
             <div class="bet-preview">
-                <span>Potential win: 🫘 {parseInt(betAmount) * (betPlayer._odds || 1)}</span>
-                <span class="transfer-fee">🤖 Bank fee (5%): 🫘 {Math.ceil(parseInt(betAmount) * (betPlayer._odds || 1) * 0.05)}</span>
+                <span>Potential win: {parseInt(betAmount) * (betPlayer._odds || 1)}</span>
+                <span class="transfer-fee">🤖 Bank fee (5%): {Math.ceil(parseInt(betAmount) * (betPlayer._odds || 1) * 0.05)}</span>
             </div>
         {/if}
         <button class="btn-join" onclick={placeBet} disabled={!betAmount || parseInt(betAmount) < 1}>Place Bet →</button>
@@ -1729,9 +1729,9 @@
         </div>
         <div class="map-container" bind:this={mapEl}>
             <!-- Minimal map badge -->
-            <button class="map-badge" onclick={() => showMapInfo = !showMapInfo} title="Map info">
+            <button class="map-badge" onclick={() => showMapInfo = !showMapInfo} title={$t('booty.price')}">
                 {#if data.myPlayer}
-                    🫘 {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}
+                    {$t('booty.price')}: {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}
                 {/if}
                 {#if narratorEvent?.event_type !== 'flavor'}
                     <span style="color:#ef4444"> ⚠️</span>
@@ -1741,7 +1741,7 @@
             {#if showMapInfo}
                 <div class="map-info-panel">
                     {#if data.myPlayer}
-                    <div>🫘 <strong>{formatBeans((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</strong></div>
+                    <div>{$t('booty.price')}: <strong>{formatBeans((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</strong></div>
                     {/if}
                     {#if narratorEvent?.event_type !== 'flavor'}
                     <div style="color:#ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
@@ -1856,7 +1856,7 @@
                         <div class="detail-row"><span>📍 Port</span><span>{player.port_name || 'Unknown'}</span></div>
                         <div class="detail-row"><span>{formatSolarTime(player.lon)}</span><span>{player.lat ? formatCoords(player.lat, player.lon) : '—'}</span></div>
                         <div class="detail-row"><span>⭐ Points</span><span>{player.points || 0}</span></div>
-                        <div class="detail-row"><span>🫘 Beans</span><span>{formatBeans(player.fuel)}</span></div>
+                        <div class="detail-row"><span>{$t('booty.price')}</span><span>{formatBeans(player.fuel)}</span></div>
                         {#if player.nearestDist !== null}
                             <button class="bottle-link" onclick={(e) => { e.stopPropagation(); flyToBottle(player.nearestBottle); }}>
                                 🍾 Nearest: {player.nearestDist.toFixed(0)} km
@@ -1865,11 +1865,11 @@
                     </div>
                     {#if data.myPlayer && player.id === data.myPlayer.id}
                         <button class="btn-transfer" onclick={(e) => { e.stopPropagation(); showTransferModal = true; }}>
-                            → Send 🫘
+                            → {$t('booty.sent')}
                         </button>
                     {:else if data.myPlayer && player.type !== 'ai' && !player.solo}
                         <button class="btn-send-me" onclick={(e) => { e.stopPropagation(); transferTarget = player; showTransferModal = true; }}>
-                            💸 Send me 🫘
+                            💸 {$t('booty.request')}
                         </button>
                     {/if}
                 </div>
@@ -1883,7 +1883,7 @@
     <div class="modal-overlay" onclick={() => showTransferModal = false}></div>
     <div class="modal-box">
         <button class="btn-cancel" onclick={() => showTransferModal = false}>✕</button>
-        <h2 >🫘 Send Beans</h2>
+        <h2 >{$t('booty.price')}</h2>
         <label class="transfer-label">To</label>
         <select bind:value={transferTarget} class="transfer-input">
             <option value="">Select player...</option>
@@ -1893,16 +1893,16 @@
                 {/if}
             {/each}
         </select>
-        <label class="transfer-label">Amount (🫘)</label>
+        <label class="transfer-label">{$t('booty.price')} ({$t('booty.your_price').toLowerCase()})</label>
         <input type="number" bind:value={transferAmount} min="0.01" step="0.01" max={data.myPlayer?.fuel || 0} placeholder="10" class="transfer-input" />
-        <div class="transfer-fee">🤖 Bank fee (3%): 🫘 {transferAmount ? (transferAmount * 0.03).toFixed(2) : '0.00'}</div>
-        <div class="transfer-net">Net received: 🫘 {transferAmount ? (parseFloat(transferAmount) - parseFloat(transferAmount) * 0.03).toFixed(2) : '0.00'}</div>
+        <div class="transfer-fee">🤖 Bank fee (3%): {transferAmount ? (transferAmount * 0.03).toFixed(2) : '0.00'}</div>
+        <div class="transfer-net">Net received: {transferAmount ? (parseFloat(transferAmount) - parseFloat(transferAmount) * 0.03).toFixed(2) : '0.00'}</div>
         <label class="transfer-label">Note (optional)</label>
         <input type="text" bind:value={transferNote} maxlength="100" placeholder="Good luck!" class="transfer-input" />
         <button class="btn-join" onclick={doTransfer} disabled={transferSending || !transferTarget || !transferAmount || parseInt(transferAmount) < 1}>
-            {transferSending ? 'Sending...' : 'Send 🫘'}
+            {transferSending ? 'Sending...' : $t('booty.sent')}}
         </button>
-        <p class="transfer-limit">Daily limit: 50% of your 🫘</p>
+        <p class="transfer-limit">{$t('booty.daily_limit')}</p>
     </div>
     {/if}
 
@@ -1920,9 +1920,9 @@
             <div style="font-size:0.75rem;margin:0.3rem 0;color:#ef4444">⛔ Movement blocked by El Narrador</div>
         {/if}
         <div class="chat-speed-btns">
-            <button class="btn-chat-speed" onclick={() => confirmChatMove('drift')} disabled={moveLoading}>🌊 Drift ({pendingMove.estimated_cost?.drift || '?'} 🫘)</button>
-            <button class="btn-chat-speed" onclick={() => confirmChatMove('sail')} disabled={moveLoading}>⛵ Sail ({pendingMove.estimated_cost?.sail || '?'} 🫘)</button>
-            <button class="btn-chat-speed" onclick={() => confirmChatMove('motor')} disabled={moveLoading}>🚤 Motor ({pendingMove.estimated_cost?.motor || '?'} 🫘)</button>
+            <button class="btn-chat-speed" onclick={() => confirmChatMove('drift')} disabled={moveLoading}>🌊 Drift ({pendingMove.estimated_cost?.drift || '?'})</button>
+            <button class="btn-chat-speed" onclick={() => confirmChatMove('sail')} disabled={moveLoading}>⛵ Sail ({pendingMove.estimated_cost?.sail || '?'})</button>
+            <button class="btn-chat-speed" onclick={() => confirmChatMove('motor')} disabled={moveLoading}>🚤 Motor ({pendingMove.estimated_cost?.motor || '?'})</button>
             <button class="btn-chat-cancel" onclick={() => pendingMove = null}>✕</button>
         </div>
     </div>
