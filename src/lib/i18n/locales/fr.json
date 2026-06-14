@@ -1034,5 +1034,17 @@
   "booty.sent": "Prix envoye!",
   "booty.moved_cost": "Deplace! -{n}",
   "booty.move_btn": "⛵ Deplacer ({n})",
-  "booty.request": "Demander"
+  "booty.request": "Demander",
+  "booty.bottles_title": "Bouteilles",
+  "booty.bottles_all": "Toutes",
+  "booty.bottles_mine": "Mes Bouteilles",
+  "booty.bottles_washed": "Echouees",
+  "booty.bottles_active": "En Mer",
+  "booty.bottles_found": "Trouvees",
+  "booty.bottles_details": "Voir details",
+  "booty.marketplace_title": "Marche",
+  "booty.betting_title": "Paris",
+  "booty.requests_title": "Demandes",
+  "booty.scoreboard_title": "Classement",
+  "booty.players_title": "Joueurs"
 }

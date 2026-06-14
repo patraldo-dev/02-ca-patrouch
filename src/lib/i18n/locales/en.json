@@ -1034,5 +1034,17 @@
   "booty.sent": "Price sent!",
   "booty.moved_cost": "Moved! -{n}",
   "booty.move_btn": "⛵ Move ({n})",
-  "booty.request": "Request"
+  "booty.request": "Request",
+  "booty.bottles_title": "Bottles",
+  "booty.bottles_all": "All Bottles",
+  "booty.bottles_mine": "My Bottles",
+  "booty.bottles_washed": "Washed Ashore",
+  "booty.bottles_active": "At Sea",
+  "booty.bottles_found": "Found",
+  "booty.bottles_details": "View details",
+  "booty.marketplace_title": "Marketplace",
+  "booty.betting_title": "Betting Board",
+  "booty.requests_title": "Requests",
+  "booty.scoreboard_title": "Scoreboard",
+  "booty.players_title": "Players"
 }

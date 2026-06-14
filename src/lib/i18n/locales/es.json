@@ -1021,5 +1021,17 @@
   "booty.sent": "Precio enviado!",
   "booty.moved_cost": "Movido! -{n}",
   "booty.move_btn": "⛵ Mover ({n})",
-  "booty.request": "Solicitar"
+  "booty.request": "Solicitar",
+  "booty.bottles_title": "Botellas",
+  "booty.bottles_all": "Todas",
+  "booty.bottles_mine": "Mis Botellas",
+  "booty.bottles_washed": "Varadas",
+  "booty.bottles_active": "En el Mar",
+  "booty.bottles_found": "Encontradas",
+  "booty.bottles_details": "Ver detalles",
+  "booty.marketplace_title": "Mercado",
+  "booty.betting_title": "Apuestas",
+  "booty.requests_title": "Solicitudes",
+  "booty.scoreboard_title": "Marcador",
+  "booty.players_title": "Jugadores"
 }

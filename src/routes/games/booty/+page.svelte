@@ -1385,8 +1385,12 @@
 
     <!-- Bean Requests -->
     {#if data.myPlayer}
-    <div class="section">
-        <h2>🆘 Bean Requests</h2>
+    <details class="accordion-section">
+        <summary class="accordion-header">
+            <span>🆘 {$t('booty.requests_title')}</span>
+            {#if fuelRequests.length}<span class="accordion-badge">{fuelRequests.length}</span>{/if}
+        </summary>
+        <div class="accordion-body">
         {#if data.myPlayer}
             <div class="fuel-request-form">
                 <div class="request-row">
@@ -1416,12 +1420,16 @@
         {:else}
             <p class="no-requests">No open requests</p>
         {/if}
-    </div>
+    </details>
     {/if}
 
     <!-- Marketplace -->
-    <div class="section">
-        <h2>🏪 Agora Marketplace</h2>
+    <details class="accordion-section">
+        <summary class="accordion-header">
+            <span>🏪 {$t('booty.marketplace_title')}</span>
+            {#if marketListings.length}<span class="accordion-badge">{marketListings.length}</span>{/if}
+        </summary>
+        <div class="accordion-body">
         {#if wordIndex.length}
             <div class="word-index">
                 <span class="word-index-label">📈 Word Index this month:</span>
@@ -1450,12 +1458,15 @@
         {:else}
             <p class="no-requests">No listings yet — publish writings and list them for sale!</p>
         {/if}
-    </div>
+    </details>
 
     <!-- Betting Board -->
     {#if data.odds?.length}
-    <div class="section">
-        <h2>🎲 Betting Board</h2>
+    <details class="accordion-section">
+        <summary class="accordion-header">
+            <span>🎲 {$t('booty.betting_title')}</span>
+        </summary>
+        <div class="accordion-body">
         {#each data.odds as bottleOdds}
             <div class="bet-bottle">
                 <div class="bet-bottle-title">🍾 {bottleOdds.title}</div>
@@ -1473,7 +1484,7 @@
                 </div>
             </div>
         {/each}
-    </div>
+    </details>
     {/if}
 
     <!-- Beached Bottles Modal -->
@@ -1589,11 +1600,12 @@
 
     <!-- My Bottles -->
     {#if data.user}
-        <div class="section">
-            <div class="section-header">
-                <h2>{$t('bottles.my_bottles')}</h2>
-                <button class="btn btn-accent" onclick={() => showForm = !showForm}>{$t('bottles.create')}</button>
-            </div>
+        <details class="accordion-section" open>
+            <summary class="accordion-header">
+                <span>🍾 {$t('booty.bottles_mine')}</span>
+                <button class="btn btn-accent btn-sm" onclick={(e) => { e.preventDefault(); showForm = !showForm; }}>{$t('bottles.create')}</button>
+            </summary>
+            <div class="accordion-body">
 
             {#if showForm}
                 <div class="form-card">
@@ -1701,6 +1713,7 @@
                 </div>
             {/if}
         </div>
+    </details>
     {/if}
 
     <!-- Chat Command -->
@@ -1756,8 +1769,11 @@
 
     <!-- Beached / Found bottles (public) -->
     {#if data.bottles.filter(b => b.status === 'beached' || b.status === 'found').length}
-        <div class="section">
-            <h2>{$t('bottles.washed_up')}</h2>
+        <details class="accordion-section">
+            <summary class="accordion-header">
+                <span>📬 {$t('booty.bottles_washed')} ({data.bottles.filter(b => b.status === 'beached' || b.status === 'found').length})</span>
+            </summary>
+            <div class="accordion-body">
             {#each data.bottles.filter(b => b.status === 'beached' || b.status === 'found') as bottle}
                 <div class="beached-item">
                     <div class="beached-icon">{bottle.status === 'found' ? '📬' : '🍾'}</div>
@@ -1805,12 +1821,16 @@
                 {/if}
             {/each}
         </div>
+    </details>
     {/if}
 
     <!-- Scoreboard -->
     {#if data.players?.length}
-    <div class="scoreboard-section">
-        <h2 class="section-title">🏆 {$t('scoreboard.title')}</h2>
+    <details class="accordion-section" open>
+        <summary class="accordion-header">
+            <span>🏆 {$t('booty.scoreboard_title')}</span>
+        </summary>
+        <div class="accordion-body">
         <div class="scoreboard-tabs">
             <button class:active={scoreTab === 'general'} onclick={() => scoreTab = 'general'}>🌐 General</button>
             <button class:active={scoreTab === 'booty'} onclick={() => scoreTab = 'booty'}>⚔️ Booty Battle</button>
@@ -1831,14 +1851,17 @@
                 </div>
             {/each}
         </div>
-    </div>
+    </details>
     {/if}
 
     <!-- Players -->
     {#if playersWithDist.length}
-    <div class="section">
-        <h2>🏴‍☠️ Players</h2>
-        <div class="players-grid">
+    <details class="accordion-section">
+        <summary class="accordion-header">
+            <span>🏴‍☠️ {$t('booty.players_title')}</span>
+        </summary>
+        <div class="accordion-body">
+            <div class="players-grid">
             {#each playersWithDist as player}
                 <div class="player-card" onclick={() => flyToPlayer(player)} role="button" tabindex="0">
                     <div class="player-header">
@@ -1875,7 +1898,7 @@
                 </div>
             {/each}
         </div>
-    </div>
+    </details>
     {/if}
 
     <!-- Transfer Modal -->
@@ -2012,6 +2035,45 @@
     .bq-link a { color: var(--accent); font-weight: 600; font-size: 0.95rem; text-decoration: none; }
     .bq-link a:hover { text-decoration: underline; }
     .section { margin-bottom: 3rem; }
+
+    /* Accordion */
+    .accordion-section {
+        margin-bottom: 1rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .accordion-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 1.25rem;
+        cursor: pointer;
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        color: var(--accent);
+        user-select: none;
+        list-style: none;
+        transition: background 0.15s;
+    }
+    .accordion-header::-webkit-details-marker { display: none; }
+    .accordion-header:hover { background: var(--accent-bg); }
+    .accordion-badge {
+        background: var(--accent);
+        color: var(--bg);
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+    .accordion-body {
+        padding: 0 1.25rem 1.25rem;
+    }
+    .accordion-section[open] > summary {
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1rem;
+    }
     .section h2 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--accent); margin-bottom: 1rem; }
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
     .section-header h2 { margin-bottom: 0; }
