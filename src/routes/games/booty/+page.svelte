@@ -949,7 +949,9 @@
         if (voiceListening && voiceRecognition) { voiceRecognition.stop(); voiceListening = false; return; }
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         voiceRecognition = new SR();
-        voiceRecognition.lang = 'es';
+        // Use page locale or browser language for recognition
+        const speechLang = data.serverLocale || (navigator.language || 'es').slice(0, 2);
+        voiceRecognition.lang = speechLang;
         voiceRecognition.continuous = false;
         voiceRecognition.interimResults = false;
         voiceRecognition.onresult = (e) => {
@@ -974,6 +976,38 @@
 
         // Local commands — don't need AI
         const lowerMsg = msg.toLowerCase();
+
+        // Relative direction move: "move 20 points west", "go 5 north", "mover 10 oeste"
+        const relMove = lowerMsg.match(/(?:move|go|mover|ve|ir)\s+(\d+(?:\.\d+)?)\s*(?:points?|puntos?|degrees?|grados?|deg)?\s*(west|oeste|east|este|north|norte|south|sur|nw|ne|sw|se)/);
+        if (relMove && data.myPlayer) {
+            const amount = parseFloat(relMove[1]);
+            const dir = relMove[2];
+            let dLat = 0, dLon = 0;
+            if (dir.includes('west') || dir.includes('oeste')) dLon = -amount;
+            else if (dir.includes('east') || dir.includes('este')) dLon = amount;
+            else if (dir.includes('north') || dir.includes('norte')) dLat = amount;
+            else if (dir.includes('south') || dir.includes('sur')) dLat = -amount;
+            const target_lat = parseFloat((data.myPlayer.lat + dLat).toFixed(5));
+            const target_lon = parseFloat((data.myPlayer.lon + dLon).toFixed(5));
+            const distKm = Math.sqrt(dLat * dLat + dLon * dLon) * 111;
+            const cost = Math.ceil(distKm * (data.market?.cost_per_km || 0.73));
+            pendingMove = {
+                action: 'move',
+                target_lat, target_lon,
+                target_name: `${amount}° ${dir}`,
+                distance_km: Math.round(distKm),
+                estimated_cost: {
+                    drift: Math.ceil(cost * 0.5),
+                    sail: cost,
+                    motor: cost * 4
+                },
+                reply: `Rumbo ${dir} ${amount}° — ~${Math.round(distKm)}km`
+            };
+            chatHistory = [...chatHistory, { role: 'bot', text: pendingMove.reply }];
+            chatLoading = false;
+            return;
+        }
+
         if (lowerMsg.match(/^(fly|ve|vas|go|aller|vuela|llévame|llevame|where am i|dónde estoy|donde estoy|my location|mi ubicaci[oó]n)/)) {
             if (mapInstance && data.myPlayer) {
                 mapInstance.flyTo([data.myPlayer.lat, data.myPlayer.lon], 15, { duration: 1.5 });
@@ -1677,10 +1711,8 @@
         </div>
         <form onsubmit={(e) => { e.preventDefault(); sendChatCommand(); }} class="chat-form">
             <input type="text" bind:value={chatInput} placeholder={get(t)('booty.command_placeholder')} class="chat-input" disabled={chatLoading} />
-            {#if data.user}
-            <button type="button" class="btn-chat-send {voiceListening ? 'voice-active' : ''}" onclick={toggleVoiceCommand} title="Voice command" aria-label="Voice command">🎙️</button>
-            {/if}
-            <button type="submit" class="btn-chat-send" disabled={chatLoading || !chatInput.trim()}>🧭</button>
+            <button type="button" class="btn-chat-voice {voiceListening ? 'voice-active' : ''}" onclick={toggleVoiceCommand} title="Voice command" aria-label="Voice command" disabled={chatLoading}>🎙️</button>
+            <button type="submit" class="btn-chat-send" disabled={chatLoading || !chatInput.trim()} title="Send" aria-label="Send">➤</button>
         </form>
     </div>
 
@@ -2147,12 +2179,15 @@
     .chat-form { display: flex; border-top: 1px solid var(--bs-border); }
     .chat-input { flex: 1; padding: 0.5rem 0.75rem; background: transparent; border: none; color: var(--text); font-size: 0.85rem; outline: none; font-family: inherit; }
     .chat-input::placeholder { color: var(--muted); opacity: 0.6; }
-    .btn-chat-send { background: var(--bs-accent); border: none; color: #fff; padding: 0.5rem 0.75rem; cursor: pointer; font-size: 1rem; border-radius: 0; }
+    .btn-chat-send { background: var(--bs-accent); border: none; color: #fff; padding: 0.5rem 0.75rem; cursor: pointer; font-size: 1rem; border-radius: 0; min-width: 40px; }
     .narrator-speak { background: rgba(255,255,255,0.1); border: none; color: var(--accent); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; margin-top: 0.4rem; }
     .narrator-speak:hover { background: rgba(255,255,255,0.2); }
     .narrator-speak.narrator-playing { animation: micPulse 1.5s infinite; color: #ef4444; }
     .voice-active { animation: micPulse 1.5s infinite; color: #ef4444; }
     @keyframes micPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .btn-chat-voice { background: transparent; border: none; color: var(--muted); padding: 0.5rem 0.75rem; cursor: pointer; font-size: 1rem; border-radius: 0; min-width: 40px; }
+    .btn-chat-voice:hover { color: var(--text); }
+    .btn-chat-voice:disabled { opacity: 0.4; cursor: default; }
     .btn-chat-send:disabled { opacity: 0.4; cursor: default; }
     .chat-move-confirm { background: var(--bs-surface); border: 1px solid var(--bs-accent); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 1rem; font-size: 0.8rem; }
     .chat-speed-btns { display: flex; gap: 0.4rem; margin-top: 0.4rem; flex-wrap: wrap; }

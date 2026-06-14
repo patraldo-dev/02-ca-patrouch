@@ -100,10 +100,10 @@ Reply ONLY with raw JSON, no markdown fences:
 
         const aiRes = await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
             messages: [
-                { role: 'system', content: 'You are a pirate navigator AI. Reply only with valid JSON. No markdown.' },
+                { role: 'system', content: 'You are a pirate navigator AI. Reply only with valid JSON. No markdown. No prose.' },
                 { role: 'user', content: prompt }
             ],
-            max_tokens: 250
+            max_tokens: 400
         });
 
         // Workers AI returns response in different shapes depending on model
@@ -124,11 +124,16 @@ Reply ONLY with raw JSON, no markdown fences:
         // Strip markdown code fences if model wrapped JSON
         aiText = aiText.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim();
         const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) return json({ reply: '¡Ay, el código del mar me falló! Intenta de nuevo.', action: 'unknown' });
+        if (!jsonMatch) return json({ reply: '¡Ay, el código del mar me falló! Intenta de nuevo.', action: 'unknown', debug: aiText.slice(0, 200) });
 
         let result;
-        try { result = JSON.parse(jsonMatch[0]); }
-        catch { return json({ reply: '¡La brújula está descalibrada! Intenta de nuevo.', action: 'unknown' }); }
+        try {
+            result = JSON.parse(jsonMatch[0]);
+        } catch {
+            // Try to fix common truncation — missing closing brace
+            try { result = JSON.parse(jsonMatch[0] + '}'); }
+            catch { return json({ reply: '¡La brújula está descalibrada! Intenta de nuevo.', action: 'unknown', debug: aiText.slice(0, 200) }); }
+        }
 
         // If action is "move" and we have coords, also suggest a speed
         if (result.action === 'move' && result.target_lat && result.target_lon) {
