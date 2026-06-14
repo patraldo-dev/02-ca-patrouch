@@ -948,29 +948,60 @@
 
     let voiceListening = $state(false);
     let voiceRecognition = $state(null);
+    let voiceWaiting = $state(false); // waiting for wake phrase
+    const WAKE_PHRASE = 'okay booty';
+
     function toggleVoiceCommand() {
         if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
             showToast('Voice not supported'); return;
         }
-        if (voiceListening && voiceRecognition) { voiceRecognition.stop(); voiceListening = false; return; }
+        if (voiceListening && voiceRecognition) { voiceRecognition.stop(); voiceListening = false; voiceWaiting = false; return; }
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         voiceRecognition = new SR();
-        // Use page locale or browser language for recognition
         const speechLang = data.serverLocale || (navigator.language || 'es').slice(0, 2);
         voiceRecognition.lang = speechLang;
         voiceRecognition.continuous = false;
         voiceRecognition.interimResults = false;
         voiceRecognition.onresult = (e) => {
             const text = e.results[0][0].transcript;
-            chatInput = text;
+            const lower = text.toLowerCase().trim();
             voiceListening = false;
-            sendChatCommand();
+
+            if (voiceWaiting) {
+                // Second listen — this is the actual command
+                voiceWaiting = false;
+                // Strip wake phrase if they included it again
+                const cmd = lower.startsWith(WAKE_PHRASE) ? text.substring(WAKE_PHRASE.length).trim() : text;
+                if (cmd) {
+                    chatInput = cmd;
+                    sendChatCommand();
+                }
+            } else if (lower.startsWith(WAKE_PHRASE)) {
+                // Wake phrase detected — check if command included
+                const cmd = text.substring(WAKE_PHRASE.length).replace(/^[,\s]+/, '').trim();
+                if (cmd) {
+                    // Command included in same phrase
+                    chatInput = cmd;
+                    sendChatCommand();
+                } else {
+                    // Just the wake phrase — listen for command
+                    voiceWaiting = true;
+                    showToast(get(t)('booty.voice_prompt'));
+                    setTimeout(() => {
+                        if (voiceWaiting && voiceRecognition) {
+                            try { voiceRecognition.start(); } catch {}
+                        }
+                    }, 300);
+                }
+            } else {
+                showToast(get(t)('booty.voice_no_wake'));
+            }
         };
-        voiceRecognition.onerror = (e) => { voiceListening = false; showToast('❌ Voice error: ' + (e.error || 'unknown')); };
-        voiceRecognition.onend = () => voiceListening = false;
+        voiceRecognition.onerror = (e) => { voiceListening = false; voiceWaiting = false; showToast('Voice error: ' + (e.error || 'unknown')); };
+        voiceRecognition.onend = () => { voiceListening = false; };
         voiceRecognition.start();
         voiceListening = true;
-        showToast('🎙️ Listening...');
+        showToast(get(t)('booty.voice_waiting'));
     }
 
     async function sendChatCommand() {
