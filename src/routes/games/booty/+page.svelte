@@ -1419,6 +1419,29 @@
         </div>
     </div>
 
+    <!-- Kraken Warning -->
+    {#if data.krakenWarning?.warning === 'DANGER'}
+        <div class="kraken-banner kraken-danger">
+            <div class="kraken-banner-inner">
+                <span class="kraken-icon-large">🐙</span>
+                <div class="kraken-alert-text">
+                    <div class="kraken-alert-title">⚠️ KRAKEN ATTACK ZONE ⚠️</div>
+                    <div class="kraken-alert-desc">The beast is {data.krakenWarning.distance} km away. Flee or be devoured.</div>
+                </div>
+            </div>
+        </div>
+    {:else if data.krakenWarning?.warning === 'NEAR'}
+        <div class="kraken-banner kraken-near">
+            <div class="kraken-banner-inner">
+                <span class="kraken-icon-large">🐙</span>
+                <div class="kraken-alert-text">
+                    <div class="kraken-alert-title">🟡 Kraken Sighted Nearby</div>
+                    <div class="kraken-alert-desc">Something stirs in the deep, ~{data.krakenWarning.distance} km from your position. Proceed with caution.</div>
+                </div>
+            </div>
+        </div>
+    {/if}
+
     <!-- Active Effects Clock -->
     {#if narratorEvents.filter(e => e.event_type !== 'flavor').length > 0}
         <div class="effects-clock-bar">
@@ -2217,6 +2240,19 @@
     .narrator-title { font-family: var(--font-heading); font-size: 1.2rem; color: var(--bs-fg); margin: 0 0 0.5rem; }
     .narrator-text { font-size: 0.9rem; color: var(--bs-muted); line-height: 1.5; margin: 0; font-style: italic; }
     .narrator-tag { display: inline-block; margin-top: 0.5rem; font-size: 0.7rem; color: #ef4444; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Kraken Warning */
+    .kraken-banner { border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; animation: kraken-pulse 2s ease-in-out infinite; }
+    .kraken-danger { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(127,29,29,0.2)); border: 3px solid rgba(220,38,38,0.5); box-shadow: 0 0 32px rgba(220,38,38,0.15); }
+    .kraken-near { background: linear-gradient(135deg, rgba(234,179,8,0.1), rgba(120,53,15,0.1)); border: 2px solid rgba(234,179,8,0.3); }
+    .kraken-banner-inner { display: flex; align-items: center; gap: 1.25rem; }
+    .kraken-icon-large { font-size: 3rem; animation: kraken-tentacle 3s ease-in-out infinite; }
+    .kraken-alert-title { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: var(--bs-fg); margin-bottom: 0.25rem; }
+    .kraken-danger .kraken-alert-title { color: #fca5a5; }
+    .kraken-near .kraken-alert-title { color: #fcd34d; }
+    .kraken-alert-desc { font-size: 0.9rem; color: var(--bs-muted); }
+    @keyframes kraken-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.005); } }
+    @keyframes kraken-tentacle { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 
     /* Active Effects Clock */
     .effects-clock-bar { display: flex; gap: 1rem; margin-bottom: 2rem; overflow-x: auto; padding: 0.25rem; }

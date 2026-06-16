@@ -221,6 +221,19 @@ Decide your action. Reply with ONLY valid JSON:
             }
         }
 
+        // 11. Kraken displacement + attacks
+        try {
+            const { displaceKraken, processKrakenAttacks } = await import('$lib/server/kraken.js');
+            const krakenMove = await displaceKraken(db);
+            results.push({ kraken_displaced: krakenMove });
+
+            const krakenResult = await processKrakenAttacks(db);
+            if (krakenResult.warnings.length) results.push({ kraken_warnings: krakenResult.warnings });
+            if (krakenResult.attacks.length) results.push({ kraken_attacks: krakenResult.attacks });
+        } catch (e) {
+            console.error('[BOT-CRON] Kraken error:', e.message);
+        }
+
         return json({ success: true, timestamp: new Date().toISOString(), results });
 
     } catch (e) {

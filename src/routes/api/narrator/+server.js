@@ -59,6 +59,8 @@ export async function POST({ request, platform }) {
 
 Current players: ${playerContext || 'None'}
 
+THE KRAKEN roams the ocean. It displaces every 6 hours and attacks players within 5 km (15% fuel loss + 1h paralysis). Players within 25 km get warnings. Reference the Kraken in your narratives when it stirs.
+
 Create ONE event. Choose from the EFFECT CATALOG below — each has real mechanical teeth (game-altering consequences). Be unpredictable: 50% chance calamity, 40% chance blessing, 10% chance flavor.
 
 EFFECT CATALOG (use event_type + effects):

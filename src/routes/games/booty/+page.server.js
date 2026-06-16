@@ -4,6 +4,7 @@ export async function load({ locals, url, platform }) {
   let players = [];
   let playersInPursuit = 0;
   let myPlayer = null;
+  let krakenWarning = null;
 
   if (db) {
     try {
@@ -62,6 +63,12 @@ export async function load({ locals, url, platform }) {
           const { results: beans } = await db.prepare(`SELECT bean_type, amount FROM bq_bean_inventory WHERE player_id = ?`).bind(myPlayer.id).all();
           myPlayer.funds = {};
           for (const b of (beans || [])) myPlayer.funds[b.bean_type] = b.amount;
+
+          // Kraken proximity check
+          try {
+            const { getKrakenProximity } = await import('$lib/server/kraken.js');
+            krakenWarning = await getKrakenProximity(db, myPlayer.lat, myPlayer.lon);
+          } catch {}
         }
  } catch {}
     }
@@ -101,7 +108,8 @@ export async function load({ locals, url, platform }) {
       bots,
       market,
       myPlayer,
-      odds
+      odds,
+      krakenWarning
     };
   }
 
