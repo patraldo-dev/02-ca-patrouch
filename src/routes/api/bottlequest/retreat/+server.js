@@ -17,6 +17,14 @@ export async function POST({ locals, platform }) {
 
         if (!player) return json({ error: 'Not a player' }, { status: 403 });
 
+        // Rank check — First Mate+ required to retreat
+        const { hasRank, RANK_GATES, getRank } = await import('$lib/ranks.js');
+        const playerPoints = player.booty_points || player.points || 0;
+        if (!hasRank(playerPoints, RANK_GATES.pierRetreat)) {
+            const rank = getRank(playerPoints);
+            return json({ error: `Retreat requires First Mate rank. You are ${rank.title}.`, rank: rank.id }, { status: 403 });
+        }
+
         // Can't retreat while paralyzed (unless already at pier)
         if (player.paralyzed_until) {
             const pUntil = new Date(player.paralyzed_until.replace(' ', 'T') + 'Z');

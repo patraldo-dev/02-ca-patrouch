@@ -274,12 +274,17 @@ async function resolveBattle(db, alienA, alienB) {
  */
 async function processCrossfire(db, activeAliens) {
     const events = [];
+    const { hasRank, RANK_GATES } = await import('$lib/ranks.js');
     const { results: humans } = await db.prepare(
-        "SELECT id, username, display_name, lat, lon, fuel FROM bq_players WHERE type = 'human' AND lat IS NOT NULL"
+        "SELECT id, username, display_name, lat, lon, fuel, booty_points, points FROM bq_players WHERE type = 'human' AND lat IS NOT NULL"
     ).all();
 
     for (const alien of activeAliens) {
         for (const human of (humans || [])) {
+            // Rank gate — only Navigator+ affected by crossfire
+            const playerPoints = human.booty_points || human.points || 0;
+            if (!hasRank(playerPoints, RANK_GATES.alienCrossfire)) continue;
+
             // Pier sanctuary
             if (isAtPier(human.lat, human.lon)) continue;
 

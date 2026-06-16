@@ -64,11 +64,20 @@ export async function load({ locals, url, platform }) {
           myPlayer.funds = {};
           for (const b of (beans || [])) myPlayer.funds[b.bean_type] = b.amount;
 
-          // Kraken proximity check
-          try {
-            const { getKrakenProximity } = await import('$lib/server/kraken.js');
-            krakenWarning = await getKrakenProximity(db, myPlayer.lat, myPlayer.lon);
-          } catch {}
+          // Rank-gated features
+          const { hasRank, RANK_GATES } = await import('$lib/ranks.js');
+          const playerPoints = myPlayer.booty_points || myPlayer.points || 0;
+          myPlayer.canSeeKraken = hasRank(playerPoints, RANK_GATES.krakenWarnings);
+          myPlayer.canSeeAliens = hasRank(playerPoints, RANK_GATES.alienVisibility);
+          myPlayer.canRetreat = hasRank(playerPoints, RANK_GATES.pierRetreat);
+
+          // Kraken proximity — only for Boatswain+
+          if (myPlayer.canSeeKraken) {
+            try {
+              const { getKrakenProximity } = await import('$lib/server/kraken.js');
+              krakenWarning = await getKrakenProximity(db, myPlayer.lat, myPlayer.lon);
+            } catch {}
+          }
         }
  } catch {}
     }
@@ -99,11 +108,15 @@ export async function load({ locals, url, platform }) {
       bots = br || [];
     } catch {}
 
-    // Alien Armies
+    // Alien Armies — only visible to Navigator+ rank
     let aliens = [];
     try {
-      const { results: al } = await db.prepare("SELECT * FROM bq_aliens WHERE status = 'active'").all();
-      aliens = al || [];
+      const { hasRank, RANK_GATES } = await import('$lib/ranks.js');
+      const myPoints = myPlayer?.booty_points || myPlayer?.points || 0;
+      if (hasRank(myPoints, RANK_GATES.alienVisibility)) {
+        const { results: al } = await db.prepare("SELECT * FROM bq_aliens WHERE status = 'active'").all();
+        aliens = al || [];
+      }
     } catch {}
 
     return {

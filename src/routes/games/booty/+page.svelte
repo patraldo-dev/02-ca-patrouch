@@ -5,6 +5,7 @@
     import { browser } from '$app/environment';
     import { invalidateAll } from '$app/navigation';
     import { getEffectInfo, TARGET_LABELS } from '$lib/narrator-catalog.js';
+    import { getRank, getNextRank, getRankProgress, RANKS } from '$lib/ranks.js';
 
     let { data } = $props();
 
@@ -22,6 +23,12 @@
     function showToast(msg) { toastMsg = msg; setTimeout(() => toastMsg = '', 3000); }
     let narratorEvents = $state([]);
     let activeEffectsClock = $state(Date.now()); // ticks every second for countdown
+
+    // Player rank
+    let playerPoints = $derived(data.myPlayer?.booty_points || data.myPlayer?.points || 0);
+    let playerRank = $derived(getRank(playerPoints));
+    let nextRank = $derived(getNextRank(playerPoints));
+    let rankProgress = $derived(getRankProgress(playerPoints));
     let showTransferModal = $state(false);
     let transferTarget = $state(null);
     let transferAmount = $state('');
@@ -1454,8 +1461,8 @@
         </div>
         {#if data.myPlayer}
         <div class="stats-row stats-row-center">
-            <button class="stat-retreat" class:retreat-cooling={retreatCooldown} onclick={doRetreat} disabled={retreatLoading || retreatCooldown} title="Retreat to Los Muertos Pier — sanctuary from Kraken, calamities, and alien crossfire">
-                <span class="stat-num">⚓</span>
+            <button class="stat-retreat" class:retreat-cooling={retreatCooldown} onclick={doRetreat} disabled={retreatLoading || retreatCooldown || !data.myPlayer?.canRetreat} title={data.myPlayer?.canRetreat ? 'Retreat to Los Muertos Pier — sanctuary' : 'Unlocks at First Mate rank (600 pts)'}>
+                <span class="stat-num">{data.myPlayer?.canRetreat ? '⚓' : '🔒'}</span>
                 <span class="stat-label">{retreatCooldown ? '⏳' : 'Retreat'}</span>
             </button>
         </div>
@@ -1471,8 +1478,34 @@
         </div>
     </div>
 
+    <!-- Rank Badge -->
+    {#if data.myPlayer}
+        <div class="rank-bar">
+            <div class="rank-badge">
+                <span class="rank-icon">{playerRank.icon}</span>
+                <div class="rank-info">
+                    <div class="rank-title-row">
+                        <span class="rank-title">{playerRank.title}</span>
+                        <span class="rank-points">{playerPoints} pts</span>
+                    </div>
+                    {#if nextRank}
+                        <div class="rank-progress-track">
+                            <div class="rank-progress-fill" style="width:{Math.round(rankProgress * 100)}%"></div>
+                        </div>
+                        <div class="rank-next-label">
+                            <span>{playerRank.flavor}</span>
+                            <span class="rank-next">Next: {nextRank.icon} {nextRank.title} ({nextRank.minPoints} pts)</span>
+                        </div>
+                    {:else}
+                        <div class="rank-max-label">{playerRank.flavor}</div>
+                    {/if}
+                </div>
+            </div>
+        </div>
+    {/if}
+
     <!-- Kraken Warning -->
-    {#if data.krakenWarning?.warning === 'DANGER'}
+    {#if data.krakenWarning?.warning === 'DANGER' && data.myPlayer?.canSeeKraken}
         <div class="kraken-banner kraken-danger">
             <div class="kraken-banner-inner">
                 <span class="kraken-icon-large">🐙</span>
@@ -1482,7 +1515,7 @@
                 </div>
             </div>
         </div>
-    {:else if data.krakenWarning?.warning === 'NEAR'}
+    {:else if data.krakenWarning?.warning === 'NEAR' && data.myPlayer?.canSeeKraken}
         <div class="kraken-banner kraken-near">
             <div class="kraken-banner-inner">
                 <span class="kraken-icon-large">🐙</span>
@@ -2341,6 +2374,20 @@
     .hp-text { font-size: 0.7rem; color: var(--bs-muted); }
     .alien-faction-warn { font-size: 0.65rem; color: #fca5a5; }
     .alien-banner-foot { margin-top: 0.75rem; font-size: 0.75rem; color: var(--bs-muted); text-align: center; font-style: italic; }
+
+    /* Rank Badge */
+    .rank-bar { margin: -0.5rem 0 2rem 0; padding: 1rem 1.25rem; background: var(--bs-surface); border: 1px solid rgba(201,168,124,0.2); border-radius: 12px; }
+    .rank-badge { display: flex; align-items: center; gap: 1rem; }
+    .rank-icon { font-size: 2.5rem; line-height: 1; }
+    .rank-info { flex: 1; }
+    .rank-title-row { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.35rem; }
+    .rank-title { font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+    .rank-points { font-size: 0.8rem; color: var(--bs-muted); }
+    .rank-progress-track { height: 6px; background: rgba(201,168,124,0.12); border-radius: 3px; overflow: hidden; margin-bottom: 0.3rem; }
+    .rank-progress-fill { height: 100%; background: linear-gradient(90deg, #c9a87c, #f0d4a4); border-radius: 3px; transition: width 0.4s ease; }
+    .rank-next-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--bs-muted); font-style: italic; }
+    .rank-next { color: var(--accent); opacity: 0.7; font-style: normal; }
+    .rank-max-label { font-size: 0.75rem; color: var(--accent); font-style: italic; }
 
     /* Kraken Warning */
     .kraken-banner { border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; animation: kraken-pulse 2s ease-in-out infinite; }

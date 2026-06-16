@@ -67,9 +67,14 @@ export async function POST({ locals, platform }) {
     const existing = await db.prepare('SELECT checkin_date FROM bq_checkins WHERE player_id = ? AND checkin_date = ?').bind(player.id, today).first();
     if (existing) return json({ success: false, message: 'Already checked in today', checkedIn: true, streak: 0 });
 
-    await db.prepare('INSERT INTO bq_checkins (player_id, checkin_date, fuel_awarded) VALUES (?, ?, ?)').bind(player.id, today, 10).run();
-    await db.prepare(`UPDATE bq_players SET checkin_fuel = checkin_fuel + 10, checkin_date = ? WHERE id = ?`).bind(today, player.id).run();
-    await db.prepare(`UPDATE bq_bean_inventory SET amount = amount + 10 WHERE player_id = ? AND bean_type = 'lemon'`).bind(player.id).run();
+    // Rank check — Admiral gets double check-in
+    const { hasRank, RANK_GATES } = await import('$lib/ranks.js');
+    const playerPoints = player.booty_points || player.points || 0;
+    const checkinAmount = hasRank(playerPoints, RANK_GATES.doubleCheckin) ? 20 : 10;
+
+    await db.prepare('INSERT INTO bq_checkins (player_id, checkin_date, fuel_awarded) VALUES (?, ?, ?)').bind(player.id, today, checkinAmount).run();
+    await db.prepare(`UPDATE bq_players SET checkin_fuel = checkin_fuel + ?, checkin_date = ? WHERE id = ?`).bind(checkinAmount, today, player.id).run();
+    await db.prepare(`UPDATE bq_bean_inventory SET amount = amount + ? WHERE player_id = ? AND bean_type = 'lemon'`).bind(checkinAmount, player.id).run();
 
     // Calculate new streak
     const streaks = await db.prepare(`
@@ -82,6 +87,6 @@ export async function POST({ locals, platform }) {
         else break;
     }
 
-    await logTransaction(db, { player_id: player.id, type: "checkin", amount: 10, detail: `Daily check-in (streak ${streak})` });
-    return json({ success: true, message: "+$10" + (streak > 1 ? " (" + streak + "🔥)" : ""), streak, bonus: { amount: 10 } });
+    await logTransaction(db, { player_id: player.id, type: "checkin", amount: checkinAmount, detail: `Daily check-in (streak ${streak})` });
+    return json({ success: true, message: `+$${checkinAmount}` + (streak > 1 ? " (" + streak + "🔥)" : ""), streak, bonus: { amount: checkinAmount } });
 }

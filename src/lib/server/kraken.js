@@ -76,6 +76,11 @@ export async function processKrakenAttacks(db) {
     const attacks = [];
 
     for (const player of (players || [])) {
+        // Rank gate — only Navigator+ players are affected by the Kraken
+        const { hasRank, RANK_GATES } = await import('$lib/ranks.js');
+        const playerPoints = player.booty_points || player.points || 0;
+        if (!hasRank(playerPoints, RANK_GATES.krakenWarnings)) continue;
+
         // Pier sanctuary — immune to kraken at Los Muertos Pier
         const distToPier = haversineKm(PIER_LAT, PIER_LON, player.lat, player.lon);
         if (distToPier <= PIER_SANCTUARY_RADIUS_KM) continue;
