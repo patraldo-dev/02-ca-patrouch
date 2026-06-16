@@ -234,6 +234,15 @@ Decide your action. Reply with ONLY valid JSON:
             console.error('[BOT-CRON] Kraken error:', e.message);
         }
 
+        // 12. Alien army processing
+        try {
+            const { processAliens } = await import('$lib/server/aliens.js');
+            const alienResult = await processAliens(db);
+            if (alienResult.events?.length) results.push({ alien_events: alienResult.events });
+        } catch (e) {
+            console.error('[BOT-CRON] Alien error:', e.message);
+        }
+
         return json({ success: true, timestamp: new Date().toISOString(), results });
 
     } catch (e) {

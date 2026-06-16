@@ -99,6 +99,13 @@ export async function load({ locals, url, platform }) {
       bots = br || [];
     } catch {}
 
+    // Alien Armies
+    let aliens = [];
+    try {
+      const { results: al } = await db.prepare("SELECT * FROM bq_aliens WHERE status = 'active'").all();
+      aliens = al || [];
+    } catch {}
+
     return {
       serverLocale: locals.locale || "es",
       user: locals.user || null,
@@ -106,6 +113,7 @@ export async function load({ locals, url, platform }) {
       players,
       playersInPursuit,
       bots,
+      aliens,
       market,
       myPlayer,
       odds,

@@ -910,7 +910,23 @@
             });
         }
 
-        const allPts = [...launchedBottles.map(b => [b.current_lat, b.current_lon]), ...playerPts, ...botPts];
+        // Alien Armies on map
+        const alienPts = [];
+        for (const alien of (data.aliens || [])) {
+            if (!alien.lat || !alien.lon) continue;
+            alienPts.push([alien.lat, alien.lon]);
+            const factionColors = { annunaki: '#7c3aed', greys: '#06b6d4' };
+            const factionIcons = { annunaki: '👽', greys: '🛸' };
+            const color = factionColors[alien.faction] || '#7c3aed';
+            const icon_ = factionIcons[alien.faction] || '👽';
+            const alienHtml = `<div style="background:${color};color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid ${color};box-shadow:0 0 16px ${color}88, 0 0 32px ${color}44;animation:alienPulse 1.5s infinite">${icon_}</div>`;
+            const alienIcon = L.divIcon({ className: 'alien-marker', html: alienHtml, iconSize: [36, 36], iconAnchor: [18, 18] });
+            const am = L.marker([alien.lat, alien.lon], { icon: alienIcon, zIndexOffset: 1000 }).addTo(mapInstance);
+            am.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${alien.name}</strong><br><span style="color:${color};font-size:0.85em;font-weight:600">${icon_} Alien Warship</span><br><span style="color:#555;font-size:0.85em">❤️ HP: ${alien.hp}/100</span><br><span style="color:#ef4444;font-size:0.75em">⚠️ Crossfire zone: ~8km</span></div>`);
+            am.bindTooltip(alien.name, { permanent: true, direction: 'top', offset: [0, -18], className: 'alien-label' });
+        }
+
+        const allPts = [...launchedBottles.map(b => [b.current_lat, b.current_lon]), ...playerPts, ...botPts, ...alienPts];
         // Only fitBounds if points are in the PV area, otherwise stay centered on pier
         const pvPts = allPts.filter(p => p[0] > 19 && p[0] < 23 && p[1] > -110 && p[1] < -100);
         if (pvPts.length > 3) {
@@ -1475,6 +1491,35 @@
                     <div class="kraken-alert-desc">Something stirs in the deep, ~{data.krakenWarning.distance} km from your position. Proceed with caution.</div>
                 </div>
             </div>
+        </div>
+    {/if}
+
+    <!-- Alien Armies Banner -->
+    {#if data.aliens?.filter(a => a.status === 'active').length > 0}
+        <div class="alien-banner">
+            <div class="alien-banner-header">
+                <span class="alien-banner-icon">🛸</span>
+                <span class="alien-banner-title">ALIEN INVASION</span>
+                <span class="alien-banner-sub">Warships active in PV airspace</span>
+            </div>
+            <div class="alien-factions">
+                {#each data.aliens.filter(a => a.status === 'active') as alien}
+                    {@const color = alien.faction === 'annunaki' ? '#7c3aed' : '#06b6d4'}
+                    {@const icon_ = alien.faction === 'annunaki' ? '👽' : '🛸'}
+                    <div class="alien-faction-card" style="border-color:{color}55">
+                        <span class="alien-faction-icon" style="color:{color}">{icon_}</span>
+                        <div class="alien-faction-info">
+                            <div class="alien-faction-name" style="color:{color}">{alien.name}</div>
+                            <div class="alien-faction-hp">
+                                <div class="hp-bar" style="background:{color}">{alien.hp}</div>
+                                <span class="hp-text">HP {alien.hp}/100</span>
+                            </div>
+                            <div class="alien-faction-warn">⚠️ Crossfire zone ~8km</div>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+            <div class="alien-banner-foot">⚓ Retreat to the pier for safety from crossfire</div>
         </div>
     {/if}
 
@@ -2281,6 +2326,22 @@
     .narrator-text { font-size: 0.9rem; color: var(--bs-muted); line-height: 1.5; margin: 0; font-style: italic; }
     .narrator-tag { display: inline-block; margin-top: 0.5rem; font-size: 0.7rem; color: #ef4444; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 
+    /* Alien Armies */
+    .alien-banner { background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(6,182,212,0.06)); border: 2px solid rgba(124,58,237,0.2); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
+    .alien-banner-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+    .alien-banner-icon { font-size: 1.4rem; animation: alienPulse 1.5s infinite; }
+    .alien-banner-title { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; letter-spacing: 0.05em; background: linear-gradient(90deg, #7c3aed, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .alien-banner-sub { font-size: 0.75rem; color: var(--bs-muted); margin-left: 0.5rem; }
+    .alien-factions { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .alien-faction-card { flex: 1; min-width: 180px; display: flex; gap: 0.75rem; padding: 0.75rem; border: 1px solid; border-radius: 10px; background: rgba(0,0,0,0.15); }
+    .alien-faction-icon { font-size: 1.8rem; }
+    .alien-faction-name { font-weight: 700; font-size: 0.95rem; }
+    .alien-faction-hp { display: flex; align-items: center; gap: 0.4rem; margin: 0.25rem 0; }
+    .hp-bar { height: 6px; border-radius: 3px; min-width: 60px; opacity: 0.6; }
+    .hp-text { font-size: 0.7rem; color: var(--bs-muted); }
+    .alien-faction-warn { font-size: 0.65rem; color: #fca5a5; }
+    .alien-banner-foot { margin-top: 0.75rem; font-size: 0.75rem; color: var(--bs-muted); text-align: center; font-style: italic; }
+
     /* Kraken Warning */
     .kraken-banner { border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; animation: kraken-pulse 2s ease-in-out infinite; }
     .kraken-danger { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(127,29,29,0.2)); border: 3px solid rgba(220,38,38,0.5); box-shadow: 0 0 32px rgba(220,38,38,0.15); }
@@ -2315,6 +2376,8 @@
     .btn-send-me { width: 100%; margin-top: 0.75rem; padding: 0.5rem; background: rgba(201,168,124,0.08); border: 1px solid rgba(201,168,124,0.25); border-radius: 8px; color: var(--accent); font-size: 0.75rem; cursor: pointer; animation: pulse 2s ease-in-out infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     @keyframes botPulse { 0%, 100% { box-shadow: 0 0 12px rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 24px rgba(239,68,68,0.8); } }
+    @keyframes alienPulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.1); filter: brightness(1.3); } }
+    .alien-label { background: rgba(124,58,237,0.9) !important; color: #fff !important; border: 1px solid rgba(124,58,237,0.5) !important; font-size: 0.7rem !important; padding: 1px 6px !important; border-radius: 4px !important; text-shadow: 0 0 4px rgba(0,0,0,0.5) !important; }
     .btn-transfer:hover { background: rgba(239,68,68,0.2); }
     .transfer-recipient { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bs-surface); border: 1px solid rgba(239,68,68,0.15); border-radius: 8px; margin-bottom: 1rem; }
     .transfer-port { font-size: 0.8rem; color: var(--bs-muted); }
