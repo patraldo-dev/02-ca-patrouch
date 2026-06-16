@@ -60,8 +60,8 @@ export async function load({ locals, url, platform }) {
         }
         if (myPlayer) {
           const { results: beans } = await db.prepare(`SELECT bean_type, amount FROM bq_bean_inventory WHERE player_id = ?`).bind(myPlayer.id).all();
-          myPlayer.beans = {};
-          for (const b of (beans || [])) myPlayer.beans[b.bean_type] = b.amount;
+          myPlayer.funds = {};
+          for (const b of (beans || [])) myPlayer.funds[b.bean_type] = b.amount;
         }
  } catch {}
     }

@@ -210,13 +210,13 @@ Reply ONLY with raw JSON, no markdown fences:
                 motor: Math.ceil(distKm * context.cost_per_km * 4.0 * zoneMult * nightMult * eventModifier)
             };
             // Check if player can afford the cheapest option
-            const totalBeans = player.fuel + (player.checkin_fuel || 0);
+            const totalFunds = player.fuel + (player.checkin_fuel || 0);
             const cheapestCost = Math.min(result.estimated_cost.drift, result.estimated_cost.sail, result.estimated_cost.motor);
-            if (totalBeans < cheapestCost) {
+            if (totalFunds < cheapestCost) {
                 result.action = 'blocked';
-                result.reply = `No tienes suficientes fondos. Necesitas ${cheapestCost} pero solo tienes ${totalBeans}. Haz check-in o solicita apoyo.`;
-                result.beans_needed = cheapestCost;
-                result.beans_current = totalBeans;
+                result.reply = `No tienes suficientes fondos. Necesitas $${cheapestCost} pero solo tienes $${totalFunds}. Haz check-in o solicita apoyo.`;
+                result.funds_needed = cheapestCost;
+                result.funds_current = totalFunds;
             }
             if (eventWarning) result.warning = eventWarning;
             if (nightMult > 1) result.night_penalty = true;

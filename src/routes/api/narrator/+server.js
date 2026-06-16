@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { applyInstantEffects } from '$lib/server/narrator-effects.js';
 
 export async function GET({ platform }) {
     const db = platform?.env?.DB_book;
@@ -52,55 +53,43 @@ export async function POST({ request, platform }) {
 
             // Fetch recent activity for context
             const { results: players } = await db.prepare('SELECT username, lat, lon, fuel FROM bq_players').all();
-            const playerContext = (players || []).slice(0, 10).map(p => `${p.username} at (${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}) with ${p.fuel} beans`).join('; ');
+            const playerContext = (players || []).slice(0, 10).map(p => `${p.username} at (${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}) with $${p.fuel}`).join('; ');
 
             const prompt = `You are El Narrador (Albot Camus), the omniscient narrator of a pirate bottle game on the Pacific coast of Mexico. You speak with authority and mischief.
 
 Current players: ${playerContext || 'None'}
 
-Create ONE event. Vary your style dramatically — be unpredictable. Mix these categories freely:
+Create ONE event. Choose from the EFFECT CATALOG below — each has real mechanical teeth (game-altering consequences). Be unpredictable: 50% chance calamity, 40% chance blessing, 10% chance flavor.
 
-ACTIONS (with consequences):
-- A bottle washes ashore near a player — they have 2h to capture it
-- A treasure map fragment appears at a specific coordinate
-- Currents shift — bottles drift faster toward the Bahía de Banderas
-- A pirate ghost ship appears on the horizon
-- Players near a port get bonus fuel
-- A bounty is placed on a specific player's bottle
-- Someone spots land — first player to reach it gets treasure
+EFFECT CATALOG (use event_type + effects):
 
-ATMOSPHERE:
-- A storm approaches from the west
-- Bioluminescent waves light up the night ocean
-- A whale breaches near a player's position
-- The moon reveals a message in the tide pools
-- Fog rolls in — visibility drops, capture radius doubles
+CALAMITIES (hinder players):
+- event_type "paralyze" — {"paralyze": true, "target": "humans|ai|all|player:username"} Immobilizes targets. They cannot move, transfer, or check in.
+- event_type "storm" — {"half_speed": true, "fuel_penalty": 50, "target": "all"} Double fuel cost + flat penalty per move.
+- event_type "doldrums" — {"drift_speed_mult": 0.3, "target": "all"} Bottle drift nearly stops.
+- event_type "fog" — {"no_vision": true, "target": "humans"} AI players blinded — cannot navigate. Map limited for humans.
+- event_type "market_crash" — {"fuel_penalty": 100, "target": "all"} Severe fuel penalty per move.
+- event_type "kraken" — {"fuel_tax": 0.3, "target": "all"} 30% of all funds destroyed instantly.
+- event_type "mutiny" — {"no_move": true, "target": "humans"} No movement for duration (general blockade).
+- event_type "bounty" — {"bounty_player": "username", "capture_bonus": 200, "target": "all"} Bounty placed — bonus for capturing that player's bottle.
 
-CHALLENGES:
-- Riddle of the tide — answer correctly for fuel bonus
-- Navigation challenge — find the coordinates hidden in the narrative
-- Alliance request — two players must cooperate for bonus
+BLESSINGS (help players):
+- event_type "fuel_bonus" — {"fuel_bonus": 100, "target": "all"} Immediate funds granted.
+- event_type "favorable_winds" — {"half_cost": true, "target": "all"} Half fuel cost on all moves.
+- event_type "clear_skies" — {"visibility": "clear", "capture_radius_mult": 2, "target": "all"} Enhanced vision, easier captures.
+- event_type "swift_currents" — {"drift_speed_mult": 1.8, "target": "all"} Bottles drift fast — more action.
+- event_type "resurrection" — {"unparalyze": true, "target": "all"} Clears all paralysis.
+- event_type "safe_harbor" — {"fuel_bonus": 30, "target": "humans"} Fuel for human players near ports.
 
 Generate a JSON object with:
 - title: dramatic title (max 10 words)
-- narrative: 2-4 sentences, vivid and engaging (max 350 chars). Include action, urgency, or mystery.
-- event_type: one of "flavor", "action", "challenge", "weather", "event"
-- duration_hours: 6 or 12
-
-- effects: JSON object with game mechanics that apply. Use these:
-  {"freeze_hours": 2} — all players paralyzed (siesta), no movement
-  {"fuel_bonus": 50} — all players gain fuel
-  {"capture_radius_mult": 2} — capture radius doubled
-  {"drift_speed_mult": 1.5} — bottles drift 50% faster
-  {"drift_speed_mult": 0.5} — bottles drift 50% slower (calm seas)
-  {"visibility": "fog"} — reduced map visibility
-  {"visibility": "clear"} — enhanced map visibility
-  {"bounty_player": "username"} — bonus for capturing that player's bottle
-  {"bonus_fuel_port": true} — players near a port get fuel
-
-- target_game: one of "booty", "arbooty", "both" — which game this event affects
-Always include at least one effect. The effect MUST relate to the narrative.
-Be creative. Be bold. Create events that make players WANT to check the game.`;
+- narrative: 2-4 sentences, vivid and engaging (max 350 chars). The narrative MUST describe the game effect dramatically.
+- event_type: one of the catalog types above
+- duration_hours: 2, 4, 6, or 12
+- effects: the effects JSON from the catalog entry you chose. Include "target" field.
+- target_game: "both"
+Always include effects with real mechanical consequences. No empty flavor events unless event_type is literally "flavor".
+Be bold. Create events that make players FEEL the impact.`;
 
             const aiResp = await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
                 messages: [
@@ -140,18 +129,35 @@ Be creative. Be bold. Create events that make players WANT to check the game.`;
         if (!tFr) tFr = title;
         if (!nFr) nFr = narrative;
 
+        const effectsObj = data.effects || {};
+        // Ensure target is preserved in stored effects
+        if (data.target && !effectsObj.target) effectsObj.target = data.target;
+        const effectsJson = JSON.stringify(effectsObj);
+
         await db.prepare(`
             INSERT INTO narrator_events (id, title, narrative, event_type, duration_hours, expires_at, effects, target_game)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).bind(id, title, narrative, event_type || 'flavor', dur, expiresSql, JSON.stringify(data.effects || {}), data.target_game || 'both').run();
+        `).bind(id, title, narrative, event_type || 'flavor', dur, expiresSql, effectsJson, data.target_game || 'both').run();
 
+        // Apply instant effects (paralyze, fuel_bonus, kraken, resurrection)
+        let appliedEffects = [];
+        try {
+            appliedEffects = await applyInstantEffects(db, {
+                event_type: event_type || 'flavor',
+                effects: effectsObj,
+                duration_hours: dur,
+            });
+            if (appliedEffects.length) {
+                console.log('[NARRATOR] Instant effects applied:', JSON.stringify(appliedEffects));
+            }
+        } catch (e) { console.error('[NARRATOR] Effect processing failed:', e.message); }
 
         // Notify players with game notifications on
         try {
             const { notifyAll } = await import("$lib/server/notify.js");
             await notifyAll(db, { type: "narrator", title: "🌊 " + title, body: narrative });
         } catch (e) { console.error("[narrator] notify failed:", e.message); }
-        return json({ success: true, id });
+        return json({ success: true, id, appliedEffects });
     } catch (e) {
         return json({ error: e.message }, { status: 500 });
     }

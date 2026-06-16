@@ -256,7 +256,7 @@
                         <a href="/account" class="profile-switcher">
                                 <span class="profile-avatar">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
                                 {#if data.bootyFuel > 0}
-                                    <span class="nav-bean-badge">🫘{data.bootyFuel}</span>
+                                    <span class="nav-bean-badge">${data.bootyFuel}</span>
                                 {/if}
                                 <span class="profile-name">{data.user.display_name || data.user.username}</span>
                             </a>
@@ -285,7 +285,7 @@
                 <button class="mobile-avatar-btn" onclick={() => avatarMenuOpen = !avatarMenuOpen} title={activeDisplayName}>
                     <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
                     {#if data.bootyFuel > 0}
-                        <span class="mobile-bean-badge">🫘{data.bootyFuel}</span>
+                        <span class="mobile-bean-badge">${data.bootyFuel}</span>
                     {/if}
                 </button>
                 {#if avatarMenuOpen}

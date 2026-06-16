@@ -114,7 +114,7 @@ export async function PATCH({ request, locals, platform }) {
         const behavior = BOT_BEHAVIORS[bot.username] || BOT_BEHAVIORS['capitan-garfio'];
         const cost = behavior.hijackCost * hours;
 
-        // Check player beans
+        // Check player funds
         const player = await db.prepare('SELECT fuel FROM bq_players WHERE username = ?').bind(locals.user.username).first();
         if (!player || player.fuel < cost) {
             return json({ error: `Need ${cost} to hijack for ${hours}h. You have ${player?.fuel || 0}.` }, { status: 400 });

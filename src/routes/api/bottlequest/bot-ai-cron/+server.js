@@ -93,7 +93,7 @@ export async function POST({ request, platform }) {
 
 CURRENT SITUATION:
 - Your position: ${bot.lat}, ${bot.lon}
-- Your funds: ${bot.beans}
+- Your funds: $${bot.beans}
 - Brent crude price: $${brent} per barrel (movement cost = brent/100 per km)
 - Active bottles: ${JSON.stringify(bottles.map(b => ({ id: b.id, title: b.title, lat: b.current_lat, lon: b.current_lon })))}
 - Nearby humans: ${JSON.stringify(players.map(p => ({ name: p.display_name || p.username, lat: p.lat, lon: p.lon, funds: p.fuel })))}
@@ -201,7 +201,7 @@ Decide your action. Reply with ONLY valid JSON:
                 const dist = Math.sqrt(dLat * dLat + dLon * dLon);
 
                 if (dist < 0.001) {
-                    // Combat! Higher beans + captures wins
+                    // Combat! Higher funds + captures wins
                     const scoreA = (a.beans || 0) + (a.captured_bottles || 0) * 10;
                     const scoreB = (b.beans || 0) + (b.captured_bottles || 0) * 10;
 

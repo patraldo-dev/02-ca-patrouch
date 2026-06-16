@@ -22,9 +22,9 @@ export async function logTransaction(db, { player_id, type, amount = 0, detail =
 
 // Transaction types:
 // 'move' - player moved (amount = fuel cost, negative)
-// 'checkin' - daily check-in (amount = beans earned, positive)
-// 'transfer_send' - sent beans (amount = negative)
-// 'transfer_receive' - received beans (amount = positive)
+// 'checkin' - daily check-in (amount = dollars earned, positive)
+// 'transfer_send' - sent dollars (amount = negative)
+// 'transfer_receive' - received dollars (amount = positive)
 // 'bet_placed' - bet placed (amount = negative)
 // 'bet_won' - bet won (amount = positive)
 // 'bet_lost' - bet lost (amount = negative)
@@ -34,7 +34,7 @@ export async function logTransaction(db, { player_id, type, amount = 0, detail =
 // 'marketplace_sell' - sold writing
 // 'marketplace_royalty' - received royalty
 // 'keyword_match' - keyword matched (amount = points)
-// 'capture' - bottle captured (amount = beans earned)
+// 'capture' - bottle captured (amount = dollars earned)
 // 'draft_bonus' - daily draft bonus
 // 'bot_steal' - stolen by bot
 // 'join' - joined the crusade

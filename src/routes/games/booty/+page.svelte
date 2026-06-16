@@ -4,6 +4,7 @@
     import { get } from 'svelte/store';
     import { browser } from '$app/environment';
     import { invalidateAll } from '$app/navigation';
+    import { getEffectInfo, TARGET_LABELS } from '$lib/narrator-catalog.js';
 
     let { data } = $props();
 
@@ -19,7 +20,8 @@
     let showLaunchModal = $state(false);
     let toastMsg = $state('');
     function showToast(msg) { toastMsg = msg; setTimeout(() => toastMsg = '', 3000); }
-    let narratorEvent = $state(null);
+    let narratorEvents = $state([]);
+    let activeEffectsClock = $state(Date.now()); // ticks every second for countdown
     let showTransferModal = $state(false);
     let transferTarget = $state(null);
     let transferAmount = $state('');
@@ -156,19 +158,7 @@
     }
 
     function formatPrice(total) {
-        total = total || 0;
-        const licorice = Math.floor(total / 1000000);
-        const r1 = total % 1000000;
-        const cherry = Math.floor(r1 / 10000);
-        const r2 = r1 % 10000;
-        const lime = Math.floor(r2 / 100);
-        const lemon = r2 % 100;
-        let parts = [];
-        if (licorice > 0) parts.push(`⚫${licorice}`);
-        if (cherry > 0) parts.push(`🔴${cherry}`);
-        if (lime > 0) parts.push(`🟢${lime}`);
-        if (lemon > 0 || parts.length === 0) parts.push(`🟡${lemon}`);
-        return parts.join(' ');
+        return '$' + (total || 0).toLocaleString('en-US');
     }
 
     function formatSolarTime(lon) {
@@ -180,6 +170,34 @@
         const m = Math.floor((solarHours - h) * 60);
         const icon = (solarHours >= 6 && solarHours < 18) ? '☀️' : '🌙';
         return `${icon} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    }
+
+    function formatCountdown(expiresAt) {
+        if (!expiresAt) return '--:--:--';
+        // Handle D1 datetime format: "2026-06-15 18:00:00" (no T, no Z)
+        const iso = expiresAt.replace(' ', 'T') + (expiresAt.endsWith('Z') ? '' : 'Z');
+        const ms = new Date(iso).getTime() - activeEffectsClock;
+        if (ms <= 0) return '00:00:00';
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function getTargetLabel(effects) {
+        if (!effects) return '';
+        const target = effects.target || 'all';
+        if (TARGET_LABELS[target]) return TARGET_LABELS[target];
+        if (target.startsWith('player:')) return target.slice(7);
+        if (target.startsWith('team:')) return 'Team ' + target.slice(5);
+        if (target.startsWith('zone:')) return 'Zone';
+        return target;
+    }
+
+    function parseEffects(effectsRaw) {
+        if (!effectsRaw) return {};
+        try { return typeof effectsRaw === 'string' ? JSON.parse(effectsRaw) : effectsRaw; }
+        catch { return {}; }
     }
 
     function driftDays(launchedAt) {
@@ -886,7 +904,7 @@
                 iconSize: [32, 32], iconAnchor: [16, 16]
             });
             const bm = L.marker([bot.lat, bot.lon], { icon }).addTo(mapInstance);
-            bm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${bot.name}</strong>${isHijacked ? '<br><span style="color:#c9a87c">⚓ Captured by ' + bot.hijacked_by + '</span>' : '<br><span style="color:#ef4444">🏴‍☠️ Booty Bot</span>'}<br><span style="color:#555;font-size:0.85em">🍷 $${bot.beans} · 🍾 ${bot.captured_bottles} captures</span></div>`);
+            bm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${bot.name}</strong>${isHijacked ? '<br><span style="color:#c9a87c">⚓ Captured by ' + bot.hijacked_by + '</span>' : '<br><span style="color:#ef4444">🏴‍☠️ Booty Bot</span>'}<br><span style="color:#555;font-size:0.85em">💵 $${bot.beans} · 🍾 ${bot.captured_bottles} captures</span></div>`);
             bm.bindTooltip(bot.name, {
                 permanent: true, direction: 'top', offset: [0, -16], className: 'bot-label'
             });
@@ -912,8 +930,9 @@
     let pendingMove = $state(null);
 
     // Locale-aware narrator text
-    let narratorTitle = $derived(narratorEvent ? (() => { const loc = data.serverLocale || 'es'; if (loc === 'es' && narratorEvent.title_es) return narratorEvent.title_es; if (loc === 'fr' && narratorEvent.title_fr) return narratorEvent.title_fr; return narratorEvent.title; })() : '');
-    let narratorText = $derived(narratorEvent ? (() => { const loc = data.serverLocale || 'es'; if (loc === 'es' && narratorEvent.narrative_es) return narratorEvent.narrative_es; if (loc === 'fr' && narratorEvent.narrative_fr) return narratorEvent.narrative_fr; return narratorEvent.narrative; })() : '');
+    let narratorTitle = $derived(narratorEvents.length ? (() => { const ev = narratorEvents[0]; const loc = data.serverLocale || 'es'; if (loc === 'es' && ev.title_es) return ev.title_es; if (loc === 'fr' && ev.title_fr) return ev.title_fr; return ev.title; })() : '');
+    let narratorText = $derived(narratorEvents.length ? (() => { const ev = narratorEvents[0]; const loc = data.serverLocale || 'es'; if (loc === 'es' && ev.narrative_es) return ev.narrative_es; if (loc === 'fr' && ev.narrative_fr) return ev.narrative_fr; return ev.narrative; })() : '');
+    let narratorEvent = $derived(narratorEvents[0] || null);
 
     let narratorSpeaking = $state(false);
     let showMapInfo = $state(false);
@@ -1292,11 +1311,16 @@
                     fetch('/api/bottlequest/marketplace')
                 ]);
                 const [narrD, reqD, mktD] = await Promise.all([narrRes.json(), reqRes.json(), mktRes.json()]);
-                if (narrD.events?.length) narratorEvent = narrD.events[0];
+                if (narrD.events?.length) narratorEvents = narrD.events;
                 fuelRequests = reqD.requests || [];
                 marketListings = mktD.listings || [];
                 wordIndex = mktD.wordIndex || [];
             } catch {}
+
+            // Countdown clock — update every second
+            if (browser) {
+                setInterval(() => { activeEffectsClock = Date.now(); }, 1000);
+            }
         }
     });
 </script>
@@ -1380,7 +1404,7 @@
         </div>
         <div class="stats-row stats-row-center">
             <button class="stat-checkin" class:stat-checked={checkedIn} onclick={doCheckin} disabled={checkedIn || checkinLoading}>
-                <span class="stat-num">{streakCount > 0 ? '🟡' : '✋'}</span>
+                <span class="stat-num">{streakCount > 0 ? '💵' : '✋'}</span>
                 <span class="stat-label">{checkedIn ? '✓' : 'Check in'}</span>
             </button>
         </div>
@@ -1394,6 +1418,32 @@
             {/if}
         </div>
     </div>
+
+    <!-- Active Effects Clock -->
+    {#if narratorEvents.filter(e => e.event_type !== 'flavor').length > 0}
+        <div class="effects-clock-bar">
+            {#each narratorEvents.filter(e => e.event_type !== 'flavor') as ev}
+                {@const info = getEffectInfo(ev.event_type)}
+                {@const eff = parseEffects(ev.effects)}
+                {@const isCalamity = info.category === 'calamity'}
+                {@const isBlessing = info.category === 'blessing'}
+                <div class="effect-card" class:calamity={isCalamity} class:blessing={isBlessing}>
+                    <div class="effect-card-header">
+                        <span class="effect-icon">{info.icon}</span>
+                        <span class="effect-label">{info.label}</span>
+                        <span class="effect-badge" class:calamity-badge={isCalamity} class:blessing-badge={isBlessing}>
+                            {isCalamity ? '🔴 CALAMITY' : isBlessing ? '🟢 BLESSING' : '⚪ EVENT'}
+                        </span>
+                    </div>
+                    <div class="effect-countdown" class:countdown-urgent={formatCountdown(ev.expires_at).startsWith('00:0')}>
+                        {formatCountdown(ev.expires_at)}
+                    </div>
+                    <div class="effect-target">🎯 {getTargetLabel(eff)}</div>
+                    <div class="effect-desc">{ev.title || info.desc}</div>
+                </div>
+            {/each}
+        </div>
+    {/if}
 
     <!-- El Narrador -->
     {#if narratorEvent}
@@ -2167,6 +2217,23 @@
     .narrator-title { font-family: var(--font-heading); font-size: 1.2rem; color: var(--bs-fg); margin: 0 0 0.5rem; }
     .narrator-text { font-size: 0.9rem; color: var(--bs-muted); line-height: 1.5; margin: 0; font-style: italic; }
     .narrator-tag { display: inline-block; margin-top: 0.5rem; font-size: 0.7rem; color: #ef4444; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Active Effects Clock */
+    .effects-clock-bar { display: flex; gap: 1rem; margin-bottom: 2rem; overflow-x: auto; padding: 0.25rem; }
+    .effect-card { flex: 1; min-width: 220px; border-radius: 14px; padding: 1.25rem 1.5rem; position: relative; overflow: hidden; }
+    .effect-card.calamity { background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(127,29,29,0.08)); border: 2px solid rgba(239,68,68,0.35); box-shadow: 0 0 24px rgba(239,68,68,0.1); }
+    .effect-card.blessing { background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(20,83,45,0.08)); border: 2px solid rgba(34,197,94,0.35); box-shadow: 0 0 24px rgba(34,197,94,0.1); }
+    .effect-card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .effect-icon { font-size: 1.4rem; }
+    .effect-label { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--bs-fg); }
+    .effect-badge { font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 999px; letter-spacing: 0.05em; }
+    .calamity-badge { background: rgba(239,68,68,0.2); color: #fca5a5; }
+    .blessing-badge { background: rgba(34,197,94,0.2); color: #86efac; }
+    .effect-countdown { font-size: 2.5rem; font-weight: 900; font-family: 'Courier New', monospace; letter-spacing: 0.05em; text-align: center; margin: 0.5rem 0; line-height: 1; color: var(--bs-fg); text-shadow: 0 0 20px currentColor; opacity: 0.95; }
+    .countdown-urgent { color: #ef4444 !important; animation: pulse-urgent 1s ease-in-out infinite; }
+    @keyframes pulse-urgent { 0%, 100% { opacity: 0.95; } 50% { opacity: 0.5; } }
+    .effect-target { font-size: 0.8rem; text-align: center; color: var(--bs-muted); margin-bottom: 0.25rem; }
+    .effect-desc { font-size: 0.75rem; text-align: center; color: var(--bs-muted); font-style: italic; line-height: 1.3; }
 
     .btn-transfer { width: 100%; margin-top: 0.75rem; padding: 0.5rem; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; color: #ef4444; font-size: 0.8rem; cursor: pointer; transition: background 0.2s; }
     .btn-send-me { width: 100%; margin-top: 0.75rem; padding: 0.5rem; background: rgba(201,168,124,0.08); border: 1px solid rgba(201,168,124,0.25); border-radius: 8px; color: var(--accent); font-size: 0.75rem; cursor: pointer; animation: pulse 2s ease-in-out infinite; }

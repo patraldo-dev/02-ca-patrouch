@@ -30,7 +30,7 @@ export async function load({ locals, cookies }) {
             FROM profiles WHERE user_id = ? AND is_active = 1
         `).bind(user.id).first();
 
-        // Get booty player data (beans)
+        // Get booty player data (fuel = dollars)
         var bootyPlayer = await db.prepare(
             'SELECT fuel FROM bq_players WHERE user_id = ?'
         ).bind(user.id).first().catch(() => null);
