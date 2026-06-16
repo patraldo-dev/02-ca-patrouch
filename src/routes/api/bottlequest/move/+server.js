@@ -111,6 +111,10 @@ export async function POST({ request, locals, platform }) {
 
         const playerType = player.type || 'human'; // 'human' or 'ai'
 
+        // Pier sanctuary check — players at pier are immune to calamities
+        const { isAtPier } = await import('$lib/server/pier.js');
+        const atPier = isAtPier(fromLat, fromLon);
+
         for (const event of activeEvents || []) {
             // Parse effects
             let effects = {};
@@ -119,6 +123,12 @@ export async function POST({ request, locals, platform }) {
             // Check if event targets this player type
             const targetPlayers = event.target_players || 'all';
             if (targetPlayers !== 'all' && targetPlayers !== playerType) continue; // not targeted
+
+            // Pier sanctuary — skip harmful events if at pier
+            if (atPier) {
+                const harmfulTypes = ['paralyze', 'storm', 'kraken', 'mutiny', 'fog', 'doldrums', 'market_crash', 'siren', 'bounty'];
+                if (harmfulTypes.includes(event.event_type)) continue;
+            }
 
             // Check if event is zone-specific
             if (event.affected_zone) {

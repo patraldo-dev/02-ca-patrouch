@@ -1143,6 +1143,8 @@
     let checkedIn = $state(false);
     let streakCount = $state(0);
     let checkinLoading = $state(false);
+    let retreatLoading = $state(false);
+    let retreatCooldown = $state(false);
     let showJoinModal = $state(false);
     let joinPort = $state('port-pv');
     let joinAccepted = $state(false);
@@ -1300,6 +1302,32 @@
         checkinLoading = false;
     }
 
+    // Check initial retreat cooldown from server data
+    if (browser && data.myPlayer?.retreat_until) {
+        const until = new Date(data.myPlayer.retreat_until.replace(' ', 'T') + 'Z');
+        if (until > new Date()) retreatCooldown = true;
+        else retreatCooldown = false;
+    }
+
+    async function doRetreat() {
+        if (retreatLoading || retreatCooldown) return;
+        retreatLoading = true;
+        try {
+            const res = await fetch('/api/bottlequest/retreat', { method: 'POST', credentials: 'include' });
+            const d = await res.json();
+            if (d.success) {
+                showToast(`⚓ Retreated to pier (−$${d.cost})`);
+                retreatCooldown = true;
+                await invalidateAll();
+                // Re-center map on pier
+                if (mapInstance) mapInstance.flyTo([20.6035, -105.2390], 16, { duration: 1.5 });
+            } else {
+                showToast(d.error || 'Cannot retreat');
+            }
+        } catch { showToast('Retreat failed'); }
+        retreatLoading = false;
+    }
+
     onMount(async () => {
         if (browser) {
             loadCheckin();
@@ -1408,6 +1436,14 @@
                 <span class="stat-label">{checkedIn ? '✓' : 'Check in'}</span>
             </button>
         </div>
+        {#if data.myPlayer}
+        <div class="stats-row stats-row-center">
+            <button class="stat-retreat" class:retreat-cooling={retreatCooldown} onclick={doRetreat} disabled={retreatLoading || retreatCooldown} title="Retreat to Los Muertos Pier — sanctuary from Kraken, calamities, and alien crossfire">
+                <span class="stat-num">⚓</span>
+                <span class="stat-label">{retreatCooldown ? '⏳' : 'Retreat'}</span>
+            </button>
+        </div>
+        {/if}
         <div class="stats-row stats-row-center">
             {#if data.user && !data.myPlayer}
                 <button class="stat-register" onclick={() => showJoinModal = true}>→ {$t('booty.register')}</button>
@@ -2189,6 +2225,10 @@
     .stat-register { color: var(--accent); font-weight: 600; font-size: 0.85rem; text-decoration: none; }
     .stat-register:hover { color: #ef4444; }
     .stat-checkin { background: none; border: none; cursor: pointer; padding: 0.5rem 1rem; }
+    .stat-retreat { background: none; border: none; cursor: pointer; padding: 0.5rem 1rem; border-left: 1px solid rgba(201,168,124,0.15); }
+    .stat-retreat:hover:not(:disabled) { opacity: 0.7; }
+    .stat-retreat:disabled { opacity: 0.4; cursor: not-allowed; }
+    .retreat-cooling { opacity: 0.5; }
     .stat-registered { color: #4ade80; cursor: default; }
 
     /* Join Modal */

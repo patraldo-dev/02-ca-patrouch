@@ -2,6 +2,8 @@
 // The Kraken — a roaming sea monster that displaces randomly and attacks nearby players.
 // Tied to the bot-ai-cron cycle (every 6h).
 
+import { PIER_LAT, PIER_LON } from './pier.js';
+
 // PV game area bounds
 const GAME_BOUNDS = {
     minLat: 19.0, maxLat: 23.0,
@@ -11,6 +13,7 @@ const GAME_BOUNDS = {
 const KRAKEN_ATTACK_RADIUS_KM = 5;    // ~5.5 km — close encounter = attack
 const KRAKEN_WARN_RADIUS_KM = 25;      // ~25 km — proximity warning
 const KRAKEN_DISPLACE_RANGE = 0.5;     // max degrees per displacement
+const PIER_SANCTUARY_RADIUS_KM = 0.2;   // 200m — pier safety zone
 
 /**
  * Ensure the kraken row exists in the DB. Creates it at a random position if missing.
@@ -73,6 +76,10 @@ export async function processKrakenAttacks(db) {
     const attacks = [];
 
     for (const player of (players || [])) {
+        // Pier sanctuary — immune to kraken at Los Muertos Pier
+        const distToPier = haversineKm(PIER_LAT, PIER_LON, player.lat, player.lon);
+        if (distToPier <= PIER_SANCTUARY_RADIUS_KM) continue;
+
         const distKm = haversineKm(kraken.lat, kraken.lon, player.lat, player.lon);
 
         if (distKm <= KRAKEN_ATTACK_RADIUS_KM) {

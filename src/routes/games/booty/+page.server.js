@@ -52,11 +52,11 @@ export async function load({ locals, url, platform }) {
     if (locals.user) {
       try {
         const uname = locals.user.username;
-        myPlayer = await db.prepare('SELECT id, username, display_name, lat, lon, fuel, checkin_fuel, type, port_id, port_name, avatar_url FROM bq_players WHERE username = ?').bind(uname).first();
+        myPlayer = await db.prepare('SELECT id, username, display_name, lat, lon, fuel, checkin_fuel, type, port_id, port_name, avatar_url, paralyzed_until, retreat_until FROM bq_players WHERE username = ?').bind(uname).first();
         if (!myPlayer && locals.user.email) {
           const emailPrefix = locals.user.email.split('@')[0];
           if (emailPrefix !== uname) {
-            myPlayer = await db.prepare('SELECT id, username, display_name, lat, lon, fuel, checkin_fuel, type, port_id, port_name, avatar_url FROM bq_players WHERE username = ?').bind(emailPrefix).first();
+            myPlayer = await db.prepare('SELECT id, username, display_name, lat, lon, fuel, checkin_fuel, type, port_id, port_name, avatar_url, paralyzed_until, retreat_until FROM bq_players WHERE username = ?').bind(emailPrefix).first();
           }
         }
         if (myPlayer) {
