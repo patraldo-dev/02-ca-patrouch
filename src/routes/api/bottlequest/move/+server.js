@@ -193,6 +193,8 @@ export async function POST({ request, locals, platform }) {
         let speedMult, zoneMult, compMult, nightMult;
         const transportDef = TRANSPORT_MODES[mode];
 
+        const baseCostPerKm = 1; // reference value for cost breakdown
+
         if (path_steps && path_steps > 0) {
             const tierMult = distKm > 100 ? 1000000 : distKm > 20 ? 100000 : distKm > 5 ? 10000 : distKm > 1 ? 1000 : distKm > 0.2 ? 100 : distKm > 0.05 ? 10 : 1;
             nightMult = getNightMult(target_lon);
@@ -211,7 +213,6 @@ export async function POST({ request, locals, platform }) {
             }
         } else {
             // Legacy distance-based cost
-            const baseCostPerKm = 1;
             if (transportDef) {
                 nightMult = getNightMult(target_lon);
                 fuelCost = Math.ceil(distKm * (transportDef.costPerKm || baseCostPerKm) * nightMult * speedPenaltyMult) + (transportDef.flatCost || 0) + fuelPenaltyAmount;
@@ -231,7 +232,7 @@ export async function POST({ request, locals, platform }) {
         if (totalFuel < fuelCost) {
             return json({
                 error: `Not enough fuel. Need ${fuelCost}, have ${totalFuel}`,
-                cost_breakdown: { distKm: distKm.toFixed(1), baseCostPerKm, speedMult, zoneMult, compMult, nightMult, fuelCost }
+                cost_breakdown: { distKm: distKm.toFixed(1), speedMult, zoneMult, compMult, nightMult, fuelCost }
             }, { status: 402 });
         }
 
