@@ -785,7 +785,7 @@
 
         for (const modeId of allModes) {
             const route = calculateRouteForMode(modeId, playerTri.id, targetTri.id);
-            if (route) routes.push(route);
+            if (route && route.steps > 0) routes.push(route); // skip degenerate 0-step routes
         }
 
         // Sort: cheapest first
@@ -859,12 +859,16 @@
                     target_lat: route.pathCoords[route.pathCoords.length - 1][0],
                     target_lon: route.pathCoords[route.pathCoords.length - 1][1],
                     transport_mode: route.mode,
-                    path_steps: route.steps
+                    path_steps: route.steps,
+                    bottle_id: movePreview?.bottleId || null
                 })
             });
             const result = await res.json();
             if (res.ok) {
                 showToast(`${route.icon} Movido — costo: ${result.cost}`);
+                if (result.captured) {
+                    showToast(`🎉 ¡Botella capturada! +${result.captured.bonus} pts`);
+                }
                 clearRouteLines();
                 await invalidateAll();
                 drawMovementRange();
@@ -889,8 +893,8 @@
         // Proximity check first — if target is close, offer direct capture (bypasses navmesh)
         if (bottleId) {
             const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, targetLat, targetLon);
-            if (distM <= 15) {
-                // At the navmesh node — direct capture
+            if (distM <= 100) {
+                // Within capture range — direct capture
                 pendingProximityCapture = { bottleId, distM, lat: targetLat, lon: targetLon };
                 showProximityModal = true;
                 return;
@@ -947,7 +951,13 @@
 
         const routes = calculateAllRoutes(pathTargetLat, pathTargetLon);
         if (!routes || routes.length === 0) {
-            // No navmesh route — can't reach this point
+            // No navmesh route — if there's a bottle, offer proximity capture as fallback
+            if (bottleId) {
+                const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, targetLat, targetLon);
+                pendingProximityCapture = { bottleId, distM, lat: targetLat, lon: targetLon };
+                showProximityModal = true;
+                return;
+            }
             showToast('No route found — try a different point');
             return;
         }
@@ -1003,7 +1013,7 @@
                 } else if (movePreview.bottleId) {
                     // Moved to navmesh node near bottle — check if in capture range now
                     const distM = haversineM(data.myPlayer?.lat, data.myPlayer?.lon, movePreview.originalTargetLat || movePreview.targetLat, movePreview.originalTargetLon || movePreview.targetLon);
-                    if (distM <= 15) {
+                    if (distM <= 100) {
                         // Try proximity capture
                         const capRes = await fetch('/api/bottlequest/capture', {
                             method: 'POST',

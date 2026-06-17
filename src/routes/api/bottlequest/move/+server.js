@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { logTransaction } from '$lib/server/bottlequest-logger';
 import { TRANSPORT_MODES, calculateMoveCost } from '$lib/transport.js';
 
-const CAPTURE_RADIUS = 0.00015; // ~15 meters — precise capture at navmesh node
+const CAPTURE_RADIUS = 0.001; // ~100 meters — generous for navmesh-level capture
 
 // Legacy speed multipliers (kept for backward compat)
 const SPEED_MULT = {
