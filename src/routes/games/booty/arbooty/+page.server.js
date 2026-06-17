@@ -4,12 +4,12 @@ export async function load({ locals, platform, url }) {
   let bottles = [];
   const mode = url.searchParams.get('mode') || 'pirate';
 
-  // Load physical bottles — available to everyone for fiesta mode
+  // Load physical bottles — available to everyone for event mode
   if (db) {
     try {
-      const prefix = mode === 'fiesta' ? 'fiesta-%' : 'phys-%';
+      const prefix = mode === 'event' ? 'event-%' : 'phys-%';
       const result = await db.prepare(
-        "SELECT id, title, current_lat, current_lon, found_by, content_type FROM bottles WHERE id LIKE ? AND bottle_type = 'physical' AND is_test = 0 ORDER BY id"
+        "SELECT id, title, current_lat, current_lon, found_by, content_type FROM bottles WHERE id LIKE ? AND bottle_type = 'physical' AND is_test = 0 AND status != 'archived' ORDER BY id"
       ).bind(prefix).all();
       bottles = result.results || [];
     } catch (e) {
@@ -18,7 +18,7 @@ export async function load({ locals, platform, url }) {
   }
 
   // Only load player data if authenticated
-  if (!locals.user && mode === 'fiesta') {
+  if (!locals.user && mode === 'event') {
     return { serverLocale: locals.locale || 'es', user: null, myPlayer: null, bottles };
   }
 

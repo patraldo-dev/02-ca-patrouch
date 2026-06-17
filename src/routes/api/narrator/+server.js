@@ -138,8 +138,8 @@ Be bold. Create events that make players FEEL the impact.`;
 
         await db.prepare(`
             INSERT INTO narrator_events (id, title, narrative, event_type, duration_hours, expires_at, effects, target_game)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).bind(id, title, narrative, event_type || 'flavor', dur, expiresSql, effectsJson, data.target_game || 'both').run();
+            VALUES (?, ?, ?, ?, ?, datetime('now', '+${dur} hours'), ?, ?)
+        `).bind(id, title, narrative, event_type || 'flavor', dur, effectsJson, data.target_game || 'both').run();
 
         // Apply instant effects (paralyze, fuel_bonus, kraken, resurrection)
         let appliedEffects = [];

@@ -4,10 +4,10 @@ export async function POST({ platform, request }) {
     const ai = platform?.env?.AI;
     if (!ai) return json({ error: 'AI not available' }, { status: 500 });
 
-    const { mode = 'fiesta', theme = 'cumpleaños' } = await request.json();
+    const { mode = 'event', theme = 'celebración' } = await request.json();
 
     const prompts = {
-        fiesta: `Genera un mensaje corto y emotivo para una fiesta de cumpleaños. Debe ser cálido, original, no más de 3 líneas. Responde SOLO en JSON: {"title": "emoji + título creativo (máx 50 chars)", "content": "el mensaje"}`,
+        event: `Genera un mensaje corto y emotivo para un evento de celebración. Debe ser cálido, original, no más de 3 líneas. Responde SOLO en JSON: {"title": "emoji + título creativo (máx 50 chars)", "content": "el mensaje"}`,
         pirate: `Genera un mensaje misterioso para una botella al mar. Estilo pirata, aventurero, no más de 3 líneas. Responde SOLO en JSON: {"title": "emoji + título misterioso (máx 50 chars)", "content": "el mensaje"}`
     };
 
@@ -27,7 +27,7 @@ export async function POST({ platform, request }) {
             return json({ title: parsed.title, content: parsed.content, challenge: parsed.challenge || "" });
         }
         // Fallback: use raw text as content
-        return json({ title: theme === 'cumpleaños' ? '🎂 Mensaje Especial' : '🏴‍☠️ Mensaje Misterioso', content: text.trim() });
+        return json({ title: theme === 'celebración' ? '🎉 Mensaje del Evento' : '🏴‍☠️ Mensaje Misterioso', content: text.trim() });
     } catch (e) {
         return json({ error: 'AI generation failed: ' + e.message }, { status: 500 });
     }

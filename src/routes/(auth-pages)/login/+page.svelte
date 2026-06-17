@@ -12,6 +12,10 @@
     let identifier = $state('');
     let password = $state('');
     let showPassword = $state(false);
+
+    function looksLikeEmail(str) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+    }
     
     async function handleLogin() {
         if (!identifier || !password) {
@@ -21,12 +25,24 @@
         isLoading = true;
         error = '';
         try {
-            const { error: authError } = await authClient.signIn.email({
-                email: identifier,
-                password
-            });
-            if (authError) {
-                error = authError.message || 'Invalid credentials';
+            let authResult;
+
+            if (looksLikeEmail(identifier)) {
+                // Email login
+                authResult = await authClient.signIn.email({
+                    email: identifier,
+                    password
+                });
+            } else {
+                // Username login — native better-auth plugin
+                authResult = await authClient.signIn.username({
+                    username: identifier,
+                    password
+                });
+            }
+
+            if (authResult.error) {
+                error = authResult.error.message || 'Invalid credentials';
             } else {
                 window.location.href = redirectTo;
             }

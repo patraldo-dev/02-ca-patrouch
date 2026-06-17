@@ -41,8 +41,8 @@ export async function POST({ request, locals, platform }) {
 
     await db.prepare(`
         INSERT INTO narrator_events (id, title, narrative, event_type, duration_hours, expires_at, effects, target_game)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'both')
-    `).bind(id, eventTitle, eventNarrative, effect, dur, expiresSql, effectsJson).run();
+        VALUES (?, ?, ?, ?, ?, datetime('now', '+${dur} hours'), ?, 'both')
+    `).bind(id, eventTitle, eventNarrative, effect, dur, effectsJson).run();
 
     // Apply instant effects
     let appliedEffects = [];

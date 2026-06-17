@@ -5,11 +5,11 @@ export async function POST({ locals, platform, request }) {
     const user = locals.user;
     if (!user || !db) return json({ error: 'Not authenticated' }, { status: 401 });
 
-    const { title, content, lat, lon, mode = 'fiesta', challenge } = await request.json();
+    const { title, content, lat, lon, mode = 'event', challenge } = await request.json();
     if (!title || !content) return json({ error: 'Title and content required' }, { status: 400 });
     if (!lat || !lon) return json({ error: 'GPS location required' }, { status: 400 });
 
-    const prefix = mode === 'fiesta' ? 'fiesta' : 'phys';
+    const prefix = mode === 'event' ? 'event' : 'phys';
     const bottleId = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const bottleKey = bottleId.toUpperCase().replace(/-/g, '-');
 

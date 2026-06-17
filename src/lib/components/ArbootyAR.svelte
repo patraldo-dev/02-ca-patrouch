@@ -25,10 +25,10 @@
             rangeStroke: '#ef4444',
             rangeFill: 'rgba(239,68,68,0.2)',
         },
-        fiesta: {
-            icon: '🎂🍾🎉',
-            title: '¡Fiesta de Victor!',
-            desc: '60 años joven — encuentra los mensajes',
+        event: {
+            icon: '🎉🎁✨',
+            title: 'Evento de Celebración',
+            desc: 'Encuentra los mensajes ocultos',
             accentColor: '#881337',
             accentRgb: '136,19,55',
             markerNear: '🍾',
@@ -45,7 +45,7 @@
         }
     };
 
-    let isFiesta = $derived(theme === 'fiesta');
+    let isEvent = $derived(theme === 'event');
     let t = $derived(themes[theme] || themes.pirate);
 
     let videoEl;
@@ -66,10 +66,10 @@
     let captured = $state(null);
     let gamePaused = $state(false);
 
-    // Confetti for fiesta
+    // Confetti for event mode
     let confetti = $state([]);
     function spawnConfetti() {
-        if (theme !== 'fiesta') return;
+        if (theme !== 'event') return;
         const emojis = ['🎉','🎊','🥳','🎈','⭐','✨','🎂','🍾','🎁'];
         confetti = Array.from({ length: 20 }, () => ({
             id: crypto.randomUUID(),
@@ -293,14 +293,14 @@
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
-    // Nickname support for unauthenticated fiesta mode
+    // Nickname support for unauthenticated event mode
     let nickname = $state('');
     let showNickModal = $state(false);
     let effectivePlayer = $derived(player || (nickname ? { username: nickname, display_name: nickname } : null));
 
     async function activate() {
-        // For fiesta mode, allow unauthenticated play with nickname
-        if (!effectivePlayer && isFiesta) {
+        // For event mode, allow unauthenticated play with nickname
+        if (!effectivePlayer && isEvent) {
             showNickModal = true;
             return;
         }
@@ -442,15 +442,15 @@
                 </div>
             {:else}
             <div class="ar-start">
-                <button class="start-btn" onclick={activate}>📸 {isFiesta ? 'Activar Fiesta' : 'Activar Cámara AR'}</button>
+                <button class="start-btn" onclick={activate}>📸 {isEvent ? 'Activar Fiesta' : 'Activar Cámara AR'}</button>
                 <div class="ar-icon">{t.icon}</div>
                 <p class="ar-title">{t.title}</p>
-                {#if isFiesta}
+                {#if isEvent}
                     <p class="ar-subtitle">🎂 60 años joven 🎂</p>
                 {/if}
                 <p class="ar-desc">{t.desc}</p>
                 <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
-                {#if isFiesta}
+                {#if isEvent}
                     <details class="rules-toggle">
                         <summary>📋 ¿Cómo jugar?</summary>
                         <div class="rules-card">
@@ -512,7 +512,7 @@
                     {/if}
                 </svg>
                 <div class="marker-info {isNearest(m) ? 'info-nearest' : 'info-far'}">
-                    <span class="marker-name">{m.title || (theme === 'fiesta' ? 'Sorpresa' : 'Botella')}</span>
+                    <span class="marker-name">{m.title || (theme === 'event' ? 'Sorpresa' : 'Botella')}</span>
                     <span class="marker-dist" style="color: {t.accentColor}">{distLabel(m)}</span>
                 </div>
                 {#if gamePaused}
@@ -582,13 +582,13 @@
                     {:else}
                         <h2>{t.modalIcon} {captured.bottle.title}</h2>
                         <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
-                        {#if captured.reward && theme !== 'fiesta'}
+                        {#if captured.reward && theme !== 'event'}
                             <div class="capture-reward">
                                 ⛽ +{captured.reward.fuel} Combustible · 🏆 +{captured.reward.points} Puntos
                             </div>
                         {/if}
-                        {#if theme === 'fiesta'}
-                            <div class="fiesta-message">🎊 ¡Mensaje encontrado! 🎊</div>
+                        {#if theme === 'event'}
+                            <div class="event-message">🎊 ¡Mensaje encontrado! 🎊</div>
                         {/if}
                     {/if}
                     <button class="capture-close-btn {theme}" style="background: {t.accentColor}" onclick={() => captured = null}>Cerrar</button>
@@ -816,7 +816,7 @@
         border: 1.5px solid rgba(201,168,124,0.5);
     }
 
-    .ar-root.fiesta .info-nearest {
+    .ar-root.event .info-nearest {
         border-color: rgba(136,19,55,0.5);
     }
 
@@ -1014,7 +1014,7 @@
         color: #fff;
     }
 
-    .capture-modal-card.fiesta {
+    .capture-modal-card.event {
         border-color: rgba(136,19,55,0.4);
     }
 
@@ -1025,7 +1025,7 @@
         color: var(--accent, #c9a87c);
     }
 
-    .capture-modal-card.fiesta h2 {
+    .capture-modal-card.event h2 {
         color: #c9a87c;
     }
 
@@ -1071,7 +1071,7 @@
     .vote-btn.reject { background: #ef4444; }
     .vote-btn:active { transform: scale(0.95); }
     .trap-penalty { color: #f87171; font-size: 1.2rem; font-weight: 700; text-align: center; margin: 0.5rem 0; }
-    .fiesta-message {
+    .event-message {
         background: rgba(201,168,124,0.1);
         border: 1px solid rgba(201,168,124,0.3);
         border-radius: 8px;

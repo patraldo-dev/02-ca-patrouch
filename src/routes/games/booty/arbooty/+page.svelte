@@ -3,7 +3,7 @@
     import { t } from '$lib/i18n';
     import PhysicalBottles from '$lib/components/PhysicalBottles.svelte';
     import ArbootyAR from '$lib/components/ArbootyAR.svelte';
-    import FiestaScoreboard from '$lib/components/FiestaScoreboard.svelte';
+    import EventScoreboard from '$lib/components/EventScoreboard.svelte';
 
     let { data } = $props();
     let showAR = $state(false);
@@ -13,33 +13,33 @@
     });
 
     let mode = $derived($page.url.searchParams.get('mode') || 'pirate');
-    let isFiesta = $derived(mode === 'fiesta');
+    let isEvent = $derived(mode === 'event');
 </script>
 
 <svelte:head>
-    <title>{isFiesta ? '🎉 Modo Fiesta' : $t('booty.arbooty.title')} — patrouch.ca</title>
+    <title>{isEvent ? '🎉 Evento' : $t('booty.arbooty.title')} — patrouch.ca</title>
 </svelte:head>
 
 <section class="bottles-page">
-    <a href="/games/booty" class="back-link">← {isFiesta ? 'Volver' : $t('booty.arbooty.back')}</a>
+    <a href="/games/booty" class="back-link">← {isEvent ? 'Volver' : $t('booty.arbooty.back')}</a>
     <h1 class="page-title">
-        {#if isFiesta}
-            🎉 <span class="title-accent fiesta">¡Fiesta de Victor!</span>
-            <p class="page-subtitle">🎂 60 años joven 🎂</p>
+        {#if isEvent}
+            🎉 <span class="title-accent event">Evento de Celebración</span>
+            <p class="page-subtitle">Encuentra los mensajes ocultos</p>
         {:else}
             🏴‍☠️ Arbooty <span class="title-accent">— Búsqueda del Tesoro</span>
         {/if}
     </h1>
-    <p class="page-desc">{isFiesta ? 'Encuentra los mensajes de cumpleaños' : $t('booty.arbooty.description')}</p>
+    <p class="page-desc">{isEvent ? 'Busca y captura los mensajes del evento' : $t('booty.arbooty.description')}</p>
 
-    {#if data.myPlayer || isFiesta}
+    {#if data.myPlayer || isEvent}
         {#if data.myPlayer}
         <a href="/games/booty/arbooty/create?mode={mode}" class="create-link">
-            {isFiesta ? '🎁 Esconder un Mensaje' : '🏴‍☠️ Lanzar una Botella'}
+            {isEvent ? '🎁 Esconder un Mensaje' : '🏴‍☠️ Lanzar una Botella'}
         </a>
         {/if}
         <button class="ar-toggle {mode}" onclick={() => showAR = !showAR}>
-            {showAR ? '🗺️ Ver Mapa' : isFiesta ? '🎉 Activar Fiesta AR' : '🔭 Modo AR'}
+            {showAR ? '🗺️ Ver Mapa' : isEvent ? '🎉 Activar AR' : '🔭 Modo AR'}
         </button>
 
         {#if showAR}
@@ -49,13 +49,13 @@
         {/if}
     {:else}
         <div class="join-prompt">
-            <p>{isFiesta ? 'Inicia sesión para encontrar mensajes' : $t('booty.arbooty.join_required')}</p>
-            <a href="/games/booty" class="btn-accent">🏁 {isFiesta ? 'Iniciar Sesión' : $t('booty.arbooty.join_btn')}</a>
+            <p>{isEvent ? 'Inicia sesión para participar' : $t('booty.arbooty.join_required')}</p>
+            <a href="/games/booty" class="btn-accent">🏁 {isEvent ? 'Iniciar Sesión' : $t('booty.arbooty.join_btn')}</a>
         </div>
     {/if}
 
-    {#if isFiesta}
-        <FiestaScoreboard />
+    {#if isEvent}
+        <EventScoreboard />
     {/if}
 </section>
 
@@ -84,7 +84,7 @@
     .title-accent {
         color: var(--accent);
     }
-    .title-accent.fiesta {
+    .title-accent.event {
         color: #c9a87c;
     }
     .page-subtitle {
@@ -114,9 +114,9 @@
         margin-bottom: 1.5rem;
         transition: all 0.2s;
     }
-    .ar-toggle.fiesta {
-        color: #881337;
-        border-color: #881337;
+    .ar-toggle.event {
+        color: #c9a87c;
+        border-color: #c9a87c;
     }
     .ar-toggle:hover { opacity: 0.9; }
     .create-link {

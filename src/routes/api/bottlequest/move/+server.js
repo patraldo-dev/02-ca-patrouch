@@ -1,18 +1,20 @@
 import { json } from '@sveltejs/kit';
 import { logTransaction } from '$lib/server/bottlequest-logger';
+import { TRANSPORT_MODES, calculateMoveCost } from '$lib/transport.js';
 
-const CAPTURE_RADIUS = 0.000005; // ~5.5 meters
+const CAPTURE_RADIUS = 0.00015; // ~15 meters — precise capture at navmesh node
 
+// Legacy speed multipliers (kept for backward compat)
 const SPEED_MULT = {
-    drift: 0.5,   // cheap but slow
-    sail: 1.0,    // normal
-    motor: 4.0    // fast but expensive
+    drift: 0.5,
+    sail: 1.0,
+    motor: 4.0
 };
 
 const SPEED_MOVE_MULT = {
-    drift: 1.0,   // moves at current speed only
-    sail: 2.0,    // 2x current
-    motor: 10.0   // 10x current
+    drift: 1.0,
+    sail: 2.0,
+    motor: 10.0
 };
 
 // Zone multipliers based on distance to target
@@ -63,13 +65,15 @@ export async function POST({ request, locals, platform }) {
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { target_lat, target_lon, speed = 'sail', bottle_id, path_steps } = await request.json();
+        const { target_lat, target_lon, speed = 'sail', bottle_id, path_steps, transport_mode } = await request.json();
         if (target_lat == null || target_lon == null) {
             return json({ error: 'target_lat and target_lon required' }, { status: 400 });
         }
-        if (!['drift', 'sail', 'motor'].includes(speed)) {
-            return json({ error: 'Invalid speed. Use: drift, sail, motor' }, { status: 400 });
-        }
+
+        // Accept both legacy 'speed' and new 'transport_mode'
+        const mode = transport_mode && TRANSPORT_MODES[transport_mode]
+            ? transport_mode
+            : 'sail'; // default to legacy sail
 
         // Find player
         let player = await db.prepare(
@@ -184,37 +188,43 @@ export async function POST({ request, locals, platform }) {
         // Calculate distance in km
         const distKm = haversineKm(fromLat, fromLon, target_lat, target_lon);
 
-        // Get market data for base cost
-        const market = await db.prepare(`SELECT cost_per_km, brent_price, brent_change FROM bq_market WHERE id = 'daily'`).first();
-        const baseCostPerKm = market?.cost_per_km || 0.73;
-
-        // Brent dynamic multiplier
-        const brentChange = market?.brent_change || 0;
-        let brentMult = 1.0;
-        if (brentChange > 10) brentMult = 1.2;
-        else if (brentChange < -10) brentMult = 0.8;
-
-        // Brent dynamic multiplier
-        // If navmesh path provided, use step-based cost (steps × tier cost × brent)
-        // Otherwise fall back to distance-based cost
+        // Calculate power cost (no Brent — fixed per tier + mode)
         let fuelCost;
         let speedMult, zoneMult, compMult, nightMult;
+        const transportDef = TRANSPORT_MODES[mode];
 
         if (path_steps && path_steps > 0) {
-            // Navmesh-based: each step = 1 base cost, scaled by zoom tier (from distance) and Brent
             const tierMult = distKm > 100 ? 1000000 : distKm > 20 ? 100000 : distKm > 5 ? 10000 : distKm > 1 ? 1000 : distKm > 0.2 ? 100 : distKm > 0.05 ? 10 : 1;
-            speedMult = SPEED_MULT[speed];
             nightMult = getNightMult(target_lon);
             zoneMult = null;
             compMult = null;
-            fuelCost = Math.ceil(path_steps * tierMult * speedMult * nightMult * brentMult * speedPenaltyMult) + fuelPenaltyAmount;
+
+            if (transportDef) {
+                // New transport mode system — fixed costs, no external index
+                const costResult = calculateMoveCost(mode, path_steps, tierMult);
+                fuelCost = costResult.totalCost + fuelPenaltyAmount;
+                speedMult = transportDef.speedMult;
+            } else {
+                // Legacy speed system
+                speedMult = SPEED_MULT[speed];
+                fuelCost = Math.ceil(path_steps * tierMult * speedMult * nightMult * speedPenaltyMult) + fuelPenaltyAmount;
+            }
         } else {
             // Legacy distance-based cost
-            speedMult = SPEED_MULT[speed];
-            zoneMult = getZoneMult(distDeg);
-            compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
-            nightMult = getNightMult(target_lon);
-            fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * brentMult * speedPenaltyMult) + fuelPenaltyAmount;
+            const baseCostPerKm = 1;
+            if (transportDef) {
+                nightMult = getNightMult(target_lon);
+                fuelCost = Math.ceil(distKm * (transportDef.costPerKm || baseCostPerKm) * nightMult * speedPenaltyMult) + (transportDef.flatCost || 0) + fuelPenaltyAmount;
+                speedMult = transportDef.speedMult;
+                zoneMult = null;
+                compMult = null;
+            } else {
+                speedMult = SPEED_MULT[speed];
+                zoneMult = getZoneMult(distDeg);
+                compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
+                nightMult = getNightMult(target_lon);
+                fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * speedPenaltyMult) + fuelPenaltyAmount;
+            }
         }
 
         const totalFuel = (player.fuel || 0) + (player.checkin_fuel || 0);
@@ -242,7 +252,7 @@ export async function POST({ request, locals, platform }) {
         let captured = null;
         if (bottle_id) {
             const bottle = await db.prepare(
-                `SELECT id, title, status FROM bottles WHERE id = ? AND status IN ('launched', 'sailing')`
+                `SELECT id, title, status FROM bottles WHERE id = ? AND status IN ('launched', 'sailing', 'beached')`
             ).bind(bottle_id).first();
 
             if (bottle) {

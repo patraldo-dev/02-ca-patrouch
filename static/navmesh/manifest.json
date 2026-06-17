@@ -1,0 +1,49 @@
+{
+  "meshes": {
+    "A": {
+      "file": "pv-navmesh-a.json",
+      "level": "pedestrian",
+      "zoomRange": [
+        15,
+        17
+      ],
+      "triangles": 39212,
+      "navigable": 21325,
+      "sizeKB": 5063
+    },
+    "B": {
+      "file": "pv-navmesh-b.json",
+      "level": "neighborhood",
+      "zoomRange": [
+        13,
+        14
+      ],
+      "triangles": 7372,
+      "navigable": 3963,
+      "sizeKB": 963
+    },
+    "C": {
+      "file": "pv-navmesh-c.json",
+      "level": "city",
+      "zoomRange": [
+        11,
+        12
+      ],
+      "triangles": 1808,
+      "navigable": 963,
+      "sizeKB": 222
+    },
+    "D": {
+      "file": "pv-navmesh-d.json",
+      "level": "bay",
+      "zoomRange": [
+        5,
+        9
+      ],
+      "triangles": 474,
+      "navigable": 252,
+      "sizeKB": 59
+    }
+  },
+  "generated": "2026-06-16T16:38:12.993Z"
+}

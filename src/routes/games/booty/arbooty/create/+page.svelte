@@ -16,7 +16,7 @@
     let generating = $state(false);
     let challenge = $state('');
 
-    let mode = $derived($page.url.searchParams.get('mode') || 'fiesta');
+    let mode = $derived($page.url.searchParams.get('mode') || 'pirate');
 
     function startGPS() {
         if (!navigator.geolocation) {
@@ -94,7 +94,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     mode,
-                    theme: title || (mode === 'fiesta' ? 'cumpleaños' : 'botella')
+                    theme: title || (mode === 'event' ? 'evento' : 'botella')
                 })
             });
             const result = await res.json();
@@ -109,24 +109,24 @@
 </script>
 
 <svelte:head>
-    <title>{mode === 'fiesta' ? '🎁 Crear Mensaje — Fiesta' : '🏴‍☠️ Crear Botella — Arbooty'} — patrouch.ca</title>
+    <title>{mode === 'event' ? '🎁 Crear Mensaje — Evento' : '🏴‍☠️ Crear Botella — Arbooty'} — patrouch.ca</title>
 </svelte:head>
 
 <section class="create-page">
     <a href="/games/booty/arbooty?mode={mode}" class="back-link">← Volver</a>
 
     <h1 class="page-title">
-        {mode === 'fiesta' ? '🎁 Esconde un Mensaje' : '🏴‍☠️ Lanza una Botella'}
+        {mode === 'event' ? '🎁 Esconde un Mensaje' : '🏴‍☠️ Lanza una Botella'}
     </h1>
     <p class="page-desc">
-        {mode === 'fiesta' ? 'Escribe un mensaje y déjalo en tu ubicación para que otros lo encuentren' : 'Escribe tu mensaje en una botella y lánzala al mundo'}
+        {mode === 'event' ? 'Escribe un mensaje y déjalo en tu ubicación para que otros lo encuentren' : 'Escribe tu mensaje en una botella y lánzala al mundo'}
     </p>
 
     {#if !success}
         <form onsubmit={handleSubmit} class="create-form">
             <div class="form-group">
                 <label for="title">Título</label>
-                <input id="title" type="text" bind:value={title} placeholder="Ej: Feliz Cumpleaños Victor 🎂" maxlength="100" required />
+                <input id="title" type="text" bind:value={title} placeholder="Ej: Mensaje del Evento 🎉" maxlength="100" required />
             </div>
 
             <div class="form-group">
@@ -169,7 +169,7 @@
             {/if}
 
             <button type="submit" class="submit-btn" disabled={submitting || gpsStatus !== 'ready'}>
-                {submitting ? 'Creando...' : mode === 'fiesta' ? '🎁 Esconder Mensaje' : '🏴‍☠️ Lanzar Botella'}
+                {submitting ? 'Creando...' : mode === 'event' ? '🎁 Esconder Mensaje' : '🏴‍☠️ Lanzar Botella'}
             </button>
         </form>
     {:else}

@@ -2,6 +2,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { drizzle } from 'drizzle-orm/d1';
+import { username } from 'better-auth/plugins';
 import { authSchema } from '../db/auth-schema.js';
 
 // PBKDF2 via WebCrypto — doesn't count against CF Workers CPU time
@@ -170,6 +171,12 @@ onPasswordReset: async () => {
       'https://patrouch.ca',
       'https://*.chef-tech.workers.dev',
       'http://localhost:5173',
+    ],
+    plugins: [
+      username({
+        minUsernameLength: 3,
+        maxUsernameLength: 30,
+      }),
     ],
   });
 }

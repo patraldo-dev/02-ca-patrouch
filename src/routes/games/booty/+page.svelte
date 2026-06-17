@@ -6,6 +6,7 @@
     import { invalidateAll } from '$app/navigation';
     import { getEffectInfo, TARGET_LABELS } from '$lib/narrator-catalog.js';
     import { getRank, getNextRank, getRankProgress, RANKS } from '$lib/ranks.js';
+    import { TRANSPORT_MODES, calculateMoveCost } from '$lib/transport.js';
 
     let { data } = $props();
 
@@ -35,6 +36,7 @@
     let transferNote = $state('');
     let transferSending = $state(false);
     let fuelRequests = $state([]);
+    let creativeTide = $state(null);
     let requestAmount = $state('');
     let requestMsg = $state('');
     let requestingFuel = $state(false);
@@ -234,18 +236,32 @@
     let mapInstance = $state(null);
     let leafletLib = null;
 
-    // Navmesh
+    // Navmesh — multi-mesh system (A/B/C/D)
     let navVisible = $state(false);
     let navmeshLayer = null;
     let dynamicGridLayer = null;
-    let rangeCircle = null; // movement range overlay
+    let rangeCircle = null;
     let navmeshData = null;
+    let activeMeshKey = $state(null); // 'A' | 'B' | 'C' | 'D'
+    let meshManifest = null;
     let selectedTriangle = $state(null);
-    let pathStart = $state(null); // { lat, lon }
-    let pathEnd = $state(null);   // { lat, lon }
+    let pathStart = $state(null);
+    let pathEnd = $state(null);
     let pathLine = null;
-    let pathTriangles = []; // ordered triangle IDs for the route
+    let pathTriangles = [];
     let currentZoom = $state(4);
+
+    // Mesh tiers — map zoom to mesh file
+    const MESH_TIERS = [
+        { key: 'A', minZoom: 15, file: '/navmesh/pv-navmesh-a.json', labelKey: 'booty.mesh_pedestrian',  modes: ['walk', 'swim'] },
+        { key: 'B', minZoom: 13, file: '/navmesh/pv-navmesh-b.json', labelKey: 'booty.mesh_neighborhood', modes: ['walk', 'bike', 'bus', 'swim'] },
+        { key: 'C', minZoom: 11, file: '/navmesh/pv-navmesh-c.json', labelKey: 'booty.mesh_city', modes: ['bike', 'bus', 'taxi', 'drive'] },
+        { key: 'D', minZoom: 5,  file: '/navmesh/pv-navmesh-d.json', labelKey: 'booty.mesh_bay', modes: ['sail', 'speedboat', 'taxi', 'drive'] },
+    ];
+
+    function meshTierForZoom(zoom) {
+        return MESH_TIERS.find(t => zoom >= t.minZoom) || MESH_TIERS[MESH_TIERS.length - 1];
+    }
 
     // Zoom level → cell size + cost
     const ZOOM_TIERS = [
@@ -261,20 +277,37 @@
     let cellLabel = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.label || '?');
     let baseCellCost = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.cost || 1);
 
-    // Brent multiplier: >10% change = 1.2x, <-10% = 0.8x, else 1.0x
-    let brentMult = $derived(() => {
-        const change = data.market?.brent_change || 0;
-        if (change > 10) return 1.2;
-        if (change < -10) return 0.8;
-        return 1.0;
-    });
-    let cellCost = $derived(Math.ceil(baseCellCost * brentMult()));
+    // Cell cost — fixed per tier, no external multiplier
+    let cellCost = $derived(baseCellCost);
 
-    async function loadNavmesh() {
-        if (navmeshData) return navmeshData;
-        const res = await fetch('/navmesh/pv-navmesh.json');
+    async function loadNavmesh(forceKey = null) {
+        const tier = forceKey ? MESH_TIERS.find(t => t.key === forceKey) : meshTierForZoom(currentZoom);
+        if (!tier) return null;
+
+        // If already loaded the right mesh, return it
+        if (navmeshData && activeMeshKey === tier.key && !forceKey) return navmeshData;
+
+        // Load new mesh
+        const res = await fetch(tier.file);
         navmeshData = await res.json();
+        activeMeshKey = tier.key;
+
+        // Redraw if visible
+        if (navVisible && mapInstance) {
+            await toggleNavmesh(); // turn off
+            await toggleNavmesh(); // turn on with new mesh
+        }
+
         return navmeshData;
+    }
+
+    // Called on zoom change — reload mesh if tier changed
+    async function onZoomMeshSwitch() {
+        const newTier = meshTierForZoom(currentZoom);
+        if (activeMeshKey && activeMeshKey !== newTier.key) {
+            await loadNavmesh(newTier.key);
+            drawMovementRange();
+        }
     }
 
     async function toggleNavmesh() {
@@ -292,37 +325,24 @@
             const coords = tri.v.map(([lon, lat]) => [lat, lon]);
             coords.push(coords[0]);
             const navigable = tri.n === 1;
+            const terrain = tri.terrain || (navigable ? 'water' : 'land');
+            const terrainColors = {
+                water:    { color: 'rgba(100,180,255,0.3)', fill: 'rgba(60,140,220,0.08)' },
+                shallow:  { color: 'rgba(100,200,220,0.3)', fill: 'rgba(80,180,200,0.1)' },
+                land:     { color: 'rgba(180,120,80,0.2)',  fill: 'rgba(120,80,40,0.1)' },
+                beach:    { color: 'rgba(240,210,140,0.3)', fill: 'rgba(220,190,120,0.15)' },
+                pier:     { color: 'rgba(201,168,124,0.5)', fill: 'rgba(201,168,124,0.25)' },
+            };
+            const tc = terrainColors[terrain] || terrainColors.water;
             const polygon = L.polygon(coords, {
-                color: navigable ? 'rgba(100,180,255,0.3)' : 'rgba(180,120,80,0.15)',
-                fillColor: navigable ? 'rgba(60,140,220,0.08)' : 'rgba(120,80,40,0.12)',
+                color: tc.color,
+                fillColor: tc.fill,
                 weight: navigable ? 0.8 : 0.4,
-                fillOpacity: navigable ? 0.08 : 0.12,
-                interactive: navigable,
+                fillOpacity: 0.12,
+                interactive: false, // triangles are visual only — map click handles movement
             });
 
-            if (navigable) {
-                polygon.bindTooltip(`T${tri.id}`, {
-                    direction: 'top', className: 'nav-tri-label', opacity: 0.7
-                });
-                polygon.on('click', () => {
-                    const prevSelected = selectedTriangle;
-                    selectedTriangle = tri.id;
-                    polygon.setStyle({ fillColor: 'rgba(201,168,124,0.4)', fillOpacity: 0.4, weight: 2, color: '#c9a87c' });
-
-                    // If clicking same triangle as before, move there
-                    if (prevSelected !== null && prevSelected !== tri.id) {
-                        calculatePath(tri.c[1], tri.c[0]);
-                    }
-                });
-                polygon.on('mouseover', () => {
-                    if (selectedTriangle !== tri.id)
-                        polygon.setStyle({ fillColor: 'rgba(100,180,255,0.2)', fillOpacity: 0.2 });
-                });
-                polygon.on('mouseout', () => {
-                    if (selectedTriangle !== tri.id)
-                        polygon.setStyle({ fillColor: 'rgba(60,140,220,0.08)', fillOpacity: 0.08 });
-                });
-            }
+            // No triangle click handlers — movement is via map click only
 
             navmeshLayer.addLayer(polygon);
         }
@@ -444,7 +464,7 @@
         const playerLat = data.myPlayer.lat || 20.6063;
         const playerLon = data.myPlayer.lon || -105.2355;
 
-        if (currentZoom >= 14 && navmeshData) {
+        if (navmeshData && (activeMeshKey === 'A' || activeMeshKey === 'B')) {
             // === DIJKSTRA on navmesh ===
             const startTri = findTriangle(playerLat, playerLon);
             if (!startTri) return;
@@ -584,7 +604,6 @@
         if (!navmeshData) return null;
         let best = null, bestDist = Infinity;
         for (const tri of navmeshData.triangles) {
-            if (tri.n !== 1) continue; // skip non-navigable
             const dx = tri.c[0] - lon;
             const dy = tri.c[1] - lat;
             const d = dx * dx + dy * dy;
@@ -593,7 +612,36 @@
         return best;
     }
 
-    function astarNavmesh(fromId, toId) {
+    // Snap a lat/lon to the nearest NAVIGABLE triangle centroid.
+    // Returns { lat, lon, triId } or null if no navmesh.
+    function snapToNavmesh(lat, lon) {
+        if (!navmeshData) return null;
+        let best = null, bestDist = Infinity;
+        for (const tri of navmeshData.triangles) {
+            if (tri.n !== 1) continue; // only navigable triangles
+            const dx = tri.c[0] - lon;
+            const dy = tri.c[1] - lat;
+            const d = dx * dx + dy * dy;
+            if (d < bestDist) { bestDist = d; best = tri; }
+        }
+        if (!best) return null;
+        return { lat: best.c[1], lon: best.c[0], triId: best.id };
+    }
+
+    // Cached snapped positions per bottle — only for beached bottles stuck in non-navigable triangles.
+    // Sailing/launched bottles stay at their real position — they're in the ocean where they belong.
+    const bottleSnapCache = new Map();
+    function getBottleSnap(bottle) {
+        if (!bottle?.id || !bottle?.current_lat) return null;
+        if (bottleSnapCache.has(bottle.id)) return bottleSnapCache.get(bottle.id);
+        // Only snap beached bottles — they washed ashore and may be stuck in a land triangle
+        if (bottle.status !== 'beached') return null;
+        const snap = snapToNavmesh(bottle.current_lat, bottle.current_lon);
+        if (snap) bottleSnapCache.set(bottle.id, snap);
+        return snap;
+    }
+
+    function astarNavmesh(fromId, toId, modeFilter = null) {
         if (!navmeshData) return null;
         const adj = navmeshData.adjacency;
         const tris = navmeshData.triangles;
@@ -613,9 +661,12 @@
 
             for (const neighborId of (adj[current.id] || [])) {
                 if (visited.has(neighborId)) continue;
-                if (tris[neighborId].n !== 1) continue; // skip obstacles
-
                 const nTri = tris[neighborId];
+                // Terrain gate: if modeFilter provided, check modes object
+                if (modeFilter && nTri.modes && !nTri.modes[modeFilter]) continue;
+                // Legacy gate: skip obstacles if no filter
+                if (!modeFilter && nTri.n !== 1) continue;
+
                 const dx = nTri.c[0] - tris[current.id].c[0];
                 const dy = nTri.c[1] - tris[current.id].c[1];
                 const edgeCost = Math.sqrt(dx * dx + dy * dy);
@@ -632,63 +683,286 @@
         return null; // no path
     }
 
-    let showMoveModal = $state(false);
-    let movePreview = $state(null); // { steps, cost, pathCoords, targetLat, targetLon }
+    // ═══ Multi-route calculation (Google Maps style) ═══
+    let routeResults = $state(null); // { routes: [{ mode, strategy, path, steps, cost, distKm, estTime, pathCoords, canAfford }] }
+    let selectedRouteIdx = $state(0);
+    let routeLines = []; // multiple path lines on map
 
-    async function calculatePath(targetLat, targetLon) {
-        if (!data.myPlayer) { showToast(get(t)('booty.login_required') || 'Log in to move'); return; }
+    function calculateRouteForMode(modeId, fromTriId, toTriId) {
+        const path = astarNavmesh(fromTriId, toTriId, modeId);
+        if (!path) return null;
 
-        // Find player's current triangle
-        const playerTri = findTriangle(data.myPlayer.lat, data.myPlayer.lon);
-        const targetTri = findTriangle(targetLat, targetLon);
-
-        if (!playerTri) { showToast('You\'re not on the navmesh'); return; }
-        if (!targetTri) { showToast('Target not on navmesh'); return; }
-        if (playerTri.id === targetTri.id) { showToast('Already here'); return; }
-
-        // A* pathfinding
-        const path = astarNavmesh(playerTri.id, targetTri.id);
-        if (!path) { showToast('No path — blocked by land'); return; }
-
-        pathTriangles = path;
-
-        // Draw path on map
-        if (pathLine && mapInstance) mapInstance.removeLayer(pathLine);
+        const mode = TRANSPORT_MODES[modeId];
         const pathCoords = path.map(tid => {
             const t = navmeshData.triangles[tid];
             return [t.c[1], t.c[0]];
         });
-        const L = leafletLib;
-        pathLine = L.polyline(pathCoords, {
-            color: '#c9a87c', weight: 3, opacity: 0.8, dashArray: '8, 4'
-        }).addTo(mapInstance);
 
-        // Calculate cost
         const moveCount = path.length - 1;
-        const totalCost = moveCount * cellCost;
+        const tier = ZOOM_TIERS.find(t => currentZoom >= t.minZoom);
+        const tierCost = tier?.cost || 1;
+
+        // Use transport cost model
+        const costResult = calculateMoveCost(modeId, moveCount, tierCost);
         const distKm = haversine(pathCoords[0][0], pathCoords[0][1], pathCoords[pathCoords.length - 1][0], pathCoords[pathCoords.length - 1][1]);
+        const estTimeMin = (distKm / (mode.speedMult * 5)) * 60; // base 5 km/h walk → scaled
+
         const playerFuel = (data.myPlayer?.fuel || 0) + (data.myPlayer?.checkin_fuel || 0);
-        const canAfford = playerFuel >= totalCost;
+
+        return {
+            mode: modeId,
+            icon: mode.icon,
+            label: mode.label,
+            path,
+            steps: moveCount,
+            cost: costResult.totalCost,
+            perStepCost: costResult.perStepCost,
+            flatCost: costResult.flatCost || 0,
+            distKm: parseFloat(distKm.toFixed(2)),
+            estTimeMin: Math.round(estTimeMin),
+            pathCoords,
+            canAfford: playerFuel >= costResult.totalCost,
+        };
+    }
+
+    function calculateAllRoutes(targetLat, targetLon) {
+        if (!navmeshData) return;
+
+        // Snap player position to nearest navigable triangle
+        let pLat = data.myPlayer.lat;
+        let pLon = data.myPlayer.lon;
+        const rawPlayerTri = findTriangle(pLat, pLon);
+        if (rawPlayerTri && rawPlayerTri.n !== 1) {
+            const pSnap = snapToNavmesh(pLat, pLon);
+            if (pSnap) { pLat = pSnap.lat; pLon = pSnap.lon; }
+        }
+
+        // Snap target to nearest navigable triangle
+        let tLat = targetLat;
+        let tLon = targetLon;
+        const rawTargetTri = findTriangle(tLat, tLon);
+        if (rawTargetTri && rawTargetTri.n !== 1) {
+            const tSnap = snapToNavmesh(tLat, tLon);
+            if (tSnap) { tLat = tSnap.lat; tLon = tSnap.lon; }
+        }
+
+        const playerTri = findTriangle(pLat, pLon);
+        const targetTri = findTriangle(tLat, tLon);
+        if (!playerTri || !targetTri || playerTri.id === targetTri.id) return;
+
+        // Determine which modes are available for current mesh tier
+        const meshTier = meshTierForZoom(currentZoom);
+        const availableModes = Object.keys(TRANSPORT_MODES).filter(mId => {
+            const mode = TRANSPORT_MODES[mId];
+            // Check if mode is relevant for current mesh level
+            return meshTier.modes.some(mm => mm === mId) ||
+                   ['walk', 'swim'].includes(mId) && meshTier.key === 'A' ||
+                   ['bike', 'bus'].includes(mId) && meshTier.key === 'B' ||
+                   ['taxi', 'drive'].includes(mId) && (meshTier.key === 'C' || meshTier.key === 'D') ||
+                   ['sail', 'speedboat'].includes(mId) && meshTier.key === 'D';
+        });
+
+        // Always include all modes — let the pathfinding decide if it's possible
+        const allModes = Object.keys(TRANSPORT_MODES);
+        const routes = [];
+
+        for (const modeId of allModes) {
+            const route = calculateRouteForMode(modeId, playerTri.id, targetTri.id);
+            if (route) routes.push(route);
+        }
+
+        // Sort: cheapest first
+        routes.sort((a, b) => a.cost - b.cost);
+
+        routeResults = { routes };
+        selectedRouteIdx = 0;
+
+        // Draw all routes on map with different colors
+        clearRouteLines();
+        const L = leafletLib;
+        const routeColors = ['#c9a87c', '#60a5fa', '#34d399', '#f87171', '#a78bfa', '#fbbf24', '#f472b6', '#22d3ee'];
+
+        routes.forEach((r, i) => {
+            const isSelected = i === 0;
+            const line = L.polyline(r.pathCoords, {
+                color: routeColors[i % routeColors.length],
+                weight: isSelected ? 4 : 2,
+                opacity: isSelected ? 0.9 : 0.4,
+                dashArray: isSelected ? null : '6, 4',
+            }).addTo(mapInstance);
+            routeLines.push(line);
+        });
+
+        return routes;
+    }
+
+    function selectRoute(idx) {
+        selectedRouteIdx = idx;
+        // Update line weights
+        clearRouteLines();
+        const L = leafletLib;
+        const routeColors = ['#c9a87c', '#60a5fa', '#34d399', '#f87171', '#a78bfa', '#fbbf24', '#f472b6', '#22d3ee'];
+
+        routeResults.routes.forEach((r, i) => {
+            const isSelected = i === idx;
+            const line = L.polyline(r.pathCoords, {
+                color: routeColors[i % routeColors.length],
+                weight: isSelected ? 4 : 2,
+                opacity: isSelected ? 0.9 : 0.4,
+                dashArray: isSelected ? null : '6, 4',
+            }).addTo(mapInstance);
+            routeLines.push(line);
+        });
+    }
+
+    function clearRouteLines() {
+        for (const line of routeLines) {
+            if (mapInstance) mapInstance.removeLayer(line);
+        }
+        routeLines = [];
+    }
+
+    function formatTime(min) {
+        if (min < 60) return `${min} min`;
+        const h = Math.floor(min / 60);
+        const m = min % 60;
+        return `${h}h ${m}min`;
+    }
+
+    async function executeSelectedRoute() {
+        if (!routeResults || selectedRouteIdx === null) return;
+        const route = routeResults.routes[selectedRouteIdx];
+        showMoveModal = false;
+
+        try {
+            const res = await fetch('/api/bottlequest/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target_lat: route.pathCoords[route.pathCoords.length - 1][0],
+                    target_lon: route.pathCoords[route.pathCoords.length - 1][1],
+                    transport_mode: route.mode,
+                    path_steps: route.steps
+                })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                showToast(`${route.icon} Movido — costo: ${result.cost}`);
+                clearRouteLines();
+                await invalidateAll();
+                drawMovementRange();
+            } else {
+                showToast(result.error || 'Move failed');
+            }
+        } catch (e) {
+            showToast('Move error');
+        }
+        routeResults = null;
+        movePreview = null;
+    }
+
+    let showMoveModal = $state(false);
+    let movePreview = $state(null);
+    let showProximityModal = $state(false);
+    let pendingProximityCapture = $state(null);
+
+    async function calculatePath(targetLat, targetLon, bottleId = null) {
+        if (!data.myPlayer) { showToast(get(t)('booty.login_required') || 'Log in to move'); return; }
+
+        // Proximity check first — if target is close, offer direct capture (bypasses navmesh)
+        if (bottleId) {
+            const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, targetLat, targetLon);
+            if (distM <= 15) {
+                // At the navmesh node — direct capture
+                pendingProximityCapture = { bottleId, distM, lat: targetLat, lon: targetLon };
+                showProximityModal = true;
+                return;
+            }
+        }
+
+        // Ensure navmesh is loaded before calculating
+        if (!navmeshData) {
+            try { await loadNavmesh(); } catch {}
+        }
+        if (!navmeshData) { showToast('Map data still loading — try again'); return; }
+
+        // Snap target to nearest navigable node if the target triangle isn't navigable
+        let pathTargetLat = targetLat;
+        let pathTargetLon = targetLon;
+        const rawTargetTri = findTriangle(targetLat, targetLon);
+        if (rawTargetTri && rawTargetTri.n !== 1) {
+            // Target is in a non-navigable triangle — snap to nearest navigable
+            const snap = snapToNavmesh(targetLat, targetLon);
+            if (snap) {
+                pathTargetLat = snap.lat;
+                pathTargetLon = snap.lon;
+            }
+        }
+
+        const playerTri = findTriangle(data.myPlayer.lat, data.myPlayer.lon);
+        const targetTri = findTriangle(pathTargetLat, pathTargetLon);
+
+        // Snap player too if in non-navigable triangle
+        let playerStartLat = data.myPlayer.lat;
+        let playerStartLon = data.myPlayer.lon;
+        if (playerTri && playerTri.n !== 1) {
+            const playerSnap = snapToNavmesh(playerStartLat, playerStartLon);
+            if (playerSnap) {
+                playerStartLat = playerSnap.lat;
+                playerStartLon = playerSnap.lon;
+            }
+        }
+        const playerTriSnapped = findTriangle(playerStartLat, playerStartLon);
+
+        if (!playerTriSnapped) { showToast('Your position is off the map'); return; }
+        if (!targetTri) { showToast('Target is off the map'); return; }
+        if (playerTriSnapped.id === targetTri.id) {
+            // Already at the same navmesh node — offer capture if bottle
+            if (bottleId) {
+                const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, pathTargetLat, pathTargetLon);
+                pendingProximityCapture = { bottleId, distM, lat: pathTargetLat, lon: pathTargetLon };
+                showProximityModal = true;
+                return;
+            }
+            showToast('Already here');
+            return;
+        }
+
+        const routes = calculateAllRoutes(pathTargetLat, pathTargetLon);
+        if (!routes || routes.length === 0) {
+            // No navmesh route — can't reach this point
+            showToast('No route found — try a different point');
+            return;
+        }
+
+        // Set up move preview from cheapest route
+        const cheapest = routes[0];
+        pathTriangles = cheapest.path;
+        const playerFuel = (data.myPlayer?.fuel || 0) + (data.myPlayer?.checkin_fuel || 0);
 
         movePreview = {
-            steps: moveCount,
-            cost: totalCost,
-            distKm: distKm.toFixed(2),
-            pathCoords,
-            targetLat,
-            targetLon,
-            path,
+            steps: cheapest.steps,
+            cost: cheapest.cost,
+            distKm: cheapest.distKm.toFixed(2),
+            pathCoords: cheapest.pathCoords,
+            targetLat: pathTargetLat,
+            targetLon: pathTargetLon,
+            originalTargetLat: targetLat,
+            originalTargetLon: targetLon,
+            path: cheapest.path,
             playerFuel,
-            canAfford,
-            brentPrice: data.market?.brent_price || 73,
-            brentChange: data.market?.brent_change || 0,
-            brentMult: brentMult(),
+            canAfford: playerFuel >= cheapest.cost,
             cellLabel,
+            bottleId,
         };
         showMoveModal = true;
     }
 
     async function executeMove() {
+        if (routeResults) {
+            await executeSelectedRoute();
+            return;
+        }
         if (!movePreview) return;
         showMoveModal = false;
 
@@ -700,13 +974,33 @@
                     target_lat: movePreview.targetLat,
                     target_lon: movePreview.targetLon,
                     speed: 'sail',
-                    path_steps: movePreview.steps
+                    path_steps: movePreview.steps,
+                    bottle_id: movePreview.bottleId || null
                 })
             });
             const result = await res.json();
             if (res.ok) {
                 showToast($t('booty.moved_cost', { n: result.cost }));
+                if (result.captured) {
+                    showToast(`🎉 ¡Botella capturada! +${result.captured.bonus} pts`);
+                } else if (movePreview.bottleId) {
+                    // Moved to navmesh node near bottle — check if in capture range now
+                    const distM = haversineM(data.myPlayer?.lat, data.myPlayer?.lon, movePreview.originalTargetLat || movePreview.targetLat, movePreview.originalTargetLon || movePreview.targetLon);
+                    if (distM <= 15) {
+                        // Try proximity capture
+                        const capRes = await fetch('/api/bottlequest/capture', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ bottle_id: movePreview.bottleId, snapped_lat: movePreview.targetLat, snapped_lon: movePreview.targetLon })
+                        });
+                        const capResult = await capRes.json();
+                        if (capResult.success) {
+                            showToast(`🎉 ¡Capturada! +${capResult.reward?.points || 50} pts · +${capResult.reward?.fuel || 25} ⚡`);
+                        }
+                    }
+                }
                 if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
+                clearRouteLines();
                 await invalidateAll();
                 drawMovementRange();
             } else {
@@ -716,12 +1010,45 @@
             showToast('Move error');
         }
         movePreview = null;
+        routeResults = null;
     }
 
     function cancelMove() {
         showMoveModal = false;
         if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
+        clearRouteLines();
         movePreview = null;
+        routeResults = null;
+    }
+
+    async function confirmProximityCapture() {
+        if (!pendingProximityCapture) return;
+        const { bottleId, lat, lon } = pendingProximityCapture;
+        showProximityModal = false;
+        showToast('🏴‍☠️ Capturando...');
+        try {
+            const res = await fetch('/api/bottlequest/capture', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bottle_id: bottleId, snapped_lat: lat, snapped_lon: lon })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast(`🎉 ¡Capturada! +${result.reward?.points || 50} pts · +${result.reward?.fuel || 25} ⚡`);
+                await invalidateAll();
+                drawMovementRange();
+            } else {
+                showToast(result.error || 'No se pudo capturar');
+            }
+        } catch {
+            showToast('Error de red');
+        }
+        pendingProximityCapture = null;
+    }
+
+    function cancelProximityCapture() {
+        showProximityModal = false;
+        pendingProximityCapture = null;
     }
 
     // Haversine
@@ -731,6 +1058,11 @@
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // Haversine in meters
+    function haversineM(lat1, lon1, lat2, lon2) {
+        return haversine(lat1, lon1, lat2, lon2) * 1000;
     }
 
     let playersWithDist = $derived(
@@ -749,6 +1081,48 @@
 
     onMount(async () => {
         if (!browser) return;
+
+        // Expose move-to-bottle for popup buttons
+        window.__moveToBottle = (bottleId, lat, lon) => {
+            calculatePath(lat, lon, bottleId);
+        };
+
+        // Proximity capture — works without navmesh
+        let captureLoading = $state(false);
+        window.__captureBottle = async (bottleId) => {
+            if (captureLoading) return;
+            captureLoading = true;
+            showToast('🏴‍☠️ Capturando...');
+            try {
+                // Find bottle in data.bottles to get snap position
+                const bottle = data.bottles.find(b => b.id === bottleId);
+                const snap = bottle ? getBottleSnap(bottle) : null;
+                const body = { bottle_id: bottleId };
+                if (snap) { body.snapped_lat = snap.lat; body.snapped_lon = snap.lon; }
+                const res = await fetch('/api/bottlequest/capture', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast(`🎉 ¡Capturada! +${result.reward?.points || 50} pts · +${result.reward?.fuel || 25} ⚡`);
+                    await invalidateAll();
+                    drawMovementRange();
+                } else {
+                    showToast(result.error || 'No se pudo capturar');
+                }
+            } catch {
+                showToast('Error de red');
+            }
+            captureLoading = false;
+        };
+
+        // Fetch Creative Tide
+        try {
+            const tideRes = await fetch('/api/creative-tide');
+            creativeTide = await tideRes.json();
+        } catch {}
 
         const L = (await import('leaflet')).default;
         leafletLib = L;
@@ -804,15 +1178,22 @@
             currentZoom = snapped;
             if (navVisible) drawDynamicGrid();
             drawMovementRange();
+            onZoomMeshSwitch(); // reload mesh if tier changed
         });
 
         // Auto-load navmesh when zoomed into PV area
         mapInstance.on('moveend', async () => {
             const center = mapInstance.getCenter();
             if (center.lat > 20.4 && center.lat < 21.0 && center.lng > -105.7 && center.lng < -105.0) {
+                if (!navmeshData) await loadNavmesh();
                 if (!navVisible) await toggleNavmesh();
             }
         });
+
+        // Pre-load navmesh since we start in PV
+        if (!navmeshData) {
+            try { await loadNavmesh(); } catch {}
+        }
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             maxZoom: 18
@@ -827,13 +1208,28 @@
                 L.polyline(coords, { color: '#c9a87c', weight: 2, opacity: 0.4 }).addTo(mapInstance);
             }
 
-            const marker = L.circleMarker([bottle.current_lat, bottle.current_lon], {
-                radius: 8,
-                fillColor: bottle.status === 'beached' ? '#f59e0b' : bottle.status === 'found' ? '#c084fc' : '#c9a87c',
-                fillOpacity: 0.9,
-                color: '#fff',
-                weight: 2
-            }).addTo(mapInstance);
+            // Snap bottle to nearest navigable navmesh node
+            const snap = getBottleSnap(bottle);
+            const markerLat = snap ? snap.lat : bottle.current_lat;
+            const markerLon = snap ? snap.lon : bottle.current_lon;
+            const isSnapped = snap && (Math.abs(markerLat - bottle.current_lat) > 0.00001 || Math.abs(markerLon - bottle.current_lon) > 0.00001);
+
+            // If snapped position differs from real, draw dotted line
+            if (isSnapped) {
+                L.polyline([[bottle.current_lat, bottle.current_lon], [markerLat, markerLon]], {
+                    color: '#c9a87c', weight: 1.5, opacity: 0.5, dashArray: '3, 5'
+                }).addTo(mapInstance);
+            }
+
+            // Bottle marker — at snapped position
+            const bottleEmoji = bottle.status === 'beached' ? '🏺' : bottle.status === 'found' ? '📬' : '🍾';
+            const bottleIcon = L.divIcon({
+                className: 'bottle-marker',
+                html: `<div style="font-size:24px;text-align:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));">${bottleEmoji}</div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
+            const marker = L.marker([markerLat, markerLon], { icon: bottleIcon }).addTo(mapInstance);
 
             const author = bottle.display_name || bottle.username || '?';
             const catLabel = contentTypeLabel(bottle.content_type);
@@ -842,6 +1238,22 @@
             const currentCoords = bottle.current_lat ? formatCoords(bottle.current_lat, bottle.current_lon) : '';
             const dist = bottle.distance_km ? bottle.distance_km.toFixed(0) + ' km' : '';
             const statusText = statusLabel(bottle.status);
+            const captureBtn = (() => {
+                if (!data.myPlayer || !bottle.current_lat) return '';
+                if (bottle.status !== 'sailing' && bottle.status !== 'launched' && bottle.status !== 'beached') return '';
+                // Use snapped position if navmesh is loaded
+                const snap = getBottleSnap(bottle);
+                const targetLat = snap ? snap.lat : bottle.current_lat;
+                const targetLon = snap ? snap.lon : bottle.current_lon;
+                const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, targetLat, targetLon);
+                const radius = 15; // precise — must be at navmesh node
+                if (distM <= radius) {
+                    return `<button onclick="window.__captureBottle('${bottle.id}')" style="margin-top:6px;padding:6px 14px;background:#22c55e;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.85em">🍾 Capturar (${Math.round(distM)}m)</button>`;
+                }
+                const label = bottle.status === 'beached' ? '🏺 Move to collect' : '🗺️ Move to capture';
+                const bg = bottle.status === 'beached' ? '#f59e0b' : '#c9a87c';
+                return `<button onclick="window.__moveToBottle('${bottle.id}', ${targetLat}, ${targetLon})" style="margin-top:6px;padding:6px 14px;background:${bg};color:#09090b;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:0.85em">${label} (${Math.round(distM)}m)</button>`;
+            })();
             marker.bindPopup(`
                 <div style="color:#09090b;font-family:Inter,sans-serif;min-width:200px">
                     <strong style="font-family:Playfair Display,serif;font-size:1.05em">${bottle.title || '🍾'}</strong><br>
@@ -853,6 +1265,7 @@
                         ${dist ? `<div>📏 ${dist}</div>` : ''}
                         <div style="margin-top:3px;font-weight:600;color:#333">${statusText}</div>
                     </div>
+                    ${captureBtn}
                 </div>
             `);
         }
@@ -889,8 +1302,8 @@
                     iconSize: [30, 30], iconAnchor: [15, 15]
                 });
                 const pm = L.marker([lat, lon], { icon, zIndexOffset }).addTo(mapInstance);
-                pm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${player.display_name || player.username}</strong><br><span style="color:#555;font-size:0.85em"><b>${player.team_name || ''}</b><br>📍 ${player.port_name || ''}</span></div>`);
-                pm.bindTooltip(player.display_name || player.username, {
+                pm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${player.username}</strong><br><span style="color:#555;font-size:0.85em"><b>${player.team_name || ''}</b><br>📍 ${player.port_name || ''}</span></div>`);
+                pm.bindTooltip(player.username, {
                     permanent: true, direction: 'top', offset: [0, -14], className: 'player-label'
                 });
             }
@@ -945,6 +1358,7 @@
 
     let moveTarget = $state(null); // { lat, lon }
     let moveSpeed = $state('sail');
+    let transportMode = $state('walk'); // new transport system
     let moveLoading = $state(false);
     let chatInput = $state('');
     let chatLoading = $state(false);
@@ -1141,10 +1555,15 @@
     // Click-to-move on map
     $effect(() => {
         if (!mapInstance || !data.myPlayer) return;
-        mapInstance.on('click', (e) => {
+        const handler = (e) => {
             if (!data.myPlayer) return;
-            moveTarget = { lat: parseFloat(e.latlng.lat.toFixed(5)), lon: parseFloat(e.latlng.lng.toFixed(5)) };
-        });
+            const lat = parseFloat(e.latlng.lat.toFixed(5));
+            const lon = parseFloat(e.latlng.lng.toFixed(5));
+            // Use new directions system
+            calculatePath(lat, lon);
+        };
+        mapInstance.on('click', handler);
+        return () => { mapInstance.off('click', handler); };
     });
 
     async function doMove() {
@@ -1154,7 +1573,7 @@
             const res = await fetch('/api/bottlequest/move', {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ target_lat: moveTarget.lat, target_lon: moveTarget.lon, speed: moveSpeed })
+                body: JSON.stringify({ target_lat: moveTarget.lat, target_lon: moveTarget.lon, transport_mode: transportMode })
             });
             const d = await res.json();
             if (d.error) { showToast(d.error); }
@@ -1319,7 +1738,7 @@
             if (d.success) {
                 checkedIn = true;
                 streakCount = d.streak || streakCount + 1;
-                showToast(d.message || `+10 ${$t('booty.price')}`);
+                showToast(d.message || `+10 ⚡ ${$t('booty.power')}`);
             }
         } catch {}
         checkinLoading = false;
@@ -1380,21 +1799,70 @@
     <title>{$t('games.find_the_bottle')} — Patrouch</title>
 </svelte:head>
 
+<!-- Ocean Map — first thing, full bleed -->
+<div style="max-width:900px;margin:0 auto;padding:1.5rem 1.5rem 0">
+<div class="section">
+    <div class="section-header">
+        <h2>{$t('bottles.map_title')}</h2>
+        <button class="btn-sm" onclick={() => toggleNavmesh()} title="Toggle Navmesh">🗺️</button>
+        <button class="btn-sm btn-fly-me" onclick={() => { if (mapInstance && data.myPlayer) mapInstance.flyTo([data.myPlayer.lat, data.myPlayer.lon], 15, { duration: 1.5 }); }} title={get(t)('booty.fly_to_me')}>🧭</button>
+        <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
+    </div>
+    <div class="map-container" bind:this={mapEl}>
+        {#if data.myPlayer && !showMoveModal}
+            <div class="map-hint">📍 Tap anywhere to plot a route</div>
+        {/if}
+        <button class="map-badge" onclick={() => showMapInfo = !showMapInfo} title={$t('booty.power')}>
+            {#if data.myPlayer}
+                ⚡ {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}
+            {/if}
+            {#if narratorEvent?.event_type !== 'flavor'}
+                <span style="color:#ef4444"> ⚠️</span>
+            {/if}
+            <span style="opacity:0.5;font-size:0.65rem">{showMapInfo ? '▲' : '▼'}</span>
+        </button>
+        {#if showMapInfo}
+            <div class="map-info-panel">
+                {#if data.myPlayer}
+                <div>⚡ {$t('booty.power')}: <strong>{formatPrice((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</strong></div>
+                {/if}
+                <div>{$t('booty.zoom')}: <strong>{currentZoom}</strong> · {$t('booty.cell')}: <strong>{cellLabel}</strong> · {$t('booty.cost_per_step')}: <strong>{cellCost}</strong></div>
+                {#if activeMeshKey}
+                <div>{$t('booty.mesh')}: <strong>{activeMeshKey}</strong> ({$t(MESH_TIERS.find(t => t.key === activeMeshKey)?.labelKey || '?')}) · {navmeshData?.stats?.navigable || 0} {$t('booty.triangles')}</div>
+                {/if}
+                {#if creativeTide}
+                <div>{creativeTide.emoji} {$t('booty.tide')}: <strong>{creativeTide.level}</strong> ({creativeTide.tide}/100) — {creativeTide.stats?.writings || 0} {$t('booty.writings')}, {creativeTide.stats?.activeWriters || 0} {$t('booty.active_writers')}</div>
+                {/if}
+                {#if narratorEvent?.event_type !== 'flavor'}
+                <div style="color:#ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
+                {/if}
+            </div>
+        {/if}
+    </div>
+</div>
+</div>
+
 <!-- Ticker Tape -->
 <div class="ticker-tape" role="status" aria-label="Game status">
     <div class="ticker-content">
         {#if data.myPlayer}
         <span class="ticker-item">
-            {$t('booty.price')} <span class="ticker-value">{formatPrice((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</span>
+            ⚡ {$t('booty.power')} <span class="ticker-value">{formatPrice((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</span>
+        </span>
+        <span class="ticker-divider">│</span>
+        {/if}
+        {#if creativeTide}
+        <span class="ticker-item">
+            {creativeTide.emoji} <span class="ticker-value">{creativeTide.level}</span> ({creativeTide.tide})
         </span>
         <span class="ticker-divider">│</span>
         {/if}
         <span class="ticker-item">
-            🏴‍☠️ <span class="ticker-value">{data.playersInPursuit}</span> en persecución
+            🏴‍☠️ <span class="ticker-value">{data.playersInPursuit}</span> {$t('booty.in_pursuit')}
         </span>
         <span class="ticker-divider">│</span>
         <span class="ticker-item">
-            🤖 <span class="ticker-value">{data.bots?.length || 0}</span> Booty Bots activos
+            🤖 <span class="ticker-value">{data.bots?.length || 0}</span> {$t('booty.bots_active')}
         </span>
         <span class="ticker-divider">│</span>
         <span class="ticker-item">
@@ -1417,15 +1885,15 @@
         <h2 class="text-xl font-bold mb-1" style="font-family:Playfair Display,serif">🏴☠️ {$t('booty.arbooty.title')}</h2>
         <p class="text-sm" style="color:var(--text-dim)">{$t('booty.arbooty.card_desc')}</p>
     </a>
-    <a href="/games/booty/arbooty?mode=fiesta" style="display:block;background:var(--surface);border:2px solid #881337;border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;text-decoration:none;color:var(--text);">
-        <h2 class="text-xl font-bold mb-1" style="font-family:Playfair Display,serif;color:#c9a87c">🎉 ¡Fiesta de Victor!</h2>
-        <p class="text-sm" style="color:var(--text-dim)">Encuentra mensajes escondidos con la cámara AR</p>
+    <a href="/games/booty/arbooty?mode=event" style="display:block;background:var(--surface);border:2px solid #c9a87c;border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;text-decoration:none;color:var(--text);">
+        <h2 class="text-xl font-bold mb-1" style="font-family:Playfair Display,serif;color:#c9a87c">🎉 Evento de Celebración</h2>
+        <p class="text-sm" style="color:var(--text-dim)">Crea y encuentra mensajes ocultos con la cámara AR</p>
     </a>
 {/if}
 
 <section class="bottles-page">
     <h1 class="page-title">🍾 Booty <span class="title-accent">Battle</span></h1>
-    <p class="page-subtitle">{$t('games.find_the_bottle_desc')}</p>
+    <p class="page-subtitle">{#if data.myPlayer}{data.myPlayer.username}{/if}</p>
 
     {#if toastMsg}
         <div class="toast" class:toast-visible={toastMsg}>{toastMsg}</div>
@@ -1667,7 +2135,7 @@
                         <div class="listing-excerpt">{listing.excerpt || '...'}</div>
                         {#if listing.resale_count > 0}<div class="listing-resale">🔄 Resold {listing.resale_count}x · 10% royalty to author</div>{/if}
                         {#if data.myPlayer && listing.seller_player_id !== data.myPlayer.id}
-                            <button class="btn-buy" onclick={() => buyListing(listing.id)}>{$t('booty.price')}: {listing.price}</button>
+                            <button class="btn-buy" onclick={() => buyListing(listing.id)}>⚡ {$t('booty.power')}: {listing.price}</button>
                         {/if}
                     </div>
                 {/each}
@@ -1743,52 +2211,134 @@
     </div>
     {/if}
 
-    <!-- Move Confirmation Modal -->
-    {#if showMoveModal && movePreview}
+    <!-- Proximity Capture Modal -->
+    {#if showProximityModal && pendingProximityCapture}
+    <div class="modal-overlay" onclick={cancelProximityCapture}></div>
+    <div class="modal-card" style="text-align:center">
+        <button class="btn-cancel" onclick={cancelProximityCapture}>✕</button>
+        <div style="font-size:3rem;margin-bottom:8px">🍾</div>
+        <h2 style="font-family:Playfair Display,serif">¡Botella al alcance!</h2>
+        <p style="color:var(--text-dim);margin:8px 0 16px">
+            Estás a <strong>{Math.round(pendingProximityCapture.distM)}m</strong> de la botella.<br>
+            ¿Recogerla del {pendingProximityCapture.distM <= 150 && pendingProximityCapture.distM > 75 ? 'agua' : 'mar/arena'}?
+        </p>
+        <div style="display:flex;gap:8px;justify-content:center">
+            <button class="btn btn-accent" onclick={confirmProximityCapture}>
+                🏴‍☠️ Recoger (+50 pts · +25 ⚡)
+            </button>
+            <button class="btn btn-cancel-move" onclick={cancelProximityCapture}>
+                ✋ Cancelar
+            </button>
+        </div>
+    </div>
+    {/if}
+
+    <!-- Move / Directions Modal — Google Maps Style -->
+    {#if showMoveModal && (movePreview || routeResults)}
     <div class="modal-overlay" onclick={cancelMove}></div>
-    <div class="modal-card move-modal">
+    <div class="modal-card directions-modal">
         <button class="btn-cancel" onclick={cancelMove}>✕</button>
-        <h2>⛵ ¿Mover o no mover?</h2>
+        <h2>🗺️ {$t('booty.routes')}</h2>
 
-        <div class="move-breakdown">
-            <div class="move-row">
-                <span class="move-label">Pasos</span>
-                <span class="move-value">{movePreview.steps} triángulos</span>
+        {#if routeResults && routeResults.routes.length > 0}
+            <!-- Route list -->
+            <div class="routes-list">
+                {#each routeResults.routes as route, i}
+                    <button
+                        class="route-card"
+                        class:selected={i === selectedRouteIdx}
+                        class:unaffordable={!route.canAfford}
+                        onclick={() => selectRoute(i)}
+                    >
+                        <div class="route-header">
+                            <span class="route-icon">{route.icon}</span>
+                            <span class="route-mode">{route.label}</span>
+                            <span class="route-time">{formatTime(route.estTimeMin)}</span>
+                        </div>
+                        <div class="route-details">
+                            <span class="route-dist">📏 {route.distKm} km</span>
+                            <span class="route-steps">📐 {route.steps} {$t('booty.steps')}</span>
+                            <span class="route-cost" class:unaffordable={!route.canAfford}>⚡ {route.cost}</span>
+                        </div>
+                    </button>
+                {/each}
             </div>
-            <div class="move-row">
-                <span class="move-label">Distancia</span>
-                <span class="move-value">{movePreview.distKm} km</span>
-            </div>
-            <div class="move-row">
-                <span class="move-label">Tier</span>
-                <span class="move-value">{movePreview.cellLabel}</span>
-            </div>
-            <div class="move-row">
-                <span class="move-label">Brent</span>
-                <span class="move-value">${movePreview.brentPrice} <span style="color: {movePreview.brentChange > 0 ? '#ef4444' : movePreview.brentChange < 0 ? '#22c55e' : '#888'}">{movePreview.brentChange > 0 ? '▲' : movePreview.brentChange < 0 ? '▼' : '—'}</span> (×{movePreview.brentMult})</span>
-            </div>
-            <div class="move-divider"></div>
-            <div class="move-row move-total">
-                <span class="move-label">{$t('booty.price')}</span>
-                <span class="move-value" style="color: {movePreview.canAfford ? '#f59e0b' : '#ef4444'}">{movePreview.cost}</span>
-            </div>
-            <div class="move-row">
-                <span class="move-label">{$t('booty.your_price')}</span>
-                <span class="move-value">{movePreview.playerFuel}</span>
-            </div>
-            {#if !movePreview.canAfford}
-            <div class="move-warning">⚠️ {$t('booty.not_enough')}</div>
+
+            <!-- Selected route breakdown -->
+            {#if routeResults.routes[selectedRouteIdx]}
+                {@const sel = routeResults.routes[selectedRouteIdx]}
+                <div class="route-breakdown">
+                    <div class="move-row">
+                        <span class="move-label">Mesh</span>
+                        <span class="move-value">{activeMeshKey || '?'} · {$t(MESH_TIERS.find(t => t.key === activeMeshKey)?.labelKey || '')}</span>
+                    </div>
+                    <div class="move-row">
+                        <span class="move-label">Celda</span>
+                        <span class="move-value">{cellLabel}</span>
+                    </div>
+                    {#if sel.flatCost > 0}
+                    <div class="move-row">
+                        <span class="move-label">{$t('booty.flat_fee')}</span>
+                        <span class="move-value">{sel.flatCost}</span>
+                    </div>
+                    {/if}
+                    <div class="move-row">
+                        <span class="move-label">{$t('booty.cost_per_step')}</span>
+                        <span class="move-value">{sel.perStepCost}</span>
+                    </div>
+                    <div class="move-divider"></div>
+                    <div class="move-row move-total">
+                        <span class="move-label">⚡ {$t('booty.power')}</span>
+                        <span class="move-value" style="color: {sel.canAfford ? '#f59e0b' : '#ef4444'}">{sel.cost}</span>
+                    </div>
+                    <div class="move-row">
+                        <span class="move-label">{$t('booty.your_price')}</span>
+                        <span class="move-value">{movePreview?.playerFuel || 0}</span>
+                    </div>
+                    {#if !sel.canAfford}
+                    <div class="move-warning">⚠️ {$t('booty.not_enough')}</div>
+                    {/if}
+                </div>
             {/if}
-        </div>
 
-        <div class="move-actions">
-            <button class="btn btn-accent" onclick={executeMove} disabled={!movePreview.canAfford}>
-                ⛵ {$t('booty.move_btn', { n: movePreview.cost })}
-            </button>
-            <button class="btn btn-cancel-move" onclick={cancelMove}>
-                ✋ No mover
-            </button>
-        </div>
+            <div class="move-actions">
+                <button class="btn btn-accent" onclick={executeMove} disabled={!routeResults.routes[selectedRouteIdx]?.canAfford}>
+                    {routeResults.routes[selectedRouteIdx]?.icon || '🚶'} {$t('booty.go')} ({routeResults.routes[selectedRouteIdx]?.cost || 0})
+                </button>
+                <button class="btn btn-cancel-move" onclick={cancelMove}>
+                    ✋ {$t('booty.cancel')}
+                </button>
+            </div>
+        {:else}
+            <!-- Fallback: single route (legacy) -->
+            <div class="move-breakdown">
+                <div class="move-row">
+                    <span class="move-label">{$t('booty.steps')}</span>
+                    <span class="move-value">{movePreview.steps} triángulos</span>
+                </div>
+                <div class="move-row">
+                    <span class="move-label">{$t('booty.distance')}</span>
+                    <span class="move-value">{movePreview.distKm} km</span>
+                </div>
+                <div class="move-row">
+                    <span class="move-label">{$t('booty.tier')}</span>
+                    <span class="move-value">{movePreview.cellLabel}</span>
+                </div>
+                <div class="move-divider"></div>
+                <div class="move-row move-total">
+                    <span class="move-label">⚡ {$t('booty.power')}</span>
+                    <span class="move-value" style="color: {movePreview.canAfford ? '#f59e0b' : '#ef4444'}">{movePreview.cost}</span>
+                </div>
+            </div>
+            <div class="move-actions">
+                <button class="btn btn-accent" onclick={executeMove} disabled={!movePreview.canAfford}>
+                    {$t('booty.move_btn', { n: movePreview.cost })}
+                </button>
+                <button class="btn btn-cancel-move" onclick={cancelMove}>
+                    ✋ {$t('booty.cancel')}
+                </button>
+            </div>
+        {/if}
     </div>
     {/if}
 
@@ -1803,7 +2353,7 @@
             <div><strong>On:</strong> {betPlayer.display_name || betPlayer.username}</div>
             <div><strong>Odds:</strong> {betPlayer._odds || '?'}×</div>
         </div>
-        <label class="transfer-label">{$t('booty.price')}</label>
+        <label class="transfer-label">⚡ {$t('booty.power')}</label>
         <input type="number" bind:value={betAmount} min="1" placeholder="5" class="transfer-input" />
         {#if betAmount}
             <div class="bet-preview">
@@ -1949,38 +2499,6 @@
         </form>
     </div>
 
-    <!-- Ocean Map -->
-    <div class="section">
-        <div class="section-header">
-            <h2>{$t('bottles.map_title')}</h2>
-            <button class="btn-sm" onclick={() => toggleNavmesh()} title="Toggle Navmesh">🗺️</button>
-            <button class="btn-sm btn-fly-me" onclick={() => { if (mapInstance && data.myPlayer) mapInstance.flyTo([data.myPlayer.lat, data.myPlayer.lon], 15, { duration: 1.5 }); }} title={get(t)('booty.fly_to_me')}>🧭</button>
-            <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
-        </div>
-        <div class="map-container" bind:this={mapEl}>
-            <!-- Minimal map badge -->
-            <button class="map-badge" onclick={() => showMapInfo = !showMapInfo} title={$t('booty.price')}>
-                {#if data.myPlayer}
-                    {$t('booty.price')}: {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}
-                {/if}
-                {#if narratorEvent?.event_type !== 'flavor'}
-                    <span style="color:#ef4444"> ⚠️</span>
-                {/if}
-                <span style="opacity:0.5;font-size:0.65rem">{showMapInfo ? '▲' : '▼'}</span>
-            </button>
-            {#if showMapInfo}
-                <div class="map-info-panel">
-                    {#if data.myPlayer}
-                    <div>{$t('booty.price')}: <strong>{formatPrice((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</strong></div>
-                    {/if}
-                    {#if narratorEvent?.event_type !== 'flavor'}
-                    <div style="color:#ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
-                    {/if}
-                </div>
-            {/if}
-        </div>
-    </div>
-
     <!-- Beached / Found bottles (public) -->
     {#if data.bottles.filter(b => b.status === 'beached' || b.status === 'found').length}
         <details class="accordion-section">
@@ -2061,7 +2579,7 @@
                     <span class="score-type">{p.type === 'ai' ? '🤖' : p.solo ? '👤' : '👥'}</span>
                     <span class="score-name">{p.display_name || p.username}</span>
                     <span class="score-pts">⭐ {scoreTab === 'booty' ? (p.booty_points || 0) : scoreTab === 'arbooty' ? (p.arbooty_points || 0) : (p.points || 0)}</span>
-                    <span class="score-fuel">{formatPrice(p.fuel)}</span>
+                    <span class="score-fuel">⚡ {formatPrice(p.fuel)}</span>
                 </div>
             {/each}
         </div>
@@ -2093,7 +2611,7 @@
                         <div class="detail-row"><span>📍 Port</span><span>{player.port_name || 'Unknown'}</span></div>
                         <div class="detail-row"><span>{formatSolarTime(player.lon)}</span><span>{player.lat ? formatCoords(player.lat, player.lon) : '—'}</span></div>
                         <div class="detail-row"><span>⭐ Points</span><span>{player.points || 0}</span></div>
-                        <div class="detail-row"><span>{$t('booty.price')}</span><span>{formatPrice(player.fuel)}</span></div>
+                        <div class="detail-row"><span>⚡ {$t('booty.power')}</span><span>{formatPrice(player.fuel)}</span></div>
                         {#if player.nearestDist !== null}
                             <button class="bottle-link" onclick={(e) => { e.stopPropagation(); flyToBottle(player.nearestBottle); }}>
                                 🍾 Nearest: {player.nearestDist.toFixed(0)} km
@@ -2120,7 +2638,7 @@
     <div class="modal-overlay" onclick={() => showTransferModal = false}></div>
     <div class="modal-box">
         <button class="btn-cancel" onclick={() => showTransferModal = false}>✕</button>
-        <h2 >{$t('booty.price')}</h2>
+        <h2 >⚡ {$t('booty.power')}</h2>
         <label class="transfer-label">To</label>
         <select bind:value={transferTarget} class="transfer-input">
             <option value="">Select player...</option>
@@ -2130,7 +2648,7 @@
                 {/if}
             {/each}
         </select>
-        <label class="transfer-label">{$t('booty.price')} ({$t('booty.your_price').toLowerCase()})</label>
+        <label class="transfer-label">⚡ {$t('booty.power')} ({$t('booty.your_price')})</label>
         <input type="number" bind:value={transferAmount} min="0.01" step="0.01" max={data.myPlayer?.fuel || 0} placeholder="10" class="transfer-input" />
         <div class="transfer-fee">🤖 Bank fee (3%): {transferAmount ? (transferAmount * 0.03).toFixed(2) : '0.00'}</div>
         <div class="transfer-net">Net received: {transferAmount ? (parseFloat(transferAmount) - parseFloat(transferAmount) * 0.03).toFixed(2) : '0.00'}</div>
@@ -2166,23 +2684,7 @@
     {/if}
 
     <!-- Click-to-Move Modal -->
-    {#if moveTarget}
-    <div class="modal-overlay" onclick={() => moveTarget = null}></div>
-    <div class="modal-box">
-        <button class="btn-cancel" onclick={() => moveTarget = null}>✕</button>
-        <h3>🗺️ Move Here</h3>
-        <p style="font-size:0.85rem;color:var(--muted)">{moveTarget.lat}, {moveTarget.lon}</p>
-        <div style="margin:1rem 0">
-            <label style="font-size:0.8rem;display:block;margin-bottom:0.3rem">Speed</label>
-            <select bind:value={moveSpeed} class="transfer-input">
-                <option value="drift">🌊 Drift (0.5×, cheap)</option>
-                <option value="sail">⛵ Sail (1×, normal)</option>
-                <option value="motor">🚤 Motor (4×, expensive)</option>
-            </select>
-        </div>
-        <button class="btn-join" onclick={doMove} disabled={moveLoading}>{moveLoading ? '...' : '🧭 Move'}</button>
-    </div>
-    {/if}
+    <!-- Legacy move modal removed — now uses directions system -->
 
     <!-- Launch Bottle Modal -->
     {#if showLaunchModal && launching}
@@ -2311,8 +2813,37 @@
 
     /* Join Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; }
-    .move-modal { max-width: 380px; text-align: center; }
+    .move-modal { max-width: 420px; text-align: center; }
     .move-modal h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: #d4c9a8; margin-bottom: 1rem; }
+
+    /* ═══ Directions Modal — Google Maps Style ═══ */
+    .directions-modal { max-width: 440px; text-align: left; max-height: 85vh; overflow-y: auto; }
+    .directions-modal h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: #d4c9a8; margin-bottom: 0.75rem; text-align: center; }
+    .routes-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .route-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.75rem; background: rgba(20,20,23,0.5); border: 1px solid rgba(201,168,124,0.12); border-radius: 10px; cursor: pointer; transition: all 0.15s; text-align: left; }
+    .route-card:hover { border-color: rgba(201,168,124,0.35); background: rgba(201,168,124,0.05); }
+    .route-card.selected { border-color: #c9a87c; background: rgba(201,168,124,0.1); box-shadow: 0 0 8px rgba(201,168,124,0.15); }
+    .route-card.unaffordable { opacity: 0.55; }
+    .route-header { display: flex; align-items: center; gap: 0.5rem; }
+    .route-icon { font-size: 1.4rem; }
+    .route-mode { flex: 1; font-weight: 600; color: #d4c9a8; font-size: 0.95rem; text-transform: capitalize; }
+    .route-time { color: #a1a1aa; font-size: 0.85rem; font-weight: 500; }
+    .route-details { display: flex; gap: 1rem; font-size: 0.8rem; color: #71717a; padding-left: 2rem; }
+    .route-cost { color: #f59e0b; font-weight: 600; }
+    .route-cost.unaffordable { color: #ef4444; }
+    .route-breakdown { background: rgba(20,20,23,0.6); border-radius: 8px; padding: 12px; margin-bottom: 1rem; }
+
+    /* Transport Mode Selector */
+    .transport-selector { margin-bottom: 1.25rem; }
+    .transport-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #71717a; margin-bottom: 0.5rem; font-weight: 600; }
+    .transport-buttons { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+    .transport-btn { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; padding: 0.5rem 0.6rem; background: rgba(20,20,23,0.5); border: 1px solid rgba(201,168,124,0.15); border-radius: 8px; cursor: pointer; transition: all 0.15s; min-width: 52px; }
+    .transport-btn:hover { border-color: rgba(201,168,124,0.4); background: rgba(201,168,124,0.08); }
+    .transport-btn.active { border-color: #c9a87c; background: rgba(201,168,124,0.15); box-shadow: 0 0 8px rgba(201,168,124,0.2); }
+    .transport-icon { font-size: 1.3rem; }
+    .transport-name { font-size: 0.65rem; color: #a1a1aa; text-transform: capitalize; }
+    .transport-btn.active .transport-name { color: #d4c9a8; font-weight: 600; }
+
     .move-breakdown { background: rgba(20,20,23,0.6); border-radius: 8px; padding: 12px; margin-bottom: 1rem; }
     .move-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; color: #a1a1aa; }
     .move-total .move-value { font-weight: 700; font-size: 1rem; }
@@ -2322,6 +2853,7 @@
     .btn-cancel-move { background: rgba(161,161,170,0.15); color: #a1a1aa; border: 1px solid rgba(161,161,170,0.2); border-radius: 8px; padding: 8px 20px; cursor: pointer; font-size: 0.9rem; }
     .btn-cancel-move:hover { background: rgba(161,161,170,0.25); }
     .modal-box { background: var(--bs-surface); border: 1px solid rgba(239,68,68,0.15); border-radius: 16px; padding: 2rem; max-width: 500px; width: calc(100% - 2rem); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .modal-card { background: var(--bs-surface); border: 1px solid rgba(201,168,124,0.2); border-radius: 16px; padding: 2rem; max-width: 500px; width: calc(100% - 2rem); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
     .modal-box h2 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--bs-fg); margin-bottom: 0.5rem; }
     .beached-modal-box { max-width: 560px; max-height: 80vh; overflow-y: auto; }
     .beached-modal-list { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -2548,6 +3080,7 @@
     .btn-chat-speed:disabled { opacity: 0.4; }
     .btn-chat-cancel { background: transparent; border: 1px solid var(--muted); color: var(--muted); padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
     .map-container { height: 450px; border-radius: 12px; overflow: hidden; border: 1px solid var(--bs-border); cursor: crosshair; position: relative; }
+    .map-hint { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(20,20,23,0.85); color: #c9a87c; padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; z-index: 500; pointer-events: none; white-space: nowrap; backdrop-filter: blur(4px); border: 1px solid rgba(201,168,124,0.2); }
     .map-container:fullscreen { height: 100vh; border-radius: 0; border: none; }
     .map-badge {
         position: absolute; top: 10px; right: 10px; z-index: 1000;
