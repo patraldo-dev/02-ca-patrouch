@@ -6,7 +6,7 @@
     import { invalidateAll } from '$app/navigation';
     import { getEffectInfo, TARGET_LABELS } from '$lib/narrator-catalog.js';
     import { getRank, getNextRank, getRankProgress, RANKS } from '$lib/ranks.js';
-    import { TRANSPORT_MODES, calculateMoveCost } from '$lib/transport.js';
+    import { TRANSPORT_MODES, calculateMoveCost, canTraverse } from '$lib/transport.js';
 
     let { data } = $props();
 
@@ -662,10 +662,27 @@
             for (const neighborId of (adj[current.id] || [])) {
                 if (visited.has(neighborId)) continue;
                 const nTri = tris[neighborId];
-                // Terrain gate: if modeFilter provided, check modes object
-                if (modeFilter && nTri.modes && !nTri.modes[modeFilter]) continue;
-                // Legacy gate: skip obstacles if no filter
-                if (!modeFilter && nTri.n !== 1) continue;
+                // Terrain gate: infer terrain from navigability flag
+                // n=1 → ocean/water, n=0 → land
+                // Coastline triangles (mix of land/water vertices) get beach treatment
+                if (modeFilter) {
+                    let terrain = nTri.n === 1 ? 'water' : 'land';
+                    const mode = TRANSPORT_MODES[modeFilter];
+                    if (mode && !mode.terrains.includes(terrain)) {
+                        // Check if this is a coastline triangle (adjacent to both land and water)
+                        const neighbors = (adj[neighborId] || []);
+                        const hasWater = neighbors.some(nid => tris[nid]?.n === 1) || nTri.n === 1;
+                        const hasLand = neighbors.some(nid => tris[nid]?.n === 0) || nTri.n === 0;
+                        if (hasWater && hasLand && mode.terrains.includes('beach')) {
+                            // Allowed — beach terrain
+                        } else {
+                            continue;
+                        }
+                    }
+                } else {
+                    // Legacy gate: skip non-navigable when no filter
+                    if (nTri.n !== 1) continue;
+                }
 
                 const dx = nTri.c[0] - tris[current.id].c[0];
                 const dy = nTri.c[1] - tris[current.id].c[1];
