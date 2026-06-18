@@ -1,12 +1,91 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { t } from '$lib/i18n';
     import { get } from 'svelte/store';
     import { browser } from '$app/environment';
     import { invalidateAll } from '$app/navigation';
     import { getEffectInfo, TARGET_LABELS } from '$lib/narrator-catalog.js';
     import { getRank, getNextRank, getRankProgress, RANKS } from '$lib/ranks.js';
-    import { TRANSPORT_MODES, calculateMoveCost, canTraverse } from '$lib/transport.js';
+    import { POIS, POI_LIST, EDGES, hopsBetween, getTravelNarrative, TRAVEL_MODES, calculateTravelCost, canBoat } from '$lib/poi.js';
+
+    // POI Travel System
+    let currentPOI = $state(null);
+    let selectedDest = $state(null);
+    let showTravelModal = $state(false);
+    let travelLoading = $state(false);
+
+    function detectPOI(lat, lon) {
+        if (!lat || !lon) return 'muertos';
+        let nearest = 'muertos';
+        let minDist = Infinity;
+        for (const poi of POI_LIST) {
+            const d = Math.hypot(lat - poi.lat, lon - poi.lon);
+            if (d < minDist) { minDist = d; nearest = poi.id; }
+        }
+        return nearest;
+    }
+
+    function getTravelOptions(fromId, toId) {
+        if (fromId === toId) return [];
+        return Object.values(TRAVEL_MODES)
+            .map(mode => {
+                const result = calculateTravelCost(fromId, toId, mode.id);
+                return { ...mode, ...result, fromId, toId };
+            })
+            .filter(r => !r.impossible);
+    }
+
+    function openTravel(destId) {
+        selectedDest = destId;
+        showTravelModal = true;
+    }
+
+    async function executeTravel(modeId) {
+        if (!selectedDest || travelLoading) return;
+        const from = currentPOI || detectPOI(data.myPlayer?.lat, data.myPlayer?.lon);
+        const cost = calculateTravelCost(from, selectedDest, modeId);
+        if (cost.impossible) return;
+
+        travelLoading = true;
+        try {
+            const dest = POIS[selectedDest];
+            const res = await fetch('/api/bottlequest/move', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target_lat: dest.lat, target_lon: dest.lon,
+                    transport_mode: modeId, poi_id: selectedDest
+                })
+            });
+            const d = await res.json();
+            if (d.error) { showToast(d.error); }
+            else {
+                showToast(`✅ ${TRAVEL_MODES[modeId].icon} ${POIS[selectedDest].name} · −${d.cost} ⚡`);
+                showTravelModal = false;
+                currentPOI = selectedDest;
+                selectedDest = null;
+                await invalidateAll();
+            }
+        } catch { showToast('Travel failed'); }
+        travelLoading = false;
+
+    async function captureBottle(bottleId) {
+        try {
+            const res = await fetch('/api/bottlequest/capture', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bottle_id: bottleId })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast(`🎉 ¡Capturada! +${result.reward?.points || 50} pts · +${result.reward?.fuel || 25} ⚡`);
+                await invalidateAll();
+            } else {
+                showToast(result.error || 'No se pudo capturar');
+            }
+        } catch { showToast('Error de red'); }
+    }
+    }
 
     let { data } = $props();
 
@@ -220,865 +299,7 @@
     let totalBeached = $derived(data.bottles.filter(b => b.status === 'beached').length);
     let totalFound = $derived(data.bottles.filter(b => b.status === 'found').length);
 
-    // Map
-    let mapEl = $state(null);
-    let isFullscreen = $state(false);
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            mapEl.requestFullscreen().then(() => isFullscreen = true).catch(() => {});
-        } else {
-            document.exitFullscreen().then(() => isFullscreen = false);
-        }
-    }
-    onMount(() => {
-        document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
-    });
-    let mapInstance = $state(null);
-    let leafletLib = null;
-
-    // Navmesh — multi-mesh system (A/B/C/D)
-    let navVisible = $state(false);
-    let navmeshLayer = null;
-    let dynamicGridLayer = null;
-    let rangeCircle = null;
-    let navmeshData = null;
-    let activeMeshKey = $state(null); // 'A' | 'B' | 'C' | 'D'
-    let meshManifest = null;
-    let selectedTriangle = $state(null);
-    let pathStart = $state(null);
-    let pathEnd = $state(null);
-    let pathLine = null;
-    let pathTriangles = [];
-    let currentZoom = $state(4);
-
-    // Mesh tiers — map zoom to mesh file
-    const MESH_TIERS = [
-        { key: 'A', minZoom: 15, file: '/navmesh/pv-navmesh-a.json', labelKey: 'booty.mesh_pedestrian',  modes: ['walk', 'swim'] },
-        { key: 'B', minZoom: 13, file: '/navmesh/pv-navmesh-b.json', labelKey: 'booty.mesh_neighborhood', modes: ['walk', 'bike', 'bus', 'swim'] },
-        { key: 'C', minZoom: 11, file: '/navmesh/pv-navmesh-c.json', labelKey: 'booty.mesh_city', modes: ['bike', 'bus', 'taxi', 'drive'] },
-        { key: 'D', minZoom: 5,  file: '/navmesh/pv-navmesh-d.json', labelKey: 'booty.mesh_bay', modes: ['sail', 'speedboat', 'taxi', 'drive'] },
-    ];
-
-    function meshTierForZoom(zoom) {
-        return MESH_TIERS.find(t => zoom >= t.minZoom) || MESH_TIERS[MESH_TIERS.length - 1];
-    }
-
-    // Zoom level → cell size + cost
-    const ZOOM_TIERS = [
-        { minZoom: 17, cellDeg: 0.0001, label: '~10m',   cost: 1 },
-        { minZoom: 15, cellDeg: 0.0005, label: '~50m',   cost: 10 },
-        { minZoom: 13, cellDeg: 0.002,  label: '~200m',  cost: 100 },
-        { minZoom: 11, cellDeg: 0.01,   label: '~1km',   cost: 1000 },
-        { minZoom: 9,  cellDeg: 0.05,   label: '~5km',   cost: 10000 },
-        { minZoom: 7,  cellDeg: 0.2,    label: '~20km',  cost: 100000 },
-        { minZoom: 5,  cellDeg: 1.0,    label: '~100km', cost: 1000000 },
-    ];
-
-    let cellLabel = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.label || '?');
-    let baseCellCost = $derived(ZOOM_TIERS.find(t => currentZoom >= t.minZoom)?.cost || 1);
-
-    // Cell cost — fixed per tier, no external multiplier
-    let cellCost = $derived(baseCellCost);
-
-    async function loadNavmesh(forceKey = null) {
-        const tier = forceKey ? MESH_TIERS.find(t => t.key === forceKey) : meshTierForZoom(currentZoom);
-        if (!tier) return null;
-
-        // If already loaded the right mesh, return it
-        if (navmeshData && activeMeshKey === tier.key && !forceKey) return navmeshData;
-
-        // Load new mesh
-        const res = await fetch(tier.file);
-        navmeshData = await res.json();
-        activeMeshKey = tier.key;
-
-        // Redraw if visible
-        if (navVisible && mapInstance) {
-            await toggleNavmesh(); // turn off
-            await toggleNavmesh(); // turn on with new mesh
-        }
-
-        return navmeshData;
-    }
-
-    // Called on zoom change — reload mesh if tier changed
-    async function onZoomMeshSwitch() {
-        const newTier = meshTierForZoom(currentZoom);
-        if (activeMeshKey && activeMeshKey !== newTier.key) {
-            await loadNavmesh(newTier.key);
-            drawMovementRange();
-        }
-    }
-
-    async function toggleNavmesh() {
-        if (!mapInstance || !leafletLib) return;
-        const L = leafletLib;
-        if (navVisible) {
-            if (navmeshLayer) { mapInstance.removeLayer(navmeshLayer); navmeshLayer = null; }
-            navVisible = false;
-            return;
-        }
-        const nav = await loadNavmesh();
-        navmeshLayer = L.layerGroup();
-
-        for (const tri of nav.triangles) {
-            const coords = tri.v.map(([lon, lat]) => [lat, lon]);
-            coords.push(coords[0]);
-            const navigable = tri.n === 1;
-            const terrain = tri.terrain || (navigable ? 'water' : 'land');
-            const terrainColors = {
-                water:    { color: 'rgba(100,180,255,0.3)', fill: 'rgba(60,140,220,0.08)' },
-                shallow:  { color: 'rgba(100,200,220,0.3)', fill: 'rgba(80,180,200,0.1)' },
-                land:     { color: 'rgba(180,120,80,0.2)',  fill: 'rgba(120,80,40,0.1)' },
-                beach:    { color: 'rgba(240,210,140,0.3)', fill: 'rgba(220,190,120,0.15)' },
-                pier:     { color: 'rgba(201,168,124,0.5)', fill: 'rgba(201,168,124,0.25)' },
-            };
-            const tc = terrainColors[terrain] || terrainColors.water;
-            const polygon = L.polygon(coords, {
-                color: tc.color,
-                fillColor: tc.fill,
-                weight: navigable ? 0.8 : 0.4,
-                fillOpacity: 0.12,
-                interactive: false, // triangles are visual only — map click handles movement
-            });
-
-            // No triangle click handlers — movement is via map click only
-
-            navmeshLayer.addLayer(polygon);
-        }
-
-        navmeshLayer.addTo(mapInstance);
-        navVisible = true;
-        // Don't override map position — let the caller decide where to fly
-        drawDynamicGrid();
-        drawMovementRange();
-    }
-
-    // Draw zoom-responsive grid over navmesh area
-    function drawDynamicGrid() {
-        if (!mapInstance || !leafletLib) return;
-        const L = leafletLib;
-
-        // Remove previous grid
-        if (dynamicGridLayer) { mapInstance.removeLayer(dynamicGridLayer); dynamicGridLayer = null; }
-
-        const tier = ZOOM_TIERS.find(t => currentZoom >= t.minZoom);
-        if (!tier) return;
-
-        const cellDeg = tier.cellDeg;
-        const bounds = mapInstance.getBounds();
-        const sw = bounds.getSouthWest();
-        const ne = bounds.getNorthEast();
-
-        // Add padding
-        const padLat = (ne.lat - sw.lat) * 0.1;
-        const padLon = (ne.lng - sw.lng) * 0.1;
-        const minLat = sw.lat - padLat;
-        const maxLat = ne.lat + padLat;
-        const minLon = sw.lng - padLon;
-        const maxLon = ne.lng + padLon;
-
-        // Limit cells to prevent performance issues
-        const cols = Math.ceil((maxLon - minLon) / cellDeg);
-        const rows = Math.ceil((maxLat - minLat) / cellDeg);
-        if (cols * rows > 2000) return; // too many cells, skip
-
-        dynamicGridLayer = L.layerGroup();
-
-        const startCol = Math.floor(minLon / cellDeg);
-        const endCol = Math.ceil(maxLon / cellDeg);
-        const startRow = Math.floor(minLat / cellDeg);
-        const endRow = Math.ceil(maxLat / cellDeg);
-
-        for (let col = startCol; col <= endCol; col++) {
-            for (let row = startRow; row <= endRow; row++) {
-                const south = row * cellDeg;
-                const north = (row + 1) * cellDeg;
-                const west = col * cellDeg;
-                const east = (col + 1) * cellDeg;
-
-                // Only draw if in PV area
-                if (south > 21.0 || north < 20.4 || east < -105.7 || west > -105.0) continue;
-
-                const isOcean = south < 20.65 || west > -105.35; // simplified check
-                const color = isOcean ? 'rgba(100,180,255,0.25)' : 'rgba(180,120,80,0.2)';
-                const fillColor = isOcean ? 'rgba(60,140,220,0.04)' : 'rgba(120,80,40,0.06)';
-
-                const rect = L.rectangle([[south, west], [north, east]], {
-                    color,
-                    fillColor,
-                    weight: 0.5,
-                    fillOpacity: isOcean ? 0.04 : 0.06,
-                    interactive: true,
-                });
-
-                rect.bindTooltip(`${tier.label} · ${tier.cost}`, {
-                    direction: 'top', className: 'nav-tri-label', opacity: 0.8,
-                    sticky: true,
-                });
-
-                rect.on('click', () => {
-                    const prevSelected = selectedTriangle;
-                    selectedTriangle = `grid:${col},${row}`;
-                    rect.setStyle({ fillColor: 'rgba(201,168,124,0.3)', fillOpacity: 0.3, weight: 1.5, color: '#c9a87c' });
-
-                    // Move to center of this cell
-                    const targetLat = (south + north) / 2;
-                    const targetLon = (west + east) / 2;
-                    calculatePath(targetLat, targetLon);
-                });
-
-                dynamicGridLayer.addLayer(rect);
-            }
-        }
-
-        dynamicGridLayer.addTo(mapInstance);
-    }
-
-    function flyToPlayer(player) {
-        if (mapInstance) mapInstance.flyTo([player.lat, player.lon], 6, { duration: 1.5 });
-    }
-
-    function flyToBottle(bottle) {
-        if (mapInstance && bottle.current_lat) mapInstance.flyTo([bottle.current_lat, bottle.current_lon], 8, { duration: 1.5 });
-    }
-
-    // Draw movement range circle based on player fuel
-    // Draw movement range — Dijkstra (zoom ≥ 14) or circle (zoom ≤ 13)
-    let rangePolygon = null;
-
-    function drawMovementRange() {
-        if (!mapInstance || !leafletLib || !data.myPlayer) return;
-        const L = leafletLib;
-
-        // Remove previous range
-        if (rangeCircle) { mapInstance.removeLayer(rangeCircle); rangeCircle = null; }
-        if (rangePolygon) { mapInstance.removeLayer(rangePolygon); rangePolygon = null; }
-
-        const playerFuel = (data.myPlayer?.fuel || 0) + (data.myPlayer?.checkin_fuel || 0);
-        if (playerFuel <= 0) return;
-
-        const tier = ZOOM_TIERS.find(t => currentZoom >= t.minZoom);
-        if (!tier) return;
-
-        const playerLat = data.myPlayer.lat || 20.6063;
-        const playerLon = data.myPlayer.lon || -105.2355;
-
-        if (navmeshData && (activeMeshKey === 'A' || activeMeshKey === 'B')) {
-            // === DIJKSTRA on navmesh ===
-            const startTri = findTriangle(playerLat, playerLon);
-            if (!startTri) return;
-
-            const stepsCanAfford = Math.floor(playerFuel / tier.cost);
-            const visited = new Map(); // triId → steps remaining
-            const queue = [{ id: startTri.id, steps: 0 }];
-            const reachable = new Set();
-
-            while (queue.length > 0) {
-                const current = queue.shift();
-                if (visited.has(current.id) && visited.get(current.id) <= current.steps) continue;
-                visited.set(current.id, current.steps);
-
-                if (current.steps > stepsCanAfford) continue;
-                reachable.add(current.id);
-
-                // Expand neighbors
-                for (const neighborId of (navmeshData.adjacency[current.id] || [])) {
-                    if (navmeshData.triangles[neighborId].n !== 1) continue; // skip obstacles
-                    if (!visited.has(neighborId) || visited.get(neighborId) > current.steps + 1) {
-                        queue.push({ id: neighborId, steps: current.steps + 1 });
-                    }
-                }
-            }
-
-            if (reachable.size === 0) return;
-
-            // Build polygon outline from reachable triangles
-            // Collect all boundary edges (edges shared with non-reachable triangles)
-            const outlinePoints = [];
-            const edgeSet = new Set();
-
-            for (const triId of reachable) {
-                const tri = navmeshData.triangles[triId];
-                const v = tri.v; // [[lon,lat], [lon,lat], [lon,lat]]
-                for (let i = 0; i < 3; i++) {
-                    const j = (i + 1) % 3;
-                    const edgeKey = v[i][0] < v[j][0] || (v[i][0] === v[j][0] && v[i][1] < v[j][1])
-                        ? `${v[i][0]},${v[i][1]}-${v[j][0]},${v[j][1]}`
-                        : `${v[j][0]},${v[j][1]}-${v[i][0]},${v[i][1]}`;
-
-                    // Check if neighbor across this edge is also reachable
-                    // Simple: if edge is shared with a non-reachable tri, it's a boundary
-                    let isBoundary = false;
-                    for (const neighborId of (navmeshData.adjacency[triId] || [])) {
-                        if (!reachable.has(neighborId)) {
-                            // Check if this edge belongs to this neighbor
-                            const nTri = navmeshData.triangles[neighborId];
-                            const nv = nTri.v;
-                            // Check if any edge of neighbor matches this edge
-                            for (let ni = 0; ni < 3; ni++) {
-                                const nj = (ni + 1) % 3;
-                                const nEdgeKey = nv[ni][0] < nv[nj][0] || (nv[ni][0] === nv[nj][0] && nv[ni][1] < nv[nj][1])
-                                    ? `${nv[ni][0]},${nv[ni][1]}-${nv[nj][0]},${nv[nj][1]}`
-                                    : `${nv[nj][0]},${nv[nj][1]}-${nv[ni][0]},${nv[ni][1]}`;
-                                if (nEdgeKey === edgeKey) {
-                                    isBoundary = true;
-                                    break;
-                                }
-                            }
-                            if (isBoundary) break;
-                        }
-                    }
-                    // Also boundary if no neighbor (outer edge of navmesh)
-                    const neighbors = navmeshData.adjacency[triId] || [];
-                    if (neighbors.length < 3 && !isBoundary) {
-                        // Could be outer boundary — check if any neighbor shares this edge
-                        let shared = false;
-                        for (const nId of neighbors) {
-                            if (reachable.has(nId)) {
-                                const nTri = navmeshData.triangles[nId];
-                                const nv = nTri.v;
-                                for (let ni = 0; ni < 3; ni++) {
-                                    const nj = (ni + 1) % 3;
-                                    const nKey = nv[ni][0] < nv[nj][0] || (nv[ni][0] === nv[nj][0] && nv[ni][1] < nv[nj][1])
-                                        ? `${nv[ni][0]},${nv[ni][1]}-${nv[nj][0]},${nv[nj][1]}`
-                                        : `${nv[nj][0]},${nv[nj][1]}-${nv[ni][0]},${nv[ni][1]}`;
-                                    if (nKey === edgeKey) { shared = true; break; }
-                                }
-                            }
-                        }
-                        if (!shared) isBoundary = true;
-                    }
-
-                    if (isBoundary) {
-                        outlinePoints.push([v[i][1], v[i][0]]); // [lat, lon]
-                        outlinePoints.push([v[j][1], v[j][0]]);
-                    }
-                }
-            }
-
-            if (outlinePoints.length > 2) {
-                // Sort points to form a rough polygon (convex hull approximation)
-                const center = outlinePoints.reduce((acc, p) => [acc[0] + p[0], acc[1] + p[1]], [0, 0]).map(v => v / outlinePoints.length);
-                outlinePoints.sort((a, b) => {
-                    return Math.atan2(a[0] - center[0], a[1] - center[1]) - Math.atan2(b[0] - center[0], b[1] - center[1]);
-                });
-                outlinePoints.push(outlinePoints[0]); // close
-
-                rangePolygon = L.polygon(outlinePoints, {
-                    color: 'rgba(201,168,124,0.5)',
-                    fillColor: 'rgba(201,168,124,0.1)',
-                    fillOpacity: 0.1,
-                    weight: 1.5,
-                    dashArray: '6, 4',
-                }).addTo(mapInstance);
-
-                rangePolygon.bindTooltip(`Alcance: ${reachable.size} triángulos · ${stepsCanAfford} pasos`, {
-                    permanent: false, direction: 'top', className: 'nav-tri-label'
-                });
-            }
-        } else {
-            // === CIRCLE for low zoom ===
-            const cellsCanAfford = Math.floor(playerFuel / tier.cost);
-            const radiusDeg = Math.min(cellsCanAfford * tier.cellDeg, 5.0);
-            const radiusKm = radiusDeg * 111;
-            const radiusM = radiusKm * 1000;
-
-            rangeCircle = L.circle([playerLat, playerLon], {
-                radius: radiusM,
-                color: 'rgba(201,168,124,0.5)',
-                fillColor: 'rgba(201,168,124,0.08)',
-                fillOpacity: 0.08,
-                weight: 1.5,
-                dashArray: '6, 4',
-            }).addTo(mapInstance);
-
-            rangeCircle.bindTooltip(`Alcance: ~${radiusKm < 1 ? (radiusKm * 1000).toFixed(0) + 'm' : radiusKm.toFixed(0) + 'km'}`, {
-                permanent: false, direction: 'top', className: 'nav-tri-label'
-            });
-        }
-    }
-
-    // A* pathfinding on navmesh adjacency
-    function findTriangle(lat, lon) {
-        if (!navmeshData) return null;
-        let best = null, bestDist = Infinity;
-        for (const tri of navmeshData.triangles) {
-            const dx = tri.c[0] - lon;
-            const dy = tri.c[1] - lat;
-            const d = dx * dx + dy * dy;
-            if (d < bestDist) { bestDist = d; best = tri; }
-        }
-        return best;
-    }
-
-    // Snap a lat/lon to the nearest NAVIGABLE triangle centroid.
-    // Returns { lat, lon, triId } or null if no navmesh.
-    function snapToNavmesh(lat, lon) {
-        if (!navmeshData) return null;
-        let best = null, bestDist = Infinity;
-        for (const tri of navmeshData.triangles) {
-            if (tri.n !== 1) continue; // only navigable triangles
-            const dx = tri.c[0] - lon;
-            const dy = tri.c[1] - lat;
-            const d = dx * dx + dy * dy;
-            if (d < bestDist) { bestDist = d; best = tri; }
-        }
-        if (!best) return null;
-        return { lat: best.c[1], lon: best.c[0], triId: best.id };
-    }
-
-    // Cached snapped positions per bottle — only for beached bottles stuck in non-navigable triangles.
-    // Sailing/launched bottles stay at their real position — they're in the ocean where they belong.
-    const bottleSnapCache = new Map();
-    function getBottleSnap(bottle) {
-        if (!bottle?.id || !bottle?.current_lat) return null;
-        if (bottleSnapCache.has(bottle.id)) return bottleSnapCache.get(bottle.id);
-        // Only snap beached bottles — they washed ashore and may be stuck in a land triangle
-        if (bottle.status !== 'beached') return null;
-        const snap = snapToNavmesh(bottle.current_lat, bottle.current_lon);
-        if (snap) bottleSnapCache.set(bottle.id, snap);
-        return snap;
-    }
-
-    function astarNavmesh(fromId, toId, modeFilter = null) {
-        if (!navmeshData) return null;
-        const adj = navmeshData.adjacency;
-        const tris = navmeshData.triangles;
-        const toTri = tris[toId];
-        if (!toTri) return null;
-
-        // Priority queue (simple sorted array)
-        const open = [{ id: fromId, g: 0, f: 0, path: [fromId] }];
-        const visited = new Set();
-
-        while (open.length > 0) {
-            open.sort((a, b) => a.f - b.f);
-            const current = open.shift();
-            if (current.id === toId) return current.path;
-            if (visited.has(current.id)) continue;
-            visited.add(current.id);
-
-            for (const neighborId of (adj[current.id] || [])) {
-                if (visited.has(neighborId)) continue;
-                const nTri = tris[neighborId];
-                // Terrain gate: infer terrain from navigability flag
-                // n=1 → ocean/water, n=0 → land
-                // Coastline triangles (mix of land/water vertices) get beach treatment
-                if (modeFilter) {
-                    let terrain = nTri.n === 1 ? 'water' : 'land';
-                    const mode = TRANSPORT_MODES[modeFilter];
-                    if (mode && !mode.terrains.includes(terrain)) {
-                        // Check if this is a coastline triangle (adjacent to both land and water)
-                        const neighbors = (adj[neighborId] || []);
-                        const hasWater = neighbors.some(nid => tris[nid]?.n === 1) || nTri.n === 1;
-                        const hasLand = neighbors.some(nid => tris[nid]?.n === 0) || nTri.n === 0;
-                        if (hasWater && hasLand && mode.terrains.includes('beach')) {
-                            // Allowed — beach terrain
-                        } else {
-                            continue;
-                        }
-                    }
-                } else {
-                    // Legacy gate: skip non-navigable when no filter
-                    if (nTri.n !== 1) continue;
-                }
-
-                const dx = nTri.c[0] - tris[current.id].c[0];
-                const dy = nTri.c[1] - tris[current.id].c[1];
-                const edgeCost = Math.sqrt(dx * dx + dy * dy);
-                const g = current.g + edgeCost;
-
-                // Heuristic: straight-line distance to goal
-                const hx = nTri.c[0] - toTri.c[0];
-                const hy = nTri.c[1] - toTri.c[1];
-                const h = Math.sqrt(hx * hx + hy * hy);
-
-                open.push({ id: neighborId, g, f: g + h, path: [...current.path, neighborId] });
-            }
-        }
-        return null; // no path
-    }
-
-    // ═══ Multi-route calculation (Google Maps style) ═══
-    let routeResults = $state(null); // { routes: [{ mode, strategy, path, steps, cost, distKm, estTime, pathCoords, canAfford }] }
-    let selectedRouteIdx = $state(0);
-    let routeLines = []; // multiple path lines on map
-
-    function calculateRouteForMode(modeId, fromTriId, toTriId) {
-        const path = astarNavmesh(fromTriId, toTriId, modeId);
-        if (!path) return null;
-
-        const mode = TRANSPORT_MODES[modeId];
-        const pathCoords = path.map(tid => {
-            const t = navmeshData.triangles[tid];
-            return [t.c[1], t.c[0]];
-        });
-
-        const moveCount = path.length - 1;
-        const tier = ZOOM_TIERS.find(t => currentZoom >= t.minZoom);
-        const tierCost = tier?.cost || 1;
-
-        // Use transport cost model
-        const costResult = calculateMoveCost(modeId, moveCount, tierCost);
-        const distKm = haversine(pathCoords[0][0], pathCoords[0][1], pathCoords[pathCoords.length - 1][0], pathCoords[pathCoords.length - 1][1]);
-        const estTimeMin = (distKm / (mode.speedMult * 5)) * 60; // base 5 km/h walk → scaled
-
-        const playerFuel = (data.myPlayer?.fuel || 0) + (data.myPlayer?.checkin_fuel || 0);
-
-        return {
-            mode: modeId,
-            icon: mode.icon,
-            label: mode.label,
-            path,
-            steps: moveCount,
-            cost: costResult.totalCost,
-            perStepCost: costResult.perStepCost,
-            flatCost: costResult.flatCost || 0,
-            distKm: parseFloat(distKm.toFixed(2)),
-            estTimeMin: Math.round(estTimeMin),
-            pathCoords,
-            canAfford: playerFuel >= costResult.totalCost,
-        };
-    }
-
-    function calculateAllRoutes(targetLat, targetLon) {
-        if (!navmeshData) return;
-
-        // Snap player position to nearest navigable triangle
-        let pLat = data.myPlayer.lat;
-        let pLon = data.myPlayer.lon;
-        const rawPlayerTri = findTriangle(pLat, pLon);
-        if (rawPlayerTri && rawPlayerTri.n !== 1) {
-            const pSnap = snapToNavmesh(pLat, pLon);
-            if (pSnap) { pLat = pSnap.lat; pLon = pSnap.lon; }
-        }
-
-        // Snap target to nearest navigable triangle
-        let tLat = targetLat;
-        let tLon = targetLon;
-        const rawTargetTri = findTriangle(tLat, tLon);
-        if (rawTargetTri && rawTargetTri.n !== 1) {
-            const tSnap = snapToNavmesh(tLat, tLon);
-            if (tSnap) { tLat = tSnap.lat; tLon = tSnap.lon; }
-        }
-
-        const playerTri = findTriangle(pLat, pLon);
-        const targetTri = findTriangle(tLat, tLon);
-        if (!playerTri || !targetTri || playerTri.id === targetTri.id) return;
-
-        // Determine which modes are available for current mesh tier
-        const meshTier = meshTierForZoom(currentZoom);
-        const availableModes = Object.keys(TRANSPORT_MODES).filter(mId => {
-            const mode = TRANSPORT_MODES[mId];
-            // Check if mode is relevant for current mesh level
-            return meshTier.modes.some(mm => mm === mId) ||
-                   ['walk', 'swim'].includes(mId) && meshTier.key === 'A' ||
-                   ['bike', 'bus'].includes(mId) && meshTier.key === 'B' ||
-                   ['taxi', 'drive'].includes(mId) && (meshTier.key === 'C' || meshTier.key === 'D') ||
-                   ['sail', 'speedboat'].includes(mId) && meshTier.key === 'D';
-        });
-
-        // Always include all modes — let the pathfinding decide if it's possible
-        const allModes = Object.keys(TRANSPORT_MODES);
-        const routes = [];
-
-        for (const modeId of allModes) {
-            const route = calculateRouteForMode(modeId, playerTri.id, targetTri.id);
-            if (route && route.steps > 0) routes.push(route); // skip degenerate 0-step routes
-        }
-
-        // Sort: cheapest first
-        routes.sort((a, b) => a.cost - b.cost);
-
-        routeResults = { routes };
-        selectedRouteIdx = 0;
-
-        // Draw all routes on map with different colors
-        clearRouteLines();
-        const L = leafletLib;
-        const routeColors = ['#c9a87c', '#60a5fa', '#34d399', '#f87171', '#a78bfa', '#fbbf24', '#f472b6', '#22d3ee'];
-
-        routes.forEach((r, i) => {
-            const isSelected = i === 0;
-            const line = L.polyline(r.pathCoords, {
-                color: routeColors[i % routeColors.length],
-                weight: isSelected ? 4 : 2,
-                opacity: isSelected ? 0.9 : 0.4,
-                dashArray: isSelected ? null : '6, 4',
-            }).addTo(mapInstance);
-            routeLines.push(line);
-        });
-
-        return routes;
-    }
-
-    function selectRoute(idx) {
-        selectedRouteIdx = idx;
-        // Update line weights
-        clearRouteLines();
-        const L = leafletLib;
-        const routeColors = ['#c9a87c', '#60a5fa', '#34d399', '#f87171', '#a78bfa', '#fbbf24', '#f472b6', '#22d3ee'];
-
-        routeResults.routes.forEach((r, i) => {
-            const isSelected = i === idx;
-            const line = L.polyline(r.pathCoords, {
-                color: routeColors[i % routeColors.length],
-                weight: isSelected ? 4 : 2,
-                opacity: isSelected ? 0.9 : 0.4,
-                dashArray: isSelected ? null : '6, 4',
-            }).addTo(mapInstance);
-            routeLines.push(line);
-        });
-    }
-
-    function clearRouteLines() {
-        for (const line of routeLines) {
-            if (mapInstance) mapInstance.removeLayer(line);
-        }
-        routeLines = [];
-    }
-
-    function formatTime(min) {
-        if (min < 60) return `${min} min`;
-        const h = Math.floor(min / 60);
-        const m = min % 60;
-        return `${h}h ${m}min`;
-    }
-
-    async function executeSelectedRoute() {
-        if (!routeResults || selectedRouteIdx === null) return;
-        const route = routeResults.routes[selectedRouteIdx];
-        showMoveModal = false;
-
-        try {
-            const res = await fetch('/api/bottlequest/move', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    target_lat: route.pathCoords[route.pathCoords.length - 1][0],
-                    target_lon: route.pathCoords[route.pathCoords.length - 1][1],
-                    transport_mode: route.mode,
-                    path_steps: route.steps,
-                    bottle_id: movePreview?.bottleId || null
-                })
-            });
-            const result = await res.json();
-            if (res.ok) {
-                showToast(`${route.icon} Movido — costo: ${result.cost}`);
-                if (result.captured) {
-                    showToast(`🎉 ¡Botella capturada! +${result.captured.bonus} pts`);
-                }
-                clearRouteLines();
-                await invalidateAll();
-                drawMovementRange();
-            } else {
-                showToast(result.error || 'Move failed');
-            }
-        } catch (e) {
-            showToast('Move error');
-        }
-        routeResults = null;
-        movePreview = null;
-    }
-
-    let showMoveModal = $state(false);
-    let movePreview = $state(null);
-    let showProximityModal = $state(false);
-    let pendingProximityCapture = $state(null);
-
-    async function calculatePath(targetLat, targetLon, bottleId = null) {
-        if (!data.myPlayer) { showToast(get(t)('booty.login_required') || 'Log in to move'); return; }
-
-        // Proximity check first — if target is close, offer direct capture (bypasses navmesh)
-        if (bottleId) {
-            const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, targetLat, targetLon);
-            if (distM <= 100) {
-                // Within capture range — direct capture
-                pendingProximityCapture = { bottleId, distM, lat: targetLat, lon: targetLon };
-                showProximityModal = true;
-                return;
-            }
-        }
-
-        // Ensure navmesh is loaded before calculating
-        if (!navmeshData) {
-            try { await loadNavmesh(); } catch {}
-        }
-        if (!navmeshData) { showToast('Map data still loading — try again'); return; }
-
-        // Snap target to nearest navigable node if the target triangle isn't navigable
-        let pathTargetLat = targetLat;
-        let pathTargetLon = targetLon;
-        const rawTargetTri = findTriangle(targetLat, targetLon);
-        if (rawTargetTri && rawTargetTri.n !== 1) {
-            // Target is in a non-navigable triangle — snap to nearest navigable
-            const snap = snapToNavmesh(targetLat, targetLon);
-            if (snap) {
-                pathTargetLat = snap.lat;
-                pathTargetLon = snap.lon;
-            }
-        }
-
-        const playerTri = findTriangle(data.myPlayer.lat, data.myPlayer.lon);
-        const targetTri = findTriangle(pathTargetLat, pathTargetLon);
-
-        // Snap player too if in non-navigable triangle
-        let playerStartLat = data.myPlayer.lat;
-        let playerStartLon = data.myPlayer.lon;
-        if (playerTri && playerTri.n !== 1) {
-            const playerSnap = snapToNavmesh(playerStartLat, playerStartLon);
-            if (playerSnap) {
-                playerStartLat = playerSnap.lat;
-                playerStartLon = playerSnap.lon;
-            }
-        }
-        const playerTriSnapped = findTriangle(playerStartLat, playerStartLon);
-
-        if (!playerTriSnapped) { showToast('Your position is off the map'); return; }
-        if (!targetTri) { showToast('Target is off the map'); return; }
-        if (playerTriSnapped.id === targetTri.id) {
-            // Already at the same navmesh node — offer capture if bottle
-            if (bottleId) {
-                const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, pathTargetLat, pathTargetLon);
-                pendingProximityCapture = { bottleId, distM, lat: pathTargetLat, lon: pathTargetLon };
-                showProximityModal = true;
-                return;
-            }
-            showToast('Already here');
-            return;
-        }
-
-        const routes = calculateAllRoutes(pathTargetLat, pathTargetLon);
-        if (!routes || routes.length === 0) {
-            // No navmesh route — if there's a bottle, offer proximity capture as fallback
-            if (bottleId) {
-                const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, targetLat, targetLon);
-                pendingProximityCapture = { bottleId, distM, lat: targetLat, lon: targetLon };
-                showProximityModal = true;
-                return;
-            }
-            showToast('No route found — try a different point');
-            return;
-        }
-
-        // Set up move preview from cheapest route
-        const cheapest = routes[0];
-        pathTriangles = cheapest.path;
-        const playerFuel = (data.myPlayer?.fuel || 0) + (data.myPlayer?.checkin_fuel || 0);
-
-        movePreview = {
-            steps: cheapest.steps,
-            cost: cheapest.cost,
-            distKm: cheapest.distKm.toFixed(2),
-            pathCoords: cheapest.pathCoords,
-            targetLat: pathTargetLat,
-            targetLon: pathTargetLon,
-            originalTargetLat: targetLat,
-            originalTargetLon: targetLon,
-            path: cheapest.path,
-            playerFuel,
-            canAfford: playerFuel >= cheapest.cost,
-            cellLabel,
-            bottleId,
-        };
-        showMoveModal = true;
-    }
-
-    async function executeMove() {
-        if (routeResults) {
-            await executeSelectedRoute();
-            return;
-        }
-        if (!movePreview) return;
-        showMoveModal = false;
-
-        try {
-            const res = await fetch('/api/bottlequest/move', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    target_lat: movePreview.targetLat,
-                    target_lon: movePreview.targetLon,
-                    speed: 'sail',
-                    path_steps: movePreview.steps,
-                    bottle_id: movePreview.bottleId || null
-                })
-            });
-            const result = await res.json();
-            if (res.ok) {
-                showToast($t('booty.moved_cost', { n: result.cost }));
-                if (result.captured) {
-                    showToast(`🎉 ¡Botella capturada! +${result.captured.bonus} pts`);
-                } else if (movePreview.bottleId) {
-                    // Moved to navmesh node near bottle — check if in capture range now
-                    const distM = haversineM(data.myPlayer?.lat, data.myPlayer?.lon, movePreview.originalTargetLat || movePreview.targetLat, movePreview.originalTargetLon || movePreview.targetLon);
-                    if (distM <= 100) {
-                        // Try proximity capture
-                        const capRes = await fetch('/api/bottlequest/capture', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ bottle_id: movePreview.bottleId, snapped_lat: movePreview.targetLat, snapped_lon: movePreview.targetLon })
-                        });
-                        const capResult = await capRes.json();
-                        if (capResult.success) {
-                            showToast(`🎉 ¡Capturada! +${capResult.reward?.points || 50} pts · +${capResult.reward?.fuel || 25} ⚡`);
-                        }
-                    }
-                }
-                if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
-                clearRouteLines();
-                await invalidateAll();
-                drawMovementRange();
-            } else {
-                showToast(result.error || 'Move failed');
-            }
-        } catch (e) {
-            showToast('Move error');
-        }
-        movePreview = null;
-        routeResults = null;
-    }
-
-    function cancelMove() {
-        showMoveModal = false;
-        if (pathLine && mapInstance) { mapInstance.removeLayer(pathLine); pathLine = null; }
-        clearRouteLines();
-        movePreview = null;
-        routeResults = null;
-    }
-
-    async function confirmProximityCapture() {
-        if (!pendingProximityCapture) return;
-        const { bottleId, lat, lon } = pendingProximityCapture;
-        showProximityModal = false;
-        showToast('🏴‍☠️ Capturando...');
-        try {
-            const res = await fetch('/api/bottlequest/capture', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bottle_id: bottleId, snapped_lat: lat, snapped_lon: lon })
-            });
-            const result = await res.json();
-            if (result.success) {
-                showToast(`🎉 ¡Capturada! +${result.reward?.points || 50} pts · +${result.reward?.fuel || 25} ⚡`);
-                await invalidateAll();
-                drawMovementRange();
-            } else {
-                showToast(result.error || 'No se pudo capturar');
-            }
-        } catch {
-            showToast('Error de red');
-        }
-        pendingProximityCapture = null;
-    }
-
-    function cancelProximityCapture() {
-        showProximityModal = false;
-        pendingProximityCapture = null;
-    }
-
-    // Haversine
+    // Haversine (kept for distance calculations)
     function haversine(lat1, lon1, lat2, lon2) {
         const R = 6371;
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1106,287 +327,11 @@
         })
     );
 
-    onMount(async () => {
-        if (!browser) return;
 
-        // Expose move-to-bottle for popup buttons
-        window.__moveToBottle = (bottleId, lat, lon) => {
-            calculatePath(lat, lon, bottleId);
-        };
 
-        // Proximity capture — works without navmesh
-        let captureLoading = $state(false);
-        window.__captureBottle = async (bottleId) => {
-            if (captureLoading) return;
-            captureLoading = true;
-            showToast('🏴‍☠️ Capturando...');
-            try {
-                // Find bottle in data.bottles to get snap position
-                const bottle = data.bottles.find(b => b.id === bottleId);
-                const snap = bottle ? getBottleSnap(bottle) : null;
-                const body = { bottle_id: bottleId };
-                if (snap) { body.snapped_lat = snap.lat; body.snapped_lon = snap.lon; }
-                const res = await fetch('/api/bottlequest/capture', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    showToast(`🎉 ¡Capturada! +${result.reward?.points || 50} pts · +${result.reward?.fuel || 25} ⚡`);
-                    await invalidateAll();
-                    drawMovementRange();
-                } else {
-                    showToast(result.error || 'No se pudo capturar');
-                }
-            } catch {
-                showToast('Error de red');
-            }
-            captureLoading = false;
-        };
 
-        // Fetch Creative Tide
-        try {
-            const tideRes = await fetch('/api/creative-tide');
-            creativeTide = await tideRes.json();
-        } catch {}
 
-        const L = (await import('leaflet')).default;
-        leafletLib = L;
-        // Load Leaflet CSS dynamically to avoid global style conflicts
-        const css = document.createElement('link');
-        css.rel = 'stylesheet';
-        css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(css);
 
-        // Only allow zoom levels that map to grid tiers
-        const VALID_ZOOMS = [17, 15, 13, 11, 9, 7, 5];
-        const MIN_ZOOM = 5;
-        const MAX_ZOOM = 18;
-
-        // Center on player if logged in, otherwise Los Muertos Pier
-        const initCenter = data.myPlayer?.lat != null && data.myPlayer?.lon != null
-            ? [data.myPlayer.lat, data.myPlayer.lon]
-            : [20.6035, -105.2390];
-        const initZoom = data.myPlayer ? 16 : 14;
-
-        mapInstance = L.map(mapEl, {
-            center: initCenter,
-            zoom: initZoom,
-            zoomControl: true,
-            attributionControl: false,
-            minZoom: MIN_ZOOM,
-            maxZoom: MAX_ZOOM,
-            // Keep map within PV area bounds
-            maxBounds: [[19.5, -107.5], [22.0, -103.0]],
-            maxBoundsViscosity: 0.9
-        });
-
-        // Snap zoom to nearest valid tier level
-        function snapZoom(zoom) {
-            if (VALID_ZOOMS.includes(Math.round(zoom))) return Math.round(zoom);
-            // Find nearest valid zoom
-            let best = VALID_ZOOMS[0];
-            let bestDist = Math.abs(zoom - best);
-            for (const z of VALID_ZOOMS) {
-                if (Math.abs(zoom - z) < bestDist) { bestDist = Math.abs(zoom - z); best = z; }
-            }
-            return best;
-        }
-
-        // Track zoom level and snap to valid tiers
-        currentZoom = snapZoom(mapInstance.getZoom());
-        mapInstance.on('zoomend', () => {
-            const rawZoom = mapInstance.getZoom();
-            const snapped = snapZoom(rawZoom);
-            if (Math.round(rawZoom) !== snapped) {
-                mapInstance.setZoom(snapped, { animate: false });
-            }
-            currentZoom = snapped;
-            if (navVisible) drawDynamicGrid();
-            drawMovementRange();
-            onZoomMeshSwitch(); // reload mesh if tier changed
-        });
-
-        // Auto-load navmesh when zoomed into PV area
-        mapInstance.on('moveend', async () => {
-            const center = mapInstance.getCenter();
-            if (center.lat > 20.4 && center.lat < 21.0 && center.lng > -105.7 && center.lng < -105.0) {
-                if (!navmeshData) await loadNavmesh();
-                if (!navVisible) await toggleNavmesh();
-            }
-        });
-
-        // Pre-load navmesh since we start in PV
-        if (!navmeshData) {
-            try { await loadNavmesh(); } catch {}
-        }
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            maxZoom: 18
-        }).addTo(mapInstance);
-
-        L.control.attribution({ prefix: false }).addAttribution('© OpenStreetMap © CartoDB').addTo(mapInstance);
-        for (const bottle of data.bottles) {
-            if (!bottle.current_lat || !bottle.current_lon) continue;
-
-            if (bottle.positions?.length > 1) {
-                const coords = bottle.positions.map(p => [p.lat, p.lon]);
-                L.polyline(coords, { color: '#c9a87c', weight: 2, opacity: 0.4 }).addTo(mapInstance);
-            }
-
-            // Snap bottle to nearest navigable navmesh node
-            const snap = getBottleSnap(bottle);
-            const markerLat = snap ? snap.lat : bottle.current_lat;
-            const markerLon = snap ? snap.lon : bottle.current_lon;
-            const isSnapped = snap && (Math.abs(markerLat - bottle.current_lat) > 0.00001 || Math.abs(markerLon - bottle.current_lon) > 0.00001);
-
-            // If snapped position differs from real, draw dotted line
-            if (isSnapped) {
-                L.polyline([[bottle.current_lat, bottle.current_lon], [markerLat, markerLon]], {
-                    color: '#c9a87c', weight: 1.5, opacity: 0.5, dashArray: '3, 5'
-                }).addTo(mapInstance);
-            }
-
-            // Bottle marker — at snapped position
-            const bottleEmoji = bottle.status === 'beached' ? '🏺' : bottle.status === 'found' ? '📬' : '🍾';
-            const bottleIcon = L.divIcon({
-                className: 'bottle-marker',
-                html: `<div style="font-size:24px;text-align:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));">${bottleEmoji}</div>`,
-                iconSize: [28, 28],
-                iconAnchor: [14, 14]
-            });
-            const marker = L.marker([markerLat, markerLon], { icon: bottleIcon }).addTo(mapInstance);
-
-            const author = bottle.display_name || bottle.username || '?';
-            const catLabel = contentTypeLabel(bottle.content_type);
-            const launchDate = bottle.launched_at ? formatDate(bottle.launched_at) : '';
-            const launchCoords = bottle.launch_lat ? formatCoords(bottle.launch_lat, bottle.launch_lon) : '';
-            const currentCoords = bottle.current_lat ? formatCoords(bottle.current_lat, bottle.current_lon) : '';
-            const dist = bottle.distance_km ? bottle.distance_km.toFixed(0) + ' km' : '';
-            const statusText = statusLabel(bottle.status);
-            const captureBtn = (() => {
-                if (!data.myPlayer || !bottle.current_lat) return '';
-                if (bottle.status !== 'sailing' && bottle.status !== 'launched' && bottle.status !== 'beached') return '';
-                // Use snapped position if navmesh is loaded
-                const snap = getBottleSnap(bottle);
-                const targetLat = snap ? snap.lat : bottle.current_lat;
-                const targetLon = snap ? snap.lon : bottle.current_lon;
-                const distM = haversineM(data.myPlayer.lat, data.myPlayer.lon, targetLat, targetLon);
-                const radius = 15; // precise — must be at navmesh node
-                if (distM <= radius) {
-                    return `<button onclick="window.__captureBottle('${bottle.id}')" style="margin-top:6px;padding:6px 14px;background:#22c55e;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.85em">🍾 Capturar (${Math.round(distM)}m)</button>`;
-                }
-                const label = bottle.status === 'beached' ? '🏺 Move to collect' : '🗺️ Move to capture';
-                const bg = bottle.status === 'beached' ? '#f59e0b' : '#c9a87c';
-                return `<button onclick="window.__moveToBottle('${bottle.id}', ${targetLat}, ${targetLon})" style="margin-top:6px;padding:6px 14px;background:${bg};color:#09090b;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:0.85em">${label} (${Math.round(distM)}m)</button>`;
-            })();
-            marker.bindPopup(`
-                <div style="color:#09090b;font-family:Inter,sans-serif;min-width:200px">
-                    <strong style="font-family:Playfair Display,serif;font-size:1.05em">${bottle.title || '🍾'}</strong><br>
-                    <div style="font-size:0.85em;margin-top:4px;color:#555">
-                        <div><b>${author}</b> · <span style="background:#f0ebe3;padding:1px 6px;border-radius:4px;font-size:0.8em;color:#7a6538">${catLabel}</span></div>
-                        ${launchDate ? `<div style="margin-top:3px">📅 ${launchDate}</div>` : ''}
-                        ${launchCoords ? `<div>📍 ${launchCoords}</div>` : ''}
-                        ${currentCoords && currentCoords !== launchCoords ? `<div>➜ ${currentCoords}</div>` : ''}
-                        ${dist ? `<div>📏 ${dist}</div>` : ''}
-                        <div style="margin-top:3px;font-weight:600;color:#333">${statusText}</div>
-                    </div>
-                    ${captureBtn}
-                </div>
-            `);
-        }
-
-        const launchedBottles = data.bottles.filter(b => b.current_lat);
-        // Player markers — spread overlapping positions in a circle
-        const playerPts = [];
-        const posGroups = {};
-        for (const player of (data.players || [])) {
-            const key = `${player.lat},${player.lon}`;
-            if (!posGroups[key]) posGroups[key] = [];
-            posGroups[key].push(player);
-        }
-        for (const [key, group] of Object.entries(posGroups)) {
-            const count = group.length;
-            for (let i = 0; i < count; i++) {
-                const player = group[i];
-                let lat = player.lat, lon = player.lon;
-                if (count > 1) {
-                    const angle = (2 * Math.PI * i) / count;
-                    const radius = 0.003 * count;
-                    lat = lat + radius * Math.cos(angle);
-                    lon = lon + radius * Math.sin(angle);
-                }
-                playerPts.push([lat, lon]);
-                const emoji = player.type === 'ai' ? '🤖' : '🧭';
-                const avatarHtml = player.avatar_url
-                    ? `<img src="${player.avatar_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);" />`
-                    : `<div style="background:${player.team_color || '#c9a87c'};color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${emoji}</div>`;
-                const zIndexOffset = count > 1 ? i : 0;
-                const icon = L.divIcon({
-                    className: 'player-marker',
-                    html: avatarHtml,
-                    iconSize: [30, 30], iconAnchor: [15, 15]
-                });
-                const pm = L.marker([lat, lon], { icon, zIndexOffset }).addTo(mapInstance);
-                pm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${player.username}</strong><br><span style="color:#555;font-size:0.85em"><b>${player.team_name || ''}</b><br>📍 ${player.port_name || ''}</span></div>`);
-                pm.bindTooltip(player.username, {
-                    permanent: true, direction: 'top', offset: [0, -14], className: 'player-label'
-                });
-            }
-        }
-
-        // Booty Bots on map
-        const botPts = [];
-        for (const bot of (data.bots || [])) {
-            if (!bot.lat || !bot.lon) continue;
-            botPts.push([bot.lat, bot.lon]);
-            const isHijacked = bot.hijacked_by && new Date(bot.hijacked_until) > new Date();
-            const botAvatarHtml = bot.avatar_url
-                ? `<img src="${bot.avatar_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px dashed ${isHijacked ? '#fff' : '#ff6b6b'};box-shadow:0 0 12px rgba(239,68,68,0.5);" />`
-                : `<div style="background:${isHijacked ? '#c9a87c' : '#ef4444'};color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px dashed ${isHijacked ? '#fff' : '#ff6b6b'};box-shadow:0 0 12px rgba(239,68,68,0.5);animation:botPulse 2s infinite">☠️</div>`;
-            const icon = L.divIcon({
-                className: 'bot-marker',
-                html: botAvatarHtml,
-                iconSize: [32, 32], iconAnchor: [16, 16]
-            });
-            const bm = L.marker([bot.lat, bot.lon], { icon }).addTo(mapInstance);
-            bm.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${bot.name}</strong>${isHijacked ? '<br><span style="color:#c9a87c">⚓ Captured by ' + bot.hijacked_by + '</span>' : '<br><span style="color:#ef4444">🏴‍☠️ Booty Bot</span>'}<br><span style="color:#555;font-size:0.85em">💵 $${bot.beans} · 🍾 ${bot.captured_bottles} captures</span></div>`);
-            bm.bindTooltip(bot.name, {
-                permanent: true, direction: 'top', offset: [0, -16], className: 'bot-label'
-            });
-        }
-
-        // Alien Armies on map
-        const alienPts = [];
-        for (const alien of (data.aliens || [])) {
-            if (!alien.lat || !alien.lon) continue;
-            alienPts.push([alien.lat, alien.lon]);
-            const factionColors = { annunaki: '#7c3aed', greys: '#06b6d4' };
-            const factionIcons = { annunaki: '👽', greys: '🛸' };
-            const color = factionColors[alien.faction] || '#7c3aed';
-            const icon_ = factionIcons[alien.faction] || '👽';
-            const alienHtml = `<div style="background:${color};color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid ${color};box-shadow:0 0 16px ${color}88, 0 0 32px ${color}44;animation:alienPulse 1.5s infinite">${icon_}</div>`;
-            const alienIcon = L.divIcon({ className: 'alien-marker', html: alienHtml, iconSize: [36, 36], iconAnchor: [18, 18] });
-            const am = L.marker([alien.lat, alien.lon], { icon: alienIcon, zIndexOffset: 1000 }).addTo(mapInstance);
-            am.bindPopup(`<div style="color:#09090b;font-family:Inter,sans-serif"><strong>${alien.name}</strong><br><span style="color:${color};font-size:0.85em;font-weight:600">${icon_} Alien Warship</span><br><span style="color:#555;font-size:0.85em">❤️ HP: ${alien.hp}/100</span><br><span style="color:#ef4444;font-size:0.75em">⚠️ Crossfire zone: ~8km</span></div>`);
-            am.bindTooltip(alien.name, { permanent: true, direction: 'top', offset: [0, -18], className: 'alien-label' });
-        }
-
-        const allPts = [...launchedBottles.map(b => [b.current_lat, b.current_lon]), ...playerPts, ...botPts, ...alienPts];
-        // Only fitBounds if points are in the PV area, otherwise stay centered on pier
-        const pvPts = allPts.filter(p => p[0] > 19 && p[0] < 23 && p[1] > -110 && p[1] < -100);
-        if (pvPts.length > 3) {
-            mapInstance.fitBounds(L.latLngBounds(pvPts).pad(0.3));
-        } else {
-            mapInstance.setView([20.6035, -105.2390], 16);
-        }
-    });
-
-    let moveTarget = $state(null); // { lat, lon }
-    let moveSpeed = $state('sail');
-    let transportMode = $state('walk'); // new transport system
-    let moveLoading = $state(false);
     let chatInput = $state('');
     let chatLoading = $state(false);
     let chatHistory = $state([]);
@@ -1399,7 +344,7 @@
     let narratorEvent = $derived(narratorEvents[0] || null);
 
     let narratorSpeaking = $state(false);
-    let showMapInfo = $state(false);
+
     let currentAudio = $state(null);
     async function speakNarrator(text) {
         if (narratorSpeaking) return;
@@ -1529,9 +474,9 @@
         }
 
         if (lowerMsg.match(/^(fly|ve|vas|go|aller|vuela|llévame|llevame|where am i|dónde estoy|donde estoy|my location|mi ubicaci[oó]n)/)) {
-            if (mapInstance && data.myPlayer) {
-                mapInstance.flyTo([data.myPlayer.lat, data.myPlayer.lon], 15, { duration: 1.5 });
-                chatHistory = [...chatHistory, { role: 'bot', text: `🧭 ${get(t)('booty.flying_to_position')} (${data.myPlayer.lat.toFixed(4)}, ${data.myPlayer.lon.toFixed(4)})` }];
+            if (data.myPlayer) {
+                const poiName = POIS[currentPOI || detectPOI(data.myPlayer.lat, data.myPlayer.lon)]?.name || 'PV';
+                chatHistory = [...chatHistory, { role: 'bot', text: `🧭 Estás en ${poiName}` }];
             } else {
                 chatHistory = [...chatHistory, { role: 'bot', text: '⚠️ ' + (get(t)('booty.login_required') || 'Log in first') }];
             }
@@ -1560,7 +505,7 @@
 
     async function confirmChatMove(speed) {
         if (!pendingMove) return;
-        moveLoading = true;
+        travelLoading = true;
         try {
             const res = await fetch('/api/bottlequest/move', {
                 method: 'POST', credentials: 'include',
@@ -1576,38 +521,9 @@
                 await invalidateAll();
             }
         } catch { showToast('Move failed'); }
-        moveLoading = false;
+        travelLoading = false;
     }
 
-    // Click-to-move on map
-    $effect(() => {
-        if (!mapInstance || !data.myPlayer) return;
-        const handler = (e) => {
-            if (!data.myPlayer) return;
-            const lat = parseFloat(e.latlng.lat.toFixed(5));
-            const lon = parseFloat(e.latlng.lng.toFixed(5));
-            // Use new directions system
-            calculatePath(lat, lon);
-        };
-        mapInstance.on('click', handler);
-        return () => { mapInstance.off('click', handler); };
-    });
-
-    async function doMove() {
-        if (!moveTarget || moveLoading) return;
-        moveLoading = true;
-        try {
-            const res = await fetch('/api/bottlequest/move', {
-                method: 'POST', credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ target_lat: moveTarget.lat, target_lon: moveTarget.lon, transport_mode: transportMode })
-            });
-            const d = await res.json();
-            if (d.error) { showToast(d.error); }
-            else { showToast($t('booty.moved_cost', { n: d.cost })); moveTarget = null; await invalidateAll(); }
-        } catch { showToast('Move failed'); }
-        moveLoading = false;
-    }
 
     let checkedIn = $state(false);
     let streakCount = $state(0);
@@ -1789,7 +705,7 @@
                 retreatCooldown = true;
                 await invalidateAll();
                 // Re-center map on pier
-                if (mapInstance) mapInstance.flyTo([20.6035, -105.2390], 16, { duration: 1.5 });
+                
             } else {
                 showToast(d.error || 'Cannot retreat');
             }
@@ -1799,6 +715,12 @@
 
     onMount(async () => {
         if (browser) {
+            // Detect player's current POI
+            if (data.myPlayer?.lat && data.myPlayer?.lon) {
+                currentPOI = detectPOI(data.myPlayer.lat, data.myPlayer.lon);
+            } else {
+                currentPOI = 'muertos';
+            }
             loadCheckin();
             loadMyBottles();
             try {
@@ -1814,6 +736,12 @@
                 wordIndex = mktD.wordIndex || [];
             } catch {}
 
+            // Fetch Creative Tide
+            try {
+                const tideRes = await fetch('/api/creative-tide');
+                creativeTide = await tideRes.json();
+            } catch {}
+
             // Countdown clock — update every second
             if (browser) {
                 setInterval(() => { activeEffectsClock = Date.now(); }, 1000);
@@ -1822,50 +750,32 @@
     });
 </script>
 
-<svelte:head>
-    <title>{$t('games.find_the_bottle')} — Patrouch</title>
-</svelte:head>
-
-<!-- Ocean Map — first thing, full bleed -->
+<!-- POI Travel Map -->
 <div style="max-width:900px;margin:0 auto;padding:1.5rem 1.5rem 0">
 <div class="section">
     <div class="section-header">
-        <h2>{$t('bottles.map_title')}</h2>
-        <button class="btn-sm" onclick={() => toggleNavmesh()} title="Toggle Navmesh">🗺️</button>
-        <button class="btn-sm btn-fly-me" onclick={() => { if (mapInstance && data.myPlayer) mapInstance.flyTo([data.myPlayer.lat, data.myPlayer.lon], 15, { duration: 1.5 }); }} title={get(t)('booty.fly_to_me')}>🧭</button>
-        <button class="btn-sm" onclick={() => toggleFullscreen()} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? '🔳' : '🔳'}</button>
+        <h2>🗺️ Mares de Vallarta</h2>
     </div>
-    <div class="map-container" bind:this={mapEl}>
-        {#if data.myPlayer && !showMoveModal}
-            <div class="map-hint">📍 Tap anywhere to plot a route</div>
-        {/if}
-        <button class="map-badge" onclick={() => showMapInfo = !showMapInfo} title={$t('booty.power')}>
-            {#if data.myPlayer}
-                ⚡ {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)}
-            {/if}
-            {#if narratorEvent?.event_type !== 'flavor'}
-                <span style="color:#ef4444"> ⚠️</span>
-            {/if}
-            <span style="opacity:0.5;font-size:0.65rem">{showMapInfo ? '▲' : '▼'}</span>
-        </button>
-        {#if showMapInfo}
-            <div class="map-info-panel">
-                {#if data.myPlayer}
-                <div>⚡ {$t('booty.power')}: <strong>{formatPrice((data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0))}</strong></div>
+    <div class="poi-grid">
+        {#each POI_LIST as poi}
+            <button class="poi-card" class:current={currentPOI === poi.id}
+                onclick={() => openTravel(poi.id)}>
+                <span class="poi-icon">{poi.icon}</span>
+                <span class="poi-name">{poi.name}</span>
+                {#if currentPOI === poi.id}
+                    <span class="poi-here">📍 Aquí</span>
                 {/if}
-                <div>{$t('booty.zoom')}: <strong>{currentZoom}</strong> · {$t('booty.cell')}: <strong>{cellLabel}</strong> · {$t('booty.cost_per_step')}: <strong>{cellCost}</strong></div>
-                {#if activeMeshKey}
-                <div>{$t('booty.mesh')}: <strong>{activeMeshKey}</strong> ({$t(MESH_TIERS.find(t => t.key === activeMeshKey)?.labelKey || '?')}) · {navmeshData?.stats?.navigable || 0} {$t('booty.triangles')}</div>
-                {/if}
-                {#if creativeTide}
-                <div>{creativeTide.emoji} {$t('booty.tide')}: <strong>{creativeTide.level}</strong> ({creativeTide.tide}/100) — {creativeTide.stats?.writings || 0} {$t('booty.writings')}, {creativeTide.stats?.activeWriters || 0} {$t('booty.active_writers')}</div>
-                {/if}
-                {#if narratorEvent?.event_type !== 'flavor'}
-                <div style="color:#ef4444">⚠️ {narratorEvent?.title || 'Narrador'}</div>
-                {/if}
-            </div>
+            </button>
+        {/each}
+    </div>
+    {#if data.myPlayer}
+    <div class="map-badge-inline">
+        ⚡ {(data.myPlayer.fuel || 0) + (data.myPlayer.checkin_fuel || 0)} Power
+        {#if creativeTide}
+            · {creativeTide.emoji} {creativeTide.level}
         {/if}
     </div>
+    {/if}
 </div>
 </div>
 
@@ -2199,6 +1109,10 @@
     </details>
     {/if}
 
+
+
+    <!-- Travel Modal -->
+
     <!-- Beached Bottles Modal -->
     {#if showBeachedModal}
     <div class="modal-overlay" onclick={() => showBeachedModal = false}></div>
@@ -2209,11 +1123,7 @@
         <div class="beached-modal-list">
             {#each beachedBottles as bottle}
                 {@const daysSince = bottle.beached_at ? Math.floor((Date.now() - new Date(bottle.beached_at).getTime()) / 86400000) : '?'}
-                {@const nearbyPlayers = data.players.filter(p => {
-                    if (!p.lat || !p.lon || !bottle.current_lat || !bottle.current_lon) return false;
-                    const d = haversine(p.lat, p.lon, bottle.current_lat, bottle.current_lon);
-                    return d <= 10;
-                })}
+                {@const bottlePOI = detectPOI(bottle.current_lat, bottle.current_lon)}
                 {@const pointsWorth = Math.round(50 + (bottle.distance_km || 0) * 2)}
                 <div class="beached-modal-card">
                     <div class="beached-modal-header">
@@ -2222,149 +1132,60 @@
                     </div>
                     <div class="beached-modal-details">
                         <div class="detail-row"><span>{$t('booty.beached_modal.launched_by')}</span><span>{bottle.display_name || bottle.username || 'Anónimo'}</span></div>
-                        <div class="detail-row"><span>{$t('booty.beached_modal.location')}</span><span>{bottle.current_lat.toFixed(2)}°, {bottle.current_lon.toFixed(2)}°</span></div>
+                        <div class="detail-row"><span>{$t('booty.beached_modal.location')}</span><span>{POIS[bottlePOI]?.name || (bottle.current_lat?.toFixed(2) + '°, ' + bottle.current_lon?.toFixed(2) + '°')}</span></div>
                         <div class="detail-row"><span>{$t('booty.beached_modal.days_beach')}</span><span>{daysSince}d</span></div>
-                        <div class="detail-row"><span>{$t('booty.beached_modal.launch_port')}</span><span>{formatCoords(bottle.launch_lat, bottle.launch_lon)}</span></div>
                         <div class="detail-row"><span>{$t('booty.beached_modal.distance')}</span><span>{(bottle.distance_km || 0).toFixed(0)} km</span></div>
                         <div class="detail-row"><span>{$t('booty.beached_modal.points')}</span><span class="points-val">⭐ {pointsWorth}</span></div>
-                        {#if nearbyPlayers.length > 0}
-                        <div class="detail-row"><span>{$t('booty.beached_modal.nearby')}</span><span>{nearbyPlayers.map(p => p.display_name || p.username).join(', ')}</span></div>
-                        {/if}
                     </div>
-                    <button class="btn-flyto" onclick={() => { showBeachedModal = false; flyToBottle(bottle); }}>📍 {$t('booty.beached_modal.view_on_map')}</button>
+                    {#if data.myPlayer && bottlePOI === (currentPOI || detectPOI(data.myPlayer?.lat, data.myPlayer?.lon))}
+                        <button class="btn-flyto" onclick={() => captureBottle(bottle.id)}>🍾 ¡Recoger! (+{pointsWorth} pts)</button>
+                    {:else}
+                        <button class="btn-flyto" onclick={() => { showBeachedModal = false; openTravel(bottlePOI); }}>🗺️ Viajar a {POIS[bottlePOI]?.name || 'ubicación'}</button>
+                    {/if}
                 </div>
             {/each}
         </div>
     </div>
     {/if}
 
-    <!-- Proximity Capture Modal -->
-    {#if showProximityModal && pendingProximityCapture}
-    <div class="modal-overlay" onclick={cancelProximityCapture}></div>
-    <div class="modal-card" style="text-align:center">
-        <button class="btn-cancel" onclick={cancelProximityCapture}>✕</button>
-        <div style="font-size:3rem;margin-bottom:8px">🍾</div>
-        <h2 style="font-family:Playfair Display,serif">¡Botella al alcance!</h2>
-        <p style="color:var(--text-dim);margin:8px 0 16px">
-            Estás a <strong>{Math.round(pendingProximityCapture.distM)}m</strong> de la botella.<br>
-            ¿Recogerla del {pendingProximityCapture.distM <= 150 && pendingProximityCapture.distM > 75 ? 'agua' : 'mar/arena'}?
-        </p>
-        <div style="display:flex;gap:8px;justify-content:center">
-            <button class="btn btn-accent" onclick={confirmProximityCapture}>
-                🏴‍☠️ Recoger (+50 pts · +25 ⚡)
-            </button>
-            <button class="btn btn-cancel-move" onclick={cancelProximityCapture}>
-                ✋ Cancelar
-            </button>
+    {#if showTravelModal && selectedDest}
+    <div class="modal-overlay" onclick={() => { showTravelModal = false; selectedDest = null; }}></div>
+    <div class="modal-box travel-modal">
+        <button class="btn-cancel" onclick={() => { showTravelModal = false; selectedDest = null; }}>✕</button>
+        <h2>{POIS[selectedDest]?.icon} {POIS[selectedDest]?.name}</h2>
+        <p class="modal-desc">{POIS[selectedDest]?.blurb}</p>
+        
+        {#if POIS[selectedDest]?.subspots}
+        <div class="subspots">
+            {#each POIS[selectedDest].subspots as spot}
+            <div class="subspot">{spot.icon} {spot.name}</div>
+            {/each}
         </div>
-    </div>
-    {/if}
-
-    <!-- Move / Directions Modal — Google Maps Style -->
-    {#if showMoveModal && (movePreview || routeResults)}
-    <div class="modal-overlay" onclick={cancelMove}></div>
-    <div class="modal-card directions-modal">
-        <button class="btn-cancel" onclick={cancelMove}>✕</button>
-        <h2>🗺️ {$t('booty.routes')}</h2>
-
-        {#if routeResults && routeResults.routes.length > 0}
-            <!-- Route list -->
-            <div class="routes-list">
-                {#each routeResults.routes as route, i}
-                    <button
-                        class="route-card"
-                        class:selected={i === selectedRouteIdx}
-                        class:unaffordable={!route.canAfford}
-                        onclick={() => selectRoute(i)}
-                    >
-                        <div class="route-header">
-                            <span class="route-icon">{route.icon}</span>
-                            <span class="route-mode">{route.label}</span>
-                            <span class="route-time">{formatTime(route.estTimeMin)}</span>
-                        </div>
-                        <div class="route-details">
-                            <span class="route-dist">📏 {route.distKm} km</span>
-                            <span class="route-steps">📐 {route.steps} {$t('booty.steps')}</span>
-                            <span class="route-cost" class:unaffordable={!route.canAfford}>⚡ {route.cost}</span>
-                        </div>
-                    </button>
-                {/each}
-            </div>
-
-            <!-- Selected route breakdown -->
-            {#if routeResults.routes[selectedRouteIdx]}
-                {@const sel = routeResults.routes[selectedRouteIdx]}
-                <div class="route-breakdown">
-                    <div class="move-row">
-                        <span class="move-label">Mesh</span>
-                        <span class="move-value">{activeMeshKey || '?'} · {$t(MESH_TIERS.find(t => t.key === activeMeshKey)?.labelKey || '')}</span>
-                    </div>
-                    <div class="move-row">
-                        <span class="move-label">Celda</span>
-                        <span class="move-value">{cellLabel}</span>
-                    </div>
-                    {#if sel.flatCost > 0}
-                    <div class="move-row">
-                        <span class="move-label">{$t('booty.flat_fee')}</span>
-                        <span class="move-value">{sel.flatCost}</span>
-                    </div>
-                    {/if}
-                    <div class="move-row">
-                        <span class="move-label">{$t('booty.cost_per_step')}</span>
-                        <span class="move-value">{sel.perStepCost}</span>
-                    </div>
-                    <div class="move-divider"></div>
-                    <div class="move-row move-total">
-                        <span class="move-label">⚡ {$t('booty.power')}</span>
-                        <span class="move-value" style="color: {sel.canAfford ? '#f59e0b' : '#ef4444'}">{sel.cost}</span>
-                    </div>
-                    <div class="move-row">
-                        <span class="move-label">{$t('booty.your_price')}</span>
-                        <span class="move-value">{movePreview?.playerFuel || 0}</span>
-                    </div>
-                    {#if !sel.canAfford}
-                    <div class="move-warning">⚠️ {$t('booty.not_enough')}</div>
-                    {/if}
-                </div>
-            {/if}
-
-            <div class="move-actions">
-                <button class="btn btn-accent" onclick={executeMove} disabled={!routeResults.routes[selectedRouteIdx]?.canAfford}>
-                    {routeResults.routes[selectedRouteIdx]?.icon || '🚶'} {$t('booty.go')} ({routeResults.routes[selectedRouteIdx]?.cost || 0})
-                </button>
-                <button class="btn btn-cancel-move" onclick={cancelMove}>
-                    ✋ {$t('booty.cancel')}
-                </button>
-            </div>
+        {/if}
+        
+        {#if currentPOI === selectedDest || (!currentPOI && detectPOI(data.myPlayer?.lat, data.myPlayer?.lon) === selectedDest)}
+            <p class="no-requests">Ya estás en {POIS[selectedDest]?.name}.</p>
         {:else}
-            <!-- Fallback: single route (legacy) -->
-            <div class="move-breakdown">
-                <div class="move-row">
-                    <span class="move-label">{$t('booty.steps')}</span>
-                    <span class="move-value">{movePreview.steps} triángulos</span>
+        <div class="travel-options">
+            {#each getTravelOptions(currentPOI || detectPOI(data.myPlayer?.lat, data.myPlayer?.lon), selectedDest) as opt}
+            <button class="route-card" onclick={() => executeTravel(opt.id)} disabled={travelLoading}>
+                <div class="route-header">
+                    <span class="route-icon">{opt.icon}</span>
+                    <span class="route-mode">{opt.label}</span>
+                    <span class="route-time">{opt.timePerHop}</span>
                 </div>
-                <div class="move-row">
-                    <span class="move-label">{$t('booty.distance')}</span>
-                    <span class="move-value">{movePreview.distKm} km</span>
+                <div class="route-details">
+                    {#if opt.hops > 0}
+                    <span>📐 {opt.hops} escala{opt.hops > 1 ? 's' : ''}</span>
+                    {/if}
+                    <span class="route-cost">⚡ {opt.cost}</span>
                 </div>
-                <div class="move-row">
-                    <span class="move-label">{$t('booty.tier')}</span>
-                    <span class="move-value">{movePreview.cellLabel}</span>
-                </div>
-                <div class="move-divider"></div>
-                <div class="move-row move-total">
-                    <span class="move-label">⚡ {$t('booty.power')}</span>
-                    <span class="move-value" style="color: {movePreview.canAfford ? '#f59e0b' : '#ef4444'}">{movePreview.cost}</span>
-                </div>
-            </div>
-            <div class="move-actions">
-                <button class="btn btn-accent" onclick={executeMove} disabled={!movePreview.canAfford}>
-                    {$t('booty.move_btn', { n: movePreview.cost })}
-                </button>
-                <button class="btn btn-cancel-move" onclick={cancelMove}>
-                    ✋ {$t('booty.cancel')}
-                </button>
-            </div>
+                {#if opt.hops > 0}
+                <div class="route-narrative">{opt.narrative}</div>
+                {/if}
+            </button>
+            {/each}
+        </div>
         {/if}
     </div>
     {/if}
@@ -2445,8 +1266,7 @@
                                             </button>
                                         {:else}
                                             <span class={statusClass(bottle.status)}>{statusLabel(bottle.status)}</span>
-                                            {#if bottle.current_lat && mapInstance}
-                                                <button class="btn btn-sm btn-zoom" onclick={(e) => { e.stopPropagation(); mapInstance.flyTo([bottle.current_lat, bottle.current_lon], 8, { duration: 1 }); }} title="Zoom to bottle">📍</button>
+                                            {#if bottle.current_lat}
                                             {/if}
                                         {/if}
                                     </td>
@@ -2622,7 +1442,7 @@
         <div class="accordion-body">
             <div class="players-grid">
             {#each playersWithDist as player}
-                <div class="player-card" onclick={() => flyToPlayer(player)} role="button" tabindex="0">
+                <div class="player-card" role="button" tabindex="0">
                     <div class="player-header">
                         <div class="player-avatar" style="background:{player.team_color || 'var(--accent)'}">
                             {player.type === 'ai' ? '🤖' : '🧭'}
@@ -2640,7 +1460,7 @@
                         <div class="detail-row"><span>⭐ Points</span><span>{player.points || 0}</span></div>
                         <div class="detail-row"><span>⚡ {$t('booty.power')}</span><span>{formatPrice(player.fuel)}</span></div>
                         {#if player.nearestDist !== null}
-                            <button class="bottle-link" onclick={(e) => { e.stopPropagation(); flyToBottle(player.nearestBottle); }}>
+                            <button class="bottle-link" >
                                 🍾 Nearest: {player.nearestDist.toFixed(0)} km
                             </button>
                         {/if}
@@ -2702,9 +1522,9 @@
             <div style="font-size:0.75rem;margin:0.3rem 0;color:#ef4444">⛔ Movement blocked by El Narrador</div>
         {/if}
         <div class="chat-speed-btns">
-            <button class="btn-chat-speed" onclick={() => confirmChatMove('drift')} disabled={moveLoading}>🌊 Drift ({pendingMove.estimated_cost?.drift || '?'})</button>
-            <button class="btn-chat-speed" onclick={() => confirmChatMove('sail')} disabled={moveLoading}>⛵ Sail ({pendingMove.estimated_cost?.sail || '?'})</button>
-            <button class="btn-chat-speed" onclick={() => confirmChatMove('motor')} disabled={moveLoading}>🚤 Motor ({pendingMove.estimated_cost?.motor || '?'})</button>
+            <button class="btn-chat-speed" onclick={() => confirmChatMove('drift')} disabled={travelLoading}>🌊 Drift ({pendingMove.estimated_cost?.drift || '?'})</button>
+            <button class="btn-chat-speed" onclick={() => confirmChatMove('sail')} disabled={travelLoading}>⛵ Sail ({pendingMove.estimated_cost?.sail || '?'})</button>
+            <button class="btn-chat-speed" onclick={() => confirmChatMove('motor')} disabled={travelLoading}>🚤 Motor ({pendingMove.estimated_cost?.motor || '?'})</button>
             <button class="btn-chat-cancel" onclick={() => pendingMove = null}>✕</button>
         </div>
     </div>
@@ -3203,4 +2023,18 @@
     .player-details { display: flex; flex-direction: column; gap: 0.35rem; }
     .detail-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--bs-muted); }
     .detail-row span:last-child { color: var(--bs-fg); font-weight: 500; }
+    /* POI Grid */
+    .poi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+    .poi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: all 0.2s; text-align: center; font-family: inherit; }
+    .poi-card:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); transform: translateY(-2px); }
+    .poi-card.current { border-color: var(--accent); background: rgba(201,168,124,0.08); }
+    .poi-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+    .poi-name { font-weight: 600; color: var(--text); font-size: 0.9rem; }
+    .poi-here { display: block; font-size: 0.7rem; color: var(--accent); margin-top: 0.25rem; }
+    .map-badge-inline { text-align: center; font-size: 0.85rem; color: var(--text-dim); padding: 0.5rem; }
+    .travel-modal { max-width: 420px; text-align: left; max-height: 85vh; overflow-y: auto; }
+    .travel-options { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+    .subspots { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0 1rem; }
+    .subspot { font-size: 0.8rem; padding: 0.25rem 0.6rem; background: rgba(201,168,124,0.08); border-radius: 8px; color: var(--text-dim); }
+    .route-narrative { font-size: 0.78rem; color: var(--text-dim); font-style: italic; margin-top: 0.35rem; line-height: 1.4; }
 </style>

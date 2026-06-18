@@ -1,49 +1,8 @@
 import { json } from '@sveltejs/kit';
 import { logTransaction } from '$lib/server/bottlequest-logger';
-import { TRANSPORT_MODES, calculateMoveCost } from '$lib/transport.js';
+import { POIS, EDGES, hopsBetween, getTravelNarrative, calculateTravelCost, TRAVEL_MODES, canBoat } from '$lib/poi.js';
 
-const CAPTURE_RADIUS = 0.001; // ~100 meters — generous for navmesh-level capture
-
-// Legacy speed multipliers (kept for backward compat)
-const SPEED_MULT = {
-    drift: 0.5,
-    sail: 1.0,
-    motor: 4.0
-};
-
-const SPEED_MOVE_MULT = {
-    drift: 1.0,
-    sail: 2.0,
-    motor: 10.0
-};
-
-// Zone multipliers based on distance to target
-function getZoneMult(distDeg) {
-    if (distDeg > 0.05) return 1.0;       // ✈️ Fly: normal
-    if (distDeg > 0.005) return 2.0;      // 🚕 Taxi: 2x
-    return 5.0;                            // 🚶 Walk: 5x
-}
-
-// Night penalty: 1.5x fuel cost if target solar time is between 18:00-06:00
-function getNightMult(targetLon) {
-    const now = new Date();
-    const utcHours = now.getUTCHours() + now.getUTCMinutes() / 60;
-    const solarHours = (utcHours + targetLon / 15 + 24) % 24;
-    return (solarHours >= 18 || solarHours < 6) ? 1.5 : 1.0;
-}
-
-// Competition multiplier: how many other players within 0.05° of target
-async function getCompetitionMult(db, targetLat, targetLon, excludePlayerId) {
-    const { results: nearby } = await db.prepare(`
-        SELECT COUNT(*) as c FROM bq_players
-        WHERE id != ? AND type = 'human'
-        AND ABS(lat - ?) < 0.05 AND ABS(lon - ?) < 0.05
-    `).bind(excludePlayerId, targetLat, targetLon).all();
-    const count = nearby?.[0]?.c || 0;
-    if (count === 0) return 1.0;
-    if (count === 1) return 3.0;
-    return 5.0;
-}
+const CAPTURE_RADIUS = 0.001; // ~100 meters
 
 // Haversine in km
 function haversineKm(lat1, lon1, lat2, lon2) {
@@ -54,7 +13,6 @@ function haversineKm(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Degree distance
 function degDist(lat1, lon1, lat2, lon2) {
     return Math.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2);
 }
@@ -65,15 +23,131 @@ export async function POST({ request, locals, platform }) {
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { target_lat, target_lon, speed = 'sail', bottle_id, path_steps, transport_mode } = await request.json();
-        if (target_lat == null || target_lon == null) {
-            return json({ error: 'target_lat and target_lon required' }, { status: 400 });
+        const body = await request.json();
+        const { poi_id, travel_mode = 'walk', bottle_id } = body;
+
+        // ═══ POI-based travel (new system) ═══
+        if (poi_id) {
+            const targetPoi = POIS[poi_id];
+            if (!targetPoi) return json({ error: 'Unknown POI' }, { status: 400 });
+
+            // Find player
+            let player = await db.prepare(
+                `SELECT id, lat, lon, fuel, type, paralyzed_until, checkin_fuel, current_poi FROM bq_players WHERE username = ?`
+            ).bind(locals.user.username).first();
+            if (!player && locals.user.email) {
+                const emailPrefix = locals.user.email.split('@')[0];
+                if (emailPrefix !== locals.user.username) {
+                    player = await db.prepare(
+                        `SELECT id, lat, lon, fuel, type, paralyzed_until, checkin_fuel, current_poi FROM bq_players WHERE username = ?`
+                    ).bind(emailPrefix).first();
+                }
+            }
+            if (!player) return json({ error: 'No player found' }, { status: 404 });
+
+            // Check paralysis
+            if (player.paralyzed_until) {
+                const paralyzedUntil = new Date(player.paralyzed_until.replace(' ', 'T') + 'Z');
+                if (paralyzedUntil > new Date()) {
+                    return json({ error: 'Paralyzed by El Narrador', paralyzed_until: player.paralyzed_until }, { status: 403 });
+                }
+            }
+
+            // Determine current POI
+            const fromPoiId = player.current_poi || nearestPoi(player.lat, player.lon);
+            if (fromPoiId === poi_id) {
+                return json({ error: 'Ya estás aquí' }, { status: 400 });
+            }
+
+            // Calculate travel cost
+            const costResult = calculateTravelCost(fromPoiId, poi_id, travel_mode);
+            if (costResult.impossible) {
+                return json({ error: 'No hay ruta disponible', from: fromPoiId, to: poi_id }, { status: 400 });
+            }
+
+            const fuelCost = costResult.cost;
+            const totalFuel = (player.fuel || 0) + (player.checkin_fuel || 0);
+            if (totalFuel < fuelCost) {
+                return json({
+                    error: `Power insuficiente. Necesitas ${fuelCost}, tienes ${totalFuel}`,
+                    cost: fuelCost,
+                    fuel: totalFuel,
+                }, { status: 402 });
+            }
+
+            // Spend fuel
+            let fromCheckin = Math.min(player.checkin_fuel || 0, fuelCost);
+            let fromRegular = fuelCost - fromCheckin;
+            await db.prepare(`
+                UPDATE bq_players
+                SET lat = ?, lon = ?, fuel = fuel - ?, checkin_fuel = checkin_fuel - ?, current_poi = ?
+                WHERE id = ?
+            `).bind(targetPoi.lat, targetPoi.lon, fromRegular, fromCheckin, poi_id, player.id).run();
+
+            // Log move
+            await db.prepare(
+                `INSERT INTO bq_moves (id, player_id, from_lat, from_lon, to_lat, to_lon, distance_km, fuel_cost, speed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ).bind(crypto.randomUUID(), player.id, player.lat, player.lon, targetPoi.lat, targetPoi.lon, 0, fuelCost, travel_mode).run();
+
+            await logTransaction(db, { player_id: player.id, type: 'move', amount: -fuelCost, detail: `${travel_mode} → ${targetPoi.name}` });
+
+            // Check bottle capture at this POI
+            let captured = null;
+            let nearbyBottles = [];
+
+            if (bottle_id) {
+                const bottle = await db.prepare(
+                    `SELECT id, title, status, current_lat, current_lon FROM bottles WHERE id = ? AND status IN ('launched', 'sailing', 'beached')`
+                ).bind(bottle_id).first();
+
+                if (bottle) {
+                    const bDist = degDist(targetPoi.lat, targetPoi.lon, bottle.current_lat, bottle.current_lon);
+                    if (bDist <= CAPTURE_RADIUS) {
+                        const captureBonus = 50;
+                        await db.prepare(`UPDATE bottles SET status = 'found', opened_by = ?, opened_at = datetime('now') WHERE id = ?`)
+                            .bind(locals.user.id, bottle_id).run();
+                        await db.prepare(`UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`)
+                            .bind(captureBonus, captureBonus, player.id).run();
+                        captured = { bottle_id: bottle.id, title: bottle.title, bonus: captureBonus };
+                    }
+                }
+            }
+
+            // Find bottles near this POI (for discovery)
+            const { results: bottlesHere } = await db.prepare(`
+                SELECT id, title, status FROM bottles
+                WHERE status IN ('launched', 'sailing', 'beached')
+                AND ABS(current_lat - ?) < 0.002 AND ABS(current_lon - ?) < 0.002
+                LIMIT 10
+            `).bind(targetPoi.lat, targetPoi.lon).all();
+            nearbyBottles = bottlesHere || [];
+
+            const updated = await db.prepare(`SELECT fuel, checkin_fuel, lat, lon FROM bq_players WHERE id = ?`).bind(player.id).first();
+
+            return json({
+                moved: true,
+                poi: targetPoi,
+                narrative: costResult.narrative,
+                cost: fuelCost,
+                hops: costResult.hops,
+                mode: travel_mode,
+                mode_label: TRAVEL_MODES[travel_mode]?.label || travel_mode,
+                new_fuel: updated?.fuel,
+                checkin_fuel: updated?.checkin_fuel || 0,
+                captured,
+                nearby_bottles: nearbyBottles,
+                position: { lat: updated?.lat, lon: updated?.lon },
+            });
         }
 
-        // Accept both legacy 'speed' and new 'transport_mode'
-        const mode = transport_mode && TRANSPORT_MODES[transport_mode]
-            ? transport_mode
-            : 'sail'; // default to legacy sail
+        // ═══ Legacy coordinate-based move (backward compat) ═══
+        const { target_lat, target_lon, speed = 'sail', path_steps, transport_mode } = body;
+        if (target_lat == null || target_lon == null) {
+            return json({ error: 'poi_id or target_lat/target_lon required' }, { status: 400 });
+        }
+
+        const mode = transport_mode && require('$lib/transport.js').TRANSPORT_MODES[transport_mode]
+            ? transport_mode : 'sail';
 
         // Find player
         let player = await db.prepare(
@@ -87,167 +161,31 @@ export async function POST({ request, locals, platform }) {
                 ).bind(emailPrefix).first();
             }
         }
-
         if (!player) return json({ error: 'No player found' }, { status: 404 });
 
-        // Player position — needed by narrator event zone checks below
         const fromLat = player.lat;
         const fromLon = player.lon;
-
-        // Narrator event modifiers (populated during event check)
-        let speedPenaltyMult = 1.0;
-        let fuelPenaltyAmount = 0;
-
-        // Check paralysis
-        if (player.paralyzed_until) {
-            const paralyzedUntil = new Date(player.paralyzed_until.replace(' ', 'T') + 'Z');
-            if (paralyzedUntil > new Date()) {
-                return json({ error: 'Paralyzed by El Narrador', paralyzed_until: player.paralyzed_until }, { status: 403 });
-            }
-        }
-
-        // Check ALL active narrator events (not just weather/storm)
-        const { results: activeEvents } = await db.prepare(`
-            SELECT * FROM narrator_events
-            WHERE (expires_at IS NULL OR expires_at > datetime('now'))
-            AND started_at <= datetime('now')
-        `).all();
-
-        const playerType = player.type || 'human'; // 'human' or 'ai'
-
-        // Pier sanctuary check — players at pier are immune to calamities
-        const { isAtPier } = await import('$lib/server/pier.js');
-        const atPier = isAtPier(fromLat, fromLon);
-
-        for (const event of activeEvents || []) {
-            // Parse effects
-            let effects = {};
-            try { effects = JSON.parse(event.effects || '{}'); } catch {}
-
-            // Check if event targets this player type
-            const targetPlayers = event.target_players || 'all';
-            if (targetPlayers !== 'all' && targetPlayers !== playerType) continue; // not targeted
-
-            // Pier sanctuary — skip harmful events if at pier
-            if (atPier) {
-                const harmfulTypes = ['paralyze', 'storm', 'kraken', 'mutiny', 'fog', 'doldrums', 'market_crash', 'siren', 'bounty'];
-                if (harmfulTypes.includes(event.event_type)) continue;
-            }
-
-            // Check if event is zone-specific
-            if (event.affected_zone) {
-                let zoneLat, zoneLon, zoneRadius;
-                try {
-                    const zone = JSON.parse(event.affected_zone);
-                    zoneLat = zone.lat; zoneLon = zone.lon; zoneRadius = zone.radius || 2;
-                } catch { continue; }
-
-                const distToZone = haversineKm(fromLat, fromLon, zoneLat, zoneLon);
-                if (distToZone > zoneRadius) continue; // not in zone
-            }
-
-            // Apply effects
-            const noMove = effects.no_move === true;
-            const noVision = effects.no_vision === true;
-            const halfSpeed = effects.half_speed === true;
-            const fuelPenalty = effects.fuel_penalty || 0;
-
-            // AI-specific: if no_vision, AI can't navigate
-            if (noVision && playerType === 'ai') {
-                return json({
-                    error: `LIDAR/CV offline — ${event.title}`,
-                    event: event.title,
-                    event_narrative: event.narrative,
-                    blocked: true,
-                    reason: 'no_vision'
-                }, { status: 403 });
-            }
-
-            // Universal: no_move blocks everyone
-            if (noMove) {
-                return json({
-                    error: `El Narrador decrees: ${event.title}`,
-                    event: event.title,
-                    event_narrative: event.narrative,
-                    blocked: true,
-                    reason: 'no_move'
-                }, { status: 403 });
-            }
-
-            // Apply speed/cost modifiers (stored for later use in cost calc)
-            if (halfSpeed) speedPenaltyMult = 2.0; // doubles fuel cost
-            if (fuelPenalty) fuelPenaltyAmount += fuelPenalty;
-        }
-
         const distDeg = degDist(fromLat, fromLon, target_lat, target_lon);
-
-        if (distDeg < 0.000001) {
-            return json({ error: 'Already here' }, { status: 400 });
-        }
-
-        // Calculate distance in km
+        if (distDeg < 0.000001) return json({ error: 'Already here' }, { status: 400 });
         const distKm = haversineKm(fromLat, fromLon, target_lat, target_lon);
 
-        // Calculate power cost (no Brent — fixed per tier + mode)
-        let fuelCost;
-        let speedMult, zoneMult, compMult, nightMult;
-        const transportDef = TRANSPORT_MODES[mode];
-
-        const baseCostPerKm = 1; // reference value for cost breakdown
-
-        if (path_steps && path_steps > 0) {
-            const tierMult = distKm > 100 ? 1000000 : distKm > 20 ? 100000 : distKm > 5 ? 10000 : distKm > 1 ? 1000 : distKm > 0.2 ? 100 : distKm > 0.05 ? 10 : 1;
-            nightMult = getNightMult(target_lon);
-            zoneMult = null;
-            compMult = null;
-
-            if (transportDef) {
-                // New transport mode system — fixed costs, no external index
-                const costResult = calculateMoveCost(mode, path_steps, tierMult);
-                fuelCost = costResult.totalCost + fuelPenaltyAmount;
-                speedMult = transportDef.speedMult;
-            } else {
-                // Legacy speed system
-                speedMult = SPEED_MULT[speed];
-                fuelCost = Math.ceil(path_steps * tierMult * speedMult * nightMult * speedPenaltyMult) + fuelPenaltyAmount;
-            }
-        } else {
-            // Legacy distance-based cost
-            if (transportDef) {
-                nightMult = getNightMult(target_lon);
-                fuelCost = Math.ceil(distKm * (transportDef.costPerKm || baseCostPerKm) * nightMult * speedPenaltyMult) + (transportDef.flatCost || 0) + fuelPenaltyAmount;
-                speedMult = transportDef.speedMult;
-                zoneMult = null;
-                compMult = null;
-            } else {
-                speedMult = SPEED_MULT[speed];
-                zoneMult = getZoneMult(distDeg);
-                compMult = bottle_id ? await getCompetitionMult(db, target_lat, target_lon, player.id) : 1.0;
-                nightMult = getNightMult(target_lon);
-                fuelCost = Math.ceil(distKm * baseCostPerKm * speedMult * zoneMult * compMult * nightMult * speedPenaltyMult) + fuelPenaltyAmount;
-            }
-        }
-
+        // Simple flat cost for legacy moves
+        const fuelCost = Math.max(1, Math.ceil(distKm * 10));
         const totalFuel = (player.fuel || 0) + (player.checkin_fuel || 0);
         if (totalFuel < fuelCost) {
-            return json({
-                error: `Not enough fuel. Need ${fuelCost}, have ${totalFuel}`,
-                cost_breakdown: { distKm: distKm.toFixed(1), speedMult, zoneMult, compMult, nightMult, fuelCost }
-            }, { status: 402 });
+            return json({ error: `Not enough power. Need ${fuelCost}, have ${totalFuel}` }, { status: 402 });
         }
 
-        // Spend checkin_fuel first, then regular fuel
         let fromCheckin = Math.min(player.checkin_fuel || 0, fuelCost);
         let fromRegular = fuelCost - fromCheckin;
         await db.prepare(`UPDATE bq_players SET lat = ?, lon = ?, fuel = fuel - ?, checkin_fuel = checkin_fuel - ? WHERE id = ?`)
             .bind(target_lat, target_lon, fromRegular, fromCheckin, player.id).run();
 
-        // Record move
         await db.prepare(
             `INSERT INTO bq_moves (id, player_id, from_lat, from_lon, to_lat, to_lon, distance_km, fuel_cost, speed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(crypto.randomUUID(), player.id, fromLat, fromLon, target_lat, target_lon, distKm, fuelCost, speed).run();
 
-        await logTransaction(db, { player_id: player.id, type: 'move', amount: -fuelCost, detail: `${speed} ${distKm.toFixed(1)}km (${fromLat.toFixed(4)},${fromLon.toFixed(4)}) → (${target_lat.toFixed(4)},${target_lon.toFixed(4)})` });
+        await logTransaction(db, { player_id: player.id, type: 'move', amount: -fuelCost, detail: `${speed} ${distKm.toFixed(1)}km` });
 
         // Check bottle capture
         let captured = null;
@@ -255,66 +193,27 @@ export async function POST({ request, locals, platform }) {
             const bottle = await db.prepare(
                 `SELECT id, title, status FROM bottles WHERE id = ? AND status IN ('launched', 'sailing', 'beached')`
             ).bind(bottle_id).first();
-
             if (bottle) {
-                const bPos = await db.prepare(
-                    `SELECT lat, lon FROM bottle_positions WHERE bottle_id = ? ORDER BY recorded_at DESC LIMIT 1`
-                ).bind(bottle_id).first();
-
-                if (bPos) {
-                    const bottleDist = degDist(target_lat, target_lon, bPos.lat, bPos.lon);
-                    if (bottleDist <= CAPTURE_RADIUS) {
-                        // Capture!
-                        const captureBonus = 50;
-                        await db.prepare(`UPDATE bottles SET status = 'found', opened_by = ?, opened_at = datetime('now') WHERE id = ?`)
-                            .bind(locals.user.id, bottle_id).run();
-                        await db.prepare(`UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`)
-                            .bind(captureBonus, captureBonus, player.id).run();
-                        await db.prepare(`UPDATE bq_bean_inventory SET amount = amount + 2 WHERE player_id = ? AND bean_type = 'licorice'`).bind(player.id).run();
-                        captured = { bottle_id: bottle.id, title: bottle.title, bonus: captureBonus, reward: { amount: 2 } };
-
-                        // Resolve all bets on this bottle
-                        try {
-                            const { results: openBets } = await db.prepare(
-                                `SELECT * FROM bq_bets WHERE bottle_id = ? AND status = 'open'`
-                            ).bind(bottle_id).all();
-                            for (const bet of (openBets || [])) {
-                                const won = bet.bet_on_player_id === player.id;
-                                const winnings = won ? Math.floor(bet.amount * bet.odds * 0.95) : 0;
-                                const botFee = won ? Math.floor(bet.amount * bet.odds * 0.05) : 0;
-                                await db.prepare(`UPDATE bq_bets SET status = ?, resolved_at = datetime('now') WHERE id = ?`).bind(won ? 'won' : 'lost', bet.id).run();
-                                if (won) {
-                                    await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(winnings, bet.player_id).run();
-                                    if (botFee > 0) {
-                                        const { results: bots } = await db.prepare(`SELECT id FROM bq_players WHERE type = 'ai'`).all();
-                                        const bs = bots?.length ? Math.ceil(botFee / bots.length) : botFee;
-                                        for (const bot of bots) {
-                                            await db.prepare(`UPDATE bq_players SET fuel = fuel + ? WHERE id = ?`).bind(bs, bot.id).run();
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (betErr) {
-                            console.error('Bet resolution error:', betErr);
-                        }
-                    }
+                const bottleDist = degDist(target_lat, target_lon, bottle.current_lat || 0, bottle.current_lon || 0);
+                if (bottleDist <= CAPTURE_RADIUS) {
+                    const captureBonus = 50;
+                    await db.prepare(`UPDATE bottles SET status = 'found', opened_by = ?, opened_at = datetime('now') WHERE id = ?`)
+                        .bind(locals.user.id, bottle_id).run();
+                    await db.prepare(`UPDATE bq_players SET points = points + ?, fuel = fuel + ? WHERE id = ?`)
+                        .bind(captureBonus, captureBonus, player.id).run();
+                    captured = { bottle_id: bottle.id, title: bottle.title, bonus: captureBonus };
                 }
             }
         }
 
-        const updated = await db.prepare(`SELECT fuel, lat, lon FROM bq_players WHERE id = ?`).bind(player.id).first();
-
+        const updated = await db.prepare(`SELECT fuel, checkin_fuel, lat, lon FROM bq_players WHERE id = ?`).bind(player.id).first();
         return json({
             moved: true,
             new_fuel: updated?.fuel,
             checkin_fuel: updated?.checkin_fuel || 0,
             cost: fuelCost,
-            from_checkin: fromCheckin,
-            nightPenalty: nightMult > 1,
-            nightMult,
-            cost_breakdown: { distKm: distKm.toFixed(1), baseCostPerKm, speed, speedMult, zoneMult, compMult, nightMult },
             captured,
-            position: { lat: updated?.lat, lon: updated?.lon }
+            position: { lat: updated?.lat, lon: updated?.lon },
         });
 
     } catch (e) {
@@ -322,7 +221,16 @@ export async function POST({ request, locals, platform }) {
     }
 }
 
-// GET: movement history
+function nearestPoi(lat, lon) {
+    let best = null;
+    let bestDist = Infinity;
+    for (const poi of Object.values(POIS)) {
+        const d = (poi.lat - lat) ** 2 + (poi.lon - lon) ** 2;
+        if (d < bestDist) { bestDist = d; best = poi.id; }
+    }
+    return best;
+}
+
 export async function GET({ locals, platform }) {
     const db = platform?.env?.DB_book;
     if (!db) return json({ error: 'No DB' }, { status: 500 });
