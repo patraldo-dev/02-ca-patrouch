@@ -90,14 +90,14 @@
     .portals-page {
         max-width: 700px;
         margin: 0 auto;
-        padding: 3rem 1.5rem 6rem;
+        padding: 1.5rem 1.5rem 4rem;
     }
 
     .constellation {
         position: relative;
         width: 180px;
         height: 180px;
-        margin: 0 auto 2rem;
+        margin: 0 auto 1.25rem;
     }
 
     .star {
@@ -162,16 +162,16 @@
 
     .page-title {
         font-family: var(--font-heading);
-        font-size: 2.5rem;
+        font-size: 2rem;
         color: var(--fg);
         text-align: center;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.25rem;
     }
     .page-subtitle {
         color: var(--muted);
         font-size: 1rem;
         text-align: center;
-        margin-bottom: 2.5rem;
+        margin-bottom: 1.5rem;
         font-style: italic;
     }
 
