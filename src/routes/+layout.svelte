@@ -153,7 +153,7 @@
     <title>Patrouch</title>
     <meta name="description" content={getSeoMeta($page.url.pathname, $locale || 'es').description} />
     <link rel="canonical" href={"https://patrouch.ca" + $page.url.pathname} />
-    <meta property="og:title" content="Patrouch — A Space for Writing" />
+    <meta property="og:title" content="Patrouch — A Playful Space for Serious Writing" />
     <meta property="og:description" content={getSeoMeta($page.url.pathname, $locale || 'es').description} />
     <meta property="og:url" content={"https://patrouch.ca" + $page.url.pathname} />
     <meta property="og:type" content="website" />

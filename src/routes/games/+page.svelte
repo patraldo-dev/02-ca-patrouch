@@ -15,7 +15,7 @@
 
 <section class="games-page">
     <h1 class="page-title">{$t('games.title')}</h1>
-    <p class="page-subtitle">{$t('games.find_the_ai_desc')}</p>
+    <p class="page-subtitle">{$t('pages.home.works.games.desc')}</p>
 
     <div class="cards-grid">
         <button class="game-card" onclick={() => goTo('/agora?author=both' + (data.serverLocale ? '&locale=' + data.serverLocale : ''))}>
