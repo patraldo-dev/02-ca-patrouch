@@ -29,7 +29,7 @@
         if (allPortals.length <= 1) return;
         const timer = setInterval(() => {
             activeIdx = (activeIdx + 1) % allPortals.length;
-        }, 3500);
+        }, 6000);
         return () => clearInterval(timer);
     });
 </script>
@@ -41,18 +41,15 @@
 <section class="portals-page">
     <!-- Portal Preview -->
     {#if activePortal}
-        <div class="portal-preview" style="--pv-color: {activePortal.color_primary}; --pv-bg: {activePortal.color_bg};">
+        <a class="portal-preview" href="/games/booty/arbooty?theme={activePortal.id}" style="--pv-color: {activePortal.color_primary}; --pv-bg: {activePortal.color_bg};">
             <div class="preview-icon">{activePortal.icon}</div>
-            <div class="preview-body">
-                <span class="preview-name" style="color: {activePortal.color_primary}">{nameOf(activePortal)}</span>
-                <span class="preview-desc">{descOf(activePortal)}</span>
-            </div>
             <div class="preview-dots">
                 {#each allPortals as _, i}
                     <span class="dot" class:active={i === activeIdx}></span>
                 {/each}
             </div>
-        </div>
+            <span class="preview-name" style="color: {activePortal.color_primary}">{nameOf(activePortal)}</span>
+        </a>
     {/if}
 
     <h1 class="page-title">{$t('games.title')}</h1>
@@ -116,38 +113,35 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.4rem;
-        padding: 1rem 1.5rem;
+        justify-content: center;
+        gap: 0.3rem;
+        padding: 0.75rem 1.5rem;
         margin-bottom: 1rem;
         border-radius: 14px;
         background: var(--pv-bg, var(--surface));
         border: 1px solid var(--pv-color, var(--border));
-        border-left-width: 3px;
-        transition: background 0.6s ease, border-color 0.6s ease;
-        animation: portal-fade 0.5s ease;
+        text-decoration: none;
+        color: var(--fg);
+        transition: background 0.8s ease, border-color 0.8s ease;
+        animation: portal-fade 0.6s ease;
+        cursor: pointer;
+    }
+    .portal-preview:hover {
+        opacity: 0.92;
     }
     @keyframes portal-fade {
-        from { opacity: 0.4; transform: translateY(4px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0.3; }
+        to { opacity: 1; }
     }
     .preview-icon {
-        font-size: 2rem;
+        font-size: 2.5rem;
         line-height: 1;
-    }
-    .preview-body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
     }
     .preview-name {
         font-family: var(--font-heading);
-        font-size: 1rem;
+        font-size: 0.8rem;
         font-weight: 600;
-    }
-    .preview-desc {
-        font-size: 0.75rem;
-        color: var(--text-dim);
+        align-self: flex-end;
     }
     .preview-dots {
         display: flex;
