@@ -20,7 +20,27 @@
     <h1 class="page-title">{$t('games.title')}</h1>
     <p class="page-subtitle">{$t('pages.home.works.games.desc')}</p>
 
+    <!-- Active Portal Entries -->
+    <div class="portal-cards">
+        <a class="portal-card wreckage" href="/games/booty/arbooty">
+            <span class="portal-card-icon">🏴‍☠️</span>
+            <div class="portal-card-body">
+                <h2>The Wreckage</h2>
+                <p>{$t('booty.arbooty.description') || 'Búsqueda del tesoro en realidad aumentada'}</p>
+            </div>
+        </a>
+        <a class="portal-card celebration" href="/games/booty/arbooty?mode=event">
+            <span class="portal-card-icon">🎉</span>
+            <div class="portal-card-body">
+                <h2>Evento de Celebración</h2>
+                <p>Crea y encuentra mensajes ocultos con la cámara AR</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Multiverse Teaser -->
     <div class="coming-soon">
+        <div class="divider"></div>
         <p class="vision-text">
             Siete mundos naciendo de las palabras.<br>
             Cada escritura abre un portal. Cada portal, un universo.<br>
@@ -111,16 +131,76 @@
     .page-subtitle {
         color: var(--muted);
         font-size: 1.1rem;
-        margin-bottom: 3rem;
+        margin-bottom: 2.5rem;
         font-style: italic;
     }
 
+    .portal-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 3rem;
+    }
+    @media (max-width: 560px) {
+        .portal-cards { grid-template-columns: 1fr; }
+    }
+
+    .portal-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.75rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        text-decoration: none;
+        color: var(--fg);
+        text-align: left;
+        transition: all 0.25s ease;
+    }
+    .portal-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .portal-card.celebration {
+        border-color: #c9a87c33;
+    }
+    .portal-card.celebration:hover {
+        border-color: #c9a87c;
+    }
+    .portal-card-icon {
+        font-size: 2.25rem;
+        flex-shrink: 0;
+    }
+    .portal-card-body h2 {
+        font-family: var(--font-heading);
+        font-size: 1.2rem;
+        color: var(--accent);
+        margin-bottom: 0.3rem;
+    }
+    .portal-card.celebration .portal-card-body h2 {
+        color: #c9a87c;
+    }
+    .portal-card-body p {
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .divider {
+        width: 60px;
+        height: 1px;
+        background: var(--border);
+        margin: 0 auto 2rem;
+    }
+
     .coming-soon {
-        padding: 2rem;
+        padding: 1rem;
     }
     .vision-text {
         font-family: var(--font-heading);
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         line-height: 2.2;
         color: var(--text-dim);
     }

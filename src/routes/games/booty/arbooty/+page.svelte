@@ -21,7 +21,7 @@
 </svelte:head>
 
 <section class="bottles-page">
-    <a href="/games/booty" class="back-link">← {isEvent ? 'Volver' : $t('booty.arbooty.back')}</a>
+    <a href="/games" class="back-link">← {isEvent ? 'Volver' : $t('booty.arbooty.back')}</a>
     <h1 class="page-title">
         {#if isEvent}
             🎉 <span class="title-accent event">Evento de Celebración</span>

@@ -1,1 +1,6 @@
-// hydration issue: parent layout still SSRs
+export function load() {
+  return {
+    status: 302,
+    redirect: '/games'
+  };
+}

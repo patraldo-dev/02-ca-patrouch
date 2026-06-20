@@ -37,7 +37,7 @@
             icon: '🎮',
             items: [
                 { key: 'find_the_ai', href: '/agora?author=both' + (data.serverLocale ? '&locale=' + data.serverLocale : ''), active: true },
-                { key: 'booty_battle', href: '/games/booty', active: true },
+                { key: 'portals', href: '/games', active: true },
                 { key: 'arbooty', href: '/games/booty/arbooty', active: true },
                 { key: 'challenges', href: '/write', active: false },
                 { key: 'weekly_challenge', href: '/write', active: false }
