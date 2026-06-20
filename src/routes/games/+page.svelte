@@ -95,9 +95,9 @@
 
     .constellation {
         position: relative;
-        width: 180px;
-        height: 180px;
-        margin: 0 auto 1.25rem;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 0.75rem;
     }
 
     .star {
