@@ -19,6 +19,19 @@
     }
 
     let portalCount = $derived(data.portals?.length || 0);
+
+    // Auto-rotating portal preview
+    let activeIdx = $state(0);
+    let allPortals = $derived(data.portals || []);
+    let activePortal = $derived(allPortals[activeIdx] || allPortals[0]);
+
+    $effect(() => {
+        if (allPortals.length <= 1) return;
+        const timer = setInterval(() => {
+            activeIdx = (activeIdx + 1) % allPortals.length;
+        }, 3500);
+        return () => clearInterval(timer);
+    });
 </script>
 
 <svelte:head>
@@ -26,15 +39,21 @@
 </svelte:head>
 
 <section class="portals-page">
-    <div class="constellation">
-        {#each Array(portalCount) as _, i}
-            <span class="star" style="--i: {i}"></span>
-        {/each}
-        <div class="portal-orb">
-            <span class="orb-glow"></span>
-            <span class="orb-core">🌀</span>
+    <!-- Portal Preview -->
+    {#if activePortal}
+        <div class="portal-preview" style="--pv-color: {activePortal.color_primary}; --pv-bg: {activePortal.color_bg};">
+            <div class="preview-icon">{activePortal.icon}</div>
+            <div class="preview-body">
+                <span class="preview-name" style="color: {activePortal.color_primary}">{nameOf(activePortal)}</span>
+                <span class="preview-desc">{descOf(activePortal)}</span>
+            </div>
+            <div class="preview-dots">
+                {#each allPortals as _, i}
+                    <span class="dot" class:active={i === activeIdx}></span>
+                {/each}
+            </div>
         </div>
-    </div>
+    {/if}
 
     <h1 class="page-title">{$t('games.title')}</h1>
     <p class="page-subtitle">{$t('pages.home.works.games.desc')}</p>
@@ -93,71 +112,57 @@
         padding: 1.5rem 1.5rem 4rem;
     }
 
-    .constellation {
-        position: relative;
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 0.75rem;
+    .portal-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        border-radius: 14px;
+        background: var(--pv-bg, var(--surface));
+        border: 1px solid var(--pv-color, var(--border));
+        border-left-width: 3px;
+        transition: background 0.6s ease, border-color 0.6s ease;
+        animation: portal-fade 0.5s ease;
     }
-
-    .star {
-        position: absolute;
-        width: 2px;
-        height: 2px;
-        background: var(--accent);
+    @keyframes portal-fade {
+        from { opacity: 0.4; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .preview-icon {
+        font-size: 2rem;
+        line-height: 1;
+    }
+    .preview-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+    .preview-name {
+        font-family: var(--font-heading);
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    .preview-desc {
+        font-size: 0.75rem;
+        color: var(--text-dim);
+    }
+    .preview-dots {
+        display: flex;
+        gap: 4px;
+        margin-top: 2px;
+    }
+    .dot {
+        width: 5px;
+        height: 5px;
         border-radius: 50%;
-        opacity: 0.4;
-        animation: twinkle 3s ease-in-out infinite;
-        animation-delay: calc(var(--i) * 0.4s);
+        background: var(--border);
+        transition: background 0.3s;
     }
-    .star:nth-child(1) { top: 15%; left: 10%; }
-    .star:nth-child(2) { top: 25%; left: 85%; }
-    .star:nth-child(3) { top: 60%; left: 5%; }
-    .star:nth-child(4) { top: 70%; left: 90%; }
-    .star:nth-child(5) { top: 85%; left: 30%; }
-    .star:nth-child(6) { top: 10%; left: 50%; }
-    .star:nth-child(7) { top: 40%; left: 95%; }
-    .star:nth-child(8) { top: 50%; left: 15%; }
-    .star:nth-child(9) { top: 30%; left: 35%; }
-    .star:nth-child(10) { top: 80%; left: 60%; }
-    .star:nth-child(n+11) { top: 5%; left: 75%; }
-
-    @keyframes twinkle {
-        0%, 100% { opacity: 0.15; transform: scale(1); }
-        50% { opacity: 0.7; transform: scale(1.5); }
-    }
-
-    .portal-orb {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    .orb-glow {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-        opacity: 0.12;
-        animation: pulse 4s ease-in-out infinite;
-    }
-    .orb-core {
-        font-size: 2.5rem;
-        display: inline-block;
-        animation: spin 8s linear infinite;
-        filter: drop-shadow(0 0 10px var(--accent));
-    }
-    @keyframes pulse {
-        0%, 100% { opacity: 0.08; transform: translate(-50%, -50%) scale(1); }
-        50% { opacity: 0.2; transform: translate(-50%, -50%) scale(1.3); }
-    }
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+    .dot.active {
+        background: var(--pv-color);
     }
 
     .page-title {
