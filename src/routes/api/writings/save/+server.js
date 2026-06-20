@@ -133,6 +133,15 @@ export async function POST({ request, locals }) {
             }
         } // end if published
 
+        // ── Portal reindex: fire-and-forget after publish ──
+        // Triggers portal count updates + potential new portal discovery
+        if (status === 'published') {
+            try {
+                const reindexUrl = new URL('/api/portals/reindex', request.url);
+                fetch(reindexUrl, { method: 'POST' }).catch(() => {});
+            } catch {}
+        }
+
         return json({ id: result.id, wordCount: result.wordCount, status });
     } catch (err) {
         console.error('Save writing error:', err);
