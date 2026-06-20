@@ -10,8 +10,11 @@ export const THEMES = {
     id: 'arboleda',
     name: 'Arboleda',
     nameEn: 'The Grove',
+    nameFr: 'Le Bosquet',
     icon: '🌿',
     description: 'Naturaleza, contemplación, soledad',
+    descriptionEn: 'Nature, contemplation, solitude',
+    descriptionFr: 'Nature, contemplation, solitude',
 
     // Visual
     colors: {
@@ -48,8 +51,11 @@ export const THEMES = {
     id: 'fiesta',
     name: 'Fiesta',
     nameEn: 'The Celebration',
+    nameFr: 'La Fête',
     icon: '🎂',
     description: 'Celebración, humor, comunión',
+    descriptionEn: 'Celebration, humor, communion',
+    descriptionFr: 'Célébration, humour, communion',
 
     colors: {
       reticle: 0xff6b35,
@@ -83,8 +89,11 @@ export const THEMES = {
     id: 'oceano',
     name: 'Océano',
     nameEn: 'The Ocean',
+    nameFr: "L'Océan",
     icon: '🌊',
     description: 'Melancolía, viaje, misterio',
+    descriptionEn: 'Melancholy, journey, mystery',
+    descriptionFr: 'Mélancolie, voyage, mystère',
 
     colors: {
       reticle: 0x0277bd,
@@ -117,8 +126,11 @@ export const THEMES = {
     id: 'narrador',
     name: 'Narrador',
     nameEn: 'The Narrator',
+    nameFr: 'Le Narrateur',
     icon: '📖',
     description: 'Meta-narrativa, filosofía',
+    descriptionEn: 'Meta-narrative, philosophy',
+    descriptionFr: 'Méta-narration, philosophie',
 
     colors: {
       reticle: 0xc9a87c,
@@ -151,8 +163,11 @@ export const THEMES = {
     id: 'espacio',
     name: 'Espacio',
     nameEn: 'The Cosmos',
+    nameFr: 'Le Cosmos',
     icon: '🚀',
     description: 'Imaginación, futurismo, absurdo',
+    descriptionEn: 'Imagination, futurism, absurd',
+    descriptionFr: 'Imagination, futurisme, absurde',
 
     colors: {
       reticle: 0x7c4dff,
@@ -185,8 +200,11 @@ export const THEMES = {
     id: 'urbano',
     name: 'Urbano',
     nameEn: 'The Street',
+    nameFr: 'La Rue',
     icon: '🏙️',
     description: 'Cotidianidad, crónica social',
+    descriptionEn: 'Everyday life, social chronicle',
+    descriptionFr: 'Vie quotidienne, chronique sociale',
 
     colors: {
       reticle: 0x546e7a,
@@ -219,8 +237,11 @@ export const THEMES = {
     id: 'fantasia',
     name: 'Fantasía',
     nameEn: 'The Dream',
+    nameFr: 'Le Rêve',
     icon: '🔮',
     description: 'Sueño, mito, símbolo',
+    descriptionEn: 'Dream, myth, symbol',
+    descriptionFr: 'Rêve, mythe, symbole',
 
     colors: {
       reticle: 0x9c27b0,

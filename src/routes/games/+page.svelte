@@ -1,8 +1,23 @@
 <script>
     import { t } from '$lib/i18n';
+    import { locale } from '$lib/i18n';
     import { THEMES } from '$lib/ar/portal/themes.js';
 
     const themeList = Object.values(THEMES);
+
+    function themeName(theme) {
+        const lang = $locale || 'es';
+        if (lang === 'en') return theme.nameEn;
+        if (lang === 'fr') return theme.nameFr;
+        return theme.name;
+    }
+
+    function themeDesc(theme) {
+        const lang = $locale || 'es';
+        if (lang === 'en') return theme.descriptionEn;
+        if (lang === 'fr') return theme.descriptionFr;
+        return theme.description;
+    }
 </script>
 
 <svelte:head>
@@ -11,7 +26,7 @@
 
 <section class="portals-page">
     <div class="constellation">
-        {#each Array(7) as _, i}
+        {#each Array(themeList.length) as _, i}
             <span class="star" style="--i: {i}"></span>
         {/each}
         <div class="portal-orb">
@@ -33,9 +48,8 @@
             >
                 <span class="portal-icon">{theme.icon}</span>
                 <div class="portal-info">
-                    <h2 class="portal-name">{theme.name}</h2>
-                    <span class="portal-name-en">{theme.nameEn}</span>
-                    <p class="portal-desc">{theme.description}</p>
+                    <h2 class="portal-name">{themeName(theme)}</h2>
+                    <p class="portal-desc">{themeDesc(theme)}</p>
                 </div>
                 <span class="portal-enter">→</span>
             </a>
