@@ -1,8 +1,46 @@
-import { redirect } from '@sveltejs/kit';
+export async function load({ platform }) {
+    const db = platform?.env?.DB_book;
+    if (!db) return { galaxies: [], portals: [], count: 0 };
 
-export async function load({ locals }) {
-  return {
-    user: locals.user || null,
-    serverLocale: locals.locale || 'es'
-  };
+    try {
+        const { results: portals } = await db.prepare(`
+            SELECT 
+                p.id, p.galaxy_id, p.icon, p.color_primary, p.color_bg, p.color_text,
+                p.name_es, p.name_en, p.name_fr,
+                p.description_es, p.description_en, p.description_fr,
+                p.status, p.active_writings_count,
+                g.name_es as galaxy_name_es, g.name_en as galaxy_name_en, g.name_fr as galaxy_name_fr,
+                g.icon as galaxy_icon, g.sort_order as galaxy_sort
+            FROM portals p
+            JOIN galaxies g ON p.galaxy_id = g.id
+            WHERE p.status = 'active'
+            ORDER BY g.sort_order ASC, p.discovered_at ASC
+        `).all();
+
+        // Group by galaxy
+        const galaxyMap = {};
+        for (const p of portals || []) {
+            if (!galaxyMap[p.galaxy_id]) {
+                galaxyMap[p.galaxy_id] = {
+                    id: p.galaxy_id,
+                    name_es: p.galaxy_name_es,
+                    name_en: p.galaxy_name_en,
+                    name_fr: p.galaxy_name_fr,
+                    icon: p.galaxy_icon,
+                    sort_order: p.galaxy_sort,
+                    portals: []
+                };
+            }
+            galaxyMap[p.galaxy_id].portals.push(p);
+        }
+
+        return {
+            galaxies: Object.values(galaxyMap),
+            portals: portals || [],
+            count: portals?.length || 0
+        };
+    } catch (e) {
+        console.error('Portals load error:', e);
+        return { galaxies: [], portals: [], count: 0 };
+    }
 }

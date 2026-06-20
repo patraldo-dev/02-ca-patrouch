@@ -2,7 +2,29 @@ export async function load({ locals, platform, url }) {
   const db = platform?.env?.DB_book;
   let myPlayer = null;
   let bottles = [];
+  let portalConfig = null;
   const mode = url.searchParams.get('mode') || 'pirate';
+  const themeId = url.searchParams.get('theme');
+
+  // Load portal theme config if a theme is specified
+  if (db && themeId) {
+    try {
+      const portal = await db.prepare(`
+        SELECT id, galaxy_id, icon, color_primary, color_bg, color_text,
+               name_es, name_en, name_fr,
+               description_es, description_en, description_fr,
+               narrator_tone, narrator_vocabulary, narrator_greeting,
+               placement_mode, portal_distance, portal_y
+        FROM portals WHERE id = ? AND status = 'active'
+      `).bind(themeId).first();
+      if (portal) {
+        try { portal.narrator_vocabulary = JSON.parse(portal.narrator_vocabulary || '[]'); } catch {}
+        portalConfig = portal;
+      }
+    } catch (e) {
+      console.error('Portal config load error:', e);
+    }
+  }
 
   // Load physical bottles — available to everyone for event mode
   if (db) {
@@ -19,7 +41,7 @@ export async function load({ locals, platform, url }) {
 
   // Only load player data if authenticated
   if (!locals.user && mode === 'event') {
-    return { serverLocale: locals.locale || 'es', user: null, myPlayer: null, bottles };
+    return { serverLocale: locals.locale || 'es', user: null, myPlayer: null, bottles, portalConfig };
   }
 
   if (locals.user) {
@@ -34,6 +56,7 @@ export async function load({ locals, platform, url }) {
     serverLocale: locals.locale || 'es',
     user: locals.user || null,
     myPlayer,
-    bottles
+    bottles,
+    portalConfig
   };
 }

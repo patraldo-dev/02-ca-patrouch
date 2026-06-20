@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
     import { t } from '$lib/i18n';
+    import { locale } from '$lib/i18n';
     import PhysicalBottles from '$lib/components/PhysicalBottles.svelte';
     import ArbootyAR from '$lib/components/ArbootyAR.svelte';
     import EventScoreboard from '$lib/components/EventScoreboard.svelte';
@@ -14,43 +15,74 @@
 
     let mode = $derived($page.url.searchParams.get('mode') || 'pirate');
     let isEvent = $derived(mode === 'event');
+    let portal = $derived(data.portalConfig);
+
+    function portalName() {
+        if (!portal) return null;
+        const lang = $locale || 'es';
+        if (lang === 'en') return portal.name_en;
+        if (lang === 'fr') return portal.name_fr;
+        return portal.name_es;
+    }
+
+    function portalDesc() {
+        if (!portal) return null;
+        const lang = $locale || 'es';
+        if (lang === 'en') return portal.description_en;
+        if (lang === 'fr') return portal.description_fr;
+        return portal.description_es;
+    }
 </script>
 
 <svelte:head>
-    <title>{isEvent ? '🎉 Evento' : $t('booty.arbooty.title')} — patrouch.ca</title>
+    <title>{portal ? portalName() : (isEvent ? '🎉 Evento' : $t('booty.arbooty.title'))} — patrouch.ca</title>
 </svelte:head>
 
-<section class="bottles-page">
-    <a href="/games" class="back-link">← {isEvent ? 'Volver' : $t('booty.arbooty.back')}</a>
-    <h1 class="page-title">
-        {#if isEvent}
-            🎉 <span class="title-accent event">Evento de Celebración</span>
-            <p class="page-subtitle">Encuentra los mensajes ocultos</p>
-        {:else}
-            🏴‍☠️ Arbooty <span class="title-accent">— Búsqueda del Tesoro</span>
-        {/if}
-    </h1>
-    <p class="page-desc">{isEvent ? 'Busca y captura los mensajes del evento' : $t('booty.arbooty.description')}</p>
+<section class="bottles-page" style={portal ? `--portal-accent: ${portal.color_primary};` : ''}>
+    <a href="/games" class="back-link">← {$t('games.title')}</a>
 
-    {#if data.myPlayer || isEvent}
-        {#if data.myPlayer}
+    {#if portal}
+        <!-- Portal-themed header -->
+        <h1 class="page-title portal-title">
+            <span class="portal-icon">{portal.icon}</span>
+            <span class="title-accent" style="color: {portal.color_primary}">{portalName()}</span>
+        </h1>
+        {#if portal.narrator_greeting}
+            <p class="portal-greeting" style="color: {portal.color_text || 'var(--text-dim)'}; background: {portal.color_bg || 'var(--surface)'}">{portal.narrator_greeting}</p>
+        {/if}
+        <p class="page-desc">{portalDesc()}</p>
+    {:else if isEvent}
+        <h1 class="page-title">
+            🎉 <span class="title-accent event">Evento de Celebración</span>
+        </h1>
+        <p class="page-subtitle">Encuentra los mensajes ocultos</p>
+        <p class="page-desc">Busca y captura los mensajes del evento</p>
+    {:else}
+        <h1 class="page-title">
+            🏴‍☠️ Arbooty <span class="title-accent">— Búsqueda del Tesoro</span>
+        </h1>
+        <p class="page-desc">{$t('booty.arbooty.description')}</p>
+    {/if}
+
+    {#if data.myPlayer || isEvent || portal}
+        {#if data.myPlayer && !portal}
         <a href="/games/booty/arbooty/create?mode={mode}" class="create-link">
             {isEvent ? '🎁 Esconder un Mensaje' : '🏴‍☠️ Lanzar una Botella'}
         </a>
         {/if}
         <button class="ar-toggle {mode}" onclick={() => showAR = !showAR}>
-            {showAR ? '🗺️ Ver Mapa' : isEvent ? '🎉 Activar AR' : '🔭 Modo AR'}
+            {showAR ? '🗺️ Ver Mapa' : isEvent ? '🎉 Activar AR' : portal ? `🔮 Entrar a ${portalName()}` : '🔭 Modo AR'}
         </button>
 
         {#if showAR}
-            <ArbootyAR player={data.myPlayer} bottles={data.bottles} theme={mode} />
+            <ArbootyAR player={data.myPlayer} bottles={data.bottles} theme={portal ? 'pirate' : mode} portalConfig={portal} />
         {:else}
             <PhysicalBottles player={data.myPlayer} />
         {/if}
     {:else}
         <div class="join-prompt">
             <p>{isEvent ? 'Inicia sesión para participar' : $t('booty.arbooty.join_required')}</p>
-            <a href="/games/booty" class="btn-accent">🏁 {isEvent ? 'Iniciar Sesión' : $t('booty.arbooty.join_btn')}</a>
+            <a href="/login" class="btn-accent">🏁 {isEvent ? 'Iniciar Sesión' : $t('booty.arbooty.join_btn')}</a>
         </div>
     {/if}
 
@@ -81,11 +113,25 @@
         margin-bottom: 0.5rem;
         text-align: center;
     }
-    .title-accent {
-        color: var(--accent);
+    .portal-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
     }
-    .title-accent.event {
-        color: #c9a87c;
+    .portal-icon { font-size: 2.5rem; }
+    .title-accent { color: var(--accent); }
+    .title-accent.event { color: #c9a87c; }
+    .portal-greeting {
+        font-style: italic;
+        font-size: 0.95rem;
+        text-align: center;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
     }
     .page-subtitle {
         font-size: 1.2rem;
@@ -105,8 +151,8 @@
         width: 100%;
         padding: 0.75rem;
         background: var(--surface);
-        color: var(--accent);
-        border: 1px solid var(--accent);
+        color: var(--portal-accent, var(--accent));
+        border: 1px solid var(--portal-accent, var(--accent));
         border-radius: var(--radius);
         font-size: 1rem;
         font-weight: 600;
