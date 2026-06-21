@@ -2,12 +2,11 @@
     import { onMount } from 'svelte';
     import { t } from '$lib/i18n';
 
-    let { player } = $props();
+    let { player, portalConfig } = $props();
 
     let physicalBottles = $state([]);
     let openedBottle = $state(null);
     let loading = $state(true);
-    let portalConfig = $props().portalConfig;
 
     onMount(async () => {
         try {
@@ -15,7 +14,7 @@
             const json = await res.json();
             physicalBottles = json.bottles || [];
         } catch {}
-        loading = $state(false);
+        loading = false;
     });
 
     async function openBottle(bottle) {
