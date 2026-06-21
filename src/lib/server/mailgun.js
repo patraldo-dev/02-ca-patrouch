@@ -41,56 +41,80 @@ export async function sendVerificationEmail(to, verifyUrl, env) {
     return sendMailgunEmail(to, 'Verify your email — Patrouch', html, `Verify your email: ${verifyUrl}`, env);
 }
 
-export async function sendDailyPromptEmail(to, prompt, locale, env) {
+export async function sendSundaySparkEmail(to, dualPrompt, locale, env) {
     const content = {
         en: {
-            subject: '✨ Your Sunday Spark',
-            preheader: 'A gentle nudge to write this week.',
-            greeting: 'Hello, writer.',
-            body: `Here's your spark for this Sunday. No pressure — just a thought to carry with you:`,
+            subject: '☀️🌙 Your Sunday Spark',
+            preheader: 'Two doors for this week. You choose.',
+            tagline: 'A Playful Space for Serious Writing',
+            intro: 'Two doors this week. Neither is right. Neither is wrong. You choose.',
+            sun_label: 'Sun',
+            moon_label: 'Moon',
             cta: 'Start Writing',
-            footer: 'You subscribed to receive weekly prompts from Patrouch. No spam, just sparks.'
+            footer: 'You subscribed to receive weekly sparks from patrouch.ca. No spam, just sparks.'
         },
         es: {
-            subject: '✨ Tu Chispa Dominical',
-            preheader: 'Un impulso suave para escribir esta semana.',
-            greeting: 'Hola, escritor.',
-            body: 'Aquí tienes tu chispa para este domingo. Sin presión — solo un pensamiento para llevar contigo:',
+            subject: '☀️🌙 Tu Chispa Dominical',
+            preheader: 'Dos puertas para esta semana. Tú eliges.',
+            tagline: 'Un Espacio Lúdico para Escritura Seria',
+            intro: 'Dos puertas esta semana. Ninguna es la correcta. Ninguna es la equivocada. Tú eliges.',
+            sun_label: 'Sol',
+            moon_label: 'Luna',
             cta: 'Empezar a Escribir',
-            footer: 'Te suscribiste para recibir estímulos semanales de Patrouch. Sin spam, solo chispas.'
+            footer: 'Te suscribiste para recibir chispas semanales de patrouch.ca. Sin spam, solo chispas.'
         },
         fr: {
-            subject: '✨ Ton Étincelle du Dimanche',
-            preheader: 'Un doux encouragement pour écrire cette semaine.',
-            greeting: 'Bonjour, écrivain.',
-            body: "Voici ton étincelle pour ce dimanche. Sans pression — juste une pensée à emporter avec toi :",
-            cta: "Commencer à Écrire",
-            footer: "Tu t'es abonné pour recevoir des stimuli hebdomadaires de Patrouch. Pas de spam, juste des étincelles."
+            subject: '☀️🌙 Ton Étincelle du Dimanche',
+            preheader: 'Deux portes pour cette semaine. À toi de choisir.',
+            tagline: 'Un Espace Ludique pour l\'Écriture Sérieuse',
+            intro: 'Deux portes cette semaine. Aucune n\'est la bonne. Aucune n\'est la mauvaise. À toi de choisir.',
+            sun_label: 'Soleil',
+            moon_label: 'Lune',
+            cta: 'Commencer à Écrire',
+            footer: 'Tu t\'es abonné pour recevoir des étincelles hebdomadaires de patrouch.ca. Pas de spam, juste des étincelles.'
         }
     };
 
     const c = content[locale] || content.en;
-    const sparkParam = encodeURIComponent(prompt);
-    const promptUrl = `https://patrouch.ca/write?spark=${sparkParam}`;
+
+    const sunAct = dualPrompt?.sun?.act || '';
+    const sunSpark = dualPrompt?.sun?.spark || '';
+    const moonAct = dualPrompt?.moon?.act || '';
+    const moonSpark = dualPrompt?.moon?.spark || '';
+
+    const sunUrl = `https://patrouch.ca/write?spark=${encodeURIComponent(sunSpark)}`;
+    const moonUrl = `https://patrouch.ca/write?spark=${encodeURIComponent(moonSpark)}`;
 
     const html = `
         <div style="max-width:480px;margin:0 auto;font-family:Georgia,serif;color:#1a1a1a;background:#faf9f7;padding:2rem;border-radius:12px;">
-            <div style="text-align:center;margin-bottom:2rem;">
-                <h1 style="font-size:1.5rem;font-weight:400;color:#9a7b4f;margin:0;">Patrouch</h1>
+            <div style="text-align:center;margin-bottom:0.25rem;">
+                <h1 style="font-size:1.5rem;font-weight:400;color:#9a7b4f;margin:0;letter-spacing:0.02em;">patrouch.ca</h1>
+                <p style="font-size:0.75rem;color:#999;margin:0.25rem 0 0;font-style:italic;">${c.tagline}</p>
             </div>
-            <h2 style="font-size:1.3rem;font-weight:400;color:#1a1a1a;margin-bottom:0.5rem;">${c.greeting}</h2>
-            <p style="color:#666;font-size:0.95rem;line-height:1.6;">${c.body}</p>
-            <blockquote style="border-left:3px solid #c9a87c;padding:1rem 1.25rem;margin:1.5rem 0;background:#f0eeeb;border-radius:0 8px 8px 0;font-style:italic;color:#333;font-size:1.05rem;line-height:1.7;">
-                ${prompt}
-            </blockquote>
-            <div style="text-align:center;margin:2rem 0;">
-                <a href="${promptUrl}" style="display:inline-block;padding:12px 32px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;font-size:1rem;">${c.cta}</a>
+            <hr style="border:none;border-top:1px solid #e5e5e5;margin:1.5rem 0;">
+            <p style="color:#666;font-size:0.95rem;line-height:1.6;text-align:center;">${c.intro}</p>
+
+            <!-- Sun Door -->
+            <div style="background:#fff8f0;border:1px solid #e8d5b8;border-radius:10px;padding:1.25rem;margin:1.25rem 0;">
+                <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;color:#c9a87c;margin-bottom:0.5rem;">☀️ ${c.sun_label}</div>
+                <p style="font-size:1rem;color:#333;margin:0 0 0.75rem;line-height:1.6;">${sunAct}</p>
+                <p style="font-style:italic;color:#777;font-size:0.9rem;margin:0 0 1rem;line-height:1.5;">${sunSpark}</p>
+                <a href="${sunUrl}" style="display:inline-block;padding:8px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.9rem;">${c.cta} →</a>
             </div>
+
+            <!-- Moon Door -->
+            <div style="background:#f0f0f8;border:1px solid #d5d5e8;border-radius:10px;padding:1.25rem;margin:1.25rem 0;">
+                <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;color:#6b6b9a;margin-bottom:0.5rem;">🌙 ${c.moon_label}</div>
+                <p style="font-size:1rem;color:#333;margin:0 0 0.75rem;line-height:1.6;">${moonAct}</p>
+                <p style="font-style:italic;color:#777;font-size:0.9rem;margin:0 0 1rem;line-height:1.5;">${moonSpark}</p>
+                <a href="${moonUrl}" style="display:inline-block;padding:8px 24px;background:#6b6b9a;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.9rem;">${c.cta} →</a>
+            </div>
+
             <p style="color:#999;font-size:0.75rem;text-align:center;margin-top:2rem;border-top:1px solid #e5e5e5;padding-top:1rem;">${c.footer}</p>
         </div>
     `;
 
-    const text = `${c.greeting}\n\n${c.body}\n\n"${prompt}"\n\n${c.cta}: ${promptUrl}\n\n${c.footer}`;
+    const text = `patrouch.ca — ${c.tagline}\n\n${c.intro}\n\n☀️ ${c.sun_label}\n${sunAct}\n${sunSpark}\n${c.cta}: ${sunUrl}\n\n🌙 ${c.moon_label}\n${moonAct}\n${moonSpark}\n${c.cta}: ${moonUrl}\n\n${c.footer}`;
 
     return sendMailgunEmail(to, c.subject, html, text, env);
 }
