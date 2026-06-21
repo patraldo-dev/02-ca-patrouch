@@ -55,12 +55,14 @@
             {:else}
                 <div class="preview-icon">{activePortal.icon}</div>
             {/if}
-            <div class="preview-dots">
-                {#each allPortals as _, i}
-                    <span class="dot" class:active={i === activeIdx}></span>
-                {/each}
+            <div class="preview-overlay">
+                <span class="preview-name" style="color: {activePortal.color_primary}">{nameOf(activePortal)}</span>
+                <div class="preview-dots">
+                    {#each allPortals as _, i}
+                        <span class="dot" class:active={i === activeIdx}></span>
+                    {/each}
+                </div>
             </div>
-            <span class="preview-name" style="color: {activePortal.color_primary}">{nameOf(activePortal)}</span>
         </a>
     {/if}
 
@@ -122,51 +124,65 @@
     }
 
     .portal-preview {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 0.3rem;
-        padding: 0.75rem 1.5rem;
+        display: block;
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
         margin-bottom: 1rem;
         border-radius: 14px;
-        background: var(--pv-bg, var(--surface));
-        border: 1px solid var(--pv-color, var(--border));
+        overflow: hidden;
+        border: 3px solid var(--pv-color, var(--border));
+        background: var(--pv-color, var(--surface));
         text-decoration: none;
         color: var(--fg);
-        transition: background 0.8s ease, border-color 0.8s ease;
+        transition: border-color 0.8s ease;
         animation: portal-fade 0.6s ease;
         cursor: pointer;
     }
     .portal-preview:hover {
-        opacity: 0.92;
+        opacity: 0.95;
     }
     @keyframes portal-fade {
         from { opacity: 0.3; }
         to { opacity: 1; }
     }
     .preview-icon {
-        font-size: 2.5rem;
+        font-size: 3rem;
         line-height: 1;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
     .preview-video {
+        position: absolute;
+        inset: 0;
         width: 100%;
-        display: flex;
-        justify-content: center;
+        height: 100%;
     }
     .preview-video iframe {
-        width: 120px;
-        height: 120px;
+        width: 100%;
+        height: 100%;
         border: none;
-        border-radius: 50%;
-        object-fit: cover;
         pointer-events: none;
+        object-fit: cover;
+    }
+    .preview-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 0.5rem 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
     }
     .preview-name {
         font-family: var(--font-heading);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         font-weight: 600;
-        align-self: flex-end;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
     }
     .preview-dots {
         display: flex;
