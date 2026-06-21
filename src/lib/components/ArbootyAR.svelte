@@ -1,16 +1,13 @@
 <script>
-    import { onMount, onDestroy } from 'svelte';
-    import { haversineDistance, calculateBearing, relativeBearing, CAPTURE_RADIUS_M, GPS_ACCURACY_THRESHOLD } from '$lib/geo.js';
+    import { onDestroy } from 'svelte';
 
     let { bottles = [], onCapture, player, theme = 'pirate' } = $props();
-
-    // $effect needs to be imported - it's a Svelte 5 rune, auto-available
 
     const themes = {
         pirate: {
             icon: '🏴‍☠️🔭',
             title: 'Modo AR',
-            desc: 'Usa la cámara para encontrar botellas',
+            desc: 'Gira para encontrar botellas en tu entorno',
             accentColor: '#c9a87c',
             accentRgb: '201,168,124',
             markerNear: '🏴‍☠️',
@@ -52,72 +49,71 @@
     let stream = $state(null);
     let error = $state(null);
 
-    let heading = $state(0);
-    let headingAccuracy = $state(null);
+    // Heading tracking — relative rotation only, no compass/GPS needed
+    let heading = $state(0);          // current device heading (0-360)
+    let baseHeading = $state(0);      // heading at camera start — "forward"
     let useCompass = $state(true);
     let touchStartX = 0;
     let touchHeadingStart = 0;
-    let userPos = $state(null);
-    let gpsAccuracy = $state(null);
-    let showAccuracyWarning = $state(false);
 
     let cameraActive = $state(false);
     let capturing = $state(null);
     let captured = $state(null);
     let gamePaused = $state(false);
+    let lastCaptureTime = $state(0);
 
-    // Confetti for event mode
-    let confetti = $state([]);
-    function spawnConfetti() {
-        if (theme !== 'event') return;
-        const emojis = ['🎉','🎊','🥳','🎈','⭐','✨','🎂','🍾','🎁'];
-        confetti = Array.from({ length: 20 }, () => ({
-            id: crypto.randomUUID(),
-            emoji: emojis[Math.floor(Math.random() * emojis.length)],
-            x: Math.random() * 100,
-            delay: Math.random() * 500,
-            duration: 1500 + Math.random() * 1000,
-        }));
-        setTimeout(() => { confetti = []; }, 3000);
+    // FOV for marker visibility
+    const FOV = 65; // degrees on each side
+
+    // ── Local-space marker placement ──────────────────────────────────────
+    // Each bottle gets a random angle and elevation tier when camera activates
+    let placedMarkers = $state([]);
+
+    function distributeMarkers() {
+        const available = bottles.filter(b => !b.found_by);
+        placedMarkers = available.map(b => {
+            const angle = Math.random() * 360;               // 0-360°
+            const tiers = ['high', 'mid', 'low'];
+            const elevation = tiers[Math.floor(Math.random() * tiers.length)];
+            return { ...b, angle, elevation };
+        });
     }
 
-    // WebSocket
-    let ws = $state(null);
-    let wsConnected = $state(false);
-    let nearbyPlayers = $state([]);
-    let onlineCount = $state(0);
-    let proximityEvents = $state([]);
-    let locationInterval = null;
-    const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/chat/ws';
+    $effect(() => {
+        // Re-distribute when bottles array changes or camera toggles
+        if (cameraActive) {
+            distributeMarkers();
+        }
+    });
 
-    // Markers
-    let allMarkers = $derived(
-        bottles.map(b => {
-            if (!userPos || !b.current_lat || !b.current_lon) return { ...b, visible: false, dist: Infinity };
-            const dist = haversineDistance(userPos.lat, userPos.lon, b.current_lat, b.current_lon);
-            const bearing = calculateBearing(userPos.lat, userPos.lon, b.current_lat, b.current_lon);
-            const rel = relativeBearing(heading, bearing);
-            const fov = 60;
-            return {
-                ...b, dist, bearing, rel,
-                xPercent: Math.round(50 + (rel / fov) * 100),
-                visible: Math.abs(rel) < fov && !b.found_by,
-                inRange: dist < CAPTURE_RADIUS_M,
-            };
-        })
-    );
+    // Relative heading: how far has user rotated from base
+    let relHeading = $derived((heading - baseHeading + 360) % 360);
 
+    // Compute visible markers based on relative heading
     let markers = $derived(
-        allMarkers.filter(b => b.visible).sort((a, b) => a.dist - b.dist).slice(0, 3)
+        placedMarkers.map(m => {
+            // Angle of this marker relative to user's current facing
+            const relAngle = (m.angle - relHeading + 360) % 360;
+            // Normalize to -180..180
+            const signed = relAngle > 180 ? relAngle - 360 : relAngle;
+            const visible = Math.abs(signed) < FOV;
+            // Map to screen position: 0 = center, FOV = edge
+            const xPercent = visible ? Math.round(50 + (signed / FOV) * 50) : (signed > 0 ? 105 : -5);
+            // Elevation → vertical position
+            const topPct = m.elevation === 'high' ? 20 : m.elevation === 'low' ? 52 : 35;
+            return { ...m, signed, visible, xPercent, topPct };
+        })
+        .filter(m => m.visible)
+        .sort((a, b) => Math.abs(a.signed) - Math.abs(b.signed))
+        .slice(0, 5)
     );
 
     let nearest = $derived(markers[0] || null);
-    let nearestWasInRange = $state(false);
+    let nearestWasVisible = $state(false);
     $effect(() => {
-        if (nearest?.inRange && !nearestWasInRange) playPing();
-        nearestWasInRange = nearest?.inRange || false;
+        if (nearest && !nearestWasVisible) playPing();
+        nearestWasVisible = !!nearest;
     });
-    let gpsReady = $derived(!showAccuracyWarning && gpsAccuracy !== null);
 
     // ── Camera ────────────────────────────────────────────────────────────
 
@@ -152,7 +148,7 @@
         return true;
     }
 
-    // ── Sensors ────────────────────────────────────────────────────────────
+    // ── Sensors (orientation only, no GPS) ─────────────────────────────────
 
     function startOrientation() {
         window.addEventListener('deviceorientationabsolute', handleOrientation, true);
@@ -163,29 +159,20 @@
         if (!useCompass) return;
         if (e.absolute && e.alpha !== null) {
             heading = (360 - e.alpha) % 360;
-            headingAccuracy = e.webkitCompassAccuracy ?? null;
         } else if (e.webkitCompassHeading !== undefined) {
             heading = e.webkitCompassHeading;
-            headingAccuracy = e.webkitCompassAccuracy;
         }
-    }
-
-    function startGPS() {
-        navigator.geolocation.watchPosition(
-            (pos) => {
-                gpsAccuracy = Math.round(pos.coords.accuracy);
-                showAccuracyWarning = pos.coords.accuracy > GPS_ACCURACY_THRESHOLD;
-                userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-            },
-            (err) => { error = `GPS error: ${err.message}`; },
-            { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
-        );
     }
 
     // ── Capture ────────────────────────────────────────────────────────────
 
+    const CAPTURE_COOLDOWN_MS = 2000;
+
     async function captureBottle(bottle) {
-        if (capturing || !userPos || !gpsReady) return;
+        if (capturing) return;
+        const now = Date.now();
+        if (now - lastCaptureTime < CAPTURE_COOLDOWN_MS) return;
+        lastCaptureTime = now;
         capturing = bottle.id;
         try {
             const controller = new AbortController();
@@ -193,13 +180,12 @@
             const res = await fetch('/api/bottlequest/physical', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bottle_id: bottle.id, lat: userPos.lat, lon: userPos.lon, nickname: effectivePlayer?.username }),
+                body: JSON.stringify({ bottle_id: bottle.id, nickname: effectivePlayer?.username }),
                 signal: controller.signal
             });
             clearTimeout(timeout);
             const result = await res.json();
             if (result.cooldown) {
-                // Show cooldown toast
                 proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'cooldown', message: result.error, ts: Date.now() }];
                 setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 3000); }, 3000);
             }
@@ -215,6 +201,8 @@
                     spawnConfetti();
                     playFanfare();
                 }
+                // Remove captured marker from placed list
+                placedMarkers = placedMarkers.filter(m => m.id !== bottle.id);
                 // Broadcast capture to other players
                 if (ws?.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella', trap: result.trap, challenge: result.challenge }));
@@ -230,7 +218,13 @@
         finally { capturing = null; }
     }
 
-    // ── WebSocket ──────────────────────────────────────────────────────────
+    // ── WebSocket (capture notifications only, no location broadcast) ──────
+
+    let ws = $state(null);
+    let wsConnected = $state(false);
+    let onlineCount = $state(0);
+    let proximityEvents = $state([]);
+    const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/chat/ws';
 
     function connectWS() {
         if (ws) { ws.close(); ws = null; }
@@ -238,13 +232,7 @@
         const displayName = player?.display_name || username;
         try {
             ws = new WebSocket(`${WS_URL}?username=${encodeURIComponent(username)}&display_name=${encodeURIComponent(displayName)}`);
-            ws.onopen = () => { wsConnected = true;
-                locationInterval = setInterval(() => {
-                    if (ws?.readyState === WebSocket.OPEN && userPos && gpsReady) {
-                        ws.send(JSON.stringify({ type: 'location', lat: userPos.lat, lon: userPos.lon }));
-                    }
-                }, 30000);
-            };
+            ws.onopen = () => { wsConnected = true; };
             ws.onmessage = (e) => { try { handleWSMessage(JSON.parse(e.data)); } catch {} };
             ws.onclose = () => { ws = null; wsConnected = false; };
             ws.onerror = () => { ws = null; };
@@ -252,10 +240,6 @@
     }
 
     function handleWSMessage(msg) {
-        if (msg.type === 'proximity') {
-            proximityEvents = [...proximityEvents.slice(-4), { ...msg, id: crypto.randomUUID(), ts: Date.now() }];
-            setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 8000); }, 8000);
-        }
         if (msg.type === 'capture' && msg.username !== (player?.username || 'anonymous')) {
             const icon = msg.trap ? '💀' : '🎉';
             const verb = msg.trap ? 'cayó en aguafiestas' : 'capturó';
@@ -272,7 +256,7 @@
         }
         if (msg.type === 'pause') { gamePaused = true; }
         if (msg.type === 'resume') { gamePaused = false; }
-        if (msg.type === 'online') { nearbyPlayers = (msg.players || []).filter(p => p.hasLocation); onlineCount = msg.count || 0; }
+        if (msg.type === 'online') { onlineCount = msg.count || 0; }
         if (msg.type === 'online_update' && msg.username) {
             onlineCount = msg.count || 0;
             if (msg.username !== (player?.username || '')) {
@@ -286,20 +270,32 @@
     }
 
     function disconnectWS() {
-        if (locationInterval) { clearInterval(locationInterval); locationInterval = null; }
         if (ws) { ws.close(); ws = null; }
-        nearbyPlayers = []; onlineCount = 0; proximityEvents = []; wsConnected = false;
+        onlineCount = 0; proximityEvents = []; wsConnected = false;
+    }
+
+    // ── Confetti ───────────────────────────────────────────────────────────
+    let confetti = $state([]);
+    function spawnConfetti() {
+        if (theme !== 'event') return;
+        const emojis = ['🎉','🎊','🥳','🎈','⭐','✨','🎂','🍾','🎁'];
+        confetti = Array.from({ length: 20 }, () => ({
+            id: crypto.randomUUID(),
+            emoji: emojis[Math.floor(Math.random() * emojis.length)],
+            x: Math.random() * 100,
+            delay: Math.random() * 500,
+            duration: 1500 + Math.random() * 1000,
+        }));
+        setTimeout(() => { confetti = []; }, 3000);
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────────────
 
-    // Nickname support for unauthenticated event mode
     let nickname = $state('');
     let showNickModal = $state(false);
     let effectivePlayer = $derived(player || (nickname ? { username: nickname, display_name: nickname } : null));
 
     async function activate() {
-        // For event mode, allow unauthenticated play with nickname
         if (!effectivePlayer && isEvent) {
             showNickModal = true;
             return;
@@ -314,8 +310,10 @@
         if (!(await requestOrientationPermission())) return;
         await startCamera();
         if (!cameraActive) return;
+        // Set base heading to current heading so "forward" is the start direction
+        baseHeading = heading;
         startOrientation();
-        startGPS();
+        distributeMarkers();
         connectWS();
     }
 
@@ -324,7 +322,7 @@
         stopCamera();
         window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
         window.removeEventListener('deviceorientation', handleOrientation, true);
-        showAccuracyWarning = false; gpsAccuracy = null; userPos = null; captured = null; confetti = []; useCompass = true;
+        captured = null; confetti = []; placedMarkers = []; useCompass = true;
     }
 
     onDestroy(deactivate);
@@ -354,18 +352,18 @@
     function playFanfare() {
         try {
             const ctx = getAudioCtx();
-            const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+            const notes = [523, 659, 784, 1047];
             notes.forEach((freq, i) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain); gain.connect(ctx.destination);
                 osc.frequency.value = freq;
                 osc.type = 'triangle';
-                const t = ctx.currentTime + i * 0.12;
-                gain.gain.setValueAtTime(0.2, t);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-                osc.start(t);
-                osc.stop(t + 0.4);
+                const tm = ctx.currentTime + i * 0.12;
+                gain.gain.setValueAtTime(0.2, tm);
+                gain.gain.exponentialRampToValueAtTime(0.001, tm + 0.4);
+                osc.start(tm);
+                osc.stop(tm + 0.4);
             });
         } catch {}
     }
@@ -373,26 +371,26 @@
     function playSadTrombone() {
         try {
             const ctx = getAudioCtx();
-            const notes = [440, 415, 392, 349]; // A4 Ab4 G4 F4 descending
+            const notes = [440, 415, 392, 349];
             notes.forEach((freq, i) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain); gain.connect(ctx.destination);
                 osc.frequency.value = freq;
                 osc.type = 'sawtooth';
-                const t = ctx.currentTime + i * 0.3;
-                gain.gain.setValueAtTime(0.1, t);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
-                osc.start(t);
-                osc.stop(t + 0.6);
+                const tm = ctx.currentTime + i * 0.3;
+                gain.gain.setValueAtTime(0.1, tm);
+                gain.gain.exponentialRampToValueAtTime(0.001, tm + 0.6);
+                osc.start(tm);
+                osc.stop(tm + 0.6);
             });
         } catch {}
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────
 
-    function distLabel(m) {
-        return m.dist < 1000 ? `${Math.round(m.dist)}m` : `${(m.dist / 1000).toFixed(1)}km`;
+    function canCapture() {
+        return Date.now() - lastCaptureTime >= CAPTURE_COOLDOWN_MS;
     }
 
     function voteChallenge(approved) {
@@ -415,6 +413,12 @@
 
     function isNearest(m) {
         return nearest && m.id === nearest.id;
+    }
+
+    function elevationIcon(m) {
+        if (m.elevation === 'high') return '⬆️';
+        if (m.elevation === 'low') return '⬇️';
+        return '';
     }
 </script>
 
@@ -449,14 +453,14 @@
                     <p class="ar-subtitle">🎂 60 años joven 🎂</p>
                 {/if}
                 <p class="ar-desc">{t.desc}</p>
-                <p class="ar-note">Requiere GPS + brújula + cámara trasera</p>
+                <p class="ar-note">Gira 360° para descubrir todas las botellas</p>
                 {#if isEvent}
                     <details class="rules-toggle">
                         <summary>📋 ¿Cómo jugar?</summary>
                         <div class="rules-card">
-                            <p><strong>🎯 Encuentra mensajes</strong> — camina y apunta con la cámara</p>
-                            <p><strong>🍾 Captura botellas</strong> — acércate y presiona capturar</p>
-                            <p><strong>⏳ Cooldown 60s</strong> — pasa el teléfono entre capturas</p>
+                            <p><strong>🎯 Gira lentamente</strong> — las botellas aparecen alrededor tuyo</p>
+                            <p><strong>🍾 Toca para capturar</strong> — todas están a tu alcance</p>
+                            <p><strong>⏳ Cooldown 2s</strong> — entre capturas</p>
                             <p><strong>🎯 Retos</strong> — completa el desafío y el grupo vota</p>
                             <p><strong>💀 ¡Cuidado!</strong> — hay mensajes aguafiestas (-50 pts)</p>
                         </div>
@@ -486,65 +490,49 @@
                 <div class="compass-center-line" style="background: {t.compassColor}"></div>
             </div>
             <div class="ar-status">
-                <span class:warn={showAccuracyWarning} class:good={!showAccuracyWarning && gpsAccuracy !== null}>
-                    📍 {gpsAccuracy !== null ? `±${gpsAccuracy}m` : 'GPS...'}
-                </span>
-                <span class:warn={headingAccuracy > 15}>🧭 {Math.round(heading)}° {#if !useCompass}(modo touch){/if}</span>
-            {#if !useCompass}
-                <button class="compass-btn" onclick={() => useCompass = true}>🧭 Brújula</button>
-            {/if}
+                <span class="good">📍 Modo local</span>
+                <span>🧭 {Math.round(heading)}° {#if !useCompass}(modo touch){/if}</span>
+                {#if !useCompass}
+                    <button class="compass-btn" onclick={() => useCompass = true}>🧭 Brújula</button>
+                {/if}
             </div>
         </div>
 
         <!-- Markers -->
         {#each markers as m (m.id)}
-            <div class="ar-marker {isNearest(m) ? 'nearest' : 'far'}" style="left: {m.xPercent}%; top: {isNearest(m) ? 28 : 38}%;">
-                <svg viewBox="0 0 48 48" class="marker-svg {m.inRange ? 'pulse' : ''}">
-                    {#if m.inRange}
-                        <circle cx="24" cy="24" r="22" fill={t.rangeFill} stroke={t.rangeStroke} stroke-width="2.5"/>
-                        <text x="24" y="30" text-anchor="middle" font-size="24">{t.markerRange}</text>
-                    {:else if isNearest(m)}
-                        <circle cx="24" cy="24" r="22" fill="rgba({t.accentRgb},0.15)" stroke={t.accentColor} stroke-width="2.5"/>
-                        <text x="24" y="30" text-anchor="middle" font-size="22">{t.markerNear}</text>
-                    {:else}
-                        <circle cx="24" cy="24" r="20" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-                        <text x="24" y="30" text-anchor="middle" font-size="20" opacity="0.7">{t.markerFar}</text>
-                    {/if}
+            <div class="ar-marker {isNearest(m) ? 'nearest' : 'far'}" style="left: {m.xPercent}%; top: {m.topPct}%;">
+                <svg viewBox="0 0 48 48" class="marker-svg pulse">
+                    <circle cx="24" cy="24" r="22" fill={t.rangeFill} stroke={t.rangeStroke} stroke-width="2.5"/>
+                    <text x="24" y="30" text-anchor="middle" font-size="24">{t.markerRange}</text>
                 </svg>
-                <div class="marker-info {isNearest(m) ? 'info-nearest' : 'info-far'}">
-                    <span class="marker-name">{m.title || (theme === 'event' ? 'Sorpresa' : 'Botella')}</span>
-                    <span class="marker-dist" style="color: {t.accentColor}">{distLabel(m)}</span>
+                <div class="marker-info info-nearest">
+                    <span class="marker-name">{m.title || (theme === 'event' ? 'Sorpresa' : 'Botella')} {elevationIcon(m)}</span>
+                    <span class="marker-dist" style="color: {t.accentColor}">🏁 ¡Toca!</span>
                 </div>
                 {#if gamePaused}
                     <div class="pause-overlay">
                         <div class="pause-badge">⏸️ ¡Reto en curso!</div>
                     </div>
                     <button class="resume-btn" onclick={resumeGame}>▶️ Continuar</button>
-                {:else if m.inRange}
+                {:else}
                     <button
                         class="capture-btn {theme}"
                         style="background: {t.captureBtnBg}; box-shadow: 0 2px 8px {t.captureBtnShadow}"
-                        disabled={!!capturing || !gpsReady}
+                        disabled={!!capturing || !canCapture()}
                         onclick={() => captureBottle(m)}
                     >
-                        {capturing === m.id ? '...' : gpsReady ? t.captureText : 'GPS...'}
+                        {capturing === m.id ? '...' : t.captureText}
                     </button>
                 {/if}
             </div>
         {/each}
-
-        {#if showAccuracyWarning}
-            <div class="accuracy-warn">⚠️ GPS impreciso (±{gpsAccuracy}m) — cielo abierto</div>
-        {/if}
 
         <div class="ar-hud-bottom">
             <span class="hud-badge">👥 {onlineCount}</span>
             {#if wsConnected}
                 <span class="hud-badge connected">🟢 En línea</span>
             {/if}
-            {#if nearbyPlayers.length > 0}
-                <span class="hud-badge hud-nearby">🎯 {nearbyPlayers.length} cerca</span>
-            {/if}
+            <span class="hud-badge">🍾 {placedMarkers.length} restantes</span>
         </div>
 
         {#each proximityEvents as evt (evt.id)}
@@ -553,8 +541,16 @@
             </div>
         {/each}
 
-        {#if markers.length === 0}
+        {#if markers.length === 0 && placedMarkers.length > 0}
             <div class="no-bottles">{t.emptyText}</div>
+        {/if}
+
+        {#if placedMarkers.length === 0 && bottles.length > 0}
+            <div class="no-bottles">🏆 ¡Todas capturadas!</div>
+        {/if}
+
+        {#if bottles.length === 0}
+            <div class="no-bottles">Sin botellas disponibles</div>
         {/if}
 
         <button class="ar-close" onclick={deactivate}>✕</button>
@@ -893,20 +889,6 @@
         pointer-events: all;
     }
 
-    .accuracy-warn {
-        position: absolute;
-        bottom: 5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(245,158,11,0.95);
-        color: #000;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 12px;
-        z-index: 10;
-        white-space: nowrap;
-    }
-
     .no-bottles {
         position: absolute;
         bottom: 35%;
@@ -1055,8 +1037,6 @@
 
     .capture-modal-card.trap { border-color: rgba(239,68,68,0.6) !important; }
     .capture-modal-card.trap h2 { color: #f87171 !important; }
-    .capture-modal-card.trap h2 + h2,
-    .capture-modal-card h2:has(+ pre) { }
     .challenge-votes { display: flex; gap: 10px; justify-content: center; margin-top: 0.75rem; }
     .vote-btn {
         padding: 0.6rem 1.2rem;
