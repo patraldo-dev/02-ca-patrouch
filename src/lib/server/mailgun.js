@@ -9,7 +9,7 @@ export async function sendMailgunEmail(to, subject, html, text, env) {
 
     const from = env.MAILGUN_FROM_EMAIL || `noreply@${domain}`;
     const formData = new FormData();
-    formData.append('from', `Patrouch <${from}>`);
+    formData.append('from', `patrouch.ca <${from}>`);
     formData.append('to', to);
     formData.append('subject', subject);
     formData.append('html', html);
