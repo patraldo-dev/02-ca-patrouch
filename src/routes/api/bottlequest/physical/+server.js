@@ -1,5 +1,4 @@
 import { json } from '@sveltejs/kit';
-import { haversineDistance as haversine, CAPTURE_RADIUS_M } from '$lib/geo.js';
 
 const COOLDOWN_MS = 60_000; // 60s between captures
 const TRAP_PENALTY = 50;
@@ -8,8 +7,8 @@ export async function POST({ locals, platform, request }) {
     const db = platform?.env?.DB_book;
     if (!db) return json({ error: 'No database' }, { status: 500 });
 
-    const { bottle_id, lat, lon, nickname } = await request.json();
-    if (!bottle_id || !lat || !lon) return json({ error: 'Missing data' }, { status: 400 });
+    const { bottle_id, nickname } = await request.json();
+    if (!bottle_id) return json({ error: 'Missing data' }, { status: 400 });
 
     // Resolve capturer
     let capturerName = nickname?.trim() || null;
@@ -40,9 +39,6 @@ export async function POST({ locals, platform, request }) {
             return json({ error: `⏳ Espera ${remaining}s antes de capturar otra`, cooldown: remaining }, { status: 429 });
         }
     }
-
-    const dist = haversine(lat, lon, bottle.current_lat, bottle.current_lon);
-    if (dist > CAPTURE_RADIUS_M) return json({ error: `Too far: ${Math.round(dist)}m` }, { status: 403 });
 
     const now = new Date().toISOString();
     const isTrap = bottle.content_type === 'trap';
