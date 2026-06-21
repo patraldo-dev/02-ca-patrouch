@@ -42,7 +42,19 @@
     <!-- Portal Preview -->
     {#if activePortal}
         <a class="portal-preview" href="/games/booty/arbooty?theme={activePortal.id}" style="--pv-color: {activePortal.color_primary}; --pv-bg: {activePortal.color_bg};">
-            <div class="preview-icon">{activePortal.icon}</div>
+            {#if activePortal.video_url}
+                <div class="preview-video">
+                    <iframe
+                        src="{activePortal.video_url}"
+                        frameborder="0"
+                        scrolling="no"
+                        allow="autoplay; encrypted-media"
+                        title={nameOf(activePortal)}
+                    ></iframe>
+                </div>
+            {:else}
+                <div class="preview-icon">{activePortal.icon}</div>
+            {/if}
             <div class="preview-dots">
                 {#each allPortals as _, i}
                     <span class="dot" class:active={i === activeIdx}></span>
@@ -136,6 +148,19 @@
     .preview-icon {
         font-size: 2.5rem;
         line-height: 1;
+    }
+    .preview-video {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    .preview-video iframe {
+        width: 120px;
+        height: 120px;
+        border: none;
+        border-radius: 50%;
+        object-fit: cover;
+        pointer-events: none;
     }
     .preview-name {
         font-family: var(--font-heading);
