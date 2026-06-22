@@ -2,10 +2,10 @@
 	PortalWorld.svelte — Portals page with reactive visual layer
 
 	Layout:
-	- Full-width animated gradient background (reacts to active portal)
+	- Reactive gradient background (tints toward active/focused portal)
 	- Carousel hero at top (video preview, auto-rotating)
-	- Left rail of portal tabs → tap slides out a detail panel
-	- Galaxy groupings as visual clusters in the rail
+	- Portal cards in full-width rows, tap to slide-open detail
+	- Galaxy groupings as section headers
 	- ECS canvas behind everything (progressive enhancement)
 -->
 
@@ -16,13 +16,10 @@
 
 	let { data } = $props();
 
-	// ── State ──
 	let containerEl = $state(null);
 	let worldReady = $state(false);
 	let focusedPortalId = $state(null);
-	let hoveredPortalId = $state(null);
 
-	// ── i18n ──
 	function nameOf(item) {
 		const lang = $locale || 'es';
 		if (lang === 'en') return item.name_en || item.name_es;
@@ -36,7 +33,7 @@
 		return item.description_es;
 	}
 
-	// ── Carousel ──
+	// Carousel
 	let activeIdx = $state(0);
 	let allPortals = $derived(data.portals || []);
 	let activePortal = $derived(allPortals[activeIdx] || allPortals[0]);
@@ -49,23 +46,10 @@
 		return () => clearInterval(timer);
 	});
 
-	// ── Focused portal (for slide-out panel) ──
-	let focusedPortal = $derived(
-		allPortals.find((p) => p.id === focusedPortalId) || null
-	);
+	// Background follows focused portal, or carousel if none focused
+	let bgPortal = $derived(allPortals.find((p) => p.id === focusedPortalId) || activePortal);
 
-	// ── Reactive background colors ──
-	let bgColors = $derived.by(() => {
-		const p = focusedPortal || activePortal;
-		if (!p) return { a: '#0d0d14', b: '#05050a', glow: '#c9a87c' };
-		return {
-			a: p.color_primary || '#c9a87c',
-			b: p.color_bg || '#1a1a2e',
-			glow: p.color_primary || '#c9a87c',
-		};
-	});
-
-	// ── ECS World boot (silent, progressive enhancement) ──
+	// ECS boot
 	let worldInstance = null;
 	onMount(() => {
 		let cancelled = false;
@@ -95,21 +79,21 @@
 		};
 	});
 
-	function focusPortal(id) {
+	function togglePortal(id) {
 		focusedPortalId = focusedPortalId === id ? null : id;
 	}
 </script>
 
-<!-- ── ECS Canvas (behind everything) ── -->
+<!-- ECS Canvas -->
 <div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}></div>
 
-<!-- ── Reactive animated background ── -->
+<!-- Reactive background -->
 <div
 	class="reactive-bg"
-	style="--bg-a: {bgColors.a}; --bg-b: {bgColors.b}; --bg-glow: {bgColors.glow};"
+	style="--bg-a: {bgPortal?.color_primary || '#c9a87c'}; --bg-b: {bgPortal?.color_bg || '#1a1a2e'};"
 ></div>
 
-<!-- ── Accessible nav ── -->
+<!-- Accessible nav -->
 <nav class="sr-only" aria-label="Portals">
 	{#each data.galaxies as galaxy}
 		<section>
@@ -123,10 +107,10 @@
 	{/each}
 </nav>
 
-<!-- ── Page Content ── -->
+<!-- Page content -->
 <section class="portals-page">
 
-	<!-- Carousel hero -->
+	<!-- Carousel -->
 	{#if activePortal}
 		<a
 			class="carousel-hero"
@@ -166,91 +150,58 @@
 		</a>
 	{/if}
 
-	<!-- Title -->
 	<h1 class="page-title">{$t('games.title')}</h1>
 	<p class="page-subtitle">{$t('pages.home.works.games.desc')}</p>
 
-	<!-- Portal rail + slide-out panel -->
 	{#if data.galaxies?.length > 0}
-		<div class="portal-layout" class:panel-open={focusedPortal}>
-			<!-- Left rail: portal tabs -->
-			<aside class="portal-rail">
-				{#each data.galaxies as galaxy, gi}
-					{#if gi > 0}<div class="rail-divider"></div>{/if}
-					<div class="rail-group-label">{galaxy.icon}</div>
-					{#each galaxy.portals as portal}
-						<button
-							class="rail-tab"
-							class:focused={focusedPortalId === portal.id}
-							class:hovered={hoveredPortalId === portal.id}
-							style="--tab-color: {portal.color_primary};"
-							onclick={() => focusPortal(portal.id)}
-							onmouseenter={() => hoveredPortalId = portal.id}
-							onmouseleave={() => hoveredPortalId = null}
-							aria-label={nameOf(portal)}
-							title={nameOf(portal)}
-						>
-							<span class="rail-icon">{portal.icon}</span>
-							<span class="rail-label">{nameOf(portal)}</span>
-							{#if portal.active_writings_count > 0}
-								<span class="rail-badge">{portal.active_writings_count}</span>
-							{/if}
-							<span class="rail-indicator"></span>
-						</button>
-					{/each}
-				{/each}
-			</aside>
+		<div class="galaxies">
+			{#each data.galaxies as galaxy}
+				<div class="galaxy-group">
+					<div class="galaxy-header">
+						<span class="galaxy-icon">{galaxy.icon}</span>
+						<span class="galaxy-name">{nameOf(galaxy)}</span>
+					</div>
+					<div class="portal-list">
+						{#each galaxy.portals as portal}
+							<div
+								class="portal-item"
+								class:open={focusedPortalId === portal.id}
+								style="--portal-color: {portal.color_primary}; --portal-bg: {portal.color_bg};"
+							>
+								<button
+									class="portal-row"
+									onclick={() => togglePortal(portal.id)}
+									aria-expanded={focusedPortalId === portal.id}
+								>
+									<span class="portal-icon">{portal.icon}</span>
+									<div class="portal-info">
+										<h2 class="portal-name" style="color: {portal.color_primary}">{nameOf(portal)}</h2>
+										<p class="portal-desc">{descOf(portal)}</p>
+									</div>
+									{#if portal.active_writings_count > 0}
+										<span class="portal-writings">{portal.active_writings_count}</span>
+									{/if}
+									<span class="portal-chevron" class:rotated={focusedPortalId === portal.id}>›</span>
+								</button>
 
-			<!-- Slide-out detail panel -->
-			{#if focusedPortal}
-				<div class="portal-panel" style="--panel-color: {focusedPortal.color_primary}; --panel-bg: {focusedPortal.color_bg};">
-					<button class="panel-close" onclick={() => focusedPortalId = null} aria-label="Close">×</button>
-					<span class="panel-icon">{focusedPortal.icon}</span>
-					<h2 class="panel-name" style="color: {focusedPortal.color_primary}">{nameOf(focusedPortal)}</h2>
-					<p class="panel-desc">{descOf(focusedPortal)}</p>
-					{#if focusedPortal.active_writings_count > 0}
-						<span class="panel-writings">{focusedPortal.active_writings_count} {$t('games.writings')}</span>
-					{/if}
-					<a class="panel-enter" href="/portals/booty/arbooty?theme={focusedPortal.id}">
-						{$t('games.enter')} →
-					</a>
-				</div>
-			{:else}
-				<!-- Grid view when no panel open -->
-				<div class="portal-grid-area">
-					{#each data.galaxies as galaxy}
-						<div class="galaxy-section">
-							<div class="galaxy-header">
-								<span>{galaxy.icon}</span>
-								<span>{nameOf(galaxy)}</span>
+								<!-- Slide-down detail panel -->
+								{#if focusedPortalId === portal.id}
+									<div class="portal-detail">
+										<a class="portal-enter" href="/portals/booty/arbooty?theme={portal.id}">
+											{$t('games.enter')} →
+										</a>
+									</div>
+								{/if}
 							</div>
-							<div class="portal-cards">
-								{#each galaxy.portals as portal}
-									<a
-										class="portal-card"
-										href="/portals/booty/arbooty?theme={portal.id}"
-										style="--portal-color: {portal.color_primary};"
-										onmouseenter={() => hoveredPortalId = portal.id}
-										onmouseleave={() => hoveredPortalId = null}
-									>
-										<span class="card-icon">{portal.icon}</span>
-										<span class="card-name">{nameOf(portal)}</span>
-										{#if portal.active_writings_count > 0}
-											<span class="card-badge">{portal.active_writings_count}</span>
-										{/if}
-									</a>
-								{/each}
-							</div>
-						</div>
-					{/each}
+						{/each}
+					</div>
 				</div>
-			{/if}
+			{/each}
 		</div>
 	{/if}
 </section>
 
 <style>
-	/* ── ECS Canvas ── */
 	.portal-canvas {
 		position: fixed;
 		inset: 0;
@@ -260,23 +211,18 @@
 		pointer-events: none;
 	}
 	.portal-canvas.ready { opacity: 1; }
-	.portal-canvas :global(canvas) {
-		width: 100% !important;
-		height: 100% !important;
-	}
+	.portal-canvas :global(canvas) { width: 100% !important; height: 100% !important; }
 
-	/* ── Reactive background ── */
 	.reactive-bg {
 		position: fixed;
 		inset: 0;
 		z-index: 0;
 		background:
-			radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--bg-glow) 8%, transparent), transparent),
+			radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--bg-a) 8%, transparent), transparent),
 			linear-gradient(180deg, color-mix(in srgb, var(--bg-a) 12%, #0a0a0e), color-mix(in srgb, var(--bg-b) 8%, #050508));
 		transition: background 1.5s ease;
 	}
 
-	/* ── Page container ── */
 	.portals-page {
 		position: relative;
 		z-index: 2;
@@ -285,7 +231,7 @@
 		padding: 1.5rem 1.5rem 4rem;
 	}
 
-	/* ── Carousel hero ── */
+	/* Carousel */
 	.carousel-hero {
 		display: block;
 		position: relative;
@@ -301,58 +247,33 @@
 		transition: border-color 0.8s ease;
 		animation: hero-fade 0.6s ease;
 	}
-	@keyframes hero-fade {
-		from { opacity: 0.3; }
-		to { opacity: 1; }
-	}
+	@keyframes hero-fade { from { opacity: 0.3; } to { opacity: 1; } }
 	.hero-video, .hero-fallback {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
+		position: absolute; inset: 0; width: 100%; height: 100%;
 	}
 	.hero-video iframe {
-		width: 100%;
-		height: 100%;
-		border: none;
-		pointer-events: none;
+		width: 100%; height: 100%; border: none; pointer-events: none;
 	}
 	.hero-fallback {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		display: flex; align-items: center; justify-content: center;
 		background: color-mix(in srgb, var(--pv-color, #c9a87c) 10%, #0a0a0e);
 	}
 	.hero-icon { font-size: 3.5rem; }
 	.hero-bar {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
+		position: absolute; bottom: 0; left: 0; right: 0;
 		padding: 0.6rem 1rem;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
+		display: flex; justify-content: space-between; align-items: center;
 		background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
 	}
 	.hero-name {
 		font-family: var(--font-heading);
-		font-size: 0.9rem;
-		font-weight: 600;
+		font-size: 0.9rem; font-weight: 600;
 		text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 	}
-	.hero-dots {
-		display: flex;
-		gap: 6px;
-	}
+	.hero-dots { display: flex; gap: 6px; }
 	.hero-dot {
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-		border: none;
-		background: rgba(255,255,255,0.25);
-		cursor: pointer;
-		padding: 0;
+		width: 7px; height: 7px; border-radius: 50%; border: none;
+		background: rgba(255,255,255,0.25); cursor: pointer; padding: 0;
 		transition: all 0.3s;
 	}
 	.hero-dot.active {
@@ -360,7 +281,7 @@
 		transform: scale(1.3);
 	}
 
-	/* ── Title ── */
+	/* Title */
 	.page-title {
 		font-family: var(--font-heading);
 		font-size: 1.75rem;
@@ -368,301 +289,100 @@
 		margin-bottom: 0.2rem;
 	}
 	.page-subtitle {
-		color: var(--muted);
-		font-size: 0.9rem;
-		text-align: center;
-		margin-bottom: 1.5rem;
-		font-style: italic;
+		color: var(--muted); font-size: 0.9rem; text-align: center;
+		margin-bottom: 1.5rem; font-style: italic;
 	}
 
-	/* ── Portal layout: rail + panel/grid ── */
-	.portal-layout {
-		display: flex;
-		gap: 1rem;
-		min-height: 300px;
+	/* Galaxy groups */
+	.galaxies {
+		display: flex; flex-direction: column; gap: 1.5rem;
+	}
+	.galaxy-header {
+		display: flex; align-items: center; gap: 0.5rem;
+		margin-bottom: 0.5rem; padding: 0 0.25rem;
+	}
+	.galaxy-icon { font-size: 1.1rem; }
+	.galaxy-name {
+		font-family: var(--font-heading); font-size: 0.8rem;
+		text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
 	}
 
-	/* ── Left rail ── */
-	.portal-rail {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		flex-shrink: 0;
-		padding-right: 0.5rem;
-		border-right: 1px solid var(--border);
+	/* Portal items — full width, slide-open on tap */
+	.portal-list {
+		display: flex; flex-direction: column; gap: 0.6rem;
 	}
-	.rail-divider {
-		height: 1px;
-		background: var(--border);
-		margin: 6px 0;
-	}
-	.rail-group-label {
-		font-size: 0.9rem;
-		text-align: center;
-		opacity: 0.5;
-		padding: 2px 0;
-	}
-	.rail-tab {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0.6rem;
-		border: none;
-		background: transparent;
-		color: var(--fg);
-		cursor: pointer;
-		border-radius: 10px;
-		transition: all 0.2s ease;
-		position: relative;
-		text-align: left;
-		width: 100%;
-		min-height: 44px;
-	}
-	.rail-tab:hover {
-		background: color-mix(in srgb, var(--tab-color) 10%, transparent);
-	}
-	.rail-tab.focused {
-		background: color-mix(in srgb, var(--tab-color) 15%, transparent);
-	}
-	.rail-icon {
-		font-size: 1.3rem;
-		flex-shrink: 0;
-		filter: grayscale(0.3);
-		transition: filter 0.2s;
-	}
-	.rail-tab:hover .rail-icon,
-	.rail-tab.focused .rail-icon {
-		filter: grayscale(0);
-	}
-	.rail-label {
-		font-size: 0.78rem;
-		flex: 1;
-		white-space: nowrap;
+	.portal-item {
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-left: 3px solid var(--portal-color);
+		border-radius: 12px;
 		overflow: hidden;
-		text-overflow: ellipsis;
+		transition: all 0.2s ease;
 	}
-	.rail-badge {
-		font-size: 0.65rem;
-		background: var(--tab-color);
-		color: #fff;
-		border-radius: 8px;
-		padding: 1px 6px;
+	.portal-item.open {
+		border-color: var(--portal-color);
+		background: color-mix(in srgb, var(--portal-bg, var(--surface)) 10%, var(--surface));
+		box-shadow: 0 4px 20px color-mix(in srgb, var(--portal-color) 12%, transparent);
 	}
-	.rail-indicator {
-		position: absolute;
-		right: -0.5rem;
-		top: 50%;
-		transform: translateY(-50%);
-		width: 3px;
-		height: 0;
-		background: var(--tab-color);
-		border-radius: 2px;
-		transition: height 0.2s ease;
-	}
-	.rail-tab.focused .rail-indicator {
-		height: 60%;
-	}
-
-	/* ── Slide-out detail panel ── */
-	.portal-panel {
-		flex: 1;
-		background: color-mix(in srgb, var(--panel-bg, var(--surface)) 15%, var(--surface));
-		border: 1px solid color-mix(in srgb, var(--panel-color, var(--border)) 30%, var(--border));
-		border-left: 3px solid var(--panel-color, var(--accent));
-		border-radius: 16px;
-		padding: 1.5rem;
-		animation: panel-slide 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.5rem;
-	}
-	@keyframes panel-slide {
-		from {
-			opacity: 0;
-			transform: translateX(-20px);
-		}
-		to {
-			opacity: 1;
-			transform: translateX(0);
-		}
-	}
-	.panel-close {
-		position: absolute;
-		top: 0.75rem;
-		right: 0.75rem;
-		width: 32px;
-		height: 32px;
-		border: none;
-		background: transparent;
-		color: var(--muted);
-		font-size: 1.5rem;
-		cursor: pointer;
-		border-radius: 8px;
-		transition: all 0.15s;
-	}
-	.panel-close:hover {
-		background: var(--border);
+	.portal-row {
+		display: flex; align-items: center; gap: 1rem;
+		padding: 1rem 1.25rem;
+		border: none; background: transparent;
+		width: 100%; text-align: left; cursor: pointer;
 		color: var(--fg);
 	}
-	.panel-icon { font-size: 2.5rem; }
-	.panel-name {
-		font-family: var(--font-heading);
-		font-size: 1.4rem;
-		margin: 0;
+	.portal-icon { font-size: 1.8rem; flex-shrink: 0; }
+	.portal-info { flex: 1; min-width: 0; }
+	.portal-name {
+		font-family: var(--font-heading); font-size: 1.05rem;
+		margin: 0; line-height: 1.2;
 	}
-	.panel-desc {
-		color: var(--text-dim);
-		font-size: 0.9rem;
-		line-height: 1.4;
-		margin: 0;
+	.portal-desc {
+		font-size: 0.78rem; color: var(--text-dim);
+		margin: 2px 0 0; line-height: 1.3;
 	}
-	.panel-writings {
-		font-size: 0.7rem;
-		background: var(--panel-color);
-		color: #fff;
-		border-radius: 10px;
-		padding: 2px 8px;
+	.portal-writings {
+		font-size: 0.7rem; background: var(--portal-color);
+		color: #fff; border-radius: 10px; padding: 2px 8px; flex-shrink: 0;
 	}
-	.panel-enter {
+	.portal-chevron {
+		color: var(--portal-color); font-size: 1.4rem;
+		opacity: 0.5; transition: all 0.25s ease;
+		flex-shrink: 0; transform: rotate(0deg);
+	}
+	.portal-chevron.rotated {
+		transform: rotate(90deg);
+		opacity: 1;
+	}
+
+	/* Slide-down detail */
+	.portal-detail {
+		padding: 0 1.25rem 1rem;
+		animation: detail-slide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+	@keyframes detail-slide {
+		from { opacity: 0; transform: translateY(-8px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+	.portal-enter {
 		display: inline-block;
-		margin-top: 0.5rem;
-		padding: 0.6rem 1.5rem;
-		border: 1px solid var(--panel-color);
-		color: var(--panel-color);
+		padding: 0.5rem 1.5rem;
+		border: 1px solid var(--portal-color);
+		color: var(--portal-color);
 		font-family: var(--font-heading);
-		font-size: 0.9rem;
+		font-size: 0.85rem;
 		border-radius: 24px;
 		text-decoration: none;
 		transition: all 0.2s;
 	}
-	.panel-enter:hover {
-		background: var(--panel-color);
-		color: #fff;
-	}
-
-	/* ── Grid view (no panel open) ── */
-	.portal-grid-area {
-		flex: 1;
-	}
-	.galaxy-section {
-		margin-bottom: 1.25rem;
-	}
-	.galaxy-header {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		margin-bottom: 0.5rem;
-		font-size: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--muted);
-	}
-	.portal-cards {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-		gap: 0.6rem;
-	}
-	.portal-card {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.3rem;
-		padding: 0.8rem 0.5rem;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-top: 2px solid var(--portal-color);
-		border-radius: 12px;
-		text-decoration: none;
-		color: var(--fg);
-		transition: all 0.2s ease;
-		position: relative;
-	}
-	.portal-card:hover {
-		border-color: var(--portal-color);
-		transform: translateY(-2px);
-		box-shadow: 0 4px 16px color-mix(in srgb, var(--portal-color) 15%, transparent);
-	}
-	.card-icon { font-size: 1.6rem; }
-	.card-name {
-		font-size: 0.75rem;
-		text-align: center;
-		line-height: 1.2;
-	}
-	.card-badge {
-		position: absolute;
-		top: 4px;
-		right: 4px;
-		font-size: 0.6rem;
+	.portal-enter:hover {
 		background: var(--portal-color);
 		color: #fff;
-		border-radius: 8px;
-		padding: 1px 5px;
 	}
 
-	/* ── Mobile: rail becomes horizontal scroll ── */
-	@media (max-width: 560px) {
-		.portal-layout {
-			flex-direction: column;
-			gap: 0.75rem;
-		}
-		.portal-rail {
-			flex-direction: row;
-			overflow-x: auto;
-			border-right: none;
-			border-bottom: 1px solid var(--border);
-			padding: 0 0 0.5rem;
-			gap: 6px;
-			scrollbar-width: thin;
-		}
-		.rail-divider {
-			width: 1px;
-			height: auto;
-			margin: 0 2px;
-		}
-		.rail-group-label {
-			font-size: 0.8rem;
-			padding: 0 2px;
-		}
-		.rail-tab {
-			flex-shrink: 0;
-			min-height: 40px;
-			padding: 0.4rem 0.5rem;
-		}
-		.rail-label { display: none; }
-		.rail-badge { font-size: 0.55rem; }
-		.rail-indicator {
-			right: 50%;
-			transform: translateX(50%);
-			bottom: -0.5rem;
-			top: auto;
-			width: 0;
-			height: 3px;
-		}
-		.rail-tab.focused .rail-indicator {
-			width: 60%;
-			height: 3px;
-		}
-		.portal-panel {
-			animation: panel-slide-up 0.3s ease;
-		}
-		@keyframes panel-slide-up {
-			from { opacity: 0; transform: translateY(10px); }
-			to { opacity: 1; transform: translateY(0); }
-		}
-	}
-
-	/* ── Utilities ── */
 	.sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border: 0;
+		position: absolute; width: 1px; height: 1px;
+		padding: 0; margin: -1px; overflow: hidden;
+		clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 	}
 </style>
