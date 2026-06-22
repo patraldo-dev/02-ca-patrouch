@@ -72,7 +72,10 @@
 
 				worldInstance = result.world;
 				worldReady = true;
-				bumperPlaying = true; // bumper starts immediately on world boot
+				bumperPlaying = true;
+
+				// Safety net: if bumper never fires 'done' within 5s, show content anyway
+				setTimeout(() => { bumperPlaying = false; }, 5000);
 
 				// Listen for ECS → Svelte events
 				window.addEventListener('portal-bumper-done', () => {
