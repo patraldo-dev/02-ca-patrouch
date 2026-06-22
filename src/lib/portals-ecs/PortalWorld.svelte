@@ -20,7 +20,6 @@
 	// ── State ──
 	let containerEl = $state(null);
 	let worldReady = $state(false);
-	let bumperPlaying = $state(false);
 	let worldError = $state(null);
 	let activePortalId = $state(null);
 	let activePortal = $derived(
@@ -72,15 +71,9 @@
 
 				worldInstance = result.world;
 				worldReady = true;
-				bumperPlaying = true;
-
-				// Safety net: if bumper never fires 'done' within 5s, show content anyway
-				setTimeout(() => { bumperPlaying = false; }, 5000);
 
 				// Listen for ECS → Svelte events
-				window.addEventListener('portal-bumper-done', () => {
-					bumperPlaying = false;
-				}, { once: true });
+				window.addEventListener('portal-bumper-done', () => {}, { once: true });
 
 				window.addEventListener('portal-focus', (e) => {
 					activePortalId = e.detail.portalId;
@@ -132,7 +125,7 @@
 </nav>
 
 <!-- ── Content overlay (Svelte DOM over canvas) ── -->
-<div class="portal-overlay" class:hidden={bumperPlaying && !worldError}>
+<div class="portal-overlay">
 	<!-- Active portal info panel — reacts to ECS focus state -->
 	{#if activePortal}
 		<div class="portal-info-panel" style="--portal-color: {activePortal.color_primary};">
@@ -221,12 +214,6 @@
 		max-width: 700px;
 		margin: 0 auto;
 		padding: 1.5rem 1.5rem 4rem;
-		opacity: 1;
-		transition: opacity 0.6s ease;
-	}
-	.portal-overlay.hidden {
-		opacity: 0;
-		pointer-events: none;
 	}
 
 	/* Info panel — floats at bottom, reacts to active portal */
