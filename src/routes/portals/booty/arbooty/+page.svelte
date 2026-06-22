@@ -39,7 +39,7 @@
 </svelte:head>
 
 <section class="bottles-page" style={portal ? `--portal-accent: ${portal.color_primary};` : ''}>
-    <a href="/games" class="back-link">← {$t('games.title')}</a>
+    <a href="/portals" class="back-link">← {$t('games.title')}</a>
 
     {#if portal}
         <!-- Portal-themed header -->
@@ -66,7 +66,7 @@
 
     {#if data.myPlayer || isEvent || portal}
         {#if data.myPlayer && !portal}
-        <a href="/games/booty/arbooty/create?mode={mode}" class="create-link">
+        <a href="/portals/booty/arbooty/create?mode={mode}" class="create-link">
             {isEvent ? '🎁 Esconder un Mensaje' : '🏴‍☠️ Lanzar una Botella'}
         </a>
         {/if}

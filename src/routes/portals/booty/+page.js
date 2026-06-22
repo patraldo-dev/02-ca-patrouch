@@ -1,6 +1,6 @@
 export function load() {
   return {
     status: 302,
-    redirect: '/games'
+    redirect: '/portals'
   };
 }

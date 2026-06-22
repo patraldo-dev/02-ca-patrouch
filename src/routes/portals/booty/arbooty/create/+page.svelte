@@ -113,7 +113,7 @@
 </svelte:head>
 
 <section class="create-page">
-    <a href="/games/booty/arbooty?mode={mode}" class="back-link">← Volver</a>
+    <a href="/portals/booty/arbooty?mode={mode}" class="back-link">← Volver</a>
 
     <h1 class="page-title">
         {mode === 'event' ? '🎁 Esconde un Mensaje' : '🏴‍☠️ Lanza una Botella'}
@@ -181,7 +181,7 @@
             <p class="success-note">Otros jugadores podrán encontrarlo con la cámara AR</p>
             <div class="success-actions">
                 <button class="btn-primary" onclick={createAnother}>✍️ Crear Otro</button>
-                <a href="/games/booty/arbooty?mode={mode}" class="btn-secondary">🔭 Ir al AR</a>
+                <a href="/portals/booty/arbooty?mode={mode}" class="btn-secondary">🔭 Ir al AR</a>
             </div>
         </div>
     {/if}

@@ -37,8 +37,8 @@
             icon: '🎮',
             items: [
                 { key: 'find_the_ai', href: '/agora?author=both' + (data.serverLocale ? '&locale=' + data.serverLocale : ''), active: true },
-                { key: 'portals', href: '/games', active: true },
-                { key: 'arbooty', href: '/games/booty/arbooty', active: true },
+                { key: 'portals', href: '/portals', active: true },
+                { key: 'arbooty', href: '/portals/booty/arbooty', active: true },
                 { key: 'challenges', href: '/write', active: false },
                 { key: 'weekly_challenge', href: '/write', active: false }
             ]
@@ -237,7 +237,7 @@
                 <h3>{$t('pages.home.works.stats')}</h3>
                 <p>{$t('pages.home.works.stats.desc')}</p>
             </a>
-            <a href="/games" class="glass-card">
+            <a href="/portals" class="glass-card">
                 <span class="card-icon">🎮</span>
                 <h3>{$t('pages.home.works.games')}</h3>
                 <p>{$t('pages.home.works.games.desc')}</p>

@@ -178,7 +178,7 @@
                 <a href="/" class:active={$page.url.pathname === '/'}>{$t('common.nav.home')}</a>
                 <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
                 <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
-                <a href="/games" class:active={$page.url.pathname.startsWith('/games')}>{$t('common.nav.games')}</a>
+                <a href="/portals" class:active={$page.url.pathname.startsWith('/portals')}>{$t('common.nav.games')}</a>
                 {#if data?.user?.role === 'admin' || data?.user?.role === 'member'}
                 <div class="taller-dropdown">
                     <button class="taller-trigger" onclick={() => tallerOpen = !tallerOpen}>{$t('common.nav.taller')}</button>
@@ -308,7 +308,7 @@
                 <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
                 <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
-                <a href="/games" onclick={toggleMobileMenu}>{$t('common.nav.games')}</a>
+                <a href="/portals" onclick={toggleMobileMenu}>{$t('common.nav.games')}</a>
                 {#if data?.user?.role === 'admin' || data?.user?.role === 'member'}
                 <span class="mobile-taller-label">{$t('common.nav.taller')}</span>
                 <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>

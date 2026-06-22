@@ -48,7 +48,7 @@
 			worldInstance.globals.launchPortal?.(portalId);
 		} else {
 			// Fallback: navigate to AR page directly
-			window.location.href = `/games/booty/arbooty?theme=${portalId}`;
+			window.location.href = `/portals/booty/arbooty?theme=${portalId}`;
 		}
 	}
 
@@ -119,7 +119,7 @@
 		<section>
 			<h2>{galaxy.icon} {galaxy.name_es}</h2>
 			{#each galaxy.portals as portal}
-				<a href="/games/booty/arbooty?theme={portal.id}">
+				<a href="/portals/booty/arbooty?theme={portal.id}">
 					{nameOf(portal)} — {descOf(portal)}
 				</a>
 			{/each}
@@ -169,7 +169,7 @@
 					{#each galaxy.portals as portal}
 						<a
 							class="portal-card"
-							href="/games/booty/arbooty?theme={portal.id}"
+							href="/portals/booty/arbooty?theme={portal.id}"
 							style="--portal-color: {portal.color_primary}; --portal-bg: {portal.color_bg};"
 						>
 							<span class="portal-icon">{portal.icon}</span>
