@@ -2,12 +2,9 @@
 	PortalWorld.svelte — Bridge between Svelte SSR layer and IWSDK ECS World
 
 	Browser-only. Dynamically imports @iwsdk/core (heavy, not SSR-safe).
-	Provides:
-	  - Canvas container for the IWSDK World renderer
-	  - Graceful degradation: if WebGL/IWSDK fails, DOM fallback shows
-	  - Accessible sr-only nav behind the canvas for crawlers/screen readers
-	  - Svelte reactive state that mirrors ECS state via CustomEvents
-	  - Bumper gate: hides content overlay until bumper completes
+	The full portal grid is always visible. The ECS canvas is progressive
+	enhancement — when it works, it adds bumper/particles/background behind
+	the content. When it doesn't, the page is fully functional.
 -->
 
 <script>
@@ -20,13 +17,8 @@
 	// ── State ──
 	let containerEl = $state(null);
 	let worldReady = $state(false);
-	let worldError = $state(null);
-	let activePortalId = $state(null);
-	let activePortal = $derived(
-		data.portals?.find((p) => p.id === activePortalId) || data.portals?.[0] || null
-	);
 
-	// ── i18n helpers (same as original page) ──
+	// ── i18n helpers ──
 	function nameOf(item) {
 		const lang = $locale || 'es';
 		if (lang === 'en') return item.name_en || item.name_es;
@@ -41,15 +33,18 @@
 		return item.description_es;
 	}
 
-	// ── Launch into AR ──
-	function enterPortal(portalId) {
-		if (worldInstance?.globals) {
-			worldInstance.globals.launchPortal?.(portalId);
-		} else {
-			// Fallback: navigate to AR page directly
-			window.location.href = `/portals/booty/arbooty?theme=${portalId}`;
-		}
-	}
+	// ── Portal carousel (auto-rotating, same as original page) ──
+	let activeIdx = $state(0);
+	let allPortals = $derived(data.portals || []);
+	let activePortal = $derived(allPortals[activeIdx] || allPortals[0]);
+
+	$effect(() => {
+		if (allPortals.length <= 1) return;
+		const timer = setInterval(() => {
+			activeIdx = (activeIdx + 1) % allPortals.length;
+		}, 6000);
+		return () => clearInterval(timer);
+	});
 
 	let worldInstance = null;
 
@@ -58,7 +53,6 @@
 
 		async function boot() {
 			try {
-				// Dynamic import — keeps @iwsdk out of SSR bundle
 				const { initPortalWorld } = await import('./world.js');
 				if (cancelled || !containerEl) return;
 
@@ -68,24 +62,10 @@
 				});
 
 				if (cancelled) return;
-
 				worldInstance = result.world;
 				worldReady = true;
-
-				// Listen for ECS → Svelte events
-				window.addEventListener('portal-bumper-done', () => {}, { once: true });
-
-				window.addEventListener('portal-focus', (e) => {
-					activePortalId = e.detail.portalId;
-				});
-
-				window.addEventListener('portal-carousel', (e) => {
-					activePortalId = e.detail.portalId;
-				});
 			} catch (err) {
-				console.error('[PortalWorld] Failed to boot IWSDK World:', err);
-				worldError = err.message || 'WebXR unavailable';
-				// Graceful degradation: DOM fallback is visible by default
+				console.error('[PortalWorld] IWSDK unavailable, using DOM fallback:', err);
 			}
 		}
 
@@ -102,19 +82,18 @@
 	});
 </script>
 
-<!-- ── ECS Canvas Container (fixed, fullscreen behind DOM) ── -->
+<!-- ── ECS Canvas Container (fixed, fullscreen behind content) ── -->
 <div
 	class="portal-canvas"
 	class:ready={worldReady}
-	class:hidden={worldError}
 	bind:this={containerEl}
 ></div>
 
-<!-- ── Accessible fallback nav (always in DOM for SEO/a11y) ── -->
+<!-- ── Accessible nav (always in DOM for SEO/a11y) ── -->
 <nav class="sr-only" aria-label="Portals">
 	{#each data.galaxies as galaxy}
 		<section>
-			<h2>{galaxy.icon} {galaxy.name_es}</h2>
+			<h2>{galaxy.icon} {nameOf(galaxy)}</h2>
 			{#each galaxy.portals as portal}
 				<a href="/portals/booty/arbooty?theme={portal.id}">
 					{nameOf(portal)} — {descOf(portal)}
@@ -124,91 +103,97 @@
 	{/each}
 </nav>
 
-<!-- ── Content overlay (Svelte DOM over canvas) ── -->
-<div class="portal-overlay">
-	<!-- Active portal info panel — reacts to ECS focus state -->
+<!-- ── Portals Page Content ── -->
+<section class="portals-page">
+	<!-- Carousel preview (auto-rotating) -->
 	{#if activePortal}
-		<div class="portal-info-panel" style="--portal-color: {activePortal.color_primary};">
-			<span class="portal-icon-large">{activePortal.icon}</span>
-			<h1 class="portal-title" style="color: {activePortal.color_primary}">
-				{nameOf(activePortal)}
-			</h1>
-			<p class="portal-description">{descOf(activePortal)}</p>
-			{#if activePortal.active_writings_count > 0}
-				<span class="portal-writings">
-					{activePortal.active_writings_count} {$t('games.writings')}
-				</span>
-			{/if}
-			<button class="enter-portal-btn" onclick={() => enterPortal(activePortal.id)}>
-				{$t('games.enter')} →
-			</button>
-		</div>
-	{/if}
-
-	<!-- Loading indicator while World boots -->
-	{#if !worldReady && !worldError}
-		<div class="portal-loading">
-			<div class="portal-spinner"></div>
-		</div>
-	{/if}
-</div>
-
-<!-- ── Fallback: original portal grid (visible if IWSDK fails) ── -->
-{#if worldError}
-	<section class="portals-fallback">
-		{#each data.galaxies as galaxy}
-			<div class="galaxy-group">
-				<div class="galaxy-header">
-					<span class="galaxy-icon">{galaxy.icon}</span>
-					<span class="galaxy-name">{nameOf(galaxy)}</span>
+		<a class="portal-preview" href="/portals/booty/arbooty?theme={activePortal.id}" style="--pv-color: {activePortal.color_primary}; --pv-bg: {activePortal.color_bg};">
+			{#if activePortal.video_url}
+				<div class="preview-video">
+					<iframe
+						src={activePortal.video_url}
+						frameborder="0"
+						scrolling="no"
+						allow="autoplay; encrypted-media"
+						title={nameOf(activePortal)}
+					></iframe>
 				</div>
-				<div class="portal-grid">
-					{#each galaxy.portals as portal}
-						<a
-							class="portal-card"
-							href="/portals/booty/arbooty?theme={portal.id}"
-							style="--portal-color: {portal.color_primary}; --portal-bg: {portal.color_bg};"
-						>
-							<span class="portal-icon">{portal.icon}</span>
-							<div class="portal-info">
-								<h2 class="portal-name" style="color: {portal.color_primary}">
-									{nameOf(portal)}
-								</h2>
-								<p class="portal-desc">{descOf(portal)}</p>
-							</div>
-							<span class="portal-enter">→</span>
-						</a>
+			{:else}
+				<div class="preview-icon">{activePortal.icon}</div>
+			{/if}
+			<div class="preview-overlay">
+				<span class="preview-name" style="color: {activePortal.color_primary}">{nameOf(activePortal)}</span>
+				<div class="preview-dots">
+					{#each allPortals as _, i}
+						<span class="dot" class:active={i === activeIdx}></span>
 					{/each}
 				</div>
 			</div>
-		{/each}
-	</section>
-{/if}
+		</a>
+	{/if}
+
+	<h1 class="page-title">{$t('games.title')}</h1>
+	<p class="page-subtitle">{$t('pages.home.works.games.desc')}</p>
+
+	<!-- Galaxy groups with portal cards -->
+	{#if data.galaxies?.length > 0}
+		<div class="galaxies">
+			{#each data.galaxies as galaxy}
+				<div class="galaxy-group">
+					<div class="galaxy-header">
+						<span class="galaxy-icon">{galaxy.icon}</span>
+						<span class="galaxy-name">{nameOf(galaxy)}</span>
+					</div>
+					<div class="portal-grid">
+						{#each galaxy.portals as portal}
+							<a
+								class="portal-card"
+								href="/portals/booty/arbooty?theme={portal.id}"
+								style="--portal-color: {portal.color_primary}; --portal-bg: {portal.color_bg};"
+							>
+								<span class="portal-icon">{portal.icon}</span>
+								<div class="portal-info">
+									<h2 class="portal-name" style="color: {portal.color_primary}">{nameOf(portal)}</h2>
+									<p class="portal-desc">{descOf(portal)}</p>
+								</div>
+								{#if portal.active_writings_count > 0}
+									<span class="portal-writings">{portal.active_writings_count}</span>
+								{/if}
+								<span class="portal-enter">→</span>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
+	{:else}
+		<div class="loading">
+			<div class="spinner"></div>
+		</div>
+	{/if}
+</section>
 
 <style>
-	/* Canvas layer */
+	/* Canvas layer — behind everything */
 	.portal-canvas {
 		position: fixed;
 		inset: 0;
 		z-index: 0;
 		opacity: 0;
 		transition: opacity 0.8s ease;
+		pointer-events: none;
 	}
 	.portal-canvas.ready {
 		opacity: 1;
 	}
-	.portal-canvas.hidden {
-		display: none;
-	}
-	/* The canvas element IWSDK inserts */
 	.portal-canvas :global(canvas) {
 		width: 100% !important;
 		height: 100% !important;
 		display: block;
 	}
 
-	/* Overlay layer — Svelte DOM above canvas */
-	.portal-overlay {
+	/* Page content */
+	.portals-page {
 		position: relative;
 		z-index: 2;
 		max-width: 700px;
@@ -216,102 +201,107 @@
 		padding: 1.5rem 1.5rem 4rem;
 	}
 
-	/* Info panel — floats at bottom, reacts to active portal */
-	.portal-info-panel {
-		position: fixed;
-		bottom: 2rem;
-		left: 50%;
-		transform: translateX(-50%);
-		max-width: 480px;
-		width: calc(100% - 3rem);
-		padding: 1.5rem 2rem;
-		background: rgba(10, 10, 14, 0.85);
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border: 1px solid var(--portal-color, var(--border));
-		border-radius: 16px;
-		text-align: center;
-		z-index: 10;
-		transition: border-color 0.4s ease;
-	}
-
-	.portal-icon-large {
-		font-size: 2.5rem;
+	/* Carousel preview */
+	.portal-preview {
 		display: block;
-		margin-bottom: 0.5rem;
-	}
-
-	.portal-title {
-		font-family: var(--font-heading);
-		font-size: 1.5rem;
-		margin: 0 0 0.25rem;
-	}
-
-	.portal-description {
-		color: var(--text-dim, #999);
-		font-size: 0.85rem;
-		margin: 0 0 0.75rem;
-		line-height: 1.4;
-	}
-
-	.portal-writings {
-		display: inline-block;
-		font-size: 0.7rem;
-		background: var(--portal-color);
-		color: white;
-		border-radius: 10px;
-		padding: 2px 8px;
-		margin-bottom: 0.75rem;
-	}
-
-	.enter-portal-btn {
-		display: inline-block;
-		padding: 0.6rem 2rem;
-		background: transparent;
-		border: 1px solid var(--portal-color);
-		color: var(--portal-color);
-		font-family: var(--font-heading);
-		font-size: 0.9rem;
-		border-radius: 24px;
+		position: relative;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		margin-bottom: 1rem;
+		border-radius: 14px;
+		overflow: hidden;
+		border: 3px solid var(--pv-color, var(--border));
+		background: var(--pv-color, var(--surface));
+		text-decoration: none;
+		color: var(--fg);
+		transition: border-color 0.8s ease;
+		animation: portal-fade 0.6s ease;
 		cursor: pointer;
-		transition: all 0.2s;
 	}
-	.enter-portal-btn:hover {
-		background: var(--portal-color);
-		color: #fff;
+	.portal-preview:hover { opacity: 0.95; }
+	@keyframes portal-fade {
+		from { opacity: 0.3; }
+		to { opacity: 1; }
 	}
-
-	/* Loading spinner */
-	.portal-loading {
-		position: fixed;
+	.preview-icon {
+		font-size: 3rem;
+		position: absolute;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		z-index: 5;
 	}
-	.portal-spinner {
-		width: 40px;
-		height: 40px;
-		border: 2px solid var(--border);
-		border-top-color: #c9a87c;
+	.preview-video {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+	.preview-video iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+		pointer-events: none;
+		object-fit: cover;
+	}
+	.preview-overlay {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 0.5rem 0.75rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+	}
+	.preview-name {
+		font-family: var(--font-heading);
+		font-size: 0.85rem;
+		font-weight: 600;
+		text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+	}
+	.preview-dots {
+		display: flex;
+		gap: 4px;
+	}
+	.dot {
+		width: 5px;
+		height: 5px;
 		border-radius: 50%;
-		animation: spin 1s linear infinite;
+		background: rgba(255,255,255,0.3);
+		transition: background 0.3s;
+	}
+	.dot.active { background: var(--pv-color); }
+
+	/* Page title */
+	.page-title {
+		font-family: var(--font-heading);
+		font-size: 2rem;
+		color: var(--fg);
+		text-align: center;
+		margin-bottom: 0.25rem;
+	}
+	.page-subtitle {
+		color: var(--muted);
+		font-size: 1rem;
+		text-align: center;
+		margin-bottom: 1.5rem;
+		font-style: italic;
 	}
 
-	/* Fallback grid (only shows on error) */
-	.portals-fallback {
-		position: relative;
-		z-index: 2;
-		max-width: 700px;
-		margin: 0 auto;
-		padding: 1.5rem 1.5rem 4rem;
+	/* Galaxy groups */
+	.galaxies {
+		display: flex;
+		flex-direction: column;
+		gap: 1.75rem;
+		margin-bottom: 1.5rem;
 	}
-	.galaxy-group { margin-bottom: 1.75rem; }
 	.galaxy-header {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 		margin-bottom: 0.75rem;
+		padding: 0 0.25rem;
 	}
 	.galaxy-icon { font-size: 1.1rem; }
 	.galaxy-name {
@@ -321,6 +311,8 @@
 		letter-spacing: 0.1em;
 		color: var(--muted);
 	}
+
+	/* Portal cards */
 	.portal-grid {
 		display: grid;
 		grid-template-columns: 1fr;
@@ -343,25 +335,55 @@
 		transition: all 0.2s ease;
 	}
 	.portal-card:hover {
+		background: var(--portal-bg, var(--surface));
 		border-color: var(--portal-color);
 		transform: translateX(4px);
+		box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 	}
-	.portal-icon { font-size: 2rem; }
-	.portal-info { flex: 1; }
+	.portal-icon { font-size: 2rem; flex-shrink: 0; }
+	.portal-info { flex: 1; min-width: 0; }
 	.portal-name {
 		font-family: var(--font-heading);
 		font-size: 1.1rem;
 		margin: 0;
+		line-height: 1.2;
 	}
 	.portal-desc {
 		font-size: 0.8rem;
 		color: var(--text-dim);
 		margin: 4px 0 0;
+		line-height: 1.3;
+	}
+	.portal-writings {
+		font-size: 0.7rem;
+		background: var(--portal-color);
+		color: white;
+		border-radius: 10px;
+		padding: 2px 8px;
+		flex-shrink: 0;
 	}
 	.portal-enter {
 		color: var(--portal-color);
 		font-size: 1.2rem;
 		opacity: 0.5;
+		transition: opacity 0.2s;
+		flex-shrink: 0;
+	}
+	.portal-card:hover .portal-enter { opacity: 1; }
+
+	/* Loading */
+	.loading {
+		text-align: center;
+		padding: 3rem;
+	}
+	.spinner {
+		width: 32px;
+		height: 32px;
+		border: 2px solid var(--border);
+		border-top-color: var(--accent);
+		border-radius: 50%;
+		margin: 0 auto;
+		animation: spin 1s linear infinite;
 	}
 
 	/* Screen-reader only */
