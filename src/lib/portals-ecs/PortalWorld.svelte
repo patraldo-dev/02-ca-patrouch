@@ -20,6 +20,16 @@
 	let worldReady = $state(false);
 	let focusedPortalId = $state(null);
 
+	// ── Bumper ──
+	let showBumper = $state(false);
+	let bumperSrc = $state('');
+	const BUMPER_VERSIONS = [
+		'/portal-bumper-v1.html',
+		'/portal-bumper-v2.html',
+		'/portal-bumper-v3.html',
+		'/portal-bumper-v4.html',
+	];
+
 	function nameOf(item) {
 		const lang = $locale || 'es';
 		if (lang === 'en') return item.name_en || item.name_es;
@@ -52,6 +62,15 @@
 	// ECS boot
 	let worldInstance = null;
 	onMount(() => {
+		// ── Bumper: random pick, once per session ──
+		if (!sessionStorage.getItem('patrouch-bumper-played')) {
+			bumperSrc = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
+			showBumper = true;
+			sessionStorage.setItem('patrouch-bumper-played', '1');
+			// Auto-dismiss after 6.5s (bumper durations vary 4.8-5.6s + buffer)
+			setTimeout(() => { showBumper = false; }, 6500);
+		}
+
 		let cancelled = false;
 		async function boot() {
 			try {
@@ -83,6 +102,14 @@
 		focusedPortalId = focusedPortalId === id ? null : id;
 	}
 </script>
+
+<!-- Bumper overlay (fullscreen, once per session) -->
+{#if showBumper}
+	<div class="bumper-overlay">
+		<iframe src={bumperSrc} frameborder="0" allow="autoplay"></iframe>
+		<button class="bumper-skip" onclick={() => showBumper = false}>Skip</button>
+	</div>
+{/if}
 
 <!-- ECS Canvas -->
 <div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}></div>
@@ -202,6 +229,34 @@
 </section>
 
 <style>
+	/* ── Bumper overlay ── */
+	.bumper-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		background: #050508;
+	}
+	.bumper-overlay iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
+	.bumper-skip {
+		position: fixed;
+		bottom: 1.5rem;
+		right: 1.5rem;
+		z-index: 10000;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.15);
+		color: rgba(255,255,255,0.4);
+		padding: 0.4rem 1rem;
+		border-radius: 20px;
+		cursor: pointer;
+		font-size: 0.75rem;
+		backdrop-filter: blur(10px);
+		transition: all 0.2s;
+	}
+	.bumper-skip:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
 	.portal-canvas {
 		position: fixed;
 		inset: 0;
