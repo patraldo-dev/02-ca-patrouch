@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<body>
+<div id="container" style="width:100vw;height:100vh"></div>
+<div id="result" style="position:fixed;top:0;left:0;z-index:9999;background:white;color:black;padding:10px;font-family:monospace;font-size:14px;max-width:100%;">Loading...</div>
+<script>
+window.onerror = function(msg, url, line, col, error) {
+    document.getElementById('result').textContent = 'ERROR: ' + msg + ' | ' + (error ? error.stack : '');
+};
+window.addEventListener('unhandledrejection', function(event) {
+    document.getElementById('result').textContent += '\nUNHANDLED REJECTION: ' + (event.reason?.stack || event.reason);
+});
+</script>
+<script type="module">
+const result = document.getElementById('result');
+function log(msg) {
+    result.textContent += '\n' + msg;
+}
+
+try {
+    log('Importing @iwsdk/core...');
+    const iwsdk = await import('/node_modules/.vite/deps/@iwsdk_core.js?v=d2368ee4');
+    log('Import OK. World: ' + typeof iwsdk.World + ', create: ' + typeof iwsdk.World?.create);
+    
+    const container = document.getElementById('container');
+    log('Container: ' + container.tagName);
+    
+    log('Calling World.create()...');
+    const worldPromise = iwsdk.World.create(container, {
+        xr: { sessionMode: iwsdk.SessionMode.ImmersiveAR },
+        features: { locomotion: false, grabbing: false, physics: false },
+    });
+    log('World.create() returned: ' + typeof worldPromise);
+    
+    // Set a timeout to detect hanging
+    setTimeout(() => {
+        log('TIMEOUT: 10s elapsed, World.create() still pending...');
+    }, 10000);
+    
+    worldPromise.then(world => {
+        log('SUCCESS! World created. Scene: ' + typeof world.scene + ', Renderer: ' + typeof world.renderer);
+    }).catch(err => {
+        log('FAILED: ' + (err.stack || err.message || err));
+    });
+} catch(e) {
+    log('THREW: ' + (e.stack || e.message || e));
+}
+</script>
+</body>
+</html>
