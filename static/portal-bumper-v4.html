@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>patrouch.ca — Bumper v4: Hybrid</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; font-family: 'Inter', system-ui, sans-serif; }
+  #scene { position: fixed; inset: 0; }
+  #skip { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.4); padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.75rem; backdrop-filter: blur(10px); }
+  #skip:hover { color: #fff; }
+  #wordmark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; pointer-events: none; text-align: center; opacity: 0; transition: opacity 0.5s ease; }
+  #wordmark.show { opacity: 1; }
+  #wordmark h1 { font-weight: 800; font-size: clamp(2rem, 8vw, 4.5rem); color: #c9a87c; letter-spacing: -0.02em; text-shadow: 0 0 60px rgba(201,168,124,0.6); }
+  #wordmark p { font-weight: 200; font-size: clamp(0.75rem, 3vw, 1.05rem); color: rgba(255,255,255,0.5); margin-top: 0.6rem; letter-spacing: 0.08em; }
+  #content { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s ease; pointer-events: none; }
+  #content.show { opacity: 1; }
+  #content a { color: #c9a87c; text-decoration: none; font-size: 1.1rem; border: 1px solid rgba(201,168,124,0.4); padding: 0.6rem 2rem; border-radius: 24px; }
+  .nav-links { position: fixed; top: 1rem; left: 1rem; z-index: 200; display: flex; gap: 0.5rem; }
+  .nav-links a { font-size: 0.7rem; color: rgba(255,255,255,0.3); text-decoration: none; padding: 0.3rem 0.6rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+  .nav-links a.current { color: #c9a87c; border-color: rgba(201,168,124,0.3); }
+</style>
+</head>
+<body>
+<div class="nav-links">
+  <a href="/portal-bumper-v1.html">v1 Confetti</a>
+  <a href="/portal-bumper-v2.html">v2 Lava</a>
+  <a href="/portal-bumper-v3.html">v3 Letters</a>
+  <a href="/portal-bumper-v4.html" class="current">v4 Hybrid</a>
+</div>
+<canvas id="scene"></canvas>
+<button id="skip">Skip</button>
+<div id="wordmark"><h1>patrouch.ca</h1><p id="tagline">A Playful Space for Serious Writing</p></div>
+<div id="content"><a href="/portals">Enter Portals →</a></div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// v4: Hybrid — Antoine's characters AND letters AND video thumbnails
+// all mixed, swirling in a lava-lamp kaleidoscope blend.
+// Biggest, most layered visual.
+
+const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
+const ARTWORKS = [
+  '12c79899-fb93-4885-508f-d2da0a2fbf00','bd4602b0-149d-42f8-e872-f697b64c7d00',
+  '5c7fb409-1aa2-45a9-8466-296077e18e00','f8a136eb-363e-4a24-0f54-70bb4f4bf800',
+  '5c28fef5-cff0-4ddd-b4af-100d29bad100','62355ddb-0f6c-4251-5d8e-37a455e44000',
+  '85319dc7-ae16-48f8-9500-608ba174eb00','26fe40df-7745-41dc-7491-97cb36a32f00',
+];
+const VIDEOS = [
+  'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/523f2d3f4a73137aae56eb621ffa3feb/downloads/thumbnail.jpg',
+  'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/95f35d8223f9cd6ee025635255dad6d9/downloads/thumbnail.jpg',
+  'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/98fdd26667ffadc320310ef97dfcd5d0/downloads/thumbnail.jpg',
+];
+const LETTERS = 'patrouch escribir portal palabras space writing play'.split('');
+const COLORS = ['#c9a87c','#ff6b35','#2d5a27','#7c4dff','#0277bd','#9c27b0','#e6a23c'];
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x050508);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.z = 5;
+const texLoader = new THREE.TextureLoader();
+texLoader.crossOrigin = 'anonymous';
+
+let phase = 0, phaseStart = 0;
+const PHASE_DURATIONS = [3.2, 1.6, 0.8];
+const wordmarkEl = document.getElementById('wordmark');
+const contentEl = document.getElementById('content');
+const skipBtn = document.getElementById('skip');
+const lang = navigator.language?.slice(0,2) || 'en';
+const taglines = { en: 'A Playful Space for Serious Writing', es: 'Un Espacio Lúdico para Escritura Seria', fr: "Un Espace Ludique pour l'Écriture Sérieuse" };
+document.getElementById('tagline').textContent = taglines[lang] || taglines.en;
+
+function makeLetterTexture(char, color) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.shadowColor = color; ctx.shadowBlur = 24;
+  ctx.font = 'bold 160px Inter, Georgia, serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(char, 128, 138);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter;
+  return t;
+}
+
+function artUrl(id, w=256) { return `https://imagedelivery.net/${CF_HASH}/${id}/segment=foreground,width=${w}`; }
+
+const TOTAL = 90;
+const pieces = [];
+const group = new THREE.Group();
+scene.add(group);
+
+for (let i = 0; i < TOTAL; i++) {
+  const type = i % 3; // 0=artwork, 1=video thumb, 2=letter
+  let mat, mesh, s;
+
+  if (type === 0) {
+    // Artwork cutout
+    const id = ARTWORKS[i % ARTWORKS.length];
+    s = 0.4 + Math.random() * 0.5;
+    mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+    texLoader.load(artUrl(id), (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mat.map = tex; mat.needsUpdate = true; }, undefined, () => {});
+    mesh = new THREE.Mesh(new THREE.PlaneGeometry(s, s), mat);
+  } else if (type === 1) {
+    // Video thumbnail
+    const url = VIDEOS[i % VIDEOS.length];
+    s = 0.3 + Math.random() * 0.4;
+    mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+    texLoader.load(url, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mat.map = tex; mat.needsUpdate = true; }, undefined, () => {});
+    mesh = new THREE.Mesh(new THREE.PlaneGeometry(s * 1.5, s), mat);
+  } else {
+    // Letter
+    const char = LETTERS[i % LETTERS.length];
+    const color = COLORS[i % COLORS.length];
+    const tex = makeLetterTexture(char, color);
+    s = 0.15 + Math.random() * 0.3;
+    mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+    mesh = new THREE.Mesh(new THREE.PlaneGeometry(s * 0.6, s * 0.6), mat);
+  }
+
+  // Lava-lamp orbit start positions
+  const r = 2 + Math.random() * 4;
+  const theta = Math.random() * Math.PI * 2;
+  mesh.position.set(Math.cos(theta) * r, (Math.random() - 0.5) * 5, Math.sin(theta) * r * 0.4 - 1);
+  mesh.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
+  group.add(mesh);
+
+  const dir = Math.random() > 0.3 ? 1 : -1;
+  pieces.push({
+    mesh, mat, type,
+    blobRadius: r, blobAngle: theta, blobHeight: mesh.position.y,
+    blobSpeed: 0.12 + Math.random() * 0.3 * dir,
+    blobWobble: 0.4 + Math.random() * 0.9,
+    wobblePhase: Math.random() * 6.28,
+    rotSpeed: { x: (Math.random() - 0.5) * 0.6, y: (Math.random() - 0.5) * 0.6, z: dir * (0.5 + Math.random() * 1.2) },
+    depth: 0.2 + Math.random() * 0.8,
+    sx: 0, sy: 0, sz: 0,
+  });
+}
+
+// Lava-lamp + kaleidoscope hybrid BG
+const bgUni = { uTime: {value:0}, uIntensity: {value:0.8} };
+const bgMat = new THREE.ShaderMaterial({ uniforms: bgUni, depthTest:false, depthWrite:false,
+  vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position,1.0);}`,
+  fragmentShader: `uniform float uTime,uIntensity;varying vec2 vUv;
+    vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}vec2 mod289(vec2 x){return x-floor(x*(1.0/289.0))*289.0;}vec3 permute(vec3 x){return mod289(((x*34.0)+1.0)*x);}
+    float snoise(vec2 v){const vec4 C=vec4(.211324865405187,.366025403784439,-.577350269189626,.024390243902439);vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);vec2 i1=(x0.x>x0.y)?vec2(1,0):vec2(0,1);vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod289(i);vec3 p=permute(permute(i.y+vec3(0,i1.y,1))+i.x+vec3(0,i1.x,1));vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0);m=m*m;m=m*m;vec3 x=2.*fract(p*C.www)-1.;vec3 h=abs(x)-.5;vec3 ox=floor(x+.5);vec3 a0=x-ox;vec3 g;m*=1.79284291400159-.85373472095314*(a0*a0+h*h);g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;return 130.*dot(m,g);}
+    vec2 hash2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.5453);}
+    float noise(vec2 p){vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(dot(hash2(i),f),dot(hash2(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(hash2(i+vec2(0,1)),f-vec2(0,1)),dot(hash2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}
+    float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.;a*=.5;}return v;}
+    void main(){
+      vec2 p=vUv-0.5;p.x*=1.6;float t=uTime*.1;
+      // Kaleidoscope fold
+      float ang=atan(p.y,p.x);float rad=length(p);
+      ang=abs(mod(ang,1.5708)-0.7854);
+      vec2 kp=vec2(cos(ang),sin(ang))*rad;
+      // Lava domain warp
+      vec2 q=vec2(fbm(kp+vec2(t,t*.7)),fbm(kp+vec2(-t*.5,t*1.2)));
+      vec2 r=vec2(fbm(kp+2.*q+vec2(t*1.3,-t)),fbm(kp+2.*q+vec2(-t,t*.9)));
+      float n=fbm(kp+3.*r);
+      float sn=snoise(kp*2.+t);
+      vec3 c1=vec3(.79,.66,.49);vec3 c2=vec3(.49,.31,1.);vec3 c3=vec3(1.,.42,.21);vec3 c4=vec3(.02,.47,.74);
+      vec3 col=mix(c1,c2,smoothstep(-.3,.4,n));
+      col=mix(col,c3,smoothstep(.2,.7,length(r))*.6);
+      col=mix(col,c4,smoothstep(-.5,.5,sn)*.3);
+      col*=.13*uIntensity*(1.-rad*.5);
+      float g=fract(sin(dot(vUv*(uTime+1.),vec2(12.9898,78.233)))*43758.5453);col+=(g-.5)*.015;
+      gl_FragColor=vec4(col,1.);
+    }`
+});
+const bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat); bgMesh.frustumCulled=false; bgMesh.renderOrder=-1000; scene.add(bgMesh);
+
+let mouseX=0,mouseY=0,tMouseX=0,tMouseY=0;
+window.addEventListener('pointermove',(e)=>{tMouseX=(e.clientX/innerWidth-.5)*2;tMouseY=(e.clientY/innerHeight-.5)*2;});
+
+const clock = new THREE.Clock(); let elapsed=0;
+
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
+  mouseX+=(tMouseX-mouseX)*.04;mouseY+=(tMouseY-mouseY)*.04;
+  bgUni.uTime.value=elapsed;
+  camera.position.x=mouseX*.2;camera.position.y=-mouseY*.12;camera.lookAt(0,0,0);
+  const pe=elapsed-phaseStart;
+
+  if(phase===0){
+    bgUni.uIntensity.value=.8+Math.sin(elapsed*.25)*.12;
+    for(const p of pieces){
+      p.mat.opacity+=(.7-p.mat.opacity)*.012;
+      // Hybrid motion: lava orbit + slight swirl
+      p.blobAngle+=p.blobSpeed*dt*(.5+p.depth*.5);
+      const wr=p.blobRadius+Math.sin(elapsed*p.blobWobble+p.wobblePhase)*.7;
+      const wh=p.blobHeight+Math.sin(elapsed*p.blobSpeed*1.3+p.wobblePhase)*.5;
+      const tx=Math.cos(p.blobAngle)*wr, ty=wh, tz=Math.sin(p.blobAngle)*wr*.4-1+mouseX*p.depth*.25;
+      p.mesh.position.x+=(tx-p.mesh.position.x)*.018;
+      p.mesh.position.y+=(ty-p.mesh.position.y)*.018;
+      p.mesh.position.z+=(tz-p.mesh.position.z)*.018;
+      p.mesh.rotation.x+=p.rotSpeed.x*dt;
+      p.mesh.rotation.y+=p.rotSpeed.y*dt;
+      p.mesh.rotation.z+=p.rotSpeed.z*dt;
+    }
+    if(pe>=PHASE_DURATIONS[0]){phase=1;phaseStart=elapsed;wordmarkEl.classList.add('show');}
+  } else if(phase===1){
+    bgUni.uIntensity.value=.4+Math.sin(elapsed*2)*.07;
+    for(const p of pieces){
+      const px=p.mesh.position.x,py=p.mesh.position.y,d=Math.sqrt(px*px+py*py)+.01;
+      p.mesh.position.x-=(px/d)*d*.7*dt;
+      p.mesh.position.y-=(py/d)*d*.7*dt;
+      p.mesh.position.x+=Math.sin(elapsed*2+p.wobblePhase)*.002;
+      p.mesh.position.y+=Math.cos(elapsed*2+p.wobblePhase)*.002;
+      p.mesh.rotation.z+=p.rotSpeed.z*dt*(1+2.5/(d+.3));
+      if(d<.6)p.mat.opacity*=.95;
+      p.mesh.rotation.x+=p.rotSpeed.x*dt;
+      p.mesh.rotation.y+=p.rotSpeed.y*dt;
+    }
+    if(pe>=PHASE_DURATIONS[1]){phase=2;phaseStart=elapsed;wordmarkEl.classList.remove('show');
+      for(const p of pieces){const px=p.mesh.position.x||(Math.random()-.5),py=p.mesh.position.y||(Math.random()-.5);const l=Math.sqrt(px*px+py*py)||1,sp=5+Math.random()*7;p.sx=(px/l)*sp;p.sy=(py/l)*sp;p.sz=(Math.random()-.5)*3;}
+    }
+  } else if(phase===2){
+    const prog=pe/PHASE_DURATIONS[2];bgUni.uIntensity.value=.25*(1-prog);
+    for(const p of pieces){
+      p.mesh.position.x+=p.sx*dt;p.mesh.position.y+=p.sy*dt;p.mesh.position.z+=p.sz*dt;
+      p.sy-=2.5*dt;
+      p.mesh.rotation.x+=p.rotSpeed.x*dt*2;p.mesh.rotation.z+=p.rotSpeed.z*dt*2;
+      p.mat.opacity=Math.max(0,.7*(1-prog));
+    }
+    if(pe>=PHASE_DURATIONS[2]){phase=3;contentEl.style.display='flex';requestAnimationFrame(()=>contentEl.classList.add('show'));skipBtn.style.display='none';}
+  }
+  renderer.render(scene,camera);
+}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+skipBtn.onclick=()=>{phase=3;for(const p of pieces)p.mat.opacity=0;bgUni.uIntensity.value=0;wordmarkEl.classList.remove('show');contentEl.style.display='flex';requestAnimationFrame(()=>contentEl.classList.add('show'));skipBtn.style.display='none';};
+phaseStart=0;animate();
+</script>
+</body></html>

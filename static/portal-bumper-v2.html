@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>patrouch.ca — Portal Bumper</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; font-family: 'Inter', system-ui, sans-serif; }
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #skip {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.4); padding: 0.4rem 1rem; border-radius: 20px;
+    cursor: pointer; font-size: 0.75rem; backdrop-filter: blur(10px);
+    transition: all 0.2s;
+  }
+  #skip:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+  #wordmark {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 50; pointer-events: none; text-align: center;
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  #wordmark.show { opacity: 1; }
+  #wordmark h1 {
+    font-weight: 800; font-size: clamp(2rem, 8vw, 4.5rem); color: #c9a87c;
+    letter-spacing: -0.02em; text-shadow: 0 0 60px rgba(201,168,124,0.6), 0 0 120px rgba(201,168,124,0.3);
+  }
+  #wordmark p {
+    font-weight: 200; font-size: clamp(0.75rem, 3vw, 1.05rem); color: rgba(255,255,255,0.5);
+    margin-top: 0.6rem; letter-spacing: 0.08em;
+  }
+  #content {
+    position: fixed; inset: 0; z-index: 10;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.8s ease; pointer-events: none;
+  }
+  #content.show { opacity: 1; }
+  #content a {
+    color: #c9a87c; text-decoration: none; font-size: 1.1rem;
+    border: 1px solid rgba(201,168,124,0.4); padding: 0.6rem 2rem; border-radius: 24px;
+    transition: all 0.2s;
+  }
+  #content a:hover { background: rgba(201,168,124,0.15); }
+  .nav-links { position: fixed; top: 1rem; left: 1rem; z-index: 200; display: flex; gap: 0.5rem; }
+  .nav-links a { font-size: 0.7rem; color: rgba(255,255,255,0.3); text-decoration: none; padding: 0.3rem 0.6rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+  .nav-links a.current { color: #c9a87c; border-color: rgba(201,168,124,0.3); }
+</style>
+</head>
+<body>
+<div class="nav-links">
+  <a href="/portal-bumper-v1.html">v1 Confetti</a>
+  <a href="/portal-bumper-v2.html" class="current">v2 Lava</a>
+  <a href="/portal-bumper-v3.html">v3 Letters</a>
+  <a href="/portal-bumper-v4.html">v4 Hybrid</a>
+</div>
+<canvas id="scene"></canvas>
+<button id="skip">Skip</button>
+<div id="wordmark">
+  <h1>patrouch.ca</h1>
+  <p id="tagline">A Playful Space for Serious Writing</p>
+</div>
+<div id="content">
+  <a href="/portals">Enter Portals →</a>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ─── Antoine's artworks (background-removed via CF segment=foreground) ───
+const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
+const ARTWORKS = [
+  '12c79899-fb93-4885-508f-d2da0a2fbf00', // Hans
+  'bd4602b0-149d-42f8-e872-f697b64c7d00', // Barzango
+  '5c7fb409-1aa2-45a9-8466-296077e18e00', // Alena
+  'f8a136eb-363e-4a24-0f54-70bb4f4bf800', // Mujer
+  '5c28fef5-cff0-4ddd-b4af-100d29bad100',
+  '62355ddb-0f6c-4251-5d8e-37a455e44000',
+  '85319dc7-ae16-48f8-9500-608ba174eb00',
+  '26fe40df-7745-41dc-7491-97cb36a32f00',
+  '75b29e1a-2d22-4ef7-af19-2f7e3828bd00',
+  '65dfe0b8-5b3f-4501-a3ee-c99d301a1800',
+  'd4969f09-777d-46a4-f167-db56837e5300',
+  '7ced0c47-f1ee-4f88-2080-089d9d605200',
+];
+
+function artUrl(id, w = 256) {
+  return `https://imagedelivery.net/${CF_HASH}/${id}/segment=foreground,width=${w}`;
+}
+
+// ─── Letters for alphabet confetti ──────────────────────────────────
+const LETTERS = 'patrouch escribir space for writing playful serious'.split('');
+
+// ─── Setup ──────────────────────────────────────────────────────────
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x050508);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.z = 5;
+
+const texLoader = new THREE.TextureLoader();
+texLoader.crossOrigin = 'anonymous';
+
+// ─── Phase machine ──────────────────────────────────────────────────
+let phase = 0;
+let phaseStart = 0;
+const PHASE_DURATIONS = [3.0, 1.8, 0.8];
+const wordmarkEl = document.getElementById('wordmark');
+const contentEl = document.getElementById('content');
+const skipBtn = document.getElementById('skip');
+
+const lang = document.documentElement.lang || navigator.language?.slice(0,2) || 'en';
+const taglines = {
+  en: 'A Playful Space for Serious Writing',
+  es: 'Un Espacio Lúdico para Escritura Seria',
+  fr: "Un Espace Ludique pour l'Écriture Sérieuse",
+};
+document.getElementById('tagline').textContent = taglines[lang] || taglines.en;
+
+// ─── Floating pieces: artworks + letters ────────────────────────────
+const PIECE_COUNT = 50;
+const pieces = [];
+const piecesGroup = new THREE.Group();
+scene.add(piecesGroup);
+
+function makeCanvasLetter(char, color) {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.font = 'bold 80px Inter, system-ui, sans-serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(char, 64, 68);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const LETTER_COLORS = ['#c9a87c', '#ff6b35', '#2d5a27', '#7c4dff', '#0277bd', '#9c27b0', '#546e7a', '#e6a23c'];
+
+function makePiece(i) {
+  const isArtwork = i < Math.floor(PIECE_COUNT * 0.6); // 60% artworks, 40% letters
+  let mesh, mat;
+
+  if (isArtwork) {
+    const artId = ARTWORKS[i % ARTWORKS.length];
+    const w = 0.5 + Math.random() * 0.6;
+    const h = 0.5 + Math.random() * 0.6;
+    const geo = new THREE.PlaneGeometry(w, h);
+    mat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    texLoader.load(artUrl(artId, 256), (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      mat.map = tex;
+      mat.needsUpdate = true;
+    });
+    mesh = new THREE.Mesh(geo, mat);
+  } else {
+    const char = LETTERS[i % LETTERS.length];
+    const color = LETTER_COLORS[i % LETTER_COLORS.length];
+    const tex = makeCanvasLetter(char, color);
+    const s = 0.2 + Math.random() * 0.25;
+    const geo = new THREE.PlaneGeometry(s * 0.6, s * 0.6);
+    mat = new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    mesh = new THREE.Mesh(geo, mat);
+  }
+
+  // Start scattered
+  const r = 2.5 + Math.random() * 4;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = (Math.random() - 0.5) * Math.PI * 0.6; // flatten vertically
+  mesh.position.set(
+    r * Math.cos(phi) * Math.cos(theta),
+    r * Math.sin(phi),
+    r * Math.cos(phi) * Math.sin(theta) * 0.5 - 1,
+  );
+
+  piecesGroup.add(mesh);
+
+  return {
+    mesh, mat,
+    // Lava-lamp organic motion params
+    blobRadius: r,
+    blobAngle: theta,
+    blobHeight: mesh.position.y,
+    blobSpeed: 0.15 + Math.random() * 0.35,
+    blobWobble: 0.3 + Math.random() * 0.8,
+    wobblePhase: Math.random() * Math.PI * 2,
+    // Rotation — slow, lazy tumbling
+    rotSpeed: {
+      x: (Math.random() - 0.5) * 0.5,
+      y: (Math.random() - 0.5) * 0.5,
+      z: (Math.random() - 0.5) * 0.8,
+    },
+    // Parallax depth
+    depth: 0.2 + Math.random() * 0.8,
+    // Shatter
+    sx: 0, sy: 0, sz: 0,
+    isArtwork,
+  };
+}
+
+for (let i = 0; i < PIECE_COUNT; i++) pieces.push(makePiece(i));
+
+// ─── Lava-lamp background shader ────────────────────────────────────
+const bgUni = {
+  uTime: { value: 0 },
+  uIntensity: { value: 0.8 },
+  uColor1: { value: new THREE.Color(0x2d5a27) },
+  uColor2: { value: new THREE.Color(0x7c4dff) },
+  uColor3: { value: new THREE.Color(0xff6b35) },
+  uMouse: { value: new THREE.Vector2(0, 0) },
+};
+
+const bgMat = new THREE.ShaderMaterial({
+  uniforms: bgUni,
+  vertexShader: `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = vec4(position, 1.0); }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform float uIntensity;
+    uniform vec3 uColor1;
+    uniform vec3 uColor2;
+    uniform vec3 uColor3;
+    uniform vec2 uMouse;
+    varying vec2 vUv;
+
+    // FBM noise for organic blobs
+    vec2 hash2(vec2 p) {
+      p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+      return -1.0 + 2.0 * fract(sin(p) * 43758.5453);
+    }
+    float noise(vec2 p) {
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(
+        mix(dot(hash2(i + vec2(0,0)), f - vec2(0,0)),
+            dot(hash2(i + vec2(1,0)), f - vec2(1,0)), u.x),
+        mix(dot(hash2(i + vec2(0,1)), f - vec2(0,1)),
+            dot(hash2(i + vec2(1,1)), f - vec2(1,1)), u.x), u.y);
+    }
+    float fbm(vec2 p) {
+      float v = 0.0;
+      float a = 0.5;
+      for (int i = 0; i < 5; i++) {
+        v += a * noise(p);
+        p *= 2.0;
+        a *= 0.5;
+      }
+      return v;
+    }
+
+    void main() {
+      vec2 uv = vUv;
+      vec2 p = uv - 0.5;
+      p.x *= 1.6;
+
+      // Slow flowing domain warping — this creates the lava lamp feel
+      float t = uTime * 0.08;
+      vec2 q = vec2(fbm(p + vec2(t, t * 0.7)), fbm(p + vec2(-t * 0.5, t * 1.2)));
+      vec2 r = vec2(fbm(p + 2.0 * q + vec2(t * 1.3, -t)), fbm(p + 2.0 * q + vec2(-t, t * 0.9)));
+      float n = fbm(p + 3.0 * r);
+
+      // Mouse influence
+      vec2 mp = uMouse * 0.3;
+      n += 0.1 * smoothstep(0.5, 0.0, length(p - mp));
+
+      // Three-color gradient through noise
+      vec3 col = mix(uColor1, uColor2, smoothstep(-0.3, 0.4, n));
+      col = mix(col, uColor3, smoothstep(0.2, 0.7, length(r)) * 0.5);
+
+      // Dark base
+      col *= 0.12 * uIntensity;
+
+      // Vignette
+      col *= 1.0 - length(p) * 0.6;
+
+      // Grain
+      float g = fract(sin(dot(uv * (uTime + 1.0), vec2(12.9898, 78.233))) * 43758.5453);
+      col += (g - 0.5) * 0.015;
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+  depthTest: false, depthWrite: false,
+});
+
+const bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat);
+bgMesh.frustumCulled = false;
+bgMesh.renderOrder = -1000;
+scene.add(bgMesh);
+
+// ─── Color cycling ──────────────────────────────────────────────────
+const palettes = [
+  [0x2d5a27, 0x7c4dff, 0xff6b35], // green/purple/orange
+  [0x0277bd, 0x9c27b0, 0xc9a87c], // blue/purple/gold
+  [0xff6b35, 0x2d5a27, 0x7c4dff], // orange/green/purple
+  [0x9c27b0, 0x0277bd, 0xe6a23c], // purple/blue/gold
+  [0xc9a87c, 0x546e7a, 0x9c27b0], // gold/steel/purple
+];
+let paletteIdx = 0;
+let paletteTimer = 0;
+
+// ─── Input ──────────────────────────────────────────────────────────
+let mouseX = 0, mouseY = 0, tMouseX = 0, tMouseY = 0;
+window.addEventListener('pointermove', (e) => {
+  tMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  tMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// ─── Animate ────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let elapsed = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  elapsed += dt;
+
+  // Smooth mouse
+  mouseX += (tMouseX - mouseX) * 0.04;
+  mouseY += (tMouseY - mouseY) * 0.04;
+  bgUni.uMouse.value.set(mouseX, mouseY);
+
+  // Camera parallax — subtle
+  camera.position.x = mouseX * 0.2;
+  camera.position.y = -mouseY * 0.15;
+  camera.lookAt(0, 0, 0);
+
+  // Background
+  bgUni.uTime.value = elapsed;
+
+  // Palette cycling
+  paletteTimer += dt;
+  if (paletteTimer > 2.5 && phase < 2) {
+    paletteTimer = 0;
+    paletteIdx = (paletteIdx + 1) % palettes.length;
+    const p = palettes[paletteIdx];
+    bgUni.uColor1.value.lerp(new THREE.Color(p[0]), 0.5);
+    bgUni.uColor2.value.lerp(new THREE.Color(p[1]), 0.5);
+    bgUni.uColor3.value.lerp(new THREE.Color(p[2]), 0.5);
+  }
+
+  // Phase logic
+  const pe = elapsed - phaseStart;
+
+  if (phase === 0) {
+    // Lava lamp float — pieces drift in organic blobby orbits
+    bgUni.uIntensity.value = 0.8 + Math.sin(elapsed * 0.3) * 0.15;
+
+    for (const p of pieces) {
+      p.mat.opacity += (0.75 - p.mat.opacity) * 0.015;
+
+      // Organic orbital motion — slow drift around a wobbling center
+      p.blobAngle += p.blobSpeed * dt * (0.5 + p.depth * 0.5);
+      const wobbleR = p.blobRadius + Math.sin(elapsed * p.blobWobble + p.wobblePhase) * 0.6;
+      const wobbleH = p.blobHeight + Math.sin(elapsed * p.blobSpeed * 1.3 + p.wobblePhase) * 0.4;
+
+      const targetX = Math.cos(p.blobAngle) * wobbleR;
+      const targetY = wobbleH;
+      const targetZ = Math.sin(p.blobAngle) * wobbleR * 0.4 - 1 + mouseX * p.depth * 0.3;
+
+      p.mesh.position.x += (targetX - p.mesh.position.x) * 0.02;
+      p.mesh.position.y += (targetY - p.mesh.position.y) * 0.02;
+      p.mesh.position.z += (targetZ - p.mesh.position.z) * 0.02;
+
+      // Lazy rotation
+      p.mesh.rotation.x += p.rotSpeed.x * dt;
+      p.mesh.rotation.y += p.rotSpeed.y * dt;
+      p.mesh.rotation.z += p.rotSpeed.z * dt;
+    }
+
+    if (pe >= PHASE_DURATIONS[0]) {
+      phase = 1;
+      phaseStart = elapsed;
+      wordmarkEl.classList.add('show');
+    }
+  } else if (phase === 1) {
+    // Converge — pieces drift inward, slow and dreamy
+    bgUni.uIntensity.value = 0.4 + Math.sin(elapsed * 2) * 0.08;
+
+    for (const p of pieces) {
+      const px = p.mesh.position.x;
+      const py = p.mesh.position.y;
+      const dist = Math.sqrt(px * px + py * py) + 0.01;
+
+      // Gentle pull toward center
+      const pull = dist * 0.6 * dt;
+      p.mesh.position.x -= (px / dist) * pull;
+      p.mesh.position.y -= (py / dist) * pull;
+
+      // Still wobbling but tightening
+      p.mesh.position.x += Math.sin(elapsed * 2 + p.wobblePhase) * 0.002;
+      p.mesh.position.y += Math.cos(elapsed * 2 + p.wobblePhase) * 0.002;
+
+      // Spin up slightly
+      p.mesh.rotation.z += p.rotSpeed.z * dt * (1 + 2 / (dist + 0.3));
+
+      // Fade as reaching center
+      if (dist < 0.6) p.mat.opacity *= 0.95;
+
+      p.mesh.rotation.x += p.rotSpeed.x * dt;
+      p.mesh.rotation.y += p.rotSpeed.y * dt;
+    }
+
+    if (pe >= PHASE_DURATIONS[1]) {
+      phase = 2;
+      phaseStart = elapsed;
+      wordmarkEl.classList.remove('show');
+      for (const p of pieces) {
+        const px = p.mesh.position.x || (Math.random() - 0.5) * 0.5;
+        const py = p.mesh.position.y || (Math.random() - 0.5) * 0.5;
+        const len = Math.sqrt(px * px + py * py) || 1;
+        const sp = 4 + Math.random() * 6;
+        p.sx = (px / len) * sp;
+        p.sy = (py / len) * sp;
+        p.sz = (Math.random() - 0.5) * 3;
+      }
+    }
+  } else if (phase === 2) {
+    // Shatter — slow motion burst
+    const prog = pe / PHASE_DURATIONS[2];
+    bgUni.uIntensity.value = 0.25 * (1 - prog);
+
+    for (const p of pieces) {
+      p.mesh.position.x += p.sx * dt;
+      p.mesh.position.y += p.sy * dt;
+      p.mesh.position.z += p.sz * dt;
+      p.sy -= 2 * dt;
+      p.mesh.rotation.x += p.rotSpeed.x * dt * 2;
+      p.mesh.rotation.z += p.rotSpeed.z * dt * 2;
+      p.mat.opacity = Math.max(0, 0.7 * (1 - prog));
+    }
+
+    if (pe >= PHASE_DURATIONS[2]) {
+      phase = 3;
+      contentEl.style.display = 'flex';
+      requestAnimationFrame(() => contentEl.classList.add('show'));
+      skipBtn.style.display = 'none';
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ─── Resize ─────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─── Skip ───────────────────────────────────────────────────────────
+skipBtn.addEventListener('click', () => {
+  phase = 3;
+  for (const p of pieces) p.mat.opacity = 0;
+  bgUni.uIntensity.value = 0;
+  wordmarkEl.classList.remove('show');
+  contentEl.style.display = 'flex';
+  requestAnimationFrame(() => contentEl.classList.add('show'));
+  skipBtn.style.display = 'none';
+});
+
+// ─── Go ─────────────────────────────────────────────────────────────
+phaseStart = 0;
+animate();
+</script>
+</body>
+</html>

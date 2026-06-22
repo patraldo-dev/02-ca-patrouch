@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>patrouch.ca — Bumper v1: Kaleidoscope Confetti</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; font-family: 'Inter', system-ui, sans-serif; }
+  #scene { position: fixed; inset: 0; }
+  #skip { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.4); padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.75rem; backdrop-filter: blur(10px); }
+  #skip:hover { color: #fff; }
+  #wordmark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; pointer-events: none; text-align: center; opacity: 0; transition: opacity 0.5s ease; }
+  #wordmark.show { opacity: 1; }
+  #wordmark h1 { font-weight: 800; font-size: clamp(2rem, 8vw, 4.5rem); color: #c9a87c; letter-spacing: -0.02em; text-shadow: 0 0 60px rgba(201,168,124,0.6); }
+  #wordmark p { font-weight: 200; font-size: clamp(0.75rem, 3vw, 1.05rem); color: rgba(255,255,255,0.5); margin-top: 0.6rem; letter-spacing: 0.08em; }
+  #content { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s ease; pointer-events: none; }
+  #content.show { opacity: 1; }
+  #content a { color: #c9a87c; text-decoration: none; font-size: 1.1rem; border: 1px solid rgba(201,168,124,0.4); padding: 0.6rem 2rem; border-radius: 24px; }
+  .nav-links { position: fixed; top: 1rem; left: 1rem; z-index: 200; display: flex; gap: 0.5rem; }
+  .nav-links a { font-size: 0.7rem; color: rgba(255,255,255,0.3); text-decoration: none; padding: 0.3rem 0.6rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+  .nav-links a.current { color: #c9a87c; border-color: rgba(201,168,124,0.3); }
+</style>
+</head>
+<body>
+<div class="nav-links">
+  <a href="/portal-bumper-v1.html" class="current">v1 Confetti</a>
+  <a href="/portal-bumper-v2.html">v2 Lava</a>
+  <a href="/portal-bumper-v3.html">v3 Letters</a>
+  <a href="/portal-bumper-v4.html">v4 Hybrid</a>
+</div>
+<canvas id="scene"></canvas>
+<button id="skip">Skip</button>
+<div id="wordmark"><h1>patrouch.ca</h1><p id="tagline">A Playful Space for Serious Writing</p></div>
+<div id="content"><a href="/portals">Enter Portals →</a></div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// Portal video thumbnails
+const PORTAL_VIDEOS = [
+  { thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/523f2d3f4a73137aae56eb621ffa3feb/downloads/thumbnail.jpg', color: 0x2d5a27 },
+  { thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/fd7341d70b1a5517bb56a569d2a0cb38/downloads/thumbnail.jpg', color: 0xff6b35 },
+  { thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/4b11d4a9a696c67ec50571cab5f88283/downloads/thumbnail.jpg', color: 0x0277bd },
+  { thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/d1ebfd4c8c5a3284c29011ff9a842fbe/downloads/thumbnail.jpg', color: 0xc9a87c },
+  { thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/95f35d8223f9cd6ee025635255dad6d9/downloads/thumbnail.jpg', color: 0x7c4dff },
+  { thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/6ffa1842133713869ada64a5ec381258/downloads/thumbnail.jpg', color: 0x546e7a },
+  { thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/98fdd26667ffadc320310ef97dfcd5d0/downloads/thumbnail.jpg', color: 0x9c27b0 },
+];
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x050508);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.z = 5;
+const texLoader = new THREE.TextureLoader();
+texLoader.crossOrigin = 'anonymous';
+
+let phase = 0, phaseStart = 0;
+const PHASE_DURATIONS = [2.5, 1.5, 0.8];
+const wordmarkEl = document.getElementById('wordmark');
+const contentEl = document.getElementById('content');
+const skipBtn = document.getElementById('skip');
+const lang = navigator.language?.slice(0,2) || 'en';
+const taglines = { en: 'A Playful Space for Serious Writing', es: 'Un Espacio Lúdico para Escritura Seria', fr: "Un Espace Ludique pour l'Écriture Sérieuse" };
+document.getElementById('tagline').textContent = taglines[lang] || taglines.en;
+
+// 80 confetti planes with video thumbnails — kaleidoscope swirl
+const CONFETTI_COUNT = 80;
+const confetti = [];
+const group = new THREE.Group();
+scene.add(group);
+
+for (let i = 0; i < CONFETTI_COUNT; i++) {
+  const pv = PORTAL_VIDEOS[i % PORTAL_VIDEOS.length];
+  const w = 0.3 + Math.random() * 0.5;
+  const h = 0.2 + Math.random() * 0.4;
+  const mat = new THREE.MeshBasicMaterial({ color: pv.color, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+  texLoader.load(pv.thumb, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mat.map = tex; mat.color.setHex(0xffffff); mat.needsUpdate = true; }, undefined, () => {});
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+  const r = 3 + Math.random() * 4;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  mesh.position.set(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi) - 2);
+  mesh.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
+  group.add(mesh);
+  const swirlDir = Math.random() > 0.3 ? 1 : -1;
+  confetti.push({ mesh, mat, swirlSpeed: swirlDir * (0.5 + Math.random() * 1.5), shatterVx: 0, shatterVy: 0, shatterVz: 0,
+    rotSpeed: { x: (Math.random()-0.5)*2, y: (Math.random()-0.5)*2, z: swirlDir*(1+Math.random()*3) },
+    depth: 0.3 + Math.random() * 0.7, floatPhase: Math.random()*6.28, floatSpeed: 0.5 + Math.random()*1.5 });
+}
+
+// Simplex noise BG
+const bgUni = { uTime: {value:0}, uIntensity: {value:1.0}, uColor1: {value:new THREE.Color(0x2d5a27)}, uColor2: {value:new THREE.Color(0x7c4dff)}, uColor3: {value:new THREE.Color(0xff6b35)} };
+const bgMat = new THREE.ShaderMaterial({ uniforms: bgUni, depthTest:false, depthWrite:false,
+  vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position,1.0);}`,
+  fragmentShader: `uniform float uTime,uIntensity;uniform vec3 uColor1,uColor2,uColor3;varying vec2 vUv;
+    vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;} vec2 mod289(vec2 x){return x-floor(x*(1.0/289.0))*289.0;} vec3 permute(vec3 x){return mod289(((x*34.0)+1.0)*x);}
+    float snoise(vec2 v){const vec4 C=vec4(.211324865405187,.366025403784439,-.577350269189626,.024390243902439);vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);vec2 i1=(x0.x>x0.y)?vec2(1,0):vec2(0,1);vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod289(i);vec3 p=permute(permute(i.y+vec3(0,i1.y,1))+i.x+vec3(0,i1.x,1));vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0);m=m*m;m=m*m;vec3 x=2.*fract(p*C.www)-1.;vec3 h=abs(x)-.5;vec3 ox=floor(x+.5);vec3 a0=x-ox;vec3 g;m*=1.79284291400159-.85373472095314*(a0*a0+h*h);g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;return 130.*dot(m,g);}
+    void main(){vec2 p=vUv-0.5;p.x*=1.5;float t=uTime*0.15;float n1=snoise(p*3.+vec2(t,t*.7));float n2=snoise(p*5.+vec2(-t*.5,t*1.3)+n1);vec3 c=mix(uColor1,uColor2,smoothstep(-.5,.5,n1));c=mix(c,uColor3,smoothstep(-.3,.3,n2)*.6);c*=1.-length(p)*.8;c*=uIntensity*.15;float g=fract(sin(dot(vUv*uTime,vec2(12.9898,78.233)))*43758.5453);c+=(g-.5)*.02;gl_FragColor=vec4(c,1.0);}`
+});
+const bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat); bgMesh.frustumCulled=false; bgMesh.renderOrder=-1000; scene.add(bgMesh);
+
+let mouseX=0,mouseY=0,tMouseX=0,tMouseY=0;
+window.addEventListener('pointermove',(e)=>{tMouseX=(e.clientX/innerWidth-.5)*2;tMouseY=(e.clientY/innerHeight-.5)*2;});
+
+const portalColors = PORTAL_VIDEOS.map(p=>new THREE.Color(p.color));
+let colorCycleIdx=0, colorCycleTimer=0;
+const clock = new THREE.Clock(); let elapsed=0;
+
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
+  mouseX+=(tMouseX-mouseX)*.05;mouseY+=(tMouseY-mouseY)*.05;
+  camera.position.x=mouseX*.3;camera.position.y=-mouseY*.3;camera.lookAt(0,0,0);
+  bgUni.uTime.value=elapsed;
+  colorCycleTimer+=dt;
+  if(colorCycleTimer>2&&phase<2){colorCycleTimer=0;colorCycleIdx=(colorCycleIdx+1)%portalColors.length;bgUni.uColor1.value.copy(portalColors[colorCycleIdx]);bgUni.uColor2.value.copy(portalColors[(colorCycleIdx+1)%portalColors.length]);bgUni.uColor3.value.copy(portalColors[(colorCycleIdx+2)%portalColors.length]);}
+  const pe=elapsed-phaseStart;
+  if(phase===0){bgUni.uIntensity.value=1;
+    for(const c of confetti){c.mat.opacity+=(0.7-c.mat.opacity)*.02;const px=c.mesh.position.x,py=c.mesh.position.y;const a=Math.atan2(py,px),d=Math.sqrt(px*px+py*py);const na=a+c.swirlSpeed*dt*(1+2/(d+1)),nd=d+Math.sin(elapsed*c.floatSpeed+c.floatPhase)*.01;c.mesh.position.x=Math.cos(na)*nd;c.mesh.position.y=Math.sin(na)*nd;c.mesh.position.z+=(mouseX*c.depth*.5-c.mesh.position.z+2)*.02;c.mesh.rotation.x+=c.rotSpeed.x*dt;c.mesh.rotation.y+=c.rotSpeed.y*dt;c.mesh.rotation.z+=c.rotSpeed.z*dt;}
+    if(pe>=PHASE_DURATIONS[0]){phase=1;phaseStart=elapsed;wordmarkEl.classList.add('show');}
+  }else if(phase===1){bgUni.uIntensity.value=.4+Math.sin(elapsed*3)*.1;
+    for(const c of confetti){const px=c.mesh.position.x,py=c.mesh.position.y,d=Math.sqrt(px*px+py*py)+.01;const ps=d*1.5*dt;c.mesh.position.x-=(px/d)*ps;c.mesh.position.y-=(py/d)*ps;c.mesh.rotation.z+=c.rotSpeed.z*dt*(1+3/(d+.5));if(d<.5)c.mat.opacity*=.92;c.mesh.rotation.x+=c.rotSpeed.x*dt;c.mesh.rotation.y+=c.rotSpeed.y*dt;}
+    if(pe>=PHASE_DURATIONS[1]){phase=2;phaseStart=elapsed;wordmarkEl.classList.remove('show');for(const c of confetti){const px=c.mesh.position.x||(Math.random()-.5),py=c.mesh.position.y||(Math.random()-.5);const l=Math.sqrt(px*px+py*py)||1,sp=5+Math.random()*8;c.shatterVx=(px/l)*sp;c.shatterVy=(py/l)*sp;c.shatterVz=(Math.random()-.5)*4;}}
+  }else if(phase===2){const p=pe/PHASE_DURATIONS[2];bgUni.uIntensity.value=.3*(1-p);
+    for(const c of confetti){c.mesh.position.x+=c.shatterVx*dt;c.mesh.position.y+=c.shatterVy*dt;c.mesh.position.z+=c.shatterVz*dt;c.shatterVy-=3*dt;c.mesh.rotation.x+=c.rotSpeed.x*dt*3;c.mesh.rotation.z+=c.rotSpeed.z*dt*3;c.mat.opacity=Math.max(0,.7*(1-p));}
+    if(pe>=PHASE_DURATIONS[2]){phase=3;contentEl.style.display='flex';requestAnimationFrame(()=>contentEl.classList.add('show'));skipBtn.style.display='none';}
+  }
+  renderer.render(scene,camera);
+}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+skipBtn.onclick=()=>{phase=3;for(const c of confetti)c.mat.opacity=0;bgUni.uIntensity.value=0;wordmarkEl.classList.remove('show');contentEl.style.display='flex';requestAnimationFrame(()=>contentEl.classList.add('show'));skipBtn.style.display='none';};
+phaseStart=0;animate();
+</script>
+</body></html>
