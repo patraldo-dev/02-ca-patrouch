@@ -815,6 +815,8 @@
   "taller.refine_prompt_label": "Refine — System Prompt",
   "common.nav.games": "Portals",
   "games.title": "Portals",
+  "games.writings": "writings",
+  "games.enter": "Enter",
   "games.find_the_ai": "Find the AI",
   "games.find_the_ai_desc": "Can you tell human writing from AI?",
   "games.find_the_bottle": "Booty Battle",
