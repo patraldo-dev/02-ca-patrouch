@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>patrouch.ca — Portal Bumper Prototype</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; }
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #skip {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.5); padding: 0.4rem 1rem; border-radius: 20px;
+    cursor: pointer; font-size: 0.8rem; backdrop-filter: blur(10px);
+    transition: all 0.2s;
+  }
+  #skip:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+  #wordmark {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 50; pointer-events: none; text-align: center;
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  #wordmark.show { opacity: 1; }
+  #wordmark h1 {
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 800;
+    font-size: clamp(2rem, 8vw, 4rem); color: #c9a87c;
+    letter-spacing: -0.02em; text-shadow: 0 0 40px rgba(201,168,124,0.5);
+  }
+  #wordmark p {
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 300;
+    font-size: clamp(0.8rem, 3vw, 1.1rem); color: rgba(255,255,255,0.6);
+    margin-top: 0.5rem; letter-spacing: 0.05em;
+  }
+  #content {
+    position: fixed; inset: 0; z-index: 10;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.8s ease;
+    pointer-events: none;
+  }
+  #content.show { opacity: 1; pointer-events: auto; }
+  #content h2 {
+    font-family: 'Inter', system-ui, sans-serif; color: #fff;
+    font-size: 1.5rem; opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<button id="skip">Skip</button>
+<div id="wordmark">
+  <h1>patrouch.ca</h1>
+  <p id="tagline">A Playful Space for Serious Writing</p>
+</div>
+<div id="content">
+  <h2>↓ Portals Below ↓</h2>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ─── Portal video thumbnails from Antoine's Cloudflare Stream ───────
+const PORTAL_VIDEOS = [
+  { id: 'arboleda', thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/523f2d3f4a73137aae56eb621ffa3feb/downloads/thumbnail.jpg', color: 0x2d5a27 },
+  { id: 'fiesta', thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/fd7341d70b1a5517bb56a569d2a0cb38/downloads/thumbnail.jpg', color: 0xff6b35 },
+  { id: 'oceano', thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/4b11d4a9a696c67ec50571cab5f88283/downloads/thumbnail.jpg', color: 0x0277bd },
+  { id: 'narrador', thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/d1ebfd4c8c5a3284c29011ff9a842fbe/downloads/thumbnail.jpg', color: 0xc9a87c },
+  { id: 'espacio', thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/95f35d8223f9cd6ee025635255dad6d9/downloads/thumbnail.jpg', color: 0x7c4dff },
+  { id: 'urbano', thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/6ffa1842133713869ada64a5ec381258/downloads/thumbnail.jpg', color: 0x546e7a },
+  { id: 'fantasia', thumb: 'https://customer-9kroafxwku5qm6fx.cloudflarestream.com/98fdd26667ffadc320310ef97dfcd5d0/downloads/thumbnail.jpg', color: 0x9c27b0 },
+];
+
+// ─── Setup ──────────────────────────────────────────────────────────
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x050508);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.z = 5;
+
+// ─── Load textures ──────────────────────────────────────────────────
+const texLoader = new THREE.TextureLoader();
+texLoader.crossOrigin = 'anonymous';
+const textures = [];
+
+// ─── Phase machine ──────────────────────────────────────────────────
+// 0: kaleidoscope confetti storm
+// 1: converge into center, wordmark appears
+// 2: shatter outward, content revealed
+// 3: done
+let phase = 0;
+let phaseStart = 0;
+const PHASE_DURATIONS = [2.5, 1.5, 0.8]; // seconds per phase
+
+const wordmarkEl = document.getElementById('wordmark');
+const contentEl = document.getElementById('content');
+const skipBtn = document.getElementById('skip');
+
+// Set tagline based on locale
+const lang = document.documentElement.lang || navigator.language?.slice(0,2) || 'en';
+const taglines = {
+  en: 'A Playful Space for Serious Writing',
+  es: 'Un Espacio Lúdico para Escritura Seria',
+  fr: "Un Espace Ludique pour l'Écriture Sérieuse",
+};
+document.getElementById('tagline').textContent = taglines[lang] || taglines.en;
+
+// ─── Kaleidoscope Confetti Pieces ───────────────────────────────────
+// Each piece is a textured plane with a portal video thumbnail
+// They swirl, tumble, and parallax — Grateful Dead poster energy
+const CONFETTI_COUNT = 80;
+const confetti = [];
+const confettiGroup = new THREE.Group();
+scene.add(confettiGroup);
+
+function makeConfettiPiece(i) {
+  // Pick a random portal video texture
+  const portalIdx = i % PORTAL_VIDEOS.length;
+  const pv = PORTAL_VIDEOS[portalIdx];
+
+  // Create geometry — varied sizes, all small rectangles
+  const w = 0.3 + Math.random() * 0.5;
+  const h = 0.2 + Math.random() * 0.4;
+  const geo = new THREE.PlaneGeometry(w, h);
+
+  // Material — use portal thumbnail if loaded, else solid color
+  const mat = new THREE.MeshBasicMaterial({
+    color: pv.color,
+    transparent: true,
+    opacity: 0,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  // Try loading texture
+  texLoader.load(pv.thumb,
+    (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      mat.map = tex;
+      mat.color.setHex(0xffffff);
+      mat.needsUpdate = true;
+    },
+    undefined,
+    () => {} // fail silently, keep solid color
+  );
+
+  const mesh = new THREE.Mesh(geo, mat);
+
+  // Random position in a wide sphere
+  const r = 3 + Math.random() * 4;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  mesh.position.set(
+    r * Math.sin(phi) * Math.cos(theta),
+    r * Math.sin(phi) * Math.sin(theta),
+    r * Math.cos(phi) - 2
+  );
+
+  // Random rotation
+  mesh.rotation.set(
+    Math.random() * Math.PI * 2,
+    Math.random() * Math.PI * 2,
+    Math.random() * Math.PI * 2,
+  );
+
+  // Per-piece velocity for swirl + parallax
+  const speed = 0.3 + Math.random() * 0.8;
+  const angle = Math.atan2(mesh.position.y, mesh.position.x);
+  const swirlDir = Math.random() > 0.3 ? 1 : -1;
+
+  const data = {
+    mesh,
+    mat,
+    portalIdx,
+    baseColor: pv.color,
+    // Swirl velocity — tangential to center
+    swirlSpeed: swirlDir * (0.5 + Math.random() * 1.5),
+    // Inward pull (phase 1)
+    pullSpeed: 0,
+    // Shatter velocity (phase 2)
+    shatterVx: 0, shatterVy: 0, shatterVz: 0,
+    // Rotation speeds
+    rotSpeed: {
+      x: (Math.random() - 0.5) * 2,
+      y: (Math.random() - 0.5) * 2,
+      z: swirlDir * (1 + Math.random() * 3),
+    },
+    // Parallax depth factor
+    depth: 0.3 + Math.random() * 0.7,
+    // Float offset
+    floatPhase: Math.random() * Math.PI * 2,
+    floatSpeed: 0.5 + Math.random() * 1.5,
+  };
+
+  return data;
+}
+
+for (let i = 0; i < CONFETTI_COUNT; i++) {
+  const piece = makeConfettiPiece(i);
+  confetti.push(piece);
+  confettiGroup.add(piece.mesh);
+}
+
+// ─── Psychedelic background shader ──────────────────────────────────
+const bgUniforms = {
+  uTime: { value: 0 },
+  uPhase: { value: 0 },
+  uColor1: { value: new THREE.Color(0x2d5a27) },
+  uColor2: { value: new THREE.Color(0x7c4dff) },
+  uColor3: { value: new THREE.Color(0xff6b35) },
+  uIntensity: { value: 1.0 },
+};
+
+const bgMat = new THREE.ShaderMaterial({
+  uniforms: bgUniforms,
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform float uPhase;
+    uniform vec3 uColor1;
+    uniform vec3 uColor2;
+    uniform vec3 uColor3;
+    uniform float uIntensity;
+    varying vec2 vUv;
+
+    // Simplex-ish noise
+    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+    float snoise(vec2 v) {
+      const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+      vec2 i = floor(v + dot(v, C.yy));
+      vec2 x0 = v - i + dot(i, C.xx);
+      vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+      vec4 x12 = x0.xyxy + C.xxzz;
+      x12.xy -= i1;
+      i = mod289(i);
+      vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+      vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+      m = m*m; m = m*m;
+      vec3 x = 2.0 * fract(p * C.www) - 1.0;
+      vec3 h = abs(x) - 0.5;
+      vec3 ox = floor(x + 0.5);
+      vec3 a0 = x - ox;
+      m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+      vec3 g;
+      g.x = a0.x * x0.x + h.x * x0.y;
+      g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+      return 130.0 * dot(m, g);
+    }
+
+    void main() {
+      vec2 uv = vUv;
+      vec2 p = uv - 0.5;
+      p.x *= 1.5; // widen
+
+      // Swirling color fields
+      float t = uTime * 0.15;
+      float n1 = snoise(p * 3.0 + vec2(t, t * 0.7));
+      float n2 = snoise(p * 5.0 + vec2(-t * 0.5, t * 1.3) + n1);
+      float n3 = snoise(p * 2.0 + vec2(t * 0.3, -t) + n2 * 0.5);
+
+      // Mix three portal colors based on noise
+      vec3 color = mix(uColor1, uColor2, smoothstep(-0.5, 0.5, n1));
+      color = mix(color, uColor3, smoothstep(-0.3, 0.3, n2) * 0.6);
+
+      // Darken edges (vignette)
+      float vig = 1.0 - length(p) * 0.8;
+      color *= vig;
+
+      // Intensity ramps with phase
+      color *= uIntensity * 0.15;
+
+      // Subtle film grain
+      float grain = fract(sin(dot(uv * uTime, vec2(12.9898, 78.233))) * 43758.5453);
+      color += (grain - 0.5) * 0.02;
+
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `,
+  depthTest: false,
+  depthWrite: false,
+});
+
+const bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat);
+bgMesh.frustumCulled = false;
+bgMesh.renderOrder = -1000;
+scene.add(bgMesh);
+
+// ─── Mouse/parallax tracking ────────────────────────────────────────
+let mouseX = 0, mouseY = 0;
+let targetMouseX = 0, targetMouseY = 0;
+window.addEventListener('pointermove', (e) => {
+  targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// ─── Animation loop ─────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let elapsed = 0;
+
+// Cycle background colors through portal palettes
+const portalColors = PORTAL_VIDEOS.map(p => new THREE.Color(p.color));
+let colorCycleIdx = 0;
+let colorCycleTimer = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  elapsed += dt;
+
+  // Smooth mouse
+  mouseX += (targetMouseX - mouseX) * 0.05;
+  mouseY += (targetMouseY - mouseY) * 0.05;
+
+  // Camera parallax
+  camera.position.x = mouseX * 0.3;
+  camera.position.y = -mouseY * 0.3;
+  camera.lookAt(0, 0, 0);
+
+  // Background
+  bgUniforms.uTime.value = elapsed;
+  bgUniforms.uPhase.value = phase;
+
+  // Cycle background colors
+  colorCycleTimer += dt;
+  if (colorCycleTimer > 2 && phase < 2) {
+    colorCycleTimer = 0;
+    colorCycleIdx = (colorCycleIdx + 1) % portalColors.length;
+    const next = (colorCycleIdx + 1) % portalColors.length;
+    bgUniforms.uColor1.value.copy(portalColors[colorCycleIdx]);
+    bgUniforms.uColor2.value.copy(portalColors[next]);
+    bgUniforms.uColor3.value.copy(portalColors[(colorCycleIdx + 2) % portalColors.length]);
+  }
+
+  // Phase transitions
+  const phaseElapsed = elapsed - phaseStart;
+
+  if (phase === 0) {
+    // Kaleidoscope confetti storm — swirling, tumbling, alive
+    bgUniforms.uIntensity.value = 1.0;
+
+    for (const c of confetti) {
+      c.mat.opacity += (0.7 - c.mat.opacity) * 0.02;
+
+      // Swirl around center
+      const px = c.mesh.position.x;
+      const py = c.mesh.position.y;
+      const angle = Math.atan2(py, px);
+      const dist = Math.sqrt(px * px + py * py);
+      const newAngle = angle + c.swirlSpeed * dt * (1 + 2 / (dist + 1));
+      const newDist = dist + Math.sin(elapsed * c.floatSpeed + c.floatPhase) * 0.01;
+      c.mesh.position.x = Math.cos(newAngle) * newDist;
+      c.mesh.position.y = Math.sin(newAngle) * newDist;
+
+      // Z parallax with mouse
+      c.mesh.position.z += (mouseX * c.depth * 0.5 - c.mesh.position.z + 2) * 0.02;
+
+      // Tumble
+      c.mesh.rotation.x += c.rotSpeed.x * dt;
+      c.mesh.rotation.y += c.rotSpeed.y * dt;
+      c.mesh.rotation.z += c.rotSpeed.z * dt;
+    }
+
+    if (phaseElapsed >= PHASE_DURATIONS[0]) {
+      phase = 1;
+      phaseStart = elapsed;
+      wordmarkEl.classList.add('show');
+    }
+  } else if (phase === 1) {
+    // Converge toward center, wordmark holds
+    bgUniforms.uIntensity.value = 0.4 + Math.sin(elapsed * 3) * 0.1;
+
+    for (const c of confetti) {
+      const px = c.mesh.position.x;
+      const py = c.mesh.position.y;
+      const dist = Math.sqrt(px * px + py * py);
+      const pullSpeed = dist * 1.5 * dt;
+      c.mesh.position.x -= (px / dist) * pullSpeed;
+      c.mesh.position.y -= (py / dist) * pullSpeed;
+
+      // Spin faster as converging
+      c.mesh.rotation.z += c.rotSpeed.z * dt * (1 + (3 / (dist + 0.5)));
+
+      // Fade out as reaching center
+      if (dist < 0.5) {
+        c.mat.opacity *= 0.92;
+      }
+
+      // Still tumble
+      c.mesh.rotation.x += c.rotSpeed.x * dt;
+      c.mesh.rotation.y += c.rotSpeed.y * dt;
+    }
+
+    if (phaseElapsed >= PHASE_DURATIONS[1]) {
+      phase = 2;
+      phaseStart = elapsed;
+      wordmarkEl.classList.remove('show');
+      // Assign shatter velocities
+      for (const c of confetti) {
+        const px = c.mesh.position.x || (Math.random() - 0.5);
+        const py = c.mesh.position.y || (Math.random() - 0.5);
+        const len = Math.sqrt(px * px + py * py) || 1;
+        const speed = 5 + Math.random() * 8;
+        c.shatterVx = (px / len) * speed;
+        c.shatterVy = (py / len) * speed;
+        c.shatterVz = (Math.random() - 0.5) * 4;
+      }
+    }
+  } else if (phase === 2) {
+    // Shatter outward
+    const p = phaseElapsed / PHASE_DURATIONS[2];
+    bgUniforms.uIntensity.value = 0.3 * (1 - p);
+
+    for (const c of confetti) {
+      c.mesh.position.x += c.shatterVx * dt;
+      c.mesh.position.y += c.shatterVy * dt;
+      c.mesh.position.z += c.shatterVz * dt;
+      c.shatterVy -= 3 * dt; // gravity
+      c.mesh.rotation.x += c.rotSpeed.x * dt * 3;
+      c.mesh.rotation.z += c.rotSpeed.z * dt * 3;
+      c.mat.opacity = Math.max(0, 0.7 * (1 - p));
+    }
+
+    if (phaseElapsed >= PHASE_DURATIONS[2]) {
+      phase = 3;
+      contentEl.style.display = 'flex';
+      requestAnimationFrame(() => contentEl.classList.add('show'));
+      skipBtn.style.display = 'none';
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ─── Resize ─────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─── Skip ───────────────────────────────────────────────────────────
+skipBtn.addEventListener('click', () => {
+  phase = 3;
+  phaseStart = elapsed;
+  wordmarkEl.classList.remove('show');
+  for (const c of confetti) c.mat.opacity = 0;
+  bgUniforms.uIntensity.value = 0;
+  contentEl.style.display = 'flex';
+  requestAnimationFrame(() => contentEl.classList.add('show'));
+  skipBtn.style.display = 'none';
+});
+
+// ─── Start ──────────────────────────────────────────────────────────
+phaseStart = 0;
+animate();
+</script>
+</body>
+</html>
