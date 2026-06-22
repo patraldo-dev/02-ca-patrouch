@@ -211,7 +211,7 @@
 		border-radius: 14px;
 		overflow: hidden;
 		border: 3px solid var(--pv-color, var(--border));
-		background: var(--pv-color, var(--surface));
+		background: #0a0a0e;
 		text-decoration: none;
 		color: var(--fg);
 		transition: border-color 0.8s ease;
