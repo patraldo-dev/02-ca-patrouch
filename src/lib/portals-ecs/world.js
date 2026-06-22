@@ -16,7 +16,7 @@
  *   6. On portal enter: world.launchXR()
  */
 
-import { World, Transform } from '@iwsdk/core';
+import { World, SessionMode, Transform } from '@iwsdk/core';
 import * as THREE from 'three';
 import {
 	PortalGate,
@@ -73,10 +73,12 @@ function createCarouselMesh() {
 
 // ─── Main initialization ────────────────────────────────────────────
 export async function initPortalWorld(container, { portals, galaxies }) {
-	// ── 1. Create World without XR — non-immersive only ──
-	// XR session is requested later via launchXR() when user enters a portal
-	// defaultLighting: false — disables immersive lighting system that fails in non-immersive mode
+	// ── 1. Create World — non-immersive, XR on demand ──
 	const world = await World.create(container, {
+		xr: {
+			sessionMode: SessionMode.ImmersiveAR,
+			offer: 'none',
+		},
 		render: {
 			defaultLighting: false,
 		},
