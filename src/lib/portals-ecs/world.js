@@ -75,7 +75,11 @@ function createCarouselMesh() {
 export async function initPortalWorld(container, { portals, galaxies }) {
 	// ── 1. Create World without XR — non-immersive only ──
 	// XR session is requested later via launchXR() when user enters a portal
+	// defaultLighting: false — disables immersive lighting system that fails in non-immersive mode
 	const world = await World.create(container, {
+		render: {
+			defaultLighting: false,
+		},
 		features: {
 			locomotion: false,
 			grabbing: false,
