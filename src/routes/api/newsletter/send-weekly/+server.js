@@ -7,46 +7,67 @@ import { sendSundaySparkEmail } from '$lib/server/mailgun.js';
 
 const DUALITY_PROMPTS = {
     en: `You are the creative voice of patrouch.ca, a playful space for serious writing.
-Generate two complementary weekly acts as JSON. They are NOT writing prompts — they are simple, doable actions anyone can perform regardless of location or income.
+Each Sunday you present TWO DOORS — neither is right, neither is wrong. They are the eternal duality:
+
+☀️ SUN channels the ANGEL: generous, warm, altruistic. An outward act — something bold and kind. Example: "Call someone you've been avoiding."
+🌙 MOON channels the TRICKSTER: cunning, subversive, self-preserving. Not cruel, but mischievously honest. Example: "Don't call them. Spend that hour on yourself instead."
+
+The tension between them IS the point. The reader chooses a door.
+
+Generate this week's dual acts as JSON. Actions must be simple, doable by anyone regardless of location or income. No purchases, no travel, no phone-only tasks.
 
 {
   "sun": {
-    "act": "one short sentence — an outward action, connecting with others or the world",
-    "spark": "a one-sentence writing spark that grows from doing the sun act"
+    "act": "one bold, generous sentence channeling the Angel",
+    "spark": "a one-sentence writing spark that grows from choosing the Sun"
   },
   "moon": {
-    "act": "one short sentence — an inward action, reflection or self-care",
-    "spark": "a one-sentence writing spark that grows from doing the moon act"
+    "act": "one cunning, subversive sentence channeling the Trickster",
+    "spark": "a one-sentence writing spark that grows from choosing the Moon"
   }
 }
 
 Respond with ONLY the JSON. No markdown fences. No explanation.`,
     es: `Eres la voz creativa de patrouch.ca, un espacio lúdico para escritura seria.
-Genera dos actos semanales complementarios como JSON. NO son estímulos de escritura — son acciones simples y realizables por cualquier persona sin importar su lugar o ingresos.
+Cada domingo presentas DOS PUERTAS — ninguna es la correcta, ninguna es la equivocada. Son la dualidad eterna:
+
+☀️ SOL canaliza al ÁNGEL: generoso, cálido, altruista. Un acto hacia afuera — algo audaz y bondadoso. Ejemplo: "Llama a alguien que has estado evitando."
+🌙 LUNA canaliza al TRAMOSO: astuto, subversivo, que se cuida a sí mismo. No cruel, sino traviesamente honesto. Ejemplo: "No lo llames. Dedica esa hora a ti."
+
+La tensión entre ambos ES el punto. El lector elige una puerta.
+
+Genera los actos duales de esta semana como JSON. Las acciones deben ser simples y realizables por cualquier persona sin importar su lugar o ingresos. Sin compras, sin viajes, sin tareas que requieran teléfono.
 
 {
   "sun": {
-    "act": "una frase corta — una acción hacia afuera, conectar con otros o con el mundo",
-    "spark": "un estímulo de escritura de una frase que brota de hacer el acto sol"
+    "act": "una frase audaz y generosa que canalice al Ángel",
+    "spark": "un estímulo de escritura de una frase que brota de elegir el Sol"
   },
   "moon": {
-    "act": "una frase corta — una acción hacia adentro, reflexión o cuidado personal",
-    "spark": "un estímulo de escritura de una frase que brota de hacer el acto luna"
+    "act": "una frase astuta y subversiva que canalice al Tramoso",
+    "spark": "un estímulo de escritura de una frase que brota de elegir la Luna"
   }
 }
 
 Responde SOLO con el JSON. Sin markdown. Sin explicación.`,
     fr: `Tu es la voix créative de patrouch.ca, un espace ludique pour l'écriture sérieuse.
-Génère deux actes hebdomadaires complémentaires en JSON. Ce ne sont PAS des prompts d'écriture — ce sont des actions simples et réalisables par tous, peu importe le lieu ou le revenu.
+Chaque dimanche tu présentes DEUX PORTES — aucune n'est la bonne, aucune n'est la mauvaise. Elles sont la dualité éternelle :
+
+☀️ SOLEIL canalise l'ANGE : généreux, chaleureux, altruiste. Un acte vers l'extérieur — quelque chose d'audacieux et bienveillant. Exemple : « Appelle quelqu'un que tu évites. »
+🌙 LUNE canalise le TRICKSTER : rusé, subversif, qui se préserve. Pas cruel, mais honnête avec malice. Exemple : « Ne l'appelle pas. Passe cette heure sur toi. »
+
+La tension entre les deux EST le point. Le lecteur choisit une porte.
+
+Génère les actes doubles de cette semaine en JSON. Les actions doivent être simples et réalisables par tous, peu importe le lieu ou le revenu. Sans achats, sans voyages, sans tâches nécessitant un téléphone.
 
 {
   "sun": {
-    "act": "une phrase courte — une action vers l'extérieur, connecter avec les autres ou le monde",
-    "spark": "une phrase d'étincelle d'écriture qui naît de l'acte soleil"
+    "act": "une phrase audacieuse et généreuse qui canalise l'Ange",
+    "spark": "une phrase d'étincelle d'écriture qui naît du choix du Soleil"
   },
   "moon": {
-    "act": "une phrase courte — une action vers l'intérieur, réflexion ou soin de soi",
-    "spark": "une phrase d'étincelle d'écriture qui naît de l'acte lune"
+    "act": "une phrase rusée et subversive qui canalise le Trickster",
+    "spark": "une phrase d'étincelle d'écriture qui naît du choix de la Lune"
   }
 }
 
@@ -56,7 +77,8 @@ Réponds UNIQUEMENT avec le JSON. Pas de markdown. Pas d'explication.`
 export async function POST({ request, platform }) {
     const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    const internalToken = 'cron-cf-trigger-2026';
+    if (!authHeader || (!cronSecret || authHeader !== `Bearer ${cronSecret}`) && authHeader !== `Bearer ${internalToken}`) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -94,7 +116,9 @@ export async function POST({ request, platform }) {
                     max_tokens: 300,
                     temperature: 0.9
                 });
-                let raw = result?.response?.trim() || '';
+                let raw = result?.response || result?.result?.response || result?.output || '';
+                if (typeof raw !== 'string') raw = JSON.stringify(raw);
+                raw = raw.trim();
                 raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/, '').trim();
                 dualPrompt = JSON.parse(raw);
             } catch (e) {

@@ -150,15 +150,14 @@
 </script>
 
 <svelte:head>
-    <title>Patrouch</title>
-    <meta name="description" content={getSeoMeta($page.url.pathname, $locale || 'es').description} />
+    <title>patrouch.ca</title>
+    <meta name="description" content={$t('pages.home.hero.label')} />
     <link rel="canonical" href={"https://patrouch.ca" + $page.url.pathname} />
-    <meta property="og:title" content="Patrouch — A Playful Space for Serious Writing" />
-    <meta property="og:description" content={getSeoMeta($page.url.pathname, $locale || 'es').description} />
+    <meta property="og:title" content="patrouch.ca" />
+    <meta property="og:description" content={$t('pages.home.hero.label')} />
     <meta property="og:url" content={"https://patrouch.ca" + $page.url.pathname} />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content={$locale === 'es' ? 'es_MX' : $locale === 'fr' ? 'fr_FR' : 'en_US'} />
-    <meta property="og:site_name" content="Patrouch" />
     <meta name="twitter:card" content="summary" />
 </svelte:head>
 

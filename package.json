@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
+    "@iwsdk/core": "^0.3.1",
     "@oslojs/encoding": "^1.1.0",
     "better-auth": "^1.6.8",
     "capnweb": "^0.1.0",
