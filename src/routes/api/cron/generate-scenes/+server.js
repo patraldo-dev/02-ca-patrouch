@@ -51,11 +51,14 @@ Output ONLY valid JSON matching this schema (no markdown, no explanation):
 
 Rules:
 - crystal_colors must have exactly 4 hex colors
-- crystals: extract 4-8 of the most evocative short phrases from the writings
+- crystals: extract 4-6 of the most evocative short phrases from the writings (max 6)
 - ambient_texts: 2-4 very short fragments (max 80 chars) that drift as text motes
 - Colors should reflect the emotional tone of the writings, not just the portal default
-- particle_style: sparkle=festive, dust=contemplative, ember=warm/passionate, bubble=playful, snow=melancholic
+- particle_style MUST be exactly one of: sparkle, dust, ember, bubble, snow
+- sparkle=festive, dust=contemplative, ember=warm/passionate, bubble=playful, snow=melancholic
 - All positions are relative to the user at origin; the ECS handles placement using ring_radius and elevations`;
+
+import { normalizeSceneConfig } from '$lib/portals-ecs/scene-normalizer.js';
 
 export async function POST({ platform, request }) {
     const auth = request.headers.get('authorization');
@@ -148,6 +151,7 @@ Generate the scene JSON for this portal based on these writings.`;
                         ],
                         temperature: 0.7,
                         max_tokens: 1200,
+                        response_format: { type: 'json_object' },
                     }
                 );
 
@@ -174,18 +178,13 @@ Generate the scene JSON for this portal based on these writings.`;
                     }
                 }
 
-                // Merge with portal defaults for safety
-                if (!sceneConfig.atmosphere) sceneConfig.atmosphere = {};
-                if (!sceneConfig.palette) sceneConfig.palette = {};
-                if (!sceneConfig.palette.primary) sceneConfig.palette.primary = portal.color_primary;
-                if (!sceneConfig.palette.crystal_colors || sceneConfig.palette.crystal_colors.length < 4) {
-                    sceneConfig.palette.crystal_colors = [
-                        portal.color_primary || '#c9a87c',
-                        '#4fc3f7', '#b5ead7', '#ce93d8'
-                    ];
-                }
+                // Normalize: validate enums, clamp numbers, cap crystals, apply quality tier
+                sceneConfig = normalizeSceneConfig(sceneConfig, {
+                    id: portal.id,
+                    color_primary: portal.color_primary,
+                    color_bg: portal.color_bg,
+                });
 
-                sceneConfig.portal_id = portal.id;
                 sceneConfig.source_writings = sourceIds;
 
                 // 5. Store in D1 (upsert)
