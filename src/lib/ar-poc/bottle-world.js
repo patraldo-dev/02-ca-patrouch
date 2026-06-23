@@ -803,26 +803,27 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 		const portalCount = allPortals.length;
 		console.log(`[bottle-world] Spawning ${portalCount} portal tabs`);
 		if (portalCount > 0) {
-			// Arrange tabs in a front-facing arc (180°), not full ring
 			const tabRadius = 2.0;
 			const tabHeight = 1.4;
-			const tabArc = Math.PI; // 180° arc in front of user
-			const arcStart = -Math.PI / 2; // start from left
 
 			allPortals.forEach((portal, i) => {
-				const angle = arcStart + (i / Math.max(portalCount - 1, 1)) * tabArc;
+				const angle = (i / portalCount) * Math.PI * 2;
 				const colorHex = parseInt((portal.color_primary || '#c9a87c').replace('#', ''), 16);
-
 				const name = locale === 'en' ? portal.name_en : locale === 'fr' ? portal.name_fr : portal.name_es;
 
-				const tabMesh = createPortalTabMesh(
-					portal.icon || '🌐',
-					name || portal.id,
-					portal.color_primary || '#c9a87c',
-				);
+				// Simple colored box — no canvas texture
+				const boxGeo = new THREE.BoxGeometry(0.4, 0.2, 0.05);
+				const boxMat = new THREE.MeshStandardMaterial({
+					color: colorHex,
+					emissive: colorHex,
+					emissiveIntensity: 0.3,
+					transparent: true,
+					opacity: 0.85,
+				});
+				const tabMesh = new THREE.Mesh(boxGeo, boxMat);
 				tabMesh.position.set(
 					Math.cos(angle) * tabRadius,
-					tabHeight + (i % 2) * 0.2,
+					tabHeight,
 					Math.sin(angle) * tabRadius,
 				);
 

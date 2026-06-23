@@ -44,7 +44,17 @@ function hexToRgb(hex) {
 }
 
 // ─── Tab mesh factory ───────────────────────────────────────────────
-function createTabMesh(colorPrimary) {
+function createTabMesh(colorPrimary, debugSimple = false) {
+	if (debugSimple) {
+		// Simplified colored cube for debugging — no emissive, no transparency
+		const geo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+		const mat = new THREE.MeshStandardMaterial({
+			color: new THREE.Color(colorPrimary),
+			roughness: 0.5,
+			metalness: 0.1,
+		});
+		return new THREE.Mesh(geo, mat);
+	}
 	const geo = new THREE.BoxGeometry(0.12, 0.08, 0.01);
 	const color = new THREE.Color(colorPrimary);
 	const mat = new THREE.MeshStandardMaterial({
@@ -159,6 +169,16 @@ export async function initPortalWorld(container, { portals, galaxies }) {
 		});
 	}
 
+	// ── DEBUG: Giant red cube at CENTER to test visibility ──
+	const DEBUG_CUBE = new THREE.Mesh(
+		new THREE.BoxGeometry(0.3, 0.3, 0.3),
+		new THREE.MeshStandardMaterial({ color: 0xff0000, roughness: 0.3 })
+	);
+	DEBUG_CUBE.position.set(0, 0, 0);
+	world.scene.add(DEBUG_CUBE);
+	console.log('[portals-ecs] DEBUG CUBE at center:', DEBUG_CUBE.position);
+	console.log('[portals-ecs] Camera FOV:', world.camera.fov, 'Aspect:', world.camera.aspect, 'Position:', world.camera.position);
+
 	// ── 8. Create portal tab entities ──
 	const RAIL_X = -0.85; // left edge of viewport
 	const RAIL_Y_START = 0.35;
@@ -176,7 +196,8 @@ export async function initPortalWorld(container, { portals, galaxies }) {
 		const colorPrimary = hexToRgb(portal.color_primary || '#c9a87c');
 		const colorBg = hexToRgb(portal.color_bg || '#fff8e1');
 
-		const mesh = createTabMesh(portal.color_primary || '#c9a87c');
+		// First tab gets simplified debug mesh, rest get normal mesh
+		const mesh = createTabMesh(portal.color_primary || '#c9a87c', i === 0);
 		const entity = world.createTransformEntity(mesh);
 		const pos = entity.getVectorView(Transform, 'position');
 		const restY = RAIL_Y_START - i * RAIL_SPACING;
