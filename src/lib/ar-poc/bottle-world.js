@@ -595,9 +595,83 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 	accentLight.position.set(0, 0.5, 0);
 	world.scene.add(accentLight);
 
+	// ── Pan mode: rotate scene group via touch drag ──
+	const panGroup = new THREE.Group();
+	world.scene.add(panGroup);
+	let panYaw = 0;
+	let panTargetYaw = 0;
+	let isDragging = false;
+	let lastTouchX = 0;
+	let lastTouchY = 0;
+	let panPitch = 0;
+	let panTargetPitch = 0;
+
+	const PAN_SENSITIVITY = 0.005;
+	const MAX_PITCH = 0.6;
+	const MIN_PITCH = -0.3;
+
+	function onTouchStart(e) {
+		if (e.touches.length === 1) {
+			isDragging = true;
+			lastTouchX = e.touches[0].clientX;
+			lastTouchY = e.touches[0].clientY;
+		}
+	}
+	function onTouchMove(e) {
+		if (!isDragging || e.touches.length !== 1) return;
+		e.preventDefault();
+		const dx = e.touches[0].clientX - lastTouchX;
+		const dy = e.touches[0].clientY - lastTouchY;
+		panTargetYaw -= dx * PAN_SENSITIVITY;
+		panTargetPitch = Math.max(MIN_PITCH, Math.min(MAX_PITCH, panTargetPitch + dy * PAN_SENSITIVITY));
+		lastTouchX = e.touches[0].clientX;
+		lastTouchY = e.touches[0].clientY;
+	}
+	function onTouchEnd(e) {
+		isDragging = false;
+	}
+
+	// Mouse for desktop testing
+	function onMouseDown(e) { isDragging = true; lastTouchX = e.clientX; lastTouchY = e.clientY; }
+	function onMouseMove(e) {
+		if (!isDragging) return;
+		const dx = e.clientX - lastTouchX;
+		const dy = e.clientY - lastTouchY;
+		panTargetYaw -= dx * PAN_SENSITIVITY;
+		panTargetPitch = Math.max(MIN_PITCH, Math.min(MAX_PITCH, panTargetPitch + dy * PAN_SENSITIVITY));
+		lastTouchX = e.clientX; lastTouchY = e.clientY;
+	}
+	function onMouseUp() { isDragging = false; }
+
+	container.addEventListener('touchstart', onTouchStart, { passive: false });
+	container.addEventListener('touchmove', onTouchMove, { passive: false });
+	container.addEventListener('touchend', onTouchEnd);
+	container.addEventListener('mousedown', onMouseDown);
+	window.addEventListener('mousemove', onMouseMove);
+	window.addEventListener('mouseup', onMouseUp);
+
+	// Store cleanup for destroyBottleAR
+	state.cleanupPan = () => {
+		container.removeEventListener('touchstart', onTouchStart);
+		container.removeEventListener('touchmove', onTouchMove);
+		container.removeEventListener('touchend', onTouchEnd);
+		container.removeEventListener('mousedown', onMouseDown);
+		window.removeEventListener('mousemove', onMouseMove);
+		window.removeEventListener('mouseup', onMouseUp);
+	};
+
+	// Smooth pan in animation loop
+	function updatePan() {
+		panYaw += (panTargetYaw - panYaw) * 0.1;
+		panPitch += (panTargetPitch - panPitch) * 0.1;
+		panGroup.rotation.y = panYaw;
+		panGroup.rotation.x = panPitch;
+	}
+
 	// ── 5. State ──
 	const state = {
 		world,
+		panGroup,
 		bottleEntities: [],
 		decorationEntities: [],
 		isInAR: false,
@@ -640,6 +714,12 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 
 		state.isInAR = true;
 		if (state.onARStart) state.onARStart();
+
+		// Helper: reparent entity mesh to panGroup (keeps world transform)
+		function toPan(entity) {
+			if (entity.object3D) panGroup.attach(entity.object3D);
+			return entity;
+		}
 
 		// ── Spawn ground halo at user's feet ──
 		const haloMesh = createGroundHaloMesh(accentHex, 1.0);
@@ -803,14 +883,12 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 		const portalCount = allPortals.length;
 		console.log(`[bottle-world] Spawning ${portalCount} portal tabs`);
 		if (portalCount > 0) {
-			// Arrange tabs in a front-facing arc (180°), not full ring
+			// Arrange tabs in a full ring — user pans to see them all
 			const tabRadius = 2.0;
 			const tabHeight = 1.4;
-			const tabArc = Math.PI; // 180° arc in front of user
-			const arcStart = -Math.PI / 2; // start from left
 
 			allPortals.forEach((portal, i) => {
-				const angle = arcStart + (i / Math.max(portalCount - 1, 1)) * tabArc;
+				const angle = (i / portalCount) * Math.PI * 2;
 				const colorHex = parseInt((portal.color_primary || '#c9a87c').replace('#', ''), 16);
 
 				const name = locale === 'en' ? portal.name_en : locale === 'fr' ? portal.name_fr : portal.name_es;
@@ -848,15 +926,26 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 			});
 		}
 
+		// ── Reparent all decoration + bottle entities to panGroup ──
+		for (const e of state.decorationEntities) {
+			if (e.object3D) panGroup.attach(e.object3D);
+		}
+		for (const b of state.bottleEntities) {
+			if (b.entity?.object3D) panGroup.attach(b.entity.object3D);
+		}
+
 		// ── Start custom animation loop for non-ECS objects ──
 		animateScene();
 	};
 
-	// ── 7. Non-ECS animation (accent light pulse) ──
+	// ── 7. Non-ECS animation (accent light pulse + pan) ──
 	let animId = null;
 	function animateScene() {
 		if (state._closed) return;
 		const t = performance.now() * 0.001;
+
+		// Smooth pan
+		updatePan();
 
 		// Pulse the accent point light
 		accentLight.intensity = 0.3 + Math.sin(t * 0.8) * 0.15;
@@ -986,6 +1075,10 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 export function destroyBottleAR(state) {
 	if (!state) return;
 	state._closed = true;
+
+	// Remove pan listeners (stored on state by initBottleAR)
+	if (state.cleanupPan) state.cleanupPan();
+
 	if (state.world?.renderer) {
 		state.world.renderer.dispose();
 		state.world.renderer.domElement?.remove();
