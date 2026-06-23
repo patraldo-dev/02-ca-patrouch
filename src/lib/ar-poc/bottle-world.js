@@ -107,7 +107,10 @@ const BottleAnimationSystem = createSystem(
 
 				obj.rotation.y += spin * delta;
 				obj.rotation.x += spin * delta * 0.3;
-				obj.position.y += Math.sin(time * 0.0012 + phase) * 0.0003;
+
+				// Bob via vector view (Transform-safe)
+				const pos = entity.getVectorView(Transform, 'position');
+				pos[1] += Math.sin(time * 0.0012 + phase) * 0.0003;
 
 				// Selected bottles pulse
 				if (markerState === 1) {
@@ -134,11 +137,13 @@ const ParticleAnimationSystem = createSystem(
 				const phase = entity.getValue(AmbientParticle, 'phase');
 				const baseY = entity.getValue(AmbientParticle, 'baseY');
 
+				const pos = entity.getVectorView(Transform, 'position');
+
 				// Vertical drift
-				obj.position.y += vy * delta;
+				pos[1] += vy * delta;
 				// Horizontal sway
-				obj.position.x += Math.sin(time * 0.001 + phase) * delta * 0.008;
-				obj.position.z += Math.cos(time * 0.0007 + phase * 1.3) * delta * 0.006;
+				pos[0] += Math.sin(time * 0.001 + phase) * delta * 0.008;
+				pos[2] += Math.cos(time * 0.0007 + phase * 1.3) * delta * 0.006;
 
 				// Age
 				let age = entity.getValue(AmbientParticle, 'age') + delta;
@@ -146,7 +151,7 @@ const ParticleAnimationSystem = createSystem(
 
 				if (lifespan > 0 && age > lifespan) {
 					// Recycle: reset to base position
-					obj.position.y = baseY;
+					pos[1] = baseY;
 					age = 0;
 				}
 
@@ -200,8 +205,9 @@ const SpiralAnimationSystem = createSystem(
 				obj.rotation.y += speed * delta;
 				obj.rotation.z = Math.sin(time * 0.0005 + phase) * 0.15 + tilt;
 
-				// Bob the whole spiral
-				obj.position.y = 0.5 + Math.sin(time * 0.0008 + phase) * 0.1;
+				// Bob the whole spiral via vector view
+				const pos = entity.getVectorView(Transform, 'position');
+				pos[1] = 0.5 + Math.sin(time * 0.0008 + phase) * 0.1;
 			}
 		},
 	},
@@ -245,12 +251,13 @@ const PortalTabSystem = createSystem(
 				const phase = entity.getValue(PortalTab, 'bobPhase');
 				const spin = entity.getValue(PortalTab, 'spin');
 
-				// Slowly orbit around user
+				// Slowly orbit around user — via vector view (Transform-safe)
+				const pos = entity.getVectorView(Transform, 'position');
 				const t = time * 0.0001;
 				const currentAngle = angle + t * spin * 10;
-				obj.position.x = Math.cos(currentAngle) * radius;
-				obj.position.z = Math.sin(currentAngle) * radius;
-				obj.position.y = baseHeight + Math.sin(time * 0.0008 + phase) * 0.08;
+				pos[0] = Math.cos(currentAngle) * radius;
+				pos[2] = Math.sin(currentAngle) * radius;
+				pos[1] = baseHeight + Math.sin(time * 0.0008 + phase) * 0.08;
 
 				// Face the user (origin)
 				obj.lookAt(0, obj.position.y, 0);
