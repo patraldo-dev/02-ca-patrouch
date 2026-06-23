@@ -58,12 +58,12 @@ Rules:
 - All positions are relative to the user at origin; the ECS handles placement using ring_radius and elevations`;
 
 export async function POST({ platform, request }) {
-    // TEMP: auth disabled for testing — re-enable before deploy
-    // const auth = request.headers.get('authorization');
-    // const CRON_SECRET = await platform?.env?.CRON_SECRET?.get?.() ?? null;
-    // if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
-    //     return new Response('Unauthorized', { status: 401 });
-    // }
+    const auth = request.headers.get('authorization');
+    const CRON_SECRET = await platform?.env?.CRON_SECRET?.get?.() ?? null;
+
+    if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
+        return new Response('Unauthorized', { status: 401 });
+    }
 
     const db = platform?.env?.DB_book;
     const ai = platform?.env?.AI;
