@@ -152,6 +152,19 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 				lightEstimation: true,
 			},
 		});
+
+		// Wait for XR session to actually start (poll for up to 12s)
+		const deadline = performance.now() + 12000;
+		while (!world.session && performance.now() < deadline) {
+			await new Promise(r => setTimeout(r, 100));
+		}
+
+		if (!world.session) {
+			console.warn('[bottle-world] XR session did not start — user may have cancelled');
+			if (state.onAREnd) state.onAREnd();
+			return;
+		}
+
 		state.isInAR = true;
 		if (state.onARStart) state.onARStart();
 

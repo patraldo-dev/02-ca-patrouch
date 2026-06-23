@@ -329,34 +329,58 @@
     }
 
     // ── IWSDK ImmersiveAR mode ──
+    let webxrContainer = null;
+
     async function activateWebXR() {
         webxrLoading = true;
+
+        // Safety timeout: if onARStart doesn't fire in 15s, reset
+        const loadingTimeout = setTimeout(() => {
+            if (webxrLoading) {
+                console.warn('[WebXR] Timed out waiting for AR session');
+                webxrLoading = false;
+                if (webxrState) {
+                    import('$lib/ar-poc/bottle-world.js').then(({ destroyBottleAR }) => {
+                        destroyBottleAR(webxrState);
+                        webxrState = null;
+                    });
+                }
+                // Fall back to pseudo-AR
+                activatePseudoAR();
+            }
+        }, 15000);
+
         try {
             const { initBottleAR } = await import('$lib/ar-poc/bottle-world.js');
-            // Create a container element for IWSDK canvas
-            const container = document.createElement('div');
-            container.style.cssText = 'position:absolute;inset:0;z-index:0;';
-            const root = document.querySelector('.ar-root');
-            if (root) root.prepend(container);
 
-            webxrState = await initBottleAR(container, {
+            // Clean up any previous container
+            if (webxrContainer) { webxrContainer.remove(); webxrContainer = null; }
+
+            webxrContainer = document.createElement('div');
+            webxrContainer.style.cssText = 'position:absolute;inset:0;z-index:0;';
+            const root = document.querySelector('.ar-root');
+            if (root) root.prepend(webxrContainer);
+
+            webxrState = await initBottleAR(webxrContainer, {
                 bottles: bottles.filter(b => !b.found_by),
                 portalConfig,
             });
 
             webxrState.onSelect = (bottle) => {
-                // Update selectedBottle for HUD display
                 selectedBottle = bottle;
             };
 
             webxrState.onARStart = () => {
+                clearTimeout(loadingTimeout);
                 useWebXR = true;
                 webxrLoading = false;
                 connectWS();
             };
 
             webxrState.onAREnd = () => {
+                clearTimeout(loadingTimeout);
                 useWebXR = false;
+                webxrLoading = false;
                 webxrState = null;
                 disconnectWS();
                 selectedBottle = null;
@@ -365,7 +389,9 @@
             await webxrState.enterAR();
         } catch (e) {
             console.error('[WebXR] Failed, falling back to pseudo-AR:', e);
+            clearTimeout(loadingTimeout);
             webxrLoading = false;
+            webxrState = null;
             webxrSupported = false;
             await activatePseudoAR();
         }
@@ -420,19 +446,22 @@
     }
 
     function deactivateWebXR() {
+        webxrLoading = false;
         if (webxrState) {
+            try { webxrState.exitAR(); } catch {}
             import('$lib/ar-poc/bottle-world.js').then(({ destroyBottleAR }) => {
                 destroyBottleAR(webxrState);
                 webxrState = null;
             });
         }
+        if (webxrContainer) { webxrContainer.remove(); webxrContainer = null; }
         useWebXR = false;
         selectedBottle = null;
         disconnectWS();
     }
 
     function deactivate() {
-        if (useWebXR) {
+        if (useWebXR || webxrLoading) {
             deactivateWebXR();
             return;
         }
