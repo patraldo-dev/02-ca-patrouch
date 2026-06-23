@@ -253,14 +253,14 @@ const PortalTabSystem = createSystem(
 
 				// Slowly orbit around user — via vector view (Transform-safe)
 				const pos = entity.getVectorView(Transform, 'position');
-				const t = time * 0.0001;
+				const t = time * 0.00005;
 				const currentAngle = angle + t * spin * 10;
 				pos[0] = Math.cos(currentAngle) * radius;
 				pos[2] = Math.sin(currentAngle) * radius;
-				pos[1] = baseHeight + Math.sin(time * 0.0008 + phase) * 0.08;
+				pos[1] = baseHeight + Math.sin(time * 0.0008 + phase) * 0.05;
 
 				// Face the user (origin)
-				obj.lookAt(0, obj.position.y, 0);
+				obj.lookAt(0, pos[1], 0);
 			}
 		},
 	},
@@ -517,7 +517,7 @@ function createPortalTabMesh(icon, name, accentColor) {
 
 	const texture = new THREE.CanvasTexture(canvas);
 	texture.minFilter = THREE.LinearFilter;
-	const geo = new THREE.PlaneGeometry(0.25, 0.125);
+	const geo = new THREE.PlaneGeometry(0.5, 0.25);
 	const mat = new THREE.MeshBasicMaterial({
 		map: texture,
 		transparent: true,
@@ -801,13 +801,16 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 		// ── Spawn portal tabs (floating navigation cards) ──
 		const locale = document.documentElement.lang || 'es';
 		const portalCount = allPortals.length;
+		console.log(`[bottle-world] Spawning ${portalCount} portal tabs`);
 		if (portalCount > 0) {
-			// Arrange tabs in a wide arc behind/above the bottles
-			const tabRadius = 3.0;
-			const tabHeight = 1.5;
+			// Arrange tabs in a front-facing arc (180°), not full ring
+			const tabRadius = 2.0;
+			const tabHeight = 1.4;
+			const tabArc = Math.PI; // 180° arc in front of user
+			const arcStart = -Math.PI / 2; // start from left
 
 			allPortals.forEach((portal, i) => {
-				const angle = (i / portalCount) * Math.PI * 2;
+				const angle = arcStart + (i / Math.max(portalCount - 1, 1)) * tabArc;
 				const colorHex = parseInt((portal.color_primary || '#c9a87c').replace('#', ''), 16);
 
 				const name = locale === 'en' ? portal.name_en : locale === 'fr' ? portal.name_fr : portal.name_es;
@@ -819,7 +822,7 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 				);
 				tabMesh.position.set(
 					Math.cos(angle) * tabRadius,
-					tabHeight + (i % 2) * 0.15,
+					tabHeight + (i % 2) * 0.2,
 					Math.sin(angle) * tabRadius,
 				);
 
@@ -831,8 +834,8 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 					colorHex: colorHex,
 					angle,
 					radius: tabRadius,
-					height: tabHeight + (i % 2) * 0.15,
-					spin: 0.05 + (i % 3) * 0.02,
+					height: tabHeight + (i % 2) * 0.2,
+					spin: 0.02,
 					bobPhase: i * 1.2,
 					isSelected: false,
 				});
