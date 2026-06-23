@@ -1,7 +1,7 @@
 <script>
     import { onDestroy } from 'svelte';
 
-    let { bottles = [], onCapture, player, theme = 'pirate', portalConfig = null, allPortals = [] } = $props();
+    let { bottles = [], onCapture, player, theme = 'pirate', portalConfig = null, allPortals = [], sceneConfig = null } = $props();
 
     // ── WebXR AR detection ──
     let webxrSupported = $state(false);
@@ -365,6 +365,7 @@
                 bottles: bottles.filter(b => !b.found_by),
                 portalConfig,
                 allPortals,
+                sceneConfig,
             });
 
             webxrState.onSelect = (bottle) => {

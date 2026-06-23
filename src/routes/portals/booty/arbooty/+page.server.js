@@ -4,6 +4,7 @@ export async function load({ locals, platform, url }) {
   let bottles = [];
   let portalConfig = null;
   let allPortals = [];
+  let sceneConfig = null;
   const mode = url.searchParams.get('mode') || 'pirate';
   const themeId = url.searchParams.get('theme');
 
@@ -21,6 +22,18 @@ export async function load({ locals, platform, url }) {
       if (portal) {
         try { portal.narrator_vocabulary = JSON.parse(portal.narrator_vocabulary || '[]'); } catch {}
         portalConfig = portal;
+
+        // Load AI-generated scene config for this portal
+        try {
+          const sceneRow = await db.prepare(
+            'SELECT scene_config FROM portal_scenes WHERE portal_id = ?'
+          ).bind(themeId).first();
+          if (sceneRow?.scene_config) {
+            sceneConfig = JSON.parse(sceneRow.scene_config);
+          }
+        } catch (e) {
+          console.error('Scene config load error:', e);
+        }
       }
     } catch (e) {
       console.error('Portal config load error:', e);
@@ -46,7 +59,7 @@ export async function load({ locals, platform, url }) {
       const portalResult = await db.prepare(`
         SELECT id, galaxy_id, icon, color_primary, color_bg,
                name_es, name_en, name_fr
-        FROM portals WHERE status = 'active' ORDER BY galaxy_id, sort_order
+        FROM portals WHERE status = 'active' ORDER BY galaxy_id, discovered_at
       `).all();
       allPortals = portalResult.results || [];
     } catch (e) {
@@ -56,7 +69,7 @@ export async function load({ locals, platform, url }) {
 
   // Only load player data if authenticated
   if (!locals.user && mode === 'event') {
-    return { serverLocale: locals.locale || 'es', user: null, myPlayer: null, bottles, portalConfig, allPortals };
+    return { serverLocale: locals.locale || 'es', user: null, myPlayer: null, bottles, portalConfig, allPortals, sceneConfig };
   }
 
   if (locals.user) {
@@ -73,6 +86,7 @@ export async function load({ locals, platform, url }) {
     myPlayer,
     bottles,
     portalConfig,
-    allPortals
+    allPortals,
+    sceneConfig
   };
 }

@@ -398,6 +398,81 @@ function createGroundHaloMesh(color, radius = 0.8) {
 }
 
 // ─── Portal tab mesh: canvas texture card ─────────────────
+// ─── Text crystal: floating excerpt from writings ─────────
+function createTextCrystalMesh(text, colorHex, scale = 1.0) {
+	const canvas = document.createElement('canvas');
+	canvas.width = 512;
+	canvas.height = 256;
+	const ctx = canvas.getContext('2d');
+
+	// Transparent background with subtle glow
+	ctx.fillStyle = 'rgba(0,0,0,0)';
+	ctx.fillRect(0, 0, 512, 256);
+
+	// Border frame
+	const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
+	ctx.strokeStyle = colorStr;
+	ctx.lineWidth = 2;
+	ctx.strokeRect(8, 8, 496, 240);
+
+	// Corner accents
+	const cornerSize = 20;
+	ctx.lineWidth = 3;
+	[[8,8],[504,8],[8,248],[504,248]].forEach(([x,y]) => {
+		ctx.beginPath();
+		if (x < 256) { ctx.moveTo(x, y + (y < 128 ? 0 : -cornerSize)); ctx.lineTo(x, y); ctx.lineTo(x + cornerSize, y); }
+		else { ctx.moveTo(x, y + (y < 128 ? 0 : -cornerSize)); ctx.lineTo(x, y); ctx.lineTo(x - cornerSize, y); }
+		ctx.stroke();
+	});
+
+	// Text — wrap manually
+	ctx.fillStyle = '#e5e5e5';
+	ctx.font = '600 18px Georgia, serif';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	const words = text.split(' ');
+	const lines = [];
+	let line = '';
+	const maxLineLen = 38;
+	for (const w of words) {
+		if ((line + ' ' + w).length > maxLineLen) { lines.push(line); line = w; }
+		else { line = line ? line + ' ' + w : w; }
+	}
+	if (line) lines.push(line);
+	const startY = 128 - (lines.length - 1) * 12;
+	lines.slice(0, 6).forEach((l, i) => {
+		ctx.fillText(l, 256, startY + i * 24);
+	});
+
+	const texture = new THREE.CanvasTexture(canvas);
+	texture.needsUpdate = true;
+	const geo = new THREE.PlaneGeometry(0.3 * scale, 0.15 * scale);
+	const mat = new THREE.MeshBasicMaterial({
+		map: texture,
+		transparent: true,
+		side: THREE.DoubleSide,
+		depthWrite: false,
+	});
+	const mesh = new THREE.Mesh(geo, mat);
+
+	// Add a subtle crystal behind the text
+	const crystalGeo = new THREE.OctahedronGeometry(0.04 * scale, 0);
+	const crystalMat = new THREE.MeshStandardMaterial({
+		color: colorHex,
+		metalness: 0.3,
+		roughness: 0.4,
+		emissive: colorHex,
+		emissiveIntensity: 0.15,
+		transparent: true,
+		opacity: 0.5,
+	});
+	const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+	crystal.position.z = -0.02;
+	mesh.add(crystal);
+
+	return mesh;
+}
+
 function createPortalTabMesh(icon, name, accentColor) {
 	const canvas = document.createElement('canvas');
 	canvas.width = 256;
@@ -650,7 +725,7 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 			const mesh = createCrystalMesh(i);
 			mesh.position.set(
 				Math.cos(angle) * radius,
-				height,
+				elevation,
 				Math.sin(angle) * radius,
 			);
 
@@ -671,6 +746,50 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 
 			state.bottleEntities.push({ entity, bottle });
 		});
+
+		// ── Spawn ambient text crystals from writings ──
+		const sceneCrystals = sc.crystals || [];
+		if (sceneCrystals.length > 0) {
+			sceneCrystals.forEach((crystal, i) => {
+				if (!crystal.text) return;
+				const angle = (i / sceneCrystals.length) * Math.PI * 2 + 0.5;
+				const radius = (layout.crystal_ring_radius ?? 1.5) + 0.8;
+				const elevation = ((elevations[i % elevations.length] || 0.8) + 0.4);
+
+				const textMesh = createTextCrystalMesh(
+					crystal.text,
+					colorPool[crystal.color_index || 0] || accentHex,
+					crystal.scale || 1.0,
+				);
+				textMesh.position.set(
+					Math.cos(angle) * radius,
+					elevation,
+					Math.sin(angle) * radius,
+				);
+
+				const textEntity = world.createTransformEntity(textMesh);
+				textEntity.addComponent(BottleMarker, {
+					bottleId: 'scene-text-' + i,
+					bottleTitle: crystal.text,
+					state: 0,
+					spin: 0.15,
+					bobPhase: i * 0.5,
+				});
+				textEntity.addComponent(XRAnchor);
+
+				textMesh.traverse(child => {
+					child.userData.bottleRef = {
+						entity: textEntity,
+						bottle: { id: 'scene-text-' + i, title: crystal.text, isSceneText: true }
+					};
+				});
+
+				state.bottleEntities.push({
+					entity: textEntity,
+					bottle: { id: 'scene-text-' + i, title: crystal.text, isSceneText: true }
+				});
+			});
+		}
 
 		// ── Spawn portal tabs (floating navigation cards) ──
 		const locale = document.documentElement.lang || 'es';
