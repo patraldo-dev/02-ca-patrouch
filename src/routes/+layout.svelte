@@ -30,6 +30,9 @@
     /** @type {import('./$types').LayoutData} */
     let { data, children } = $props();
 
+    // SEO — reactive to route + locale changes
+    let seo = $derived(getSeoMeta($page.url.pathname, $locale));
+
     beforeNavigate(() => { mobileMenuOpen = false; tallerOpen = false; avatarMenuOpen = false; });
 
     let mobileMenuOpen = $state(false);
@@ -150,8 +153,7 @@
 </script>
 
 <svelte:head>
-    {@const seo = getSeoMeta($page.url.pathname, $locale)}
-    <title>{seo.title}</title>
+    <title>{seo.title} — patrouch.ca</title>
     <meta name="description" content={seo.description} />
     <link rel="canonical" href={seo.canonical} />
     <meta property="og:title" content={seo.ogTitle} />
