@@ -1,7 +1,7 @@
 <script>
     import { onDestroy } from 'svelte';
 
-    let { bottles = [], onCapture, player, theme = 'pirate', portalConfig = null } = $props();
+    let { bottles = [], onCapture, player, theme = 'pirate', portalConfig = null, allPortals = [] } = $props();
 
     // ── WebXR AR detection ──
     let webxrSupported = $state(false);
@@ -364,11 +364,19 @@
             webxrState = await initBottleAR(webxrContainer, {
                 bottles: bottles.filter(b => !b.found_by),
                 portalConfig,
+                allPortals,
             });
 
             webxrState.onSelect = (bottle) => {
                 selectedBottle = bottle;
             };
+
+            // Listen for portal tab taps in AR
+            window.addEventListener('portal-tab-tap', (e) => {
+                const { portalId } = e.detail;
+                // Navigate to that portal's AR view
+                window.location.href = `/portals/booty/arbooty?theme=${portalId}`;
+            });
 
             webxrState.onARStart = () => {
                 clearTimeout(loadingTimeout);
@@ -749,7 +757,10 @@
 
     <!-- ── WebXR ImmersiveAR HUD ── -->
     {#if useWebXR}
-        <div class="webxr-hud" role="dialog" aria-label="AR controls">
+        <div class="webxr-hud" role="dialog" aria-label="AR controls"
+            ontouchstart={(e) => { if (useWebXR && webxrState && e.touches[0]) { webxrState.handleTap(e.touches[0].clientX, e.touches[0].clientY); } }}
+            onclick={(e) => { if (useWebXR && webxrState) { webxrState.handleTap(e.clientX, e.clientY); } }}
+        >
             <div class="webxr-top">
                 <span class="hud-badge webxr-badge-active">🔮 AR Inmersivo</span>
                 <span class="hud-badge">🍾 {bottles.filter(b => !b.found_by).length} cristales</span>

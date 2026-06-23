@@ -3,6 +3,7 @@ export async function load({ locals, platform, url }) {
   let myPlayer = null;
   let bottles = [];
   let portalConfig = null;
+  let allPortals = [];
   const mode = url.searchParams.get('mode') || 'pirate';
   const themeId = url.searchParams.get('theme');
 
@@ -39,9 +40,23 @@ export async function load({ locals, platform, url }) {
     }
   }
 
+  // Load all active portals for AR spatial tabs
+  if (db) {
+    try {
+      const portalResult = await db.prepare(`
+        SELECT id, galaxy_id, icon, color_primary, color_bg,
+               name_es, name_en, name_fr
+        FROM portals WHERE status = 'active' ORDER BY galaxy_id, sort_order
+      `).all();
+      allPortals = portalResult.results || [];
+    } catch (e) {
+      console.error('All portals load error:', e);
+    }
+  }
+
   // Only load player data if authenticated
   if (!locals.user && mode === 'event') {
-    return { serverLocale: locals.locale || 'es', user: null, myPlayer: null, bottles, portalConfig };
+    return { serverLocale: locals.locale || 'es', user: null, myPlayer: null, bottles, portalConfig, allPortals };
   }
 
   if (locals.user) {
@@ -57,6 +72,7 @@ export async function load({ locals, platform, url }) {
     user: locals.user || null,
     myPlayer,
     bottles,
-    portalConfig
+    portalConfig,
+    allPortals
   };
 }

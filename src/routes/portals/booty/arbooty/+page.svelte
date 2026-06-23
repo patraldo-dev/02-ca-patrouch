@@ -75,7 +75,7 @@
         </button>
 
         {#if showAR}
-            <ArbootyAR player={data.myPlayer} bottles={data.bottles} theme={portal ? 'pirate' : mode} portalConfig={portal} />
+            <ArbootyAR player={data.myPlayer} bottles={data.bottles} theme={portal ? 'pirate' : mode} portalConfig={portal} allPortals={data.allPortals || []} />
         {:else}
             <PhysicalBottles player={data.myPlayer} />
         {/if}

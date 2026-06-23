@@ -72,6 +72,20 @@ const GroundHalo = {
 	pulseSpeed: { type: Types.Float32, default: 0.4 },
 };
 
+// Portal tab — floating navigation card for another portal
+const PortalTab = {
+	portalId: { type: Types.String, default: '' },
+	portalName: { type: Types.String, default: '' },
+	portalIcon: { type: Types.String, default: '🌐' },
+	colorHex: { type: Types.Float32, default: 0xc9a87c },
+	angle: { type: Types.Float32, default: 0 },
+	radius: { type: Types.Float32, default: 2.5 },
+	height: { type: Types.Float32, default: 1.2 },
+	spin: { type: Types.Float32, default: 0.1 },
+	bobPhase: { type: Types.Float32, default: 0 },
+	isSelected: { type: Types.Boolean, default: false },
+};
+
 // ═══════════════════════════════════════════════════════════════
 // ECS SYSTEMS
 // ═══════════════════════════════════════════════════════════════
@@ -216,6 +230,35 @@ const HaloAnimationSystem = createSystem(
 	},
 );
 
+// Animate portal tabs: slow orbit + bob + face user
+const PortalTabSystem = createSystem(
+	{ tabs: { required: [Transform, PortalTab] } },
+	{
+		update(delta, time) {
+			for (const entity of this.queries.tabs.iterate()) {
+				const obj = entity.object3D;
+				if (!obj) continue;
+
+				const angle = entity.getValue(PortalTab, 'angle');
+				const radius = entity.getValue(PortalTab, 'radius');
+				const baseHeight = entity.getValue(PortalTab, 'height');
+				const phase = entity.getValue(PortalTab, 'bobPhase');
+				const spin = entity.getValue(PortalTab, 'spin');
+
+				// Slowly orbit around user
+				const t = time * 0.0001;
+				const currentAngle = angle + t * spin * 10;
+				obj.position.x = Math.cos(currentAngle) * radius;
+				obj.position.z = Math.sin(currentAngle) * radius;
+				obj.position.y = baseHeight + Math.sin(time * 0.0008 + phase) * 0.08;
+
+				// Face the user (origin)
+				obj.lookAt(0, obj.position.y, 0);
+			}
+		},
+	},
+);
+
 // ═══════════════════════════════════════════════════════════════
 // MESH FACTORIES
 // ═══════════════════════════════════════════════════════════════
@@ -354,11 +397,59 @@ function createGroundHaloMesh(color, radius = 0.8) {
 	return group;
 }
 
+// ─── Portal tab mesh: canvas texture card ─────────────────
+function createPortalTabMesh(icon, name, accentColor) {
+	const canvas = document.createElement('canvas');
+	canvas.width = 256;
+	canvas.height = 128;
+	const ctx = canvas.getContext('2d');
+
+	// Background gradient
+	const grad = ctx.createLinearGradient(0, 0, 0, 128);
+	grad.addColorStop(0, '#1a1a24');
+	grad.addColorStop(1, '#0d0d14');
+	ctx.fillStyle = grad;
+	ctx.fillRect(0, 0, 256, 128);
+
+	// Accent border
+	ctx.strokeStyle = accentColor;
+	ctx.lineWidth = 3;
+	ctx.strokeRect(2, 2, 252, 124);
+
+	// Left accent bar
+	ctx.fillStyle = accentColor;
+	ctx.fillRect(2, 2, 6, 124);
+
+	// Icon (emoji)
+	ctx.font = '48px sans-serif';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	ctx.fillText(icon || '🌐', 50, 64);
+
+	// Portal name
+	ctx.font = 'bold 22px sans-serif';
+	ctx.fillStyle = '#ffffff';
+	ctx.textAlign = 'left';
+	const displayName = name.length > 12 ? name.slice(0, 11) + '…' : name;
+	ctx.fillText(displayName, 90, 64);
+
+	const texture = new THREE.CanvasTexture(canvas);
+	texture.minFilter = THREE.LinearFilter;
+	const geo = new THREE.PlaneGeometry(0.25, 0.125);
+	const mat = new THREE.MeshBasicMaterial({
+		map: texture,
+		transparent: true,
+		side: THREE.DoubleSide,
+		depthWrite: false,
+	});
+	return new THREE.Mesh(geo, mat);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
 
-export async function initBottleAR(container, { bottles, portalConfig }) {
+export async function initBottleAR(container, { bottles, portalConfig, allPortals = [] }) {
 	const accentColor = portalConfig?.color_primary || '#c9a87c';
 	const accentHex = parseInt(accentColor.replace('#', ''), 16);
 	const bgColor = portalConfig?.color_bg || '#1a1a2e';
@@ -402,6 +493,7 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 	world.registerComponent(LightPillar);
 	world.registerComponent(EnergySpiral);
 	world.registerComponent(GroundHalo);
+	world.registerComponent(PortalTab);
 
 	// ── 3. Register animation systems ──
 	world.registerSystem(BottleAnimationSystem, { priority: 0 });
@@ -409,6 +501,7 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 	world.registerSystem(PillarAnimationSystem, { priority: 1 });
 	world.registerSystem(SpiralAnimationSystem, { priority: 1 });
 	world.registerSystem(HaloAnimationSystem, { priority: 1 });
+	world.registerSystem(PortalTabSystem, { priority: 1 });
 
 	// ── 4. Lighting ──
 	world.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
@@ -579,6 +672,53 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 			state.bottleEntities.push({ entity, bottle });
 		});
 
+		// ── Spawn portal tabs (floating navigation cards) ──
+		const locale = document.documentElement.lang || 'es';
+		const portalCount = allPortals.length;
+		if (portalCount > 0) {
+			// Arrange tabs in a wide arc behind/above the bottles
+			const tabRadius = 3.0;
+			const tabHeight = 1.5;
+
+			allPortals.forEach((portal, i) => {
+				const angle = (i / portalCount) * Math.PI * 2;
+				const colorHex = parseInt((portal.color_primary || '#c9a87c').replace('#', ''), 16);
+
+				const name = locale === 'en' ? portal.name_en : locale === 'fr' ? portal.name_fr : portal.name_es;
+
+				const tabMesh = createPortalTabMesh(
+					portal.icon || '🌐',
+					name || portal.id,
+					portal.color_primary || '#c9a87c',
+				);
+				tabMesh.position.set(
+					Math.cos(angle) * tabRadius,
+					tabHeight + (i % 2) * 0.15,
+					Math.sin(angle) * tabRadius,
+				);
+
+				const tabEntity = world.createTransformEntity(tabMesh);
+				tabEntity.addComponent(PortalTab, {
+					portalId: portal.id,
+					portalName: name || portal.id,
+					portalIcon: portal.icon || '🌐',
+					colorHex: colorHex,
+					angle,
+					radius: tabRadius,
+					height: tabHeight + (i % 2) * 0.15,
+					spin: 0.05 + (i % 3) * 0.02,
+					bobPhase: i * 1.2,
+					isSelected: false,
+				});
+				tabEntity.addComponent(XRAnchor);
+
+				// Tag for tap navigation
+				tabMesh.userData.portalRef = { portalId: portal.id, portalName: name };
+
+				state.decorationEntities.push(tabEntity);
+			});
+		}
+
 		// ── Start custom animation loop for non-ECS objects ──
 		animateScene();
 	};
@@ -595,7 +735,7 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 		animId = requestAnimationFrame(animateScene);
 	}
 
-	// ── 8. Tap-to-select ──
+	// ── 8. Tap-to-select (bottles + portal tabs) ──
 	state.handleTap = (clientX, clientY) => {
 		if (!state.isInAR) return;
 
@@ -609,15 +749,16 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 
 		raycaster.setFromCamera(mouse, camera);
 
-		const meshes = state.bottleEntities
+		// Collect all tappable meshes
+		const bottleMeshes = state.bottleEntities
 			.filter(b => entity_getState(b) !== 2)
 			.map(b => b.entity.object3D)
 			.filter(Boolean);
 
-		const intersects = raycaster.intersectObjects(meshes, true);
-
-		if (intersects.length > 0) {
-			let hitObj = intersects[0].object;
+		// Check bottle hits first
+		const bottleHits = raycaster.intersectObjects(bottleMeshes, true);
+		if (bottleHits.length > 0) {
+			let hitObj = bottleHits[0].object;
 			while (hitObj && !hitObj.userData.bottleRef) {
 				hitObj = hitObj.parent;
 			}
@@ -626,6 +767,34 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 				return;
 			}
 		}
+
+		// Check portal tab hits
+		const tabMeshes = state.decorationEntities
+			.filter(e => e.object3D)
+			.flatMap(e => {
+				const meshes = [];
+				e.object3D.traverse(c => { if (c.userData.portalRef) meshes.push(c); });
+				return meshes;
+			});
+
+		if (tabMeshes.length > 0) {
+			const tabHits = raycaster.intersectObjects(tabMeshes, true);
+			if (tabHits.length > 0) {
+				let hitObj = tabHits[0].object;
+				while (hitObj && !hitObj.userData.portalRef) {
+					hitObj = hitObj.parent;
+				}
+				if (hitObj?.userData.portalRef) {
+					const { portalId, portalName } = hitObj.userData.portalRef;
+					window.dispatchEvent(new CustomEvent('portal-tab-tap', {
+						detail: { portalId, portalName }
+					}));
+					selectBottle(null);
+					return;
+				}
+			}
+		}
+
 		selectBottle(null);
 	};
 
