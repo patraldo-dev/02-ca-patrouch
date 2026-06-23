@@ -1,7 +1,19 @@
 <script>
     import { onDestroy } from 'svelte';
 
-    let { bottles = [], onCapture, player, theme = 'pirate' } = $props();
+    let { bottles = [], onCapture, player, theme = 'pirate', portalConfig = null } = $props();
+
+    // ── WebXR AR detection ──
+    let webxrSupported = $state(false);
+    let useWebXR = $state(false);
+    let webxrState = $state(null);
+    let webxrLoading = $state(false);
+
+    if (typeof navigator !== 'undefined' && navigator.xr?.isSessionSupported) {
+        navigator.xr.isSessionSupported('immersive-ar')
+            .then(s => { webxrSupported = s; })
+            .catch(() => {});
+    }
 
     const themes = {
         pirate: {
@@ -307,17 +319,123 @@
         showNickModal = false;
         error = null;
         playFanfare();
+
+        // ── Branch: WebXR ImmersiveAR vs pseudo-AR ──
+        if (webxrSupported) {
+            await activateWebXR();
+        } else {
+            await activatePseudoAR();
+        }
+    }
+
+    // ── IWSDK ImmersiveAR mode ──
+    async function activateWebXR() {
+        webxrLoading = true;
+        try {
+            const { initBottleAR } = await import('$lib/ar-poc/bottle-world.js');
+            // Create a container element for IWSDK canvas
+            const container = document.createElement('div');
+            container.style.cssText = 'position:absolute;inset:0;z-index:0;';
+            const root = document.querySelector('.ar-root');
+            if (root) root.prepend(container);
+
+            webxrState = await initBottleAR(container, {
+                bottles: bottles.filter(b => !b.found_by),
+                portalConfig,
+            });
+
+            webxrState.onSelect = (bottle) => {
+                // Update selectedBottle for HUD display
+                selectedBottle = bottle;
+            };
+
+            webxrState.onARStart = () => {
+                useWebXR = true;
+                webxrLoading = false;
+                connectWS();
+            };
+
+            webxrState.onAREnd = () => {
+                useWebXR = false;
+                webxrState = null;
+                disconnectWS();
+                selectedBottle = null;
+            };
+
+            await webxrState.enterAR();
+        } catch (e) {
+            console.error('[WebXR] Failed, falling back to pseudo-AR:', e);
+            webxrLoading = false;
+            webxrSupported = false;
+            await activatePseudoAR();
+        }
+    }
+
+    // ── Existing pseudo-AR (camera + compass) ──
+    async function activatePseudoAR() {
         if (!(await requestOrientationPermission())) return;
         await startCamera();
         if (!cameraActive) return;
-        // Set base heading to current heading so "forward" is the start direction
         baseHeading = heading;
         startOrientation();
         distributeMarkers();
         connectWS();
     }
 
+    let selectedBottle = $state(null);
+
+    // ── WebXR capture handler ──
+    async function captureWebXR() {
+        if (!webxrState || !selectedBottle) return;
+        capturing = selectedBottle.id;
+        try {
+            const bottle = await webxrState.captureSelected();
+            if (!bottle) return;
+            const res = await fetch('/api/bottlequest/physical', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bottle_id: bottle.id, nickname: effectivePlayer?.username }),
+            });
+            const result = await res.json();
+            if (result.success) {
+                captured = { bottle: result.bottle, reward: result.reward, trap: result.trap, challenge: result.challenge };
+                if (result.trap) playSadTrombone();
+                else if (result.challenge) { spawnConfetti(); playFanfare(); gamePaused = true; }
+                else { spawnConfetti(); playFanfare(); }
+                placedMarkers = placedMarkers.filter(m => m.id !== bottle.id);
+                selectedBottle = null;
+                if (ws?.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'capture', bottle_id: bottle.id, title: bottle.title || 'Botella', trap: result.trap, challenge: result.challenge }));
+                }
+                if (onCapture) onCapture(result);
+            } else if (result.cooldown) {
+                proximityEvents = [...proximityEvents.slice(-4), { id: crypto.randomUUID(), event: 'cooldown', message: result.error, ts: Date.now() }];
+                setTimeout(() => { proximityEvents = proximityEvents.filter(e => Date.now() - e.ts < 3000); }, 3000);
+            }
+        } catch (e) {
+            console.error('[WebXR] Capture failed:', e);
+        } finally {
+            capturing = null;
+        }
+    }
+
+    function deactivateWebXR() {
+        if (webxrState) {
+            import('$lib/ar-poc/bottle-world.js').then(({ destroyBottleAR }) => {
+                destroyBottleAR(webxrState);
+                webxrState = null;
+            });
+        }
+        useWebXR = false;
+        selectedBottle = null;
+        disconnectWS();
+    }
+
     function deactivate() {
+        if (useWebXR) {
+            deactivateWebXR();
+            return;
+        }
         disconnectWS();
         stopCamera();
         window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
@@ -446,7 +564,14 @@
                 </div>
             {:else}
             <div class="ar-start">
-                <button class="start-btn" onclick={activate}>📸 {isEvent ? 'Activar Fiesta' : 'Activar Cámara AR'}</button>
+                <button class="start-btn" onclick={activate}>
+                    {#if webxrLoading}⏳ Iniciando AR…
+                    {:else if webxrSupported}🔮 Activar Cámara AR
+                    {:else}📸 {isEvent ? 'Activar Fiesta' : 'Activar Cámara AR'}{/if}
+                </button>
+                {#if webxrSupported}
+                    <div class="webxr-badge">✨ WebXR ImmersiveAR disponible</div>
+                {/if}
                 <div class="ar-icon">{t.icon}</div>
                 <p class="ar-title">{t.title}</p>
                 {#if isEvent}
@@ -560,7 +685,7 @@
             <span class="confetti-piece" style="left: {c.x}%; animation-delay: {c.delay}ms; animation-duration: {c.duration}ms;">{c.emoji}</span>
         {/each}
 
-        <!-- Capture success modal -->
+        <!-- Capture success modal (shared by both modes) -->
         {#if captured}
             <div class="capture-modal">
                 <div class="capture-modal-card {captured.trap ? 'trap' : theme}">
@@ -592,6 +717,86 @@
             </div>
         {/if}
     {/if}
+
+    <!-- ── WebXR ImmersiveAR HUD ── -->
+    {#if useWebXR}
+        <div class="webxr-hud" role="dialog" aria-label="AR controls">
+            <div class="webxr-top">
+                <span class="hud-badge webxr-badge-active">🔮 AR Inmersivo</span>
+                <span class="hud-badge">🍾 {bottles.filter(b => !b.found_by).length} cristales</span>
+                {#if wsConnected}
+                    <span class="hud-badge connected">🟢</span>
+                {/if}
+                <button class="hud-btn" onclick={deactivate}>✕</button>
+            </div>
+
+            <div class="webxr-instructions">
+                Camina y toca un cristal para seleccionarlo
+            </div>
+
+            {#if selectedBottle}
+                <div class="webxr-selected">
+                    <div class="selected-card">
+                        <span class="selected-name">{selectedBottle.title || 'Botella'}</span>
+                        <button
+                            class="capture-btn {theme}"
+                            style="background: {t.captureBtnBg}; box-shadow: 0 2px 8px {t.captureBtnShadow}"
+                            disabled={!!capturing}
+                            onclick={captureWebXR}
+                        >
+                            {capturing ? '...' : t.captureText}
+                        </button>
+                    </div>
+                </div>
+            {/if}
+
+            <!-- Proximity events (shared) -->
+            {#each proximityEvents as evt (evt.id)}
+                <div class="proximity-toast">
+                    {evt.message}
+                </div>
+            {/each}
+
+            <!-- Capture modal (shared) -->
+            {#if captured}
+                <div class="capture-modal">
+                    <div class="capture-modal-card {captured.trap ? 'trap' : theme}">
+                        {#if captured.trap}
+                            <h2>💀 ¡Aguafiestas!</h2>
+                            <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
+                            <div class="trap-penalty">-{captured.reward?.points || 50} puntos</div>
+                        {:else if captured.challenge}
+                            <h2>🎯 ¡Reto!</h2>
+                            <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
+                            <div class="challenge-votes">
+                                <button class="vote-btn approve" onclick={() => voteChallenge(true)}>👍 ¡Lo logró!</button>
+                                <button class="vote-btn reject" onclick={() => voteChallenge(false)}>👎 Nope</button>
+                            </div>
+                        {:else}
+                            <h2>{t.modalIcon} {captured.bottle.title}</h2>
+                            <pre class="capture-content">{decodeContent(captured.bottle.content)}</pre>
+                            {#if captured.reward && theme !== 'event'}
+                                <div class="capture-reward">⛽ +{captured.reward.fuel} · 🏆 +{captured.reward.points}</div>
+                            {/if}
+                        {/if}
+                        <button class="capture-close-btn {theme}" style="background: {t.accentColor}" onclick={() => captured = null}>Cerrar</button>
+                    </div>
+                </div>
+            {/if}
+
+            <!-- Confetti (shared) -->
+            {#each confetti as c (c.id)}
+                <span class="confetti-piece" style="left: {c.x}%; animation-delay: {c.delay}ms; animation-duration: {c.duration}ms;">{c.emoji}</span>
+            {/each}
+
+            {#if webxrLoading}
+                <div class="webxr-loading">
+                    <div class="spinner"></div>
+                    <p>Iniciando AR…</p>
+                </div>
+            {/if}
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -602,6 +807,105 @@
         background: #000;
         overflow: hidden;
         border-radius: var(--radius);
+    }
+
+    /* ── WebXR HUD ── */
+    .webxr-hud {
+        position: absolute;
+        inset: 0;
+        z-index: 15;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .webxr-top {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.6rem 0.75rem;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+    }
+    .webxr-badge-active {
+        background: rgba(79,195,247,0.2);
+        color: #4fc3f7;
+        border: 1px solid rgba(79,195,247,0.3);
+    }
+    .hud-btn {
+        margin-left: auto;
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+        cursor: pointer;
+        pointer-events: all;
+    }
+    .webxr-instructions {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: rgba(255,255,255,0.5);
+        font-size: 0.85rem;
+        text-align: center;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+        pointer-events: none;
+        animation: pulse-fade 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse-fade {
+        0%, 100% { opacity: 0.25; }
+        50% { opacity: 0.65; }
+    }
+    .webxr-selected {
+        position: absolute;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        pointer-events: all;
+    }
+    .selected-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 16px;
+        padding: 0.75rem 1.25rem;
+        backdrop-filter: blur(12px);
+    }
+    .selected-name {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .webxr-loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.8);
+        color: #fff;
+        gap: 1rem;
+    }
+    .spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top-color: #4fc3f7;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .webxr-badge {
+        color: #4fc3f7;
+        font-size: 0.7rem;
+        margin-top: -0.3rem;
     }
 
     .ar-video {
