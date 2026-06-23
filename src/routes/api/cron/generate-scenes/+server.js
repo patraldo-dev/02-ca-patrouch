@@ -149,9 +149,11 @@ Generate the scene JSON for this portal based on these writings.`;
                             { role: 'system', content: SCENE_SYSTEM_PROMPT },
                             { role: 'user', content: userPrompt }
                         ],
+                        // temperature: 0.7,
+                        // max_tokens: 1200,
+                        // response_format: { type: 'json_object' },
                         temperature: 0.7,
                         max_tokens: 1200,
-                        response_format: { type: 'json_object' },
                     }
                 );
 
@@ -179,11 +181,17 @@ Generate the scene JSON for this portal based on these writings.`;
                 }
 
                 // Normalize: validate enums, clamp numbers, cap crystals, apply quality tier
-                sceneConfig = normalizeSceneConfig(sceneConfig, {
-                    id: portal.id,
-                    color_primary: portal.color_primary,
-                    color_bg: portal.color_bg,
-                });
+                try {
+                    sceneConfig = normalizeSceneConfig(sceneConfig, {
+                        id: portal.id,
+                        color_primary: portal.color_primary,
+                        color_bg: portal.color_bg,
+                    });
+                } catch (normErr) {
+                    console.error(`Normalizer failed for ${portal.id}:`, normErr.message);
+                    failed++;
+                    continue;
+                }
 
                 sceneConfig.source_writings = sourceIds;
 
@@ -204,6 +212,7 @@ Generate the scene JSON for this portal based on these writings.`;
                 processed++;
             } catch (aiErr) {
                 console.error(`AI call failed for ${portal.id}:`, aiErr.message);
+                console.error(`AI error stack:`, aiErr.stack);
                 failed++;
             }
         }
