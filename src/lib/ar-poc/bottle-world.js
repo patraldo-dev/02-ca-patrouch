@@ -6,6 +6,7 @@
  *  - Screen raycast for tap-to-select
  *  - Anchored placement for stability
  *  - Capture via same backend API
+ *  - Immersive decorations: ground halo, ambient particles, light pillars, energy spiral
  *
  * Browser-only. Dynamically imported by ArbootyAR.svelte.
  */
@@ -19,10 +20,14 @@ import {
 	RaycastSpace,
 	XRAnchor,
 } from '@iwsdk/core';
-import { Types } from 'elics';
+import { Types, createSystem } from 'elics';
 import * as THREE from 'three';
 
-// ─── Custom component: bottle metadata ────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// ECS COMPONENTS
+// ═══════════════════════════════════════════════════════════════
+
+// Bottle functional marker
 const BottleMarker = {
 	bottleId: { type: Types.String, default: '' },
 	bottleTitle: { type: Types.String, default: '' },
@@ -31,7 +36,190 @@ const BottleMarker = {
 	bobPhase: { type: Types.Float32, default: 0 },
 };
 
-// ─── Mesh factory: crystal bottle ─────────────────────────────
+// Ambient particle (dust mote / firefly)
+const AmbientParticle = {
+	velocityX: { type: Types.Float32, default: 0 },
+	velocityY: { type: Types.Float32, default: 0.01 },
+	velocityZ: { type: Types.Float32, default: 0 },
+	lifespan: { type: Types.Float32, default: 0 },
+	age: { type: Types.Float32, default: 0 },
+	baseY: { type: Types.Float32, default: 0 },
+	baseX: { type: Types.Float32, default: 0 },
+	baseZ: { type: Types.Float32, default: 0 },
+	phase: { type: Types.Float32, default: 0 },
+};
+
+// Light pillar (vertical beam from ground)
+const LightPillar = {
+	height: { type: Types.Float32, default: 2.0 },
+	pulsePhase: { type: Types.Float32, default: 0 },
+	pulseSpeed: { type: Types.Float32, default: 0.5 },
+	color: { type: Types.Float32, default: 0 }, // index into palette
+};
+
+// Energy spiral (rotating ring of small spheres)
+const EnergySpiral = {
+	radius: { type: Types.Float32, default: 0.5 },
+	speed: { type: Types.Float32, default: 0.3 },
+	count: { type: Types.Int32, default: 8 },
+	tilt: { type: Types.Float32, default: 0 },
+	phase: { type: Types.Float32, default: 0 },
+};
+
+// Ground halo (ring beneath user)
+const GroundHalo = {
+	pulsePhase: { type: Types.Float32, default: 0 },
+	pulseSpeed: { type: Types.Float32, default: 0.4 },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ECS SYSTEMS
+// ═══════════════════════════════════════════════════════════════
+
+// Animate bottles: spin + bob
+const BottleAnimationSystem = createSystem(
+	{ bottles: { required: [Transform, BottleMarker] } },
+	{
+		update(delta, time) {
+			for (const entity of this.queries.bottles.iterate()) {
+				const markerState = entity.getValue(BottleMarker, 'state');
+				if (markerState === 2) continue;
+
+				const obj = entity.object3D;
+				if (!obj) continue;
+
+				const spin = entity.getValue(BottleMarker, 'spin');
+				const phase = entity.getValue(BottleMarker, 'bobPhase');
+
+				obj.rotation.y += spin * delta;
+				obj.rotation.x += spin * delta * 0.3;
+				obj.position.y += Math.sin(time * 0.0012 + phase) * 0.0003;
+
+				// Selected bottles pulse
+				if (markerState === 1) {
+					const pulse = 1.4 + Math.sin(time * 0.005) * 0.15;
+					obj.scale.setScalar(pulse);
+				}
+			}
+		},
+	},
+);
+
+// Animate ambient particles: drift, sway, recycle
+const ParticleAnimationSystem = createSystem(
+	{ particles: { required: [Transform, AmbientParticle] } },
+	{
+		update(delta, time) {
+			for (const entity of this.queries.particles.iterate()) {
+				const obj = entity.object3D;
+				if (!obj) continue;
+
+				const vx = entity.getValue(AmbientParticle, 'velocityX');
+				const vy = entity.getValue(AmbientParticle, 'velocityY');
+				const vz = entity.getValue(AmbientParticle, 'velocityZ');
+				const phase = entity.getValue(AmbientParticle, 'phase');
+				const baseY = entity.getValue(AmbientParticle, 'baseY');
+
+				// Vertical drift
+				obj.position.y += vy * delta;
+				// Horizontal sway
+				obj.position.x += Math.sin(time * 0.001 + phase) * delta * 0.008;
+				obj.position.z += Math.cos(time * 0.0007 + phase * 1.3) * delta * 0.006;
+
+				// Age
+				let age = entity.getValue(AmbientParticle, 'age') + delta;
+				const lifespan = entity.getValue(AmbientParticle, 'lifespan');
+
+				if (lifespan > 0 && age > lifespan) {
+					// Recycle: reset to base position
+					obj.position.y = baseY;
+					age = 0;
+				}
+
+				entity.setValue(AmbientParticle, 'age', age);
+
+				// Fade based on age
+				if (obj.material && lifespan > 0) {
+					const lifeRatio = age / lifespan;
+					obj.material.opacity = 0.6 * (1 - lifeRatio * lifeRatio);
+				}
+			}
+		},
+	},
+);
+
+// Animate light pillars: pulse opacity
+const PillarAnimationSystem = createSystem(
+	{ pillars: { required: [Transform, LightPillar] } },
+	{
+		update(delta, time) {
+			for (const entity of this.queries.pillars.iterate()) {
+				const obj = entity.object3D;
+				if (!obj) continue;
+
+				const phase = entity.getValue(LightPillar, 'pulsePhase');
+				const speed = entity.getValue(LightPillar, 'pulseSpeed');
+
+				// Pulse opacity
+				const pulse = 0.5 + Math.sin(time * 0.001 * speed + phase) * 0.3;
+				obj.traverse(child => {
+					if (child.material) child.material.opacity = pulse;
+				});
+			}
+		},
+	},
+);
+
+// Animate energy spirals: rotate + bob
+const SpiralAnimationSystem = createSystem(
+	{ spirals: { required: [Transform, EnergySpiral] } },
+	{
+		update(delta, time) {
+			for (const entity of this.queries.spirals.iterate()) {
+				const obj = entity.object3D;
+				if (!obj) continue;
+
+				const speed = entity.getValue(EnergySpiral, 'speed');
+				const phase = entity.getValue(EnergySpiral, 'phase');
+				const tilt = entity.getValue(EnergySpiral, 'tilt');
+
+				obj.rotation.y += speed * delta;
+				obj.rotation.z = Math.sin(time * 0.0005 + phase) * 0.15 + tilt;
+
+				// Bob the whole spiral
+				obj.position.y = 0.5 + Math.sin(time * 0.0008 + phase) * 0.1;
+			}
+		},
+	},
+);
+
+// Animate ground halo: pulse + slow rotation
+const HaloAnimationSystem = createSystem(
+	{ halos: { required: [Transform, GroundHalo] } },
+	{
+		update(delta, time) {
+			for (const entity of this.queries.halos.iterate()) {
+				const obj = entity.object3D;
+				if (!obj) continue;
+
+				const phase = entity.getValue(GroundHalo, 'pulsePhase');
+				const speed = entity.getValue(GroundHalo, 'pulseSpeed');
+
+				obj.rotation.z += delta * 0.05;
+
+				const pulse = 0.4 + Math.sin(time * 0.001 * speed + phase) * 0.25;
+				obj.traverse(child => {
+					if (child.material) child.material.opacity = pulse;
+				});
+			}
+		},
+	},
+);
+
+// ═══════════════════════════════════════════════════════════════
+// MESH FACTORIES
+// ═══════════════════════════════════════════════════════════════
+
 const CRYSTAL_COLORS = [
 	0xc9a87c, 0x4fc3f7, 0xb5ead7, 0xce93d8,
 	0xfff59d, 0xffab91, 0x80cbc4, 0xf48fb1,
@@ -48,9 +236,9 @@ function createCrystalMesh(colorIndex = 0) {
 		metalness: 0.4,
 		roughness: 0.3,
 		emissive: color,
-		emissiveIntensity: 0.2,
+		emissiveIntensity: 0.25,
 		transparent: true,
-		opacity: 0.88,
+		opacity: 0.9,
 	});
 	group.add(new THREE.Mesh(coreGeo, coreMat));
 
@@ -60,17 +248,17 @@ function createCrystalMesh(colorIndex = 0) {
 		color,
 		wireframe: true,
 		transparent: true,
-		opacity: 0.25,
+		opacity: 0.3,
 	});
 	group.add(new THREE.Mesh(shellGeo, shellMat));
 
-	// Glow ring (horizontal)
+	// Glow ring
 	const ringGeo = new THREE.RingGeometry(0.05, 0.07, 24);
 	const ringMat = new THREE.MeshBasicMaterial({
 		color,
 		side: THREE.DoubleSide,
 		transparent: true,
-		opacity: 0.3,
+		opacity: 0.35,
 	});
 	const ring = new THREE.Mesh(ringGeo, ringMat);
 	ring.rotation.x = -Math.PI / 2;
@@ -80,10 +268,101 @@ function createCrystalMesh(colorIndex = 0) {
 	return group;
 }
 
-// ─── Init ─────────────────────────────────────────────────────
+function createAmbientParticleMesh(color) {
+	const geo = new THREE.SphereGeometry(0.008, 6, 6);
+	const mat = new THREE.MeshBasicMaterial({
+		color,
+		transparent: true,
+		opacity: 0.5,
+	});
+	return new THREE.Mesh(geo, mat);
+}
+
+function createLightPillarMesh(color, height = 2.0) {
+	const geo = new THREE.CylinderGeometry(0.015, 0.04, height, 12, 1, true);
+	const mat = new THREE.MeshBasicMaterial({
+		color,
+		transparent: true,
+		opacity: 0.4,
+		side: THREE.DoubleSide,
+		depthWrite: false,
+	});
+	const mesh = new THREE.Mesh(geo, mat);
+	mesh.position.y = height / 2;
+	return mesh;
+}
+
+function createEnergySpiralMesh(color, count = 8, radius = 0.5) {
+	const group = new THREE.Group();
+	for (let i = 0; i < count; i++) {
+		const angle = (i / count) * Math.PI * 2;
+		const geo = new THREE.SphereGeometry(0.012, 8, 8);
+		const mat = new THREE.MeshStandardMaterial({
+			color,
+			emissive: color,
+			emissiveIntensity: 0.4,
+			transparent: true,
+			opacity: 0.7,
+		});
+		const mesh = new THREE.Mesh(geo, mat);
+		mesh.position.set(
+			Math.cos(angle) * radius,
+			(i / count) * 0.3, // staircase up
+			Math.sin(angle) * radius,
+		);
+		group.add(mesh);
+	}
+	return group;
+}
+
+function createGroundHaloMesh(color, radius = 0.8) {
+	const group = new THREE.Group();
+
+	// Outer ring
+	const ringGeo = new THREE.RingGeometry(radius * 0.85, radius, 48);
+	const ringMat = new THREE.MeshBasicMaterial({
+		color,
+		side: THREE.DoubleSide,
+		transparent: true,
+		opacity: 0.5,
+		depthWrite: false,
+	});
+	group.add(new THREE.Mesh(ringGeo, ringMat));
+
+	// Inner glow disc
+	const discGeo = new THREE.CircleGeometry(radius * 0.85, 48);
+	const discMat = new THREE.MeshBasicMaterial({
+		color,
+		side: THREE.DoubleSide,
+		transparent: true,
+		opacity: 0.06,
+		depthWrite: false,
+	});
+	group.add(new THREE.Mesh(discGeo, discMat));
+
+	// Dashed inner ring
+	const dashGeo = new THREE.RingGeometry(radius * 0.5, radius * 0.55, 32);
+	const dashMat = new THREE.MeshBasicMaterial({
+		color,
+		side: THREE.DoubleSide,
+		transparent: true,
+		opacity: 0.3,
+		depthWrite: false,
+	});
+	group.add(new THREE.Mesh(dashGeo, dashMat));
+
+	return group;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
 
 export async function initBottleAR(container, { bottles, portalConfig }) {
 	const accentColor = portalConfig?.color_primary || '#c9a87c';
+	const accentHex = parseInt(accentColor.replace('#', ''), 16);
+	const bgColor = portalConfig?.color_bg || '#1a1a2e';
+	const bgHex = parseInt(bgColor.replace('#', ''), 16);
 
 	// ── 1. Create World ──
 	const world = await World.create(container, {
@@ -117,27 +396,46 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 		},
 	});
 
-	// ── 2. Lighting ──
-	world.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-	const dir = new THREE.DirectionalLight(0xffffff, 0.7);
-	dir.position.set(0.5, 1, 0.3);
-	world.scene.add(dir);
+	// ── 2. Register custom components ──
+	world.registerComponent(BottleMarker);
+	world.registerComponent(AmbientParticle);
+	world.registerComponent(LightPillar);
+	world.registerComponent(EnergySpiral);
+	world.registerComponent(GroundHalo);
 
-	// ── 3. State ──
+	// ── 3. Register animation systems ──
+	world.registerSystem(BottleAnimationSystem, { priority: 0 });
+	world.registerSystem(ParticleAnimationSystem, { priority: 1 });
+	world.registerSystem(PillarAnimationSystem, { priority: 1 });
+	world.registerSystem(SpiralAnimationSystem, { priority: 1 });
+	world.registerSystem(HaloAnimationSystem, { priority: 1 });
+
+	// ── 4. Lighting ──
+	world.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+	const keyLight = new THREE.DirectionalLight(0xffffff, 0.6);
+	keyLight.position.set(0.5, 1, 0.3);
+	world.scene.add(keyLight);
+	// Accent colored point light
+	const accentLight = new THREE.PointLight(accentHex, 0.4, 3);
+	accentLight.position.set(0, 0.5, 0);
+	world.scene.add(accentLight);
+
+	// ── 5. State ──
 	const state = {
 		world,
 		bottleEntities: [],
+		decorationEntities: [],
 		isInAR: false,
 		selectedBottle: null,
 		placedCount: 0,
-		onSelect: null,    // callback(bottle | null)
-		onCapture: null,   // callback(bottle) → returns promise
+		onSelect: null,
+		onCapture: null,
 		onARStart: null,
 		onAREnd: null,
 		_closed: false,
 	};
 
-	// ── 4. Enter AR ──
+	// ── 6. Enter AR ──
 	state.enterAR = async () => {
 		const { launchXR } = await import('@iwsdk/core');
 		launchXR(world, {
@@ -150,17 +448,17 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 				anchors: true,
 				hitTest: true,
 				lightEstimation: true,
-			},
+			}
 		});
 
-		// Wait for XR session to actually start (poll for up to 12s)
+		// Wait for XR session
 		const deadline = performance.now() + 12000;
 		while (!world.session && performance.now() < deadline) {
 			await new Promise(r => setTimeout(r, 100));
 		}
 
 		if (!world.session) {
-			console.warn('[bottle-world] XR session did not start — user may have cancelled');
+			console.warn('[bottle-world] XR session did not start');
 			if (state.onAREnd) state.onAREnd();
 			return;
 		}
@@ -168,14 +466,93 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 		state.isInAR = true;
 		if (state.onARStart) state.onARStart();
 
-		// Spawn bottle crystals around user
+		// ── Spawn ground halo at user's feet ──
+		const haloMesh = createGroundHaloMesh(accentHex, 1.0);
+		haloMesh.position.set(0, 0, 0);
+		const haloEntity = world.createTransformEntity(haloMesh);
+		haloEntity.addComponent(GroundHalo, {
+			pulsePhase: 0,
+			pulseSpeed: 0.4,
+		});
+		state.decorationEntities.push(haloEntity);
+
+		// ── Spawn energy spirals (2, opposite sides) ──
+		for (let s = 0; s < 2; s++) {
+			const angle = s * Math.PI;
+			const dist = 1.5;
+			const spiralMesh = createEnergySpiralMesh(accentHex, 8, 0.35);
+			spiralMesh.position.set(Math.cos(angle) * dist, 0.5, Math.sin(angle) * dist);
+			const spiralEntity = world.createTransformEntity(spiralMesh);
+			spiralEntity.addComponent(EnergySpiral, {
+				radius: 0.35,
+				speed: s === 0 ? 0.4 : -0.4,
+				count: 8,
+				tilt: s === 0 ? 0.1 : -0.1,
+				phase: s * Math.PI,
+			});
+			spiralEntity.addComponent(XRAnchor);
+			state.decorationEntities.push(spiralEntity);
+		}
+
+		// ── Spawn light pillars (3-5 around the space) ──
+		const pillarCount = 4;
+		for (let p = 0; p < pillarCount; p++) {
+			const angle = (p / pillarCount) * Math.PI * 2 + Math.PI / pillarCount;
+			const dist = 2.0 + Math.random() * 0.5;
+			const height = 1.5 + Math.random() * 1.0;
+			const pillarColor = CRYSTAL_COLORS[p % CRYSTAL_COLORS.length];
+
+			const pillarMesh = createLightPillarMesh(pillarColor, height);
+			pillarMesh.position.set(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
+
+			const pillarEntity = world.createTransformEntity(pillarMesh);
+			pillarEntity.addComponent(LightPillar, {
+				height,
+				pulsePhase: p * Math.PI / 2,
+				pulseSpeed: 0.3 + Math.random() * 0.3,
+				color: p,
+			});
+			pillarEntity.addComponent(XRAnchor);
+			state.decorationEntities.push(pillarEntity);
+		}
+
+		// ── Spawn ambient particles (40 dust motes) ──
+		const PARTICLE_COUNT = 40;
+		for (let i = 0; i < PARTICLE_COUNT; i++) {
+			const angle = Math.random() * Math.PI * 2;
+			const radius = 0.3 + Math.random() * 2.5;
+			const height = Math.random() * 1.8;
+			const baseX = Math.cos(angle) * radius;
+			const baseY = height;
+			const baseZ = Math.sin(angle) * radius;
+
+			const particleColor = Math.random() > 0.5 ? accentHex : 0xffffff;
+			const mesh = createAmbientParticleMesh(particleColor);
+			mesh.position.set(baseX, baseY, baseZ);
+
+			const entity = world.createTransformEntity(mesh);
+			entity.addComponent(AmbientParticle, {
+				velocityX: (Math.random() - 0.5) * 0.01,
+				velocityY: 0.01 + Math.random() * 0.03,
+				velocityZ: (Math.random() - 0.5) * 0.01,
+				lifespan: 4 + Math.random() * 6,
+				age: Math.random() * 4,
+				baseY,
+				baseX,
+				baseZ,
+				phase: Math.random() * Math.PI * 2,
+			});
+			state.decorationEntities.push(entity);
+		}
+
+		// ── Spawn bottle crystals ──
 		const available = bottles.filter(b => !b.found_by);
 		const count = available.length;
 
 		available.forEach((bottle, i) => {
 			const angle = (i / Math.max(count, 1)) * Math.PI * 2 + Math.random() * 0.3;
-			const radius = 1.2 + Math.random() * 1.5; // 1.2-2.7m
-			const height = 0.3 + Math.random() * 0.6; // 0.3-0.9m
+			const radius = 1.2 + Math.random() * 1.5;
+			const height = 0.3 + Math.random() * 0.6;
 
 			const mesh = createCrystalMesh(i);
 			mesh.position.set(
@@ -194,41 +571,34 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 			});
 			entity.addComponent(XRAnchor);
 
+			// Tag for raycast lookup
+			mesh.traverse(child => {
+				child.userData.bottleRef = { entity, bottle };
+			});
+
 			state.bottleEntities.push({ entity, bottle });
 		});
 
-		// Start animation loop
-		animateBottles();
+		// ── Start custom animation loop for non-ECS objects ──
+		animateScene();
 	};
 
-	// ── 5. Animation ──
+	// ── 7. Non-ECS animation (accent light pulse) ──
 	let animId = null;
-	function animateBottles() {
+	function animateScene() {
 		if (state._closed) return;
 		const t = performance.now() * 0.001;
 
-		for (const { entity, bottle } of state.bottleEntities) {
-			const obj = entity.object3D;
-			if (!obj) continue;
-			const markerState = entity.getValue(BottleMarker, 'state');
-			if (markerState === 2) continue; // captured
+		// Pulse the accent point light
+		accentLight.intensity = 0.3 + Math.sin(t * 0.8) * 0.15;
 
-			const spin = entity.getValue(BottleMarker, 'spin');
-			const phase = entity.getValue(BottleMarker, 'bobPhase');
-			obj.rotation.y += spin * 0.016;
-			obj.position.y += Math.sin(t * 1.2 + phase) * 0.0004;
-		}
-
-		animId = requestAnimationFrame(animateBottles);
+		animId = requestAnimationFrame(animateScene);
 	}
 
-	// ── 6. Tap-to-select (screen raycast) ──
-	// We use a simple approach: raycast from camera through screen center
-	// on each pointer event, check intersection with bottle meshes.
+	// ── 8. Tap-to-select ──
 	state.handleTap = (clientX, clientY) => {
 		if (!state.isInAR) return;
 
-		// Use screen-space distance: find bottle closest to tap point
 		const camera = world.camera;
 		const raycaster = new THREE.Raycaster();
 		const mouse = new THREE.Vector2();
@@ -247,7 +617,6 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 		const intersects = raycaster.intersectObjects(meshes, true);
 
 		if (intersects.length > 0) {
-			// Find which bottle this mesh belongs to
 			let hitObj = intersects[0].object;
 			while (hitObj && !hitObj.userData.bottleRef) {
 				hitObj = hitObj.parent;
@@ -257,8 +626,6 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 				return;
 			}
 		}
-
-		// No hit — deselect
 		selectBottle(null);
 	};
 
@@ -267,11 +634,9 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 	}
 
 	function selectBottle(bottleEntry) {
-		// Clear previous selection
 		if (state.selectedBottle) {
 			const prev = state.selectedBottle.entity;
 			try { prev.setValue(BottleMarker, 'state', 0); } catch {}
-			// Reset scale
 			if (prev.object3D) prev.object3D.scale.setScalar(1);
 		}
 
@@ -279,10 +644,6 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 
 		if (bottleEntry) {
 			try { bottleEntry.entity.setValue(BottleMarker, 'state', 1); } catch {}
-			// Enlarge selected
-			if (bottleEntry.entity.object3D) {
-				bottleEntry.entity.object3D.scale.setScalar(1.4);
-			}
 		}
 
 		if (state.onSelect) {
@@ -290,35 +651,18 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 		}
 	}
 
-	// Tag meshes with bottle refs for raycast lookup
-	// (done after entity creation in enterAR, but we need to wire userData)
-	// We'll do it in a microtask after entities are created
-	setTimeout(() => {
-		for (const entry of state.bottleEntities) {
-			if (entry.entity.object3D) {
-				entry.entity.object3D.traverse(child => {
-					child.userData.bottleRef = entry;
-				});
-			}
-		}
-	}, 100);
-
-	// ── 7. Capture selected bottle ──
+	// ── 9. Capture ──
 	state.captureSelected = async () => {
 		if (!state.selectedBottle) return null;
 		const { entity, bottle } = state.selectedBottle;
 
 		try { entity.setValue(BottleMarker, 'state', 2); } catch {}
-
-		// Shrink and fade
-		if (entity.object3D) {
-			entity.object3D.visible = false;
-		}
+		if (entity.object3D) entity.object3D.visible = false;
 
 		return bottle;
 	};
 
-	// ── 8. Exit AR ──
+	// ── 10. Exit ──
 	state.exitAR = () => {
 		if (animId) cancelAnimationFrame(animId);
 		if (world.xrSession) world.exitXR();
@@ -326,7 +670,6 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 		if (state.onAREnd) state.onAREnd();
 	};
 
-	// Session end listener
 	if (world.addEventListener) {
 		world.addEventListener('xrsessionend', () => {
 			state.isInAR = false;
@@ -338,7 +681,9 @@ export async function initBottleAR(container, { bottles, portalConfig }) {
 	return state;
 }
 
-// ─── Cleanup ──────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// CLEANUP
+// ═══════════════════════════════════════════════════════════════
 
 export function destroyBottleAR(state) {
 	if (!state) return;
