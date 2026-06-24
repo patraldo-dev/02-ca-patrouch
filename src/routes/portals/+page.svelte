@@ -58,19 +58,6 @@
 
 				worldReady = true;
 				bootStatus = 'ready';
-
-				// Force canvas visibility
-				const cnv = containerEl.querySelector('canvas');
-				if (cnv) {
-					cnv.style.position = 'fixed';
-					cnv.style.inset = '0';
-					cnv.style.width = '100vw';
-					cnv.style.height = '100vh';
-					cnv.style.zIndex = '99998';
-					cnv.style.display = 'block';
-				}
-				// Log diagnostic
-				console.log('[PortalWorld] Ready. Canvas:', cnv?.width + 'x' + cnv?.height, 'Container:', containerEl.getBoundingClientRect());
 			} catch (err) {
 				console.error('[PortalWorld] boot failed:', err);
 				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0, 6).join('\n');
@@ -132,8 +119,6 @@
 		{/if}
 	</div>
 {:else}
-	<!-- Debug badge stays visible -->
-	<div style="position:fixed;top:0.3rem;right:0.3rem;z-index:99999;padding:0.2rem 0.5rem;background:rgba(0,200,0,0.4);color:#0f0;font-family:monospace;font-size:0.5rem;border-radius:4px;">READY</div>
 {/if}
 
 <!-- Canvas container — covers entire viewport -->
