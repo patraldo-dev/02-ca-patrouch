@@ -596,8 +596,8 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight) 
 				varying vec2 vUv;
 				void main() {
 					float d = length(vUv - vec2(0.5, 0.5));
-					float alpha = smoothstep(0.7, 0.2, d) * 0.15;
-					gl_FragColor = vec4(uColor, alpha);
+					float alpha = smoothstep(0.8, 0.1, d) * 0.35;
+					gl_FragColor = vec4(uColor * 1.5, alpha);
 				}
 			`,
 		});
@@ -618,7 +618,8 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight) 
 	}
 
 	// Reposition camera to face the ring
-	world.camera.position.set(0, 0, 0);
+	world.camera.position.set(0, 0.3, 0.5);
+	world.camera.lookAt(0, 0, -1.5);
 
 	// Crystal decorations — floating around the ring
 	const crystalPositions = [
