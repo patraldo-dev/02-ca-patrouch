@@ -91,15 +91,13 @@
 				portals.forEach((portal, i) => {
 					const colorHex = portal.color_primary || '#c9a87c';
 					const colorNum = parseInt(colorHex.replace('#', ''), 16);
+					if (i < 3) log(`Tab[${i}] "${nameOf(portal)}" color_primary="${portal.color_primary}" → hex=0x${colorNum.toString(16)}`);
 
 					// Tab mesh — a colored box
 					const geo = new BoxGeometry(TAB_WIDTH, TAB_HEIGHT, 0.02);
-					const mat = new MeshStandardMaterial({
+					// MeshBasicMaterial ignores lighting — shows flat color
+					const mat = new MeshBasicMaterial({
 						color: colorNum,
-						emissive: colorNum,
-						emissiveIntensity: 0.3,
-						roughness: 0.5,
-						metalness: 0.2,
 					});
 					const mesh = new Mesh(geo, mat);
 
