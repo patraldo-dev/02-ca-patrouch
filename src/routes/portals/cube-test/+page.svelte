@@ -23,13 +23,6 @@
 		return portal.name_es;
 	}
 
-	function hexToRgb(hex) {
-		const r = parseInt(hex.slice(1, 3), 16) / 255;
-		const g = parseInt(hex.slice(3, 5), 16) / 255;
-		const b = parseInt(hex.slice(5, 7), 16) / 255;
-		return [r, g, b];
-	}
-
 	// Track entity refs for interaction
 	let tabEntities = [];
 	let tabMeshes = [];
@@ -42,9 +35,8 @@
 				log('Import @iwsdk/core...');
 				const {
 					World, Transform,
-					AmbientLight, DirectionalLight,
-					Mesh, BoxGeometry, MeshStandardMaterial,
-					Group, Raycaster, Vector2,
+					Mesh, BoxGeometry, MeshBasicMaterial, Color,
+					Raycaster, Vector2,
 				} = await import('@iwsdk/core');
 
 				if (cancelled || !containerEl) return;
@@ -60,12 +52,6 @@
 				world.camera.lookAt(0, 0, 0);
 				log(`Camera fov: ${world.camera.fov}, aspect: ${world.camera.aspect}`);
 
-				// Lights
-				world.scene.add(new AmbientLight(0xffffff, 0.9));
-				const dir = new DirectionalLight(0xffffff, 0.8);
-				dir.position.set(1, 1, 2);
-				world.scene.add(dir);
-
 				// ── Calculate visible width at z=0 from camera at z=3 ──
 				const distance = 3;
 				const vFov = world.camera.fov * Math.PI / 180;
@@ -75,7 +61,6 @@
 				log(`Visible area at z=0: ${visibleWidth.toFixed(2)}w × ${visibleHeight.toFixed(2)}h`);
 
 				// ── Portal Tabs ──
-				// Arrange as vertical stack, centered, within portrait FOV
 				const portals = data.portals || [];
 				log(`Creating ${portals.length} portal tabs...`);
 
@@ -90,15 +75,12 @@
 
 				portals.forEach((portal, i) => {
 					const colorHex = portal.color_primary || '#c9a87c';
-					const colorNum = parseInt(colorHex.replace('#', ''), 16);
-					if (i < 3) log(`Tab[${i}] "${nameOf(portal)}" color_primary="${portal.color_primary}" → hex=0x${colorNum.toString(16)}`);
+					const colorObj = new Color(colorHex);
 
-					// Tab mesh — a colored box
+					// Tab mesh — flat color, no lighting needed
 					const geo = new BoxGeometry(TAB_WIDTH, TAB_HEIGHT, 0.02);
-					// MeshBasicMaterial ignores lighting — shows flat color
-					const mat = new MeshBasicMaterial({
-						color: colorNum,
-					});
+					const mat = new MeshBasicMaterial({ color: colorObj });
+					if (i < 3) log(`Tab[${i}] "${nameOf(portal)}" color=${colorHex} → material=#${mat.color.getHexString()}`);
 					const mesh = new Mesh(geo, mat);
 
 					const entity = world.createTransformEntity(mesh);
@@ -110,14 +92,10 @@
 					// Store portal data on mesh for raycasting
 					mesh.userData.portalId = portal.id;
 					mesh.userData.portalName = nameOf(portal);
-					mesh.userData.restY = pos[1];
-					mesh.userData.restX = 0;
 					mesh.userData.colorHex = colorHex;
 
 					tabEntities.push(entity);
 					tabMeshes.push(mesh);
-
-					log(`Tab[${i}] "${nameOf(portal)}" at y=${pos[1].toFixed(2)}`);
 				});
 
 				// ── Tap interaction ──
@@ -136,7 +114,6 @@
 						const portalId = hit.userData.portalId;
 						const portalName = hit.userData.portalName;
 
-						// Toggle focus
 						if (focusedPortalId === portalId) {
 							focusedPortalId = null;
 							log(`Unfocused ${portalName}`);
@@ -145,32 +122,26 @@
 							log(`Focused ${portalName}`);
 						}
 
-						// Update tab positions — focused slides forward, others dim
+						// Update tab visuals
 						tabMeshes.forEach((mesh) => {
 							const isFocused = mesh.userData.portalId === focusedPortalId;
-							const pos = tabEntities.find(e => e.object3D === mesh).getVectorView(Transform, 'position');
+							const entity = tabEntities.find(e => e.object3D === mesh);
+							const pos = entity.getVectorView(Transform, 'position');
 							pos[2] = isFocused ? 0.5 : 0;
 
-							// Scale focused up slightly
-							const scale = tabEntities.find(e => e.object3D === mesh).getVectorView(Transform, 'scale');
-							const targetScale = isFocused ? 1.1 : 1.0;
-							scale[0] = targetScale;
-							scale[1] = targetScale;
-							scale[2] = targetScale;
+							const scale = entity.getVectorView(Transform, 'scale');
+							const s = isFocused ? 1.15 : 1.0;
+							scale[0] = s; scale[1] = s; scale[2] = s;
 
-							// Dim non-focused
 							if (focusedPortalId) {
-								mesh.material.opacity = isFocused ? 1.0 : 0.4;
+								mesh.material.opacity = isFocused ? 1.0 : 0.3;
 								mesh.material.transparent = true;
-								mesh.material.emissiveIntensity = isFocused ? 0.6 : 0.1;
 							} else {
 								mesh.material.opacity = 1.0;
 								mesh.material.transparent = false;
-								mesh.material.emissiveIntensity = 0.4;
 							}
 						});
 
-						// Notify Svelte layer
 						window.dispatchEvent(new CustomEvent('portal-focus', {
 							detail: { portalId: focusedPortalId }
 						}));
@@ -204,7 +175,6 @@
 		}
 	});
 
-	// Find focused portal for info overlay
 	let focusedPortal = $derived(data.portals?.find(p => p.id === focusedPortalId) || null);
 </script>
 
