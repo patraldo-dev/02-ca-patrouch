@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal World — Test</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; }
+#scene-container { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+#boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: #050508; color: #c9a87c; font-family: system-ui, sans-serif; z-index: 100; }
+#boot.hidden { display: none; }
+.spinner { font-size: 2.5rem; animation: spin 2s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+#error { color: #ef4444; font-family: monospace; font-size: 0.7rem; max-width: 90vw; white-space: pre-wrap; text-align: center; padding: 0 1rem; }
+</style>
+</head>
+<body>
+<div id="scene-container"></div>
+<div id="boot">
+  <div class="spinner">⟡</div>
+  <div style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;">loading</div>
+</div>
+<script type="module">
+import * as THREE from 'https://cdn.skypack.dev/three';
+// Minimal test — no IWSDK, just raw Three.js to verify WebGL works on this device
+try {
+  const container = document.getElementById('scene-container');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a12);
+  
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 0, 3);
+  
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(renderer.domElement);
+  
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  const key = new THREE.DirectionalLight(0xfff5e6, 0.6);
+  key.position.set(0.5, 1, 1);
+  scene.add(key);
+  
+  // Bright test objects
+  const sphereGeo = new THREE.SphereGeometry(0.5, 32, 32);
+  const sphereMat = new THREE.MeshStandardMaterial({ color: 0xff0066, emissive: 0xff0066, emissiveIntensity: 0.5 });
+  const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+  sphere.position.set(0, 0, 0);
+  scene.add(sphere);
+  
+  const boxGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+  const boxMat = new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 0.5 });
+  const box = new THREE.Mesh(boxGeo, boxMat);
+  box.position.set(-1.2, 0, 0);
+  scene.add(box);
+  
+  const torusGeo = new THREE.TorusGeometry(0.3, 0.1, 16, 32);
+  const torusMat = new THREE.MeshStandardMaterial({ color: 0xc9a87c, emissive: 0xc9a87c, emissiveIntensity: 0.5 });
+  const torus = new THREE.Mesh(torusGeo, torusMat);
+  torus.position.set(1.2, 0, 0);
+  scene.add(torus);
+  
+  function animate() {
+    requestAnimationFrame(animate);
+    sphere.rotation.y += 0.01;
+    box.rotation.x += 0.01;
+    box.rotation.y += 0.02;
+    torus.rotation.z += 0.02;
+    renderer.render(scene, camera);
+  }
+  animate();
+  
+  document.getElementById('boot').classList.add('hidden');
+} catch (err) {
+  const boot = document.getElementById('boot');
+  boot.innerHTML = '<div style="font-size:2rem;color:#ef4444;">⚠</div><div id="error">' + (err.message || err) + '\n' + (err.stack || '').split('\n').slice(0,4).join('\n') + '</div>';
+}
+</script>
+</body>
+</html>
