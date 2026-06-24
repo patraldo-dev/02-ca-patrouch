@@ -1,18 +1,19 @@
 /**
  * Portal Transition World — AR → VR Session Switching
  *
- * State machine: preview → ar-idle → ar-focused → transitioning → vr-active
+ * Uses IWSDK native interaction: RayInteractable + Pressed/Hovered tags.
+ * The InputSystem (auto-registered by World) handles all pointer event wiring.
  */
 
-import { World, SessionMode, ReferenceSpaceType, Transform } from '@iwsdk/core';
 import {
+	World, SessionMode, ReferenceSpaceType, Transform,
 	createComponent, createSystem, Types,
 	Mesh, TorusGeometry, CircleGeometry, BoxGeometry, OctahedronGeometry,
 	Group, BufferGeometry, BufferAttribute, Points,
 	MeshBasicMaterial, MeshStandardMaterial, ShaderMaterial, PointsMaterial,
 	AmbientLight, DirectionalLight, PointLight,
 	Color, Quaternion, Vector3, BackSide, AdditiveBlending, DoubleSide,
-	Raycaster, Vector2,
+	RayInteractable, Hovered, Pressed,
 } from '@iwsdk/core';
 
 // ─── Components ─────────────────────────────────────────────────────
@@ -26,7 +27,6 @@ const PortalRing = createComponent('portal-ring', {
 	radius: { type: Types.Float32, default: 0.5 },
 	opacity: { type: Types.Float32, default: 1 },
 	pulsePhase: { type: Types.Float32, default: 0 },
-	isFocused: { type: Types.Boolean, default: false },
 });
 
 const VRContent = createComponent('vr-content', {
@@ -35,14 +35,18 @@ const VRContent = createComponent('vr-content', {
 });
 
 // ─── Session Manager System ─────────────────────────────────────────
-const SessionManagerSystem = class extends createSystem(
+// Uses IWSDK native queries: detects Pressed tag on ring entity
+const PortalTransitionSystem = class extends createSystem(
 	{
 		session: { required: [PortalSession] },
 		rings: { required: [PortalRing, Transform] },
+		pressedRings: {
+			required: [PortalRing, RayInteractable, Pressed],
+		},
 		content: { required: [VRContent, Transform] },
 	},
 	{
-		transitionDuration: { type: 'Float32', default: 1.5 },
+		transitionDuration: { type: Types.Float32, default: 1.5 },
 	}
 ) {
 	update(delta) {
@@ -50,6 +54,12 @@ const SessionManagerSystem = class extends createSystem(
 		if (!sessionEntity) return;
 
 		const phase = sessionEntity.getValue(PortalSession, 'phase');
+
+		// ── Detect tap on ring via IWSDK Pressed tag ──
+		if (phase === 'ar-idle' && this.queries.pressedRings.entities.size > 0) {
+			console.log('[transition] Ring pressed! Starting focus');
+			sessionEntity.setValue(PortalSession, 'phase', 'ar-focused');
+		}
 
 		if (phase === 'preview') {
 			for (const ring of this.queries.rings.entities) {
@@ -65,18 +75,30 @@ const SessionManagerSystem = class extends createSystem(
 				const scale = ring.getVectorView(Transform, 'scale');
 				const s = 1 + Math.sin(pulse * 2) * 0.05;
 				scale[0] = s; scale[1] = s; scale[2] = s;
+
+				// Grow when hovered
+				if (ring.hasComponent(Hovered)) {
+					scale[0] *= 1.1; scale[1] *= 1.1; scale[2] *= 1.1;
+				}
 			}
 		} else if (phase === 'ar-focused') {
 			for (const ring of this.queries.rings.entities) {
 				let pulse = ring.getValue(PortalRing, 'pulsePhase') + delta * 3;
 				ring.setValue(PortalRing, 'pulsePhase', pulse);
 				const scale = ring.getVectorView(Transform, 'scale');
-				const s = 1 + Math.sin(pulse * 4) * 0.15;
+				const s = 1 + Math.sin(pulse * 4) * 0.2;
 				scale[0] = s; scale[1] = s; scale[2] = s;
 			}
+			// After brief focus, start transition
+			setTimeout(() => {
+				if (sessionEntity.getValue(PortalSession, 'phase') === 'ar-focused') {
+					sessionEntity.setValue(PortalSession, 'phase', 'transitioning');
+					sessionEntity.setValue(PortalSession, 'transitionProgress', 0);
+				}
+			}, 500);
 		} else if (phase === 'transitioning') {
 			let progress = sessionEntity.getValue(PortalSession, 'transitionProgress');
-			progress = Math.min(progress + delta / this.config.transitionDuration.value, 1);
+			progress = Math.min(progress + delta / this.config.transitionDuration.peek(), 1);
 			sessionEntity.setValue(PortalSession, 'transitionProgress', progress);
 
 			for (const ring of this.queries.rings.entities) {
@@ -84,7 +106,12 @@ const SessionManagerSystem = class extends createSystem(
 				op = Math.max(0, op - delta * 2);
 				ring.setValue(PortalRing, 'opacity', op);
 				if (ring.object3D?.material) {
-					ring.object3D.material.opacity = op;
+					ring.object3D.traverse((child) => {
+						if (child.material) {
+							child.material.opacity = op;
+							child.material.transparent = true;
+						}
+					});
 				}
 			}
 
@@ -117,20 +144,15 @@ function createPortalRingMesh(colorHex) {
 
 	const torusGeo = new TorusGeometry(0.5, 0.03, 16, 64);
 	const torusMat = new MeshStandardMaterial({
-		color,
-		emissive: color,
-		emissiveIntensity: 0.4,
-		transparent: true,
-		opacity: 1,
+		color, emissive: color, emissiveIntensity: 0.4,
+		transparent: true, opacity: 1,
 	});
 	group.add(new Mesh(torusGeo, torusMat));
 
 	const membraneGeo = new CircleGeometry(0.48, 64);
 	const membraneMat = new MeshBasicMaterial({
 		color: new Color(colorHex).multiplyScalar(0.3),
-		transparent: true,
-		opacity: 0.15,
-		side: DoubleSide,
+		transparent: true, opacity: 0.15, side: DoubleSide,
 	});
 	const membrane = new Mesh(membraneGeo, membraneMat);
 	membrane.position.z = 0.001;
@@ -144,68 +166,41 @@ function createVRScene(colorHex) {
 	const group = new Group();
 	const color = new Color(colorHex);
 
-	// Sky dome
 	const skyGeo = new BoxGeometry(100, 100, 100);
 	const skyMat = new ShaderMaterial({
 		uniforms: {
 			uColorTop: { value: color.clone().multiplyScalar(0.15) },
 			uColorBottom: { value: color.clone().multiplyScalar(0.05) },
 		},
-		vertexShader: `
-			varying vec3 vWorldPos;
-			void main() {
-				vWorldPos = position;
-				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-			}
-		`,
-		fragmentShader: `
-			uniform vec3 uColorTop;
-			uniform vec3 uColorBottom;
-			varying vec3 vWorldPos;
-			void main() {
-				float t = normalize(vWorldPos).y * 0.5 + 0.5;
-				gl_FragColor = vec4(mix(uColorBottom, uColorTop, smoothstep(0.0, 1.0, t)), 1.0);
-			}
-		`,
+		vertexShader: `varying vec3 vWorldPos; void main() { vWorldPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+		fragmentShader: `uniform vec3 uColorTop; uniform vec3 uColorBottom; varying vec3 vWorldPos; void main() { float t = normalize(vWorldPos).y * 0.5 + 0.5; gl_FragColor = vec4(mix(uColorBottom, uColorTop, smoothstep(0.0, 1.0, t)), 1.0); }`,
 		side: BackSide,
 	});
 	group.add(new Mesh(skyGeo, skyMat));
 
-	// Floor
 	const floorGeo = new BoxGeometry(100, 0.01, 100);
 	const floorMat = new MeshStandardMaterial({
 		color: color.clone().multiplyScalar(0.08),
-		roughness: 0.4,
-		metalness: 0.6,
-		transparent: true,
-		opacity: 0,
+		roughness: 0.4, metalness: 0.6, transparent: true, opacity: 0,
 	});
 	const floor = new Mesh(floorGeo, floorMat);
 	floor.position.y = -1.5;
 	group.add(floor);
 
-	// Floating crystals
-	const crystalPositions = [[-2, 0.5, -3], [2, 1.2, -4], [0, 0.8, -6], [-3, 1.5, -5], [3, 0.3, -3.5]];
-	crystalPositions.forEach((pos, i) => {
+	[[-2, 0.5, -3], [2, 1.2, -4], [0, 0.8, -6], [-3, 1.5, -5], [3, 0.3, -3.5]].forEach((pos) => {
 		const mat = new MeshStandardMaterial({
-			color,
-			emissive: color.clone().multiplyScalar(0.5),
-			emissiveIntensity: 0.3,
-			transparent: true,
-			opacity: 0,
-			metalness: 0.8,
-			roughness: 0.2,
+			color, emissive: color.clone().multiplyScalar(0.5),
+			emissiveIntensity: 0.3, transparent: true, opacity: 0,
+			metalness: 0.8, roughness: 0.2,
 		});
 		const crystal = new Mesh(new OctahedronGeometry(0.15, 0), mat);
 		crystal.position.set(...pos);
 		group.add(crystal);
 	});
 
-	// Lights
 	group.add(new PointLight(color, 2, 20).translateY(2));
 	group.add(new AmbientLight(0xffffff, 0.15));
 
-	// Dust particles
 	const dustCount = 200;
 	const dustGeo = new BufferGeometry();
 	const dustPos = new Float32Array(dustCount * 3);
@@ -216,13 +211,8 @@ function createVRScene(colorHex) {
 	}
 	dustGeo.setAttribute('position', new BufferAttribute(dustPos, 3));
 	const dustMat = new PointsMaterial({
-		color,
-		size: 0.03,
-		transparent: true,
-		opacity: 0,
-		blending: AdditiveBlending,
-		depthWrite: false,
-		sizeAttenuation: true,
+		color, size: 0.03, transparent: true, opacity: 0,
+		blending: AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	group.add(new Points(dustGeo, dustMat));
 
@@ -250,23 +240,19 @@ export async function initTransitionWorld(container, portalConfig) {
 		},
 	});
 
-	// Camera for preview
 	world.camera.position.set(0, 0, 1.5);
 	world.camera.lookAt(0, 0, 0);
 
-	// Lights
 	world.scene.add(new AmbientLight(0xffffff, 0.6));
 	const dirLight = new DirectionalLight(0xfff5e6, 0.5);
 	dirLight.position.set(0.5, 1, 1);
 	world.scene.add(dirLight);
 
-	// Register
 	world.registerComponent(PortalSession);
 	world.registerComponent(PortalRing);
 	world.registerComponent(VRContent);
-	world.registerSystem(SessionManagerSystem, { priority: 0 });
+	world.registerSystem(PortalTransitionSystem, { priority: 0 });
 
-	// Globals
 	world.globals.onTransitionReady = null;
 	world.globals.portalConfig = portalConfig;
 
@@ -278,15 +264,11 @@ export async function initTransitionWorld(container, portalConfig) {
 		transitionProgress: 0,
 	});
 
-	// Portal ring
+	// Portal ring — with RayInteractable so InputSystem handles taps
 	const ringMesh = createPortalRingMesh(colorHex);
 	const ringEntity = world.createTransformEntity(ringMesh);
-	ringEntity.addComponent(PortalRing, {
-		radius: 0.5,
-		opacity: 1,
-		pulsePhase: 0,
-		isFocused: false,
-	});
+	ringEntity.addComponent(PortalRing, { radius: 0.5, opacity: 1, pulsePhase: 0 });
+	ringEntity.addComponent(RayInteractable); // ← IWSDK native interaction
 
 	// VR scene (hidden)
 	const vrScene = createVRScene(colorHex);
@@ -309,67 +291,17 @@ export async function initTransitionWorld(container, portalConfig) {
 				features: { anchors: true, hitTest: true, planeDetection: true },
 			});
 
-			// Wait for session to be active
 			await new Promise(resolve => {
 				const check = setInterval(() => {
 					if (world.session) { clearInterval(check); resolve(); }
 				}, 50);
 			});
 
-			console.log('[transition] AR session active:', !!world.session);
-			console.log('[transition] Session type:', world.session?.constructor?.name);
-
+			console.log('[transition] AR session active, ring is RayInteractable');
 			const pos = ringEntity.getVectorView(Transform, 'position');
 			pos[0] = 0; pos[1] = 1.2; pos[2] = -1.5;
 			sessionEntity.setValue(PortalSession, 'phase', 'ar-idle');
 
-			// WebXR 'select' event — fires on screen tap in phone AR
-			world.session.addEventListener('select', (event) => {
-				console.log('[transition] SELECT event fired!');
-				const currentPhase = sessionEntity.getValue(PortalSession, 'phase');
-				console.log('[transition] Current phase:', currentPhase);
-				if (currentPhase !== 'ar-idle') return;
-
-				// Get ring world position
-				const ringWorldPos = new Vector3();
-				ringMesh.getWorldPosition(ringWorldPos);
-				console.log('[transition] Ring world pos:', ringWorldPos.x, ringWorldPos.y, ringWorldPos.z);
-
-				// Get camera position and direction
-				const camPos = world.camera.position.clone();
-				const camDir = new Vector3();
-				world.camera.getWorldDirection(camDir);
-				console.log('[transition] Cam pos:', camPos.x, camPos.y, camPos.z);
-				console.log('[transition] Cam dir:', camDir.x, camDir.y, camDir.z);
-
-				// Angle between camera forward and direction to ring
-				const toRing = ringWorldPos.clone().sub(camPos);
-				const angle = camDir.angleTo(toRing);
-				console.log('[transition] Angle to ring:', (angle * 180 / Math.PI).toFixed(1), 'degrees');
-
-				// Pulse ring for visual feedback
-				ringEntity.setValue(PortalRing, 'pulsePhase', 0);
-
-				// Cross if looking roughly at ring (within 35 degrees)
-				if (angle < 0.6) {
-					console.log('[transition] ✅ Crossing portal!');
-					this.focusPortal();
-				} else {
-					console.log('[transition] ❌ Not looking at ring');
-				}
-			});
-
-			// Also try 'selectstart'/'selectend' pair as fallback
-			let selectStartTime = 0;
-			world.session.addEventListener('selectstart', () => {
-				selectStartTime = performance.now();
-				console.log('[transition] selectstart');
-			});
-			world.session.addEventListener('selectend', () => {
-				console.log('[transition] selectend, duration:', performance.now() - selectStartTime, 'ms');
-			});
-
-			// Cleanup on session end (e.g. back button)
 			world.session.addEventListener('end', () => {
 				sessionEntity.setValue(PortalSession, 'phase', 'preview');
 				ringMesh.visible = true;
@@ -381,11 +313,6 @@ export async function initTransitionWorld(container, portalConfig) {
 		focusPortal() {
 			if (sessionEntity.getValue(PortalSession, 'phase') !== 'ar-idle') return;
 			sessionEntity.setValue(PortalSession, 'phase', 'ar-focused');
-			ringEntity.setValue(PortalRing, 'isFocused', true);
-			setTimeout(() => {
-				sessionEntity.setValue(PortalSession, 'phase', 'transitioning');
-				sessionEntity.setValue(PortalSession, 'transitionProgress', 0);
-			}, 500);
 		},
 
 		async enterVR() {
@@ -393,14 +320,6 @@ export async function initTransitionWorld(container, portalConfig) {
 			ringMesh.visible = false;
 			vrScene.visible = true;
 			await new Promise(r => setTimeout(r, 300));
-
-			// Listen for VR session end
-			const vrCleanup = () => {
-				sessionEntity.setValue(PortalSession, 'phase', 'preview');
-				ringMesh.visible = true;
-				vrScene.visible = false;
-				window.dispatchEvent(new CustomEvent('portal-session-ended'));
-			};
 
 			const { launchXR } = await import('@iwsdk/core');
 			launchXR(world, {
@@ -412,14 +331,19 @@ export async function initTransitionWorld(container, portalConfig) {
 				features: {},
 			});
 
-			// Wait for VR session
 			await new Promise(resolve => {
 				const check = setInterval(() => {
 					if (world.session) { clearInterval(check); resolve(); }
 				}, 50);
 			});
 
-			world.session.addEventListener('end', vrCleanup);
+			world.session.addEventListener('end', () => {
+				sessionEntity.setValue(PortalSession, 'phase', 'preview');
+				ringMesh.visible = true;
+				vrScene.visible = false;
+				window.dispatchEvent(new CustomEvent('portal-session-ended'));
+			});
+
 			sessionEntity.setValue(PortalSession, 'phase', 'vr-active');
 			vrEntity.setValue(VRContent, 'visible', true);
 		},
@@ -433,19 +357,6 @@ export async function initTransitionWorld(container, portalConfig) {
 			const ar = await navigator.xr?.isSessionSupported('immersive-ar') ?? false;
 			const vr = await navigator.xr?.isSessionSupported('immersive-vr') ?? false;
 			return { ar, vr };
-		},
-
-		handleTap(ndcX, ndcY) {
-			if (sessionEntity.getValue(PortalSession, 'phase') !== 'ar-idle') return false;
-			const raycaster = new Raycaster();
-			const pointer = new Vector2(ndcX, ndcY);
-			raycaster.setFromCamera(pointer, world.camera);
-			const intersects = raycaster.intersectObject(ringMesh, true);
-			if (intersects.length > 0) {
-				this.focusPortal();
-				return true;
-			}
-			return false;
 		},
 	};
 
