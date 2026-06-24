@@ -1,14 +1,6 @@
 <!--
-	PortalWorld.svelte — The space IS the experience.
-
-	No menu. No AR/VR choice. No grid of cards.
-
-	The ECS canvas loads full-screen. Floating portal mouths pulse in space.
-	Touch + hold one → it grows → the world dissolves into the portal interior.
-
-	Semantic nav lives in sr-only for accessibility + SEO.
-	A minimal status overlay shows portal names on focus.
-	Fallback link to text-based portal list for non-WebGL devices.
+	Portals — The space IS the experience.
+	Canvas-first, no menu. Everything else is overlay.
 -->
 <script>
 	import { t } from '$lib/i18n';
@@ -20,23 +12,12 @@
 	let containerEl = $state(null);
 	let worldReady = $state(false);
 	let worldError = $state(null);
-	let bootStatus = $state('init'); // init → loading → ready → error
+	let bootStatus = $state('init');
 	let api = null;
 
-	// Reactive UI state (driven by ECS CustomEvents, minimal)
-	let focusedPortal = $state(null);  // { id, name, icon, color }
-	let interiorPortal = $state(null); // when inside a portal
-	let mode = $state('index');        // 'index' | 'transitioning' | 'interior'
-
-	// Bumper
-	let showBumper = $state(false);
-	let bumperSrc = $state('');
-	const BUMPER_VERSIONS = [
-		'/portal-bumper-v1.html',
-		'/portal-bumper-v2.html',
-		'/portal-bumper-v3.html',
-		'/portal-bumper-v4.html',
-	];
+	let focusedPortal = $state(null);
+	let interiorPortal = $state(null);
+	let mode = $state('index');
 
 	function nameOf(item) {
 		const lang = $locale || 'es';
@@ -46,14 +27,6 @@
 	}
 
 	onMount(() => {
-		// Bumper — once per session
-		if (!sessionStorage.getItem('patrouch-bumper-played')) {
-			bumperSrc = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
-			showBumper = true;
-			sessionStorage.setItem('patrouch-bumper-played', '1');
-			setTimeout(() => { showBumper = false; }, 6500);
-		}
-
 		let cancelled = false;
 		async function boot() {
 			try {
@@ -68,31 +41,22 @@
 				worldReady = true;
 				bootStatus = 'ready';
 			} catch (err) {
-				console.error('[PortalWorld] IWSDK boot failed:', err);
-				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0,3).join('\n');
+				console.error('[PortalWorld] boot failed:', err);
+				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0,4).join('\n');
 				bootStatus = 'error';
 			}
 		}
 		boot();
 
-		// ECS → Svelte event bridge
 		function onPortalFocus(e) {
-			const portal = (data.portals || []).find(p => p.id === e.detail.portalId);
-			focusedPortal = portal || null;
+			focusedPortal = (data.portals || []).find(p => p.id === e.detail.portalId) || null;
 		}
 		function onPortalEnter(e) {
-			const portal = (data.portals || []).find(p => p.id === e.detail.portalId);
-			interiorPortal = portal || null;
+			interiorPortal = (data.portals || []).find(p => p.id === e.detail.portalId) || null;
 			mode = 'transitioning';
 		}
-		function onInteriorReady() {
-			mode = 'interior';
-		}
-		function onExitToIndex() {
-			mode = 'index';
-			interiorPortal = null;
-			focusedPortal = null;
-		}
+		function onInteriorReady() { mode = 'interior'; }
+		function onExitToIndex() { mode = 'index'; interiorPortal = null; focusedPortal = null; }
 
 		window.addEventListener('portal-focus', onPortalFocus);
 		window.addEventListener('portal-enter', onPortalEnter);
@@ -116,301 +80,78 @@
 		}
 	});
 
-	function handleExit() {
-		api?.exitToIndex();
-	}
-
-	async function handleEnterAR() {
-		if (!api) return;
-		try {
-			await api.enterAR();
-		} catch (err) {
-			console.error('AR entry failed:', err);
-		}
-	}
+	function handleExit() { api?.exitToIndex(); }
 </script>
 
-<!-- Bumper -->
-{#if showBumper}
-	<div class="bumper-overlay">
-		<iframe src={bumperSrc} frameborder="0" allow="autoplay"></iframe>
-		<button class="bumper-skip" onclick={() => showBumper = false}>Skip</button>
-	</div>
-{/if}
+<svelte:head>
+	<title>{$t('games.title')}</title>
+	<style>
+		/* Kill layout chrome on this page only */
+		body > .app-layout > .navbar,
+		body > .app-layout > .site-footer { display: none !important; }
+	</style>
+</svelte:head>
 
-<!-- Boot status (outside portal-canvas so it's always visible) -->
+<!-- Boot indicator (plain HTML, always visible, no wrapper dependency) -->
 {#if bootStatus !== 'ready'}
-	<div class="boot-indicator">
+	<div style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:#050508;color:#c9a87c;font-family:system-ui,sans-serif;">
 		{#if bootStatus === 'error'}
-			<span class="boot-icon" style="color: #ef4444;">⚠</span>
-			<pre class="boot-error">{worldError}</pre>
+			<div style="font-size:2rem;color:#ef4444;">⚠</div>
+			<pre style="color:#ef4444;font-size:0.65rem;font-family:monospace;max-width:90vw;overflow-x:auto;white-space:pre-wrap;text-align:center;padding:0 1rem;">{worldError}</pre>
 		{:else}
-			<span class="boot-icon">⟡</span>
-			<span class="boot-text">{bootStatus}</span>
+			<div style="font-size:2.5rem;animation:spin 2s linear infinite;">⟡</div>
+			<div style="color:rgba(255,255,255,0.3);font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;">{bootStatus}</div>
 		{/if}
 	</div>
 {/if}
 
-<!-- ECS Canvas — full screen, this IS the page -->
-<div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}></div>
+<!-- ECS Canvas -->
+<div style="position:fixed;inset:0;z-index:1;opacity:{worldReady ? 1 : 0};transition:opacity 1s ease;" bind:this={containerEl}></div>
 
-<!-- Fallback: if WebGL/IWSDK failed -->
-{#if worldError}
-	<div class="fallback">
-		<h1>{$t('games.title')}</h1>
-		<div class="fallback-list">
-			{#each data.galaxies as galaxy}
-				<section>
-					<h2>{galaxy.icon} {nameOf(galaxy)}</h2>
-					{#each galaxy.portals as portal}
-						<a href="/portals/enter/{portal.id}">
-							{portal.icon} {nameOf(portal)}
-						</a>
-					{/each}
-				</section>
-			{/each}
-		</div>
+<!-- Fallback -->
+{#if worldError && bootStatus === 'error'}
+	<div style="position:fixed;inset:0;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:#050508;color:#e0e0e0;font-family:system-ui,sans-serif;">
+		<h1 style="color:#c9a87c;font-size:1.5rem;margin-bottom:1rem;">{$t('games.title')}</h1>
+		{#each data.galaxies as galaxy}
+			<section style="margin-bottom:1.5rem;">
+				<h2 style="font-size:0.8rem;color:#888;text-transform:uppercase;">{galaxy.icon} {nameOf(galaxy)}</h2>
+				{#each galaxy.portals as portal}
+					<a href="/portals/enter/{portal.id}" style="display:block;padding:0.4rem;color:#c9a87c;text-decoration:none;">
+						{portal.icon} {nameOf(portal)}
+					</a>
+				{/each}
+			</section>
+		{/each}
 	</div>
 {/if}
 
-<!-- Minimal overlay — portal name on focus, exit button in interior -->
+<!-- Minimal overlays -->
 {#if worldReady && !worldError}
-
-	<!-- Index mode: show focused portal name -->
 	{#if mode === 'index' && focusedPortal}
-		<div class="focus-label" style="--portal-color: {focusedPortal.color_primary}">
-			<span class="focus-icon">{focusedPortal.icon}</span>
-			<span class="focus-name">{nameOf(focusedPortal)}</span>
-			<span class="focus-hold">⟡</span>
+		<div style="position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);z-index:10;padding:0.5rem 1.2rem;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);border-radius:24px;display:flex;align-items:center;gap:0.5rem;pointer-events:none;">
+			<span style="font-size:1.2rem;">{focusedPortal.icon}</span>
+			<span style="color:{focusedPortal.color_primary};font-size:0.9rem;font-weight:500;">{nameOf(focusedPortal)}</span>
 		</div>
 	{/if}
-
-	<!-- Transitioning: dissolve overlay -->
-	{#if mode === 'transitioning'}
-		<div class="dissolve-overlay"></div>
-	{/if}
-
-	<!-- Interior mode: exit button + narrative hint -->
 	{#if mode === 'interior'}
-		<button class="exit-btn" onclick={handleExit}>←</button>
-		<div class="interior-hint">
-			<span>{interiorPortal?.icon || '🔮'}</span>
-		</div>
+		<button onclick={handleExit} style="position:fixed;top:1rem;left:1rem;z-index:10;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.5);backdrop-filter:blur(10px);color:rgba(255,255,255,0.6);font-size:1.1rem;cursor:pointer;">←</button>
 	{/if}
 {/if}
 
-<!-- Accessible nav (sr-only, for SEO + screen readers) -->
-<nav class="sr-only" aria-label="Portals">
+<!-- Accessible nav -->
+<nav style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);" aria-label="Portals">
 	<h1>{$t('games.title')}</h1>
 	{#each data.galaxies as galaxy}
 		<section>
 			<h2>{galaxy.icon} {nameOf(galaxy)}</h2>
 			{#each galaxy.portals as portal}
-				<a href="/portals/enter/{portal.id}">
-					{nameOf(portal)} — {portal.active_writings_count} writings
-				</a>
+				<a href="/portals/enter/{portal.id}">{nameOf(portal)}</a>
 			{/each}
 		</section>
 	{/each}
 </nav>
 
 <style>
-	/* Canvas = full screen page */
-	.portal-canvas {
-		position: fixed;
-		inset: 0;
-		z-index: 0;
-		opacity: 0;
-		transition: opacity 1s ease;
-	}
-	.portal-canvas.ready { opacity: 1; }
-	.portal-canvas :global(canvas) {
-		width: 100% !important;
-		height: 100% !important;
-		display: block;
-	}
-
-	.boot-indicator {
-		position: fixed;
-		inset: 0;
-		z-index: 10000;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-		background: #050508;
-	}
-	.boot-icon {
-		font-size: 2.5rem;
-		color: #c9a87c;
-		animation: boot-spin 2s linear infinite;
-	}
-	.boot-text {
-		color: rgba(255,255,255,0.3);
-		font-size: 0.7rem;
-		letter-spacing: 0.3em;
-		text-transform: uppercase;
-	}
-	@keyframes boot-spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
-	}
-	.boot-error {
-		color: #ef4444;
-		font-size: 0.6rem;
-		font-family: monospace;
-		max-width: 90vw;
-		overflow-x: auto;
-		white-space: pre-wrap;
-		text-align: center;
-		padding: 0 1rem;
-	}
-
-	/* Bumper */
-	.bumper-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 9999;
-		background: #050508;
-	}
-	.bumper-overlay iframe { width: 100%; height: 100%; border: none; }
-	.bumper-skip {
-		position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 10000;
-		background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-		color: rgba(255,255,255,0.4); padding: 0.4rem 1rem; border-radius: 20px;
-		cursor: pointer; font-size: 0.75rem; backdrop-filter: blur(10px);
-		transition: all 0.2s;
-	}
-	.bumper-skip:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
-
-	/* Focus label — minimal, floats at bottom */
-	.focus-label {
-		position: fixed;
-		bottom: 2rem;
-		left: 50%;
-		transform: translateX(-50%);
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 1.2rem;
-		background: rgba(0, 0, 0, 0.6);
-		backdrop-filter: blur(12px);
-		border-radius: 24px;
-		z-index: 10;
-		pointer-events: none;
-		animation: focus-fade-in 0.3s ease;
-	}
-	@keyframes focus-fade-in {
-		from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-		to { opacity: 1; transform: translateX(-50%) translateY(0); }
-	}
-	.focus-icon { font-size: 1.2rem; }
-	.focus-name {
-		font-family: var(--font-heading);
-		color: var(--portal-color, #c9a87c);
-		font-size: 0.9rem;
-		font-weight: 500;
-	}
-	.focus-hold {
-		color: var(--portal-color, #c9a87c);
-		animation: pulse 1s ease-in-out infinite;
-	}
-	@keyframes pulse {
-		0%, 100% { opacity: 0.4; }
-		50% { opacity: 1; }
-	}
-
-	/* Dissolve overlay */
-	.dissolve-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 5;
-		background: #050508;
-		opacity: 0;
-		animation: dissolve 1.2s ease forwards;
-		pointer-events: none;
-	}
-	@keyframes dissolve {
-		0% { opacity: 0; }
-		40% { opacity: 0.7; }
-		100% { opacity: 0; }
-	}
-
-	/* Interior controls */
-	.exit-btn {
-		position: fixed;
-		top: 1rem;
-		left: 1rem;
-		z-index: 10;
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		border: 1px solid rgba(255,255,255,0.15);
-		background: rgba(0,0,0,0.5);
-		backdrop-filter: blur(10px);
-		color: rgba(255,255,255,0.6);
-		font-size: 1.1rem;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: all 0.2s;
-	}
-	.exit-btn:hover {
-		color: #fff;
-		border-color: rgba(255,255,255,0.3);
-	}
-
-	.interior-hint {
-		position: fixed;
-		top: 1rem;
-		right: 1rem;
-		z-index: 10;
-		font-size: 1.5rem;
-		opacity: 0.4;
-		pointer-events: none;
-	}
-
-	/* Fallback (no WebGL) */
-	.fallback {
-		position: relative;
-		z-index: 2;
-		max-width: 600px;
-		margin: 0 auto;
-		padding: 2rem 1.5rem;
-		color: var(--fg, #e0e0e0);
-	}
-	.fallback h1 {
-		font-family: var(--font-heading);
-		text-align: center;
-		margin-bottom: 2rem;
-	}
-	.fallback-list {
-		display: flex;
-		flex-direction: column;
-		gap: 1.5rem;
-	}
-	.fallback-list h2 {
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--muted, #888);
-		margin-bottom: 0.5rem;
-	}
-	.fallback-list a {
-		display: block;
-		padding: 0.6rem 0.8rem;
-		color: var(--fg, #e0e0e0);
-		text-decoration: none;
-		border-left: 2px solid var(--border, #333);
-		transition: border-color 0.2s;
-	}
-	.fallback-list a:hover { border-color: #c9a87c; }
-
-	.sr-only {
-		position: absolute; width: 1px; height: 1px;
-		padding: 0; margin: -1px; overflow: hidden;
-		clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-	}
+	@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+	:global(canvas) { width: 100% !important; height: 100% !important; display: block; }
 </style>
