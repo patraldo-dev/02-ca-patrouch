@@ -58,6 +58,19 @@
 
 				worldReady = true;
 				bootStatus = 'ready';
+
+				// Force canvas visibility
+				const cnv = containerEl.querySelector('canvas');
+				if (cnv) {
+					cnv.style.position = 'fixed';
+					cnv.style.inset = '0';
+					cnv.style.width = '100vw';
+					cnv.style.height = '100vh';
+					cnv.style.zIndex = '99998';
+					cnv.style.display = 'block';
+				}
+				// Log diagnostic
+				console.log('[PortalWorld] Ready. Canvas:', cnv?.width + 'x' + cnv?.height, 'Container:', containerEl.getBoundingClientRect());
 			} catch (err) {
 				console.error('[PortalWorld] boot failed:', err);
 				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0, 4).join('\n');
@@ -124,7 +137,7 @@
 {/if}
 
 <!-- Canvas container — covers entire viewport -->
-<div class="canvas-host" bind:this={containerEl}></div>
+<div style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:99998 !important;background:#0a0a12 !important;" bind:this={containerEl}></div>
 
 <!-- Focus label -->
 {#if worldReady && mode === 'index' && focusedPortal}
