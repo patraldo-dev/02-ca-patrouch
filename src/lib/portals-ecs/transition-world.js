@@ -308,9 +308,52 @@ export async function initTransitionWorld(container, portalConfig) {
 				},
 				features: { anchors: true, hitTest: true, planeDetection: true },
 			});
+
+			// Wait for session to be active
+			await new Promise(resolve => {
+				const check = setInterval(() => {
+					if (world.session) { clearInterval(check); resolve(); }
+				}, 50);
+			});
+
 			const pos = ringEntity.getVectorView(Transform, 'position');
 			pos[0] = 0; pos[1] = 1.2; pos[2] = -1.5;
 			sessionEntity.setValue(PortalSession, 'phase', 'ar-idle');
+
+			// In immersive-ar, DOM events don't fire — use XR session 'select' event
+			// For phone AR, select = screen tap. Raycast forward from camera.
+			world.session.addEventListener('select', (event) => {
+				const currentPhase = sessionEntity.getValue(PortalSession, 'phase');
+				if (currentPhase !== 'ar-idle') return;
+
+				// Raycast from camera forward through tap point
+				// For phone AR, input source ray approximates forward from camera
+				const raycaster = new Raycaster();
+				raycaster.setFromCamera(new Vector2(0, 0), world.camera);
+				const intersects = raycaster.intersectObject(ringMesh, true);
+
+				if (intersects.length > 0) {
+					this.focusPortal();
+				} else {
+					// Fallback: ring is the only object — if tap is anywhere near center, trigger
+					const ringPos = ringEntity.getVectorView(Transform, 'position');
+					const camDir = new Vector3();
+					world.camera.getWorldDirection(camDir);
+					const toRing = new Vector3(ringPos[0], ringPos[1], ringPos[2]).sub(world.camera.position);
+					const angle = camDir.angleTo(toRing);
+					if (angle < 0.5) { // ~28 degrees tolerance
+						this.focusPortal();
+					}
+				}
+			});
+
+			// Cleanup on session end (e.g. back button)
+			world.session.addEventListener('end', () => {
+				sessionEntity.setValue(PortalSession, 'phase', 'preview');
+				ringMesh.visible = true;
+				vrScene.visible = false;
+				window.dispatchEvent(new CustomEvent('portal-session-ended'));
+			});
 		},
 
 		focusPortal() {
@@ -328,6 +371,15 @@ export async function initTransitionWorld(container, portalConfig) {
 			ringMesh.visible = false;
 			vrScene.visible = true;
 			await new Promise(r => setTimeout(r, 300));
+
+			// Listen for VR session end
+			const vrCleanup = () => {
+				sessionEntity.setValue(PortalSession, 'phase', 'preview');
+				ringMesh.visible = true;
+				vrScene.visible = false;
+				window.dispatchEvent(new CustomEvent('portal-session-ended'));
+			};
+
 			const { launchXR } = await import('@iwsdk/core');
 			launchXR(world, {
 				sessionMode: SessionMode.ImmersiveVR,
@@ -337,6 +389,15 @@ export async function initTransitionWorld(container, portalConfig) {
 				},
 				features: {},
 			});
+
+			// Wait for VR session
+			await new Promise(resolve => {
+				const check = setInterval(() => {
+					if (world.session) { clearInterval(check); resolve(); }
+				}, 50);
+			});
+
+			world.session.addEventListener('end', vrCleanup);
 			sessionEntity.setValue(PortalSession, 'phase', 'vr-active');
 			vrEntity.setValue(VRContent, 'visible', true);
 		},

@@ -48,6 +48,7 @@
 
 				// Listen for transition-ready event from ECS
 				window.addEventListener('portal-transition-ready', handleTransitionReady);
+				window.addEventListener('portal-session-ended', handleSessionEnded);
 			} catch (err) {
 				console.error('[TransitionPortal] Boot failed:', err);
 				errorMsg = err.message;
@@ -81,6 +82,7 @@
 		return () => {
 			cancelled = true;
 			window.removeEventListener('portal-transition-ready', handleTransitionReady);
+			window.removeEventListener('portal-session-ended', handleSessionEnded);
 			containerEl?.removeEventListener('click', onClick);
 			containerEl?.removeEventListener('touchend', onTouchEnd);
 		};
@@ -93,6 +95,10 @@
 			});
 		}
 	});
+
+	function handleSessionEnded() {
+		phase = 'preview';
+	}
 
 	function handleTransitionReady() {
 		phase = 'transitioning';
