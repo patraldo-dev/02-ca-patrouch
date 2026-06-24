@@ -537,8 +537,8 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	// Image ID stored in portal metadata as scene_image or backdrop_image_id
 	// URL pattern: https://imagedelivery.net/<hash>/<image_id>/<variant>
 	const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
-	const portalData = portals.find(p => p.id === portalId);
-	const imageId = portalData?.scene_image || portalData?.backdrop_image_id;
+	const portalDataRow = portals.find(p => p.id === portalId);
+	const imageId = portalDataRow?.scene_image || portalDataRow?.backdrop_image_id;
 	if (imageId) {
 		const imageUrl = `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/public`;
 		const loader = new THREE.TextureLoader();
