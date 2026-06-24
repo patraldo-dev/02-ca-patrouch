@@ -10,6 +10,7 @@ export async function load({ platform }) {
                 p.description_es, p.description_en, p.description_fr,
                 p.status, p.active_writings_count, p.video_url,
                 p.narrator_greeting, p.narrator_tone,
+                p.metadata,
                 g.name_es as galaxy_name_es, g.name_en as galaxy_name_en, g.name_fr as galaxy_name_fr,
                 g.icon as galaxy_icon, g.sort_order as galaxy_sort
             FROM portals p

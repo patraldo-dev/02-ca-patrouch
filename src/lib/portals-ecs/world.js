@@ -525,7 +525,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight) 
 	const ringMesh = createPortalRingMesh(colorHex);
 	const ringEntity = world.createTransformEntity(ringMesh);
 	const ringPos = ringEntity.getVectorView(Transform, 'position');
-	ringPos[0] = 0;
+		ringPos[0] = 0;
 	ringPos[1] = 0;
 	ringPos[2] = -1.5;
 	ringEntity.addComponent(PortalRing, {
@@ -535,6 +535,87 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight) 
 		triggerDistance: 0.6,
 		pulsePhase: 0,
 	});
+
+	// ── Backdrop image from R2 ──
+	// If portal has a scene image, load it as a textured plane behind the ring.
+	// This transforms abstract geometry into a place.
+	const portalData = portals.find(p => p.id === portalId);
+	const imageUrl = portalData?.scene_image || portalData?.backdrop_url;
+	if (imageUrl) {
+		const loader = new THREE.TextureLoader();
+		loader.crossOrigin = 'anonymous';
+		loader.load(imageUrl, (texture) => {
+			texture.colorSpace = THREE.SRGBColorSpace;
+			const aspect = texture.image.width / texture.image.height;
+			const geo = new THREE.PlaneGeometry(3 * aspect, 3);
+			const mat = new THREE.MeshBasicMaterial({
+				map: texture,
+				transparent: true,
+				opacity: 0, // starts invisible, EntryCinematicSystem fades in via InteriorDecoration
+				side: THREE.DoubleSide,
+				depthWrite: false,
+			});
+			const backdrop = new THREE.Mesh(geo, mat);
+			backdrop.position.set(0, 0, -3.5);
+			world.scene.add(backdrop);
+
+			// Register as interior decoration so EntryCinematicSystem handles materialization
+			const backdropEntity = world.createTransformEntity(backdrop);
+			backdropEntity.addComponent(InteriorDecoration, {
+				decoType: 'backdrop',
+				floatPhase: 0,
+				floatSpeed: 0.1,
+				floatAmp: 0.005,
+				baseY: 0,
+				spawnDelay: 0.2, // appears first, before the ring
+				materialized: 0,
+			});
+		}, undefined, (err) => {
+			console.warn('[portals-ecs] Backdrop image failed to load:', imageUrl, err);
+		});
+	} else {
+		// No image — subtle gradient backdrop using portal color
+		const gradGeo = new THREE.PlaneGeometry(6, 4);
+		const gradMat = new THREE.ShaderMaterial({
+			transparent: true,
+			opacity: 0,
+			depthWrite: false,
+			side: THREE.DoubleSide,
+			uniforms: {
+				uColor: { value: new THREE.Color(colorHex) },
+			},
+			vertexShader: `
+				varying vec2 vUv;
+				void main() {
+					vUv = uv;
+					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+				}
+			`,
+			fragmentShader: `
+				uniform vec3 uColor;
+				varying vec2 vUv;
+				void main() {
+					float d = length(vUv - vec2(0.5, 0.5));
+					float alpha = smoothstep(0.7, 0.2, d) * 0.15;
+					gl_FragColor = vec4(uColor, alpha);
+				}
+			`,
+		});
+		const gradMesh = new THREE.Mesh(gradGeo, gradMat);
+		gradMesh.position.set(0, 0, -3.5);
+		world.scene.add(gradMesh);
+
+		const gradEntity = world.createTransformEntity(gradMesh);
+		gradEntity.addComponent(InteriorDecoration, {
+			decoType: 'backdrop',
+			floatPhase: 0,
+			floatSpeed: 0.05,
+			floatAmp: 0.002,
+			baseY: 0,
+			spawnDelay: 0.2,
+			materialized: 0,
+		});
+	}
 
 	// Reposition camera to face the ring
 	world.camera.position.set(0, 0, 0);
