@@ -1,41 +1,50 @@
 <!--
 	Portal layout — bare canvas, no chrome.
 
-	The portals page IS the spatial world. No header, no footer.
-	Overrides the app layout by hiding its elements from the shadow DOM
-	of the parent layout.
+	The portals page IS the spatial world. Sits above all other layout elements.
 -->
 <script>
 	import { onMount, onDestroy } from 'svelte';
 
 	let { children } = $props();
 
-	let hidden = [];
-
 	onMount(() => {
-		// Hide app layout chrome (navbar, footer, mobile menu)
-		const selectors = ['.navbar', '.site-footer', '.mobile-menu-overlay', '.app-layout > *:not(.portal-scope)'];
-		for (const sel of selectors) {
-			document.querySelectorAll(sel).forEach((el) => {
-				el.style.display = 'none';
-				hidden.push(el);
-			});
-		}
-		// Make app layout background transparent
-		const appLayout = document.querySelector('.app-layout');
-		if (appLayout) {
-			appLayout.style.background = 'transparent';
-			hidden.push(appLayout);
-		}
+		document.body?.classList.add('portal-route');
 	});
 
 	onDestroy(() => {
-		hidden.forEach((el) => {
-			if (el) el.style.display = '';
-		});
+		document.body?.classList.remove('portal-route');
 	});
 </script>
 
-<div class="portal-scope" style="position: fixed; inset: 0; z-index: 1;">
+<svelte:head>
+	<style>
+		body.portal-route .navbar,
+		body.portal-route .site-footer,
+		body.portal-route .mobile-menu-overlay {
+			display: none !important;
+		}
+		body.portal-route .app-layout {
+			background: #050508 !important;
+		}
+		body.portal-route .main-content {
+			padding: 0 !important;
+			max-width: none !important;
+			margin: 0 !important;
+		}
+	</style>
+</svelte:head>
+
+<div class="portal-scope">
 	{@render children()}
 </div>
+
+<style>
+	.portal-scope {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		background: #050508;
+		overflow: hidden;
+	}
+</style>
