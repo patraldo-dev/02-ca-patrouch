@@ -56,9 +56,22 @@ const PortalTransitionSystem = class extends createSystem(
 		const phase = sessionEntity.getValue(PortalSession, 'phase');
 
 		// ── Detect tap on ring via IWSDK Pressed tag ──
-		if (phase === 'ar-idle' && this.queries.pressedRings.entities.size > 0) {
-			console.log('[transition] Ring pressed! Starting focus');
-			sessionEntity.setValue(PortalSession, 'phase', 'ar-focused');
+		if (phase === 'ar-idle') {
+			const pressedCount = this.queries.pressedRings.entities.size;
+			// Log status every 2 seconds
+			this._logTimer = (this._logTimer || 0) + delta;
+			if (this._logTimer > 2) {
+				this._logTimer = 0;
+				let hovered = 0;
+				for (const e of this.queries.rings.entities) {
+					if (e.hasComponent(Hovered)) hovered++;
+				}
+				console.log(`[transition] ar-idle — pressed: ${pressedCount}, hovered: ${hovered}, rings: ${this.queries.rings.entities.size}`);
+			}
+			if (pressedCount > 0) {
+				console.log('[transition] ✅ Ring pressed! Starting focus');
+				sessionEntity.setValue(PortalSession, 'phase', 'ar-focused');
+			}
 		}
 
 		if (phase === 'preview') {
@@ -147,7 +160,9 @@ function createPortalRingMesh(colorHex) {
 		color, emissive: color, emissiveIntensity: 0.4,
 		transparent: true, opacity: 1,
 	});
-	group.add(new Mesh(torusGeo, torusMat));
+	const torus = new Mesh(torusGeo, torusMat);
+	torus.pointerEvents = 'auto'; // ← needed for InputSystem raycasting
+	group.add(torus);
 
 	const membraneGeo = new CircleGeometry(0.48, 64);
 	const membraneMat = new MeshBasicMaterial({
@@ -156,7 +171,11 @@ function createPortalRingMesh(colorHex) {
 	});
 	const membrane = new Mesh(membraneGeo, membraneMat);
 	membrane.position.z = 0.001;
+	membrane.pointerEvents = 'auto'; // ← needed for InputSystem raycasting
 	group.add(membrane);
+
+	// Group itself
+	group.pointerEvents = 'auto';
 
 	return group;
 }
