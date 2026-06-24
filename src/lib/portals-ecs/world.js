@@ -160,21 +160,47 @@ function generateToneWAV(frequency, durationSec = 2.0, sampleRate = 44100) {
 
 // ─── Main initialization ────────────────────────────────────────────
 export async function initPortalWorld(container, { portals, galaxies }) {
-	// ── 1. Create World — non-immersive, XR on demand ──
-	const world = await World.create(container, {
-		xr: {
-			sessionMode: SessionMode.ImmersiveVR,
-			offer: 'none',
-		},
-		render: {
-			defaultLighting: false,
-		},
-		features: {
-			locomotion: false,
-			grabbing: false,
-			physics: false,
-		},
-	});
+	// ── 0. Pre-flight checks ──
+	// Flush layout so container has real dimensions
+	await new Promise(r => requestAnimationFrame(r));
+	const rect = container.getBoundingClientRect();
+	console.log('[portals-ecs] Container rect:', rect.width, 'x', rect.height);
+	if (rect.width < 10 || rect.height < 10) {
+		throw new Error(`Container too small before World.create: ${rect.width}x${rect.height}`);
+	}
+
+	// Check if navigator.xr.isSessionSupported hangs
+	try {
+		const xrCheck = await Promise.race([
+			navigator.xr?.isSessionSupported?.('immersive-vr') ?? Promise.resolve(false),
+			new Promise((_, reject) => setTimeout(() => reject(new Error('XR support check timeout')), 3000))
+		]);
+		console.log('[portals-ecs] XR VR supported:', xrCheck);
+	} catch (e) {
+		console.warn('[portals-ecs] XR check failed/hung:', e.message);
+	}
+
+	// ── 1. Create World — try omitting sessionMode entirely ──
+	console.log('[portals-ecs] Calling World.create...');
+	const world = await Promise.race([
+		World.create(container, {
+			xr: {
+				offer: 'none',
+			},
+			render: {
+				defaultLighting: false,
+			},
+			features: {
+				locomotion: false,
+				grabbing: false,
+				physics: false,
+			},
+		}),
+		new Promise((_, reject) =>
+			setTimeout(() => reject(new Error('World.create timeout after 8s')), 8000)
+		)
+	]);
+	console.log('[portals-ecs] World.create resolved!');
 
 	// Position camera for spatial browsing
 	world.camera.position.set(0, 0, 1.2);

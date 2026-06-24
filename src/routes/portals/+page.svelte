@@ -73,7 +73,7 @@
 				console.log('[PortalWorld] Ready. Canvas:', cnv?.width + 'x' + cnv?.height, 'Container:', containerEl.getBoundingClientRect());
 			} catch (err) {
 				console.error('[PortalWorld] boot failed:', err);
-				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0, 4).join('\n');
+				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0, 6).join('\n');
 				bootStatus = 'error';
 			}
 		}
