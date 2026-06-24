@@ -1,6 +1,6 @@
 <!--
 	Portals — The space IS the experience.
-	Canvas-first, no menu. Everything else is overlay.
+	Full-screen overlay, z-index 99999 to cover all layout chrome.
 -->
 <script>
 	import { t } from '$lib/i18n';
@@ -16,7 +16,6 @@
 	let api = null;
 
 	let focusedPortal = $state(null);
-	let interiorPortal = $state(null);
 	let mode = $state('index');
 
 	function nameOf(item) {
@@ -32,25 +31,36 @@
 			try {
 				bootStatus = 'loading';
 				const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
-				if (cancelled || !containerEl) { bootStatus = 'error'; worldError = 'No container'; return; }
-			api = await initPortalWorld(containerEl, {
-				portals: data.portals || [],
-				galaxies: data.galaxies || [],
-			});
-			if (cancelled) return;
-			// Verify canvas actually has dimensions
-			const canvas = containerEl.querySelector('canvas');
-			const rect = containerEl.getBoundingClientRect();
-			if (!canvas || rect.width === 0 || rect.height === 0) {
-				bootStatus = 'error';
-				worldError = `Canvas not sized: container ${rect.width}x${rect.height}, canvas ${canvas ? 'exists' : 'missing'}`;
-				return;
-			}
-			worldReady = true;
-			bootStatus = 'ready';
+				if (cancelled || !containerEl) {
+					bootStatus = 'error';
+					worldError = 'Container not found';
+					return;
+				}
+				api = await initPortalWorld(containerEl, {
+					portals: data.portals || [],
+					galaxies: data.galaxies || [],
+				});
+				if (cancelled) return;
+
+				// Verify canvas has real dimensions
+				const canvas = containerEl.querySelector('canvas');
+				const rect = containerEl.getBoundingClientRect();
+				if (!canvas) {
+					bootStatus = 'error';
+					worldError = 'IWSDK booted but no canvas element found';
+					return;
+				}
+				if (rect.width < 10 || rect.height < 10) {
+					bootStatus = 'error';
+					worldError = `Container too small: ${rect.width}x${rect.height}`;
+					return;
+				}
+
+				worldReady = true;
+				bootStatus = 'ready';
 			} catch (err) {
 				console.error('[PortalWorld] boot failed:', err);
-				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0,4).join('\n');
+				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0, 4).join('\n');
 				bootStatus = 'error';
 			}
 		}
@@ -60,11 +70,10 @@
 			focusedPortal = (data.portals || []).find(p => p.id === e.detail.portalId) || null;
 		}
 		function onPortalEnter(e) {
-			interiorPortal = (data.portals || []).find(p => p.id === e.detail.portalId) || null;
 			mode = 'transitioning';
 		}
 		function onInteriorReady() { mode = 'interior'; }
-		function onExitToIndex() { mode = 'index'; interiorPortal = null; focusedPortal = null; }
+		function onExitToIndex() { mode = 'index'; focusedPortal = null; }
 
 		window.addEventListener('portal-focus', onPortalFocus);
 		window.addEventListener('portal-enter', onPortalEnter);
@@ -87,78 +96,66 @@
 			});
 		}
 	});
-
-	function handleExit() { api?.exitToIndex(); }
 </script>
 
 <svelte:head>
 	<title>{$t('games.title')}</title>
-	<style>
-		/* Kill layout chrome on this page only */
-		body > .app-layout > .navbar,
-		body > .app-layout > .site-footer { display: none !important; }
-	</style>
 </svelte:head>
 
-<!-- Boot indicator (plain HTML, always visible, no wrapper dependency) -->
+<!--
+	FULL-SCREEN OVERLAY — z-index 99999 covers navbar, footer, everything.
+	All content is position:fixed to escape the <main> layout container.
+-->
+
+<!-- Boot / error indicator -->
 {#if bootStatus !== 'ready'}
-	<div style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:#050508;color:#c9a87c;font-family:system-ui,sans-serif;">
+	<div class="boot">
 		{#if bootStatus === 'error'}
-			<div style="font-size:2rem;color:#ef4444;">⚠</div>
-			<pre style="color:#ef4444;font-size:0.65rem;font-family:monospace;max-width:90vw;overflow-x:auto;white-space:pre-wrap;text-align:center;padding:0 1rem;">{worldError}</pre>
+			<div class="boot-icon" style="color:#ef4444;">⚠</div>
+			<pre class="boot-err">{worldError}</pre>
 		{:else}
-			<div style="font-size:2.5rem;animation:spin 2s linear infinite;">⟡</div>
-			<div style="color:rgba(255,255,255,0.3);font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;">{bootStatus}</div>
+			<div class="boot-icon">⟡</div>
+			<div class="boot-text">{bootStatus}</div>
 		{/if}
 	</div>
 {/if}
 
-<!-- Post-boot diagnostic (flashes briefly if canvas is broken) -->
-{#if bootStatus === 'ready'}
-	<div id="diag-flash" style="position:fixed;top:0.5rem;right:0.5rem;z-index:99998;padding:0.3rem 0.6rem;background:rgba(0,200,0,0.3);color:#0f0;font-family:monospace;font-size:0.5rem;border-radius:4px;">
-		OK
+<!-- Canvas container — covers entire viewport -->
+<div class="canvas-host" bind:this={containerEl}></div>
+
+<!-- Focus label -->
+{#if worldReady && mode === 'index' && focusedPortal}
+	<div class="focus-label" style="--c: {focusedPortal.color_primary}">
+		<span>{focusedPortal.icon}</span>
+		<span style="color: var(--c)">{nameOf(focusedPortal)}</span>
 	</div>
 {/if}
 
-<!-- ECS Canvas -->
-<div style="position:fixed;inset:0;z-index:1;opacity:{worldReady ? 1 : 0};transition:opacity 1s ease;" bind:this={containerEl}></div>
+<!-- Exit button -->
+{#if worldReady && mode === 'interior'}
+	<button class="exit-btn" onclick={() => api?.exitToIndex()}>←</button>
+{/if}
 
-<!-- Fallback -->
-{#if worldError && bootStatus === 'error'}
-	<div style="position:fixed;inset:0;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:#050508;color:#e0e0e0;font-family:system-ui,sans-serif;">
-		<h1 style="color:#c9a87c;font-size:1.5rem;margin-bottom:1rem;">{$t('games.title')}</h1>
+<!-- Fallback nav (if world fails) -->
+{#if bootStatus === 'error'}
+	<div class="fallback-nav">
 		{#each data.galaxies as galaxy}
-			<section style="margin-bottom:1.5rem;">
-				<h2 style="font-size:0.8rem;color:#888;text-transform:uppercase;">{galaxy.icon} {nameOf(galaxy)}</h2>
+			<section>
+				<h2>{galaxy.icon} {nameOf(galaxy)}</h2>
 				{#each galaxy.portals as portal}
-					<a href="/portals/enter/{portal.id}" style="display:block;padding:0.4rem;color:#c9a87c;text-decoration:none;">
-						{portal.icon} {nameOf(portal)}
-					</a>
+					<a href="/portals/enter/{portal.id}">{portal.icon} {nameOf(portal)}</a>
 				{/each}
 			</section>
 		{/each}
 	</div>
 {/if}
 
-<!-- Minimal overlays -->
-{#if worldReady && !worldError}
-	{#if mode === 'index' && focusedPortal}
-		<div style="position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);z-index:10;padding:0.5rem 1.2rem;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);border-radius:24px;display:flex;align-items:center;gap:0.5rem;pointer-events:none;">
-			<span style="font-size:1.2rem;">{focusedPortal.icon}</span>
-			<span style="color:{focusedPortal.color_primary};font-size:0.9rem;font-weight:500;">{nameOf(focusedPortal)}</span>
-		</div>
-	{/if}
-	{#if mode === 'interior'}
-		<button onclick={handleExit} style="position:fixed;top:1rem;left:1rem;z-index:10;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.5);backdrop-filter:blur(10px);color:rgba(255,255,255,0.6);font-size:1.1rem;cursor:pointer;">←</button>
-	{/if}
-{/if}
-
-<!-- Accessible nav -->
-<nav style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);" aria-label="Portals">
+<!-- Screen reader nav -->
+<nav class="sr" aria-label="Portals">
 	<h1>{$t('games.title')}</h1>
 	{#each data.galaxies as galaxy}
 		<section>
-			<h2>{galaxy.icon} {nameOf(galaxy)}</h2>
+			<h2>{nameOf(galaxy)}</h2>
 			{#each galaxy.portals as portal}
 				<a href="/portals/enter/{portal.id}">{nameOf(portal)}</a>
 			{/each}
@@ -167,6 +164,87 @@
 </nav>
 
 <style>
+	.boot {
+		position: fixed;
+		inset: 0;
+		z-index: 99999;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		background: #050508;
+		font-family: system-ui, sans-serif;
+	}
+	.boot-icon { font-size: 2.5rem; color: #c9a87c; }
+	.boot-text { color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; }
+	.boot-err { color: #ef4444; font-size: 0.6rem; font-family: monospace; max-width: 90vw; overflow-x: auto; white-space: pre-wrap; text-align: center; padding: 0 1rem; }
+
+	.canvas-host {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		z-index: 99998;
+		background: #050508;
+	}
+
+	:global(.canvas-host canvas) {
+		width: 100% !important;
+		height: 100% !important;
+		display: block;
+	}
+
+	.focus-label {
+		position: fixed;
+		bottom: 2rem;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 99999;
+		padding: 0.5rem 1.2rem;
+		background: rgba(0,0,0,0.6);
+		backdrop-filter: blur(12px);
+		border-radius: 24px;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		pointer-events: none;
+		font-size: 0.9rem;
+	}
+
+	.exit-btn {
+		position: fixed;
+		top: 1rem;
+		left: 1rem;
+		z-index: 99999;
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		border: 1px solid rgba(255,255,255,0.15);
+		background: rgba(0,0,0,0.5);
+		backdrop-filter: blur(10px);
+		color: rgba(255,255,255,0.6);
+		font-size: 1.1rem;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.fallback-nav {
+		position: fixed;
+		inset: 0;
+		z-index: 99999;
+		overflow-y: auto;
+		padding: 2rem 1.5rem;
+		background: #050508;
+		color: #e0e0e0;
+		font-family: system-ui, sans-serif;
+	}
+	.fallback-nav h2 { font-size: 0.8rem; color: #888; text-transform: uppercase; margin: 1rem 0 0.3rem; }
+	.fallback-nav a { display: block; padding: 0.4rem 0; color: #c9a87c; text-decoration: none; }
+
+	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
 	@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-	:global(canvas) { width: 100% !important; height: 100% !important; display: block; }
 </style>
