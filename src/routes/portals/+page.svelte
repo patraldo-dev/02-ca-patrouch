@@ -1,263 +1,443 @@
+<!--
+	PortalWorld.svelte — Portals page with reactive visual layer
+
+	Layout:
+	- Reactive gradient background (tints toward active/focused portal)
+	- Carousel hero at top (video preview, auto-rotating)
+	- Portal cards in full-width rows, tap to slide-open detail
+	- Galaxy groupings as section headers
+	- ECS canvas behind everything (progressive enhancement)
+-->
+
 <script>
-	import { onMount, onDestroy } from 'svelte';
+	import { t } from '$lib/i18n';
 	import { locale } from '$lib/i18n';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 
 	let containerEl = $state(null);
-	let status = $state('Booting...');
-	let worldRef = null;
+	let worldReady = $state(false);
 	let focusedPortalId = $state(null);
-	let bootError = $state(null);
 
-	function nameOf(portal) {
+	// ── Bumper ──
+	let showBumper = $state(false);
+	let bumperSrc = $state('');
+	const BUMPER_VERSIONS = [
+		'/portal-bumper-v1.html',
+		'/portal-bumper-v2.html',
+		'/portal-bumper-v3.html',
+		'/portal-bumper-v4.html',
+	];
+
+	function nameOf(item) {
 		const lang = $locale || 'es';
-		if (lang === 'en') return portal.name_en || portal.name_es;
-		if (lang === 'fr') return portal.name_fr || portal.name_es;
-		return portal.name_es;
+		if (lang === 'en') return item.name_en || item.name_es;
+		if (lang === 'fr') return item.name_fr || item.name_es;
+		return item.name_es;
+	}
+	function descOf(item) {
+		const lang = $locale || 'es';
+		if (lang === 'en') return item.description_en || item.description_es;
+		if (lang === 'fr') return item.description_fr || item.description_es;
+		return item.description_es;
 	}
 
-	let tabEntities = [];
-	let tabMeshes = [];
+	// Carousel
+	let activeIdx = $state(0);
+	let allPortals = $derived(data.portals || []);
+	let activePortal = $derived(allPortals[activeIdx] || allPortals[0]);
 
+	$effect(() => {
+		if (allPortals.length <= 1) return;
+		const timer = setInterval(() => {
+			activeIdx = (activeIdx + 1) % allPortals.length;
+		}, 6000);
+		return () => clearInterval(timer);
+	});
+
+	// Background follows focused portal, or carousel if none focused
+	let bgPortal = $derived(allPortals.find((p) => p.id === focusedPortalId) || activePortal);
+
+	// ECS boot
+	let worldInstance = null;
 	onMount(() => {
-		let cancelled = false;
+		// ── Bumper: random pick, once per session ──
+		if (!sessionStorage.getItem('patrouch-bumper-played')) {
+			bumperSrc = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
+			showBumper = true;
+			sessionStorage.setItem('patrouch-bumper-played', '1');
+			// Auto-dismiss after 6.5s (bumper durations vary 4.8-5.6s + buffer)
+			setTimeout(() => { showBumper = false; }, 6500);
+		}
 
+		let cancelled = false;
 		async function boot() {
 			try {
-				const {
-					World, Transform,
-					Mesh, BoxGeometry, MeshBasicMaterial, Color,
-					Raycaster, Vector2,
-				} = await import('@iwsdk/core');
-
+				const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
 				if (cancelled || !containerEl) return;
-
-				const world = await World.create(containerEl, {
-					render: { defaultLighting: false },
+				const result = await initPortalWorld(containerEl, {
+					portals: data.portals || [],
+					galaxies: data.galaxies || [],
 				});
-				worldRef = world;
-
-				world.camera.position.set(0, 0, 3);
-				world.camera.lookAt(0, 0, 0);
-
-				const distance = 3;
-				const vFov = world.camera.fov * Math.PI / 180;
-				const visibleHeight = 2 * Math.tan(vFov / 2) * distance;
-				const visibleWidth = visibleHeight * world.camera.aspect;
-
-				const portals = data.portals || [];
-
-				const TAB_WIDTH = Math.min(0.8, visibleWidth * 0.7);
-				const TAB_HEIGHT = 0.15;
-				const TAB_GAP = 0.04;
-				const totalHeight = portals.length * (TAB_HEIGHT + TAB_GAP) - TAB_GAP;
-				const startY = totalHeight / 2 - TAB_HEIGHT / 2;
-
-				tabEntities = [];
-				tabMeshes = [];
-
-				portals.forEach((portal, i) => {
-					const colorHex = portal.color_primary || '#c9a87c';
-					const geo = new BoxGeometry(TAB_WIDTH, TAB_HEIGHT, 0.02);
-					const mat = new MeshBasicMaterial({ color: new Color(colorHex) });
-					const mesh = new Mesh(geo, mat);
-
-					const entity = world.createTransformEntity(mesh);
-					const pos = entity.getVectorView(Transform, 'position');
-					pos[0] = 0;
-					pos[1] = startY - i * (TAB_HEIGHT + TAB_GAP);
-					pos[2] = 0;
-
-					mesh.userData.portalId = portal.id;
-					mesh.userData.portalName = nameOf(portal);
-
-					tabEntities.push(entity);
-					tabMeshes.push(mesh);
-				});
-
-				// Tap interaction
-				const raycaster = new Raycaster();
-				const pointer = new Vector2();
-
-				function handleTap(clientX, clientY) {
-					const rect = containerEl.getBoundingClientRect();
-					pointer.x = (clientX - rect.left) / rect.width * 2 - 1;
-					pointer.y = -((clientY - rect.top) / rect.height * 2 - 1);
-					raycaster.setFromCamera(pointer, world.camera);
-
-					const intersects = raycaster.intersectObjects(tabMeshes);
-					if (intersects.length > 0) {
-						const hit = intersects[0].object;
-						const portalId = hit.userData.portalId;
-
-						focusedPortalId = focusedPortalId === portalId ? null : portalId;
-
-						tabMeshes.forEach((mesh) => {
-							const isFocused = mesh.userData.portalId === focusedPortalId;
-							const entity = tabEntities.find(e => e.object3D === mesh);
-							const pos = entity.getVectorView(Transform, 'position');
-							pos[2] = isFocused ? 0.5 : 0;
-
-							const scale = entity.getVectorView(Transform, 'scale');
-							const s = isFocused ? 1.15 : 1.0;
-							scale[0] = s; scale[1] = s; scale[2] = s;
-
-							if (focusedPortalId) {
-								mesh.material.opacity = isFocused ? 1.0 : 0.3;
-								mesh.material.transparent = true;
-							} else {
-								mesh.material.opacity = 1.0;
-								mesh.material.transparent = false;
-							}
-						});
-					}
-				}
-
-				containerEl.addEventListener('click', (e) => handleTap(e.clientX, e.clientY));
-				containerEl.addEventListener('touchend', (e) => {
-					if (e.changedTouches.length > 0) {
-						handleTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-					}
-				});
-
-				status = `${portals.length} portals — tap to focus`;
+				if (cancelled) return;
+				worldInstance = result.world;
+				worldReady = true;
 			} catch (err) {
-				console.error('[portals] Boot failed:', err);
-				bootError = err.message;
-				status = `Failed: ${err.message}`;
+				console.error('[PortalWorld] IWSDK unavailable:', err);
 			}
 		}
-
 		boot();
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+			if (worldInstance) {
+				import('$lib/portals-ecs/world.js').then(({ destroyPortalWorld }) => {
+					destroyPortalWorld(worldInstance);
+				});
+			}
+		};
 	});
 
-	onDestroy(() => {
-		if (worldRef?.renderer) {
-			worldRef.renderer.dispose();
-			worldRef.renderer.domElement?.remove();
-		}
-	});
-
-	let focusedPortal = $derived(data.portals?.find(p => p.id === focusedPortalId) || null);
+	function togglePortal(id) {
+		focusedPortalId = focusedPortalId === id ? null : id;
+	}
 </script>
 
-<svelte:head>
-	<title>Portales — patrouch.ca</title>
-</svelte:head>
-
-<div class="portal-canvas" bind:this={containerEl}></div>
-
-<!-- Fallback: if IWSDK fails, show DOM list -->
-{#if bootError}
-	<div class="fallback">
-		{#each data.portals as portal}
-			<a class="fallback-tab" href="/portals/enter/{portal.id}" style="--c: {portal.color_primary}">
-				<span>{portal.icon}</span>
-				<span>{nameOf(portal)}</span>
-				<span>→</span>
-			</a>
-		{/each}
-	</div>
-{:else}
-	<div class="overlay">
-		{#if focusedPortal}
-			<div class="portal-info" style="--pc: {focusedPortal.color_primary};">
-				<span class="portal-icon">{focusedPortal.icon}</span>
-				<h2 class="portal-name">{nameOf(focusedPortal)}</h2>
-				<a class="portal-enter" href="/portals/enter/{focusedPortal.id}">Entrar →</a>
-			</div>
-		{:else}
-			<p class="hint">Toca un portal</p>
-		{/if}
+<!-- Bumper overlay (fullscreen, once per session) -->
+{#if showBumper}
+	<div class="bumper-overlay">
+		<iframe src={bumperSrc} frameborder="0" allow="autoplay"></iframe>
+		<button class="bumper-skip" onclick={() => showBumper = false}>Skip</button>
 	</div>
 {/if}
 
+<!-- ECS Canvas -->
+<div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}></div>
+
+<!-- Reactive background -->
+<div
+	class="reactive-bg"
+	style="--bg-a: {bgPortal?.color_primary || '#c9a87c'}; --bg-b: {bgPortal?.color_bg || '#1a1a2e'};"
+></div>
+
+<!-- Accessible nav -->
+<nav class="sr-only" aria-label="Portals">
+	{#each data.galaxies as galaxy}
+		<section>
+			<h2>{galaxy.icon} {nameOf(galaxy)}</h2>
+			{#each galaxy.portals as portal}
+				<a href="/portals/enter/{portal.id}">
+					{nameOf(portal)} — {descOf(portal)}
+				</a>
+			{/each}
+		</section>
+	{/each}
+</nav>
+
+<!-- Page content -->
+<section class="portals-page">
+
+	<!-- Carousel -->
+	{#if activePortal}
+		<a
+			class="carousel-hero"
+			href="/portals/enter/{activePortal.id}"
+			style="--pv-color: {activePortal.color_primary};"
+		>
+			{#if activePortal.video_url}
+				<div class="hero-video">
+					<iframe
+						src={activePortal.video_url}
+						frameborder="0"
+						scrolling="no"
+						allow="autoplay; encrypted-media"
+						title={nameOf(activePortal)}
+					></iframe>
+				</div>
+			{:else}
+				<div class="hero-fallback">
+					<span class="hero-icon">{activePortal.icon}</span>
+				</div>
+			{/if}
+			<div class="hero-bar">
+				<span class="hero-name" style="color: {activePortal.color_primary}">
+					{activePortal.icon} {nameOf(activePortal)}
+				</span>
+				<div class="hero-dots">
+					{#each allPortals as _, i}
+						<button
+							class="hero-dot"
+							class:active={i === activeIdx}
+							onclick={(e) => { e.preventDefault(); activeIdx = i; }}
+							aria-label="Slide {i + 1}"
+						></button>
+					{/each}
+				</div>
+			</div>
+		</a>
+	{/if}
+
+	<h1 class="page-title">{$t('games.title')}</h1>
+	<p class="page-subtitle">{$t('pages.home.works.games.desc')}</p>
+
+	{#if data.galaxies?.length > 0}
+		<div class="galaxies">
+			{#each data.galaxies as galaxy}
+				<div class="galaxy-group">
+					<div class="galaxy-header">
+						<span class="galaxy-icon">{galaxy.icon}</span>
+						<span class="galaxy-name">{nameOf(galaxy)}</span>
+					</div>
+					<div class="portal-list">
+						{#each galaxy.portals as portal}
+							<div
+								class="portal-item"
+								class:open={focusedPortalId === portal.id}
+								style="--portal-color: {portal.color_primary}; --portal-bg: {portal.color_bg};"
+							>
+								<button
+									class="portal-row"
+									onclick={() => togglePortal(portal.id)}
+									aria-expanded={focusedPortalId === portal.id}
+								>
+									<span class="portal-icon">{portal.icon}</span>
+									<div class="portal-info">
+										<h2 class="portal-name" style="color: {portal.color_primary}">{nameOf(portal)}</h2>
+										<p class="portal-desc">{descOf(portal)}</p>
+									</div>
+									{#if portal.active_writings_count > 0}
+										<span class="portal-writings">{portal.active_writings_count}</span>
+									{/if}
+									<span class="portal-chevron" class:rotated={focusedPortalId === portal.id}>›</span>
+								</button>
+
+								<!-- Slide-down detail panel -->
+								{#if focusedPortalId === portal.id}
+									<div class="portal-detail">
+										<a class="portal-enter" href="/portals/enter/{portal.id}">
+											{$t('games.enter')} →
+										</a>
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
+</section>
+
 <style>
+	/* ── Bumper overlay ── */
+	.bumper-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		background: #050508;
+	}
+	.bumper-overlay iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
+	.bumper-skip {
+		position: fixed;
+		bottom: 1.5rem;
+		right: 1.5rem;
+		z-index: 10000;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.15);
+		color: rgba(255,255,255,0.4);
+		padding: 0.4rem 1rem;
+		border-radius: 20px;
+		cursor: pointer;
+		font-size: 0.75rem;
+		backdrop-filter: blur(10px);
+		transition: all 0.2s;
+	}
+	.bumper-skip:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
 	.portal-canvas {
 		position: fixed;
 		inset: 0;
 		z-index: 0;
-	}
-	.portal-canvas :global(canvas) {
-		width: 100% !important;
-		height: 100% !important;
-	}
-
-	.overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		z-index: 5;
+		opacity: 0;
+		transition: opacity 0.8s ease;
 		pointer-events: none;
-		padding: 1rem;
 	}
-	.overlay > * { pointer-events: auto; }
+	.portal-canvas.ready { opacity: 1; }
+	.portal-canvas :global(canvas) { width: 100% !important; height: 100% !important; }
 
-	.portal-info {
-		text-align: center;
-		background: rgba(0, 0, 0, 0.7);
-		backdrop-filter: blur(12px);
-		border: 1px solid color-mix(in srgb, var(--pc, #c9a87c) 40%, transparent);
-		border-radius: 16px;
-		padding: 1rem 1.5rem;
-		max-width: 400px;
+	.reactive-bg {
+		position: fixed;
+		inset: 0;
+		z-index: 0;
+		background:
+			radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--bg-a) 8%, transparent), transparent),
+			linear-gradient(180deg, color-mix(in srgb, var(--bg-a) 12%, #0a0a0e), color-mix(in srgb, var(--bg-b) 8%, #050508));
+		transition: background 1.5s ease;
+	}
+
+	.portals-page {
+		position: relative;
+		z-index: 2;
+		max-width: 700px;
 		margin: 0 auto;
-		animation: slide-down 0.3s ease;
+		padding: 1.5rem 1.5rem 4rem;
 	}
-	@keyframes slide-down {
-		from { opacity: 0; transform: translateY(-20px); }
-		to { opacity: 1; transform: translateY(0); }
+
+	/* Carousel */
+	.carousel-hero {
+		display: block;
+		position: relative;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		margin-bottom: 1.5rem;
+		border-radius: 16px;
+		overflow: hidden;
+		border: 2px solid color-mix(in srgb, var(--pv-color, #c9a87c) 40%, transparent);
+		background: #0a0a0e;
+		text-decoration: none;
+		color: var(--fg);
+		transition: border-color 0.8s ease;
+		animation: hero-fade 0.6s ease;
 	}
-	.portal-icon { font-size: 2rem; }
-	.portal-name {
+	@keyframes hero-fade { from { opacity: 0.3; } to { opacity: 1; } }
+	.hero-video, .hero-fallback {
+		position: absolute; inset: 0; width: 100%; height: 100%;
+	}
+	.hero-video iframe {
+		width: 100%; height: 100%; border: none; pointer-events: none;
+	}
+	.hero-fallback {
+		display: flex; align-items: center; justify-content: center;
+		background: color-mix(in srgb, var(--pv-color, #c9a87c) 10%, #0a0a0e);
+	}
+	.hero-icon { font-size: 3.5rem; }
+	.hero-bar {
+		position: absolute; bottom: 0; left: 0; right: 0;
+		padding: 0.6rem 1rem;
+		display: flex; justify-content: space-between; align-items: center;
+		background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+	}
+	.hero-name {
 		font-family: var(--font-heading);
-		color: var(--pc, #c9a87c);
-		font-size: 1.2rem;
-		margin: 0.5rem 0;
+		font-size: 0.9rem; font-weight: 600;
+		text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+	}
+	.hero-dots { display: flex; gap: 6px; }
+	.hero-dot {
+		width: 7px; height: 7px; border-radius: 50%; border: none;
+		background: rgba(255,255,255,0.25); cursor: pointer; padding: 0;
+		transition: all 0.3s;
+	}
+	.hero-dot.active {
+		background: var(--pv-color, #c9a87c);
+		transform: scale(1.3);
+	}
+
+	/* Title */
+	.page-title {
+		font-family: var(--font-heading);
+		font-size: 1.75rem;
+		text-align: center;
+		margin-bottom: 0.2rem;
+	}
+	.page-subtitle {
+		color: var(--muted); font-size: 0.9rem; text-align: center;
+		margin-bottom: 1.5rem; font-style: italic;
+	}
+
+	/* Galaxy groups */
+	.galaxies {
+		display: flex; flex-direction: column; gap: 1.5rem;
+	}
+	.galaxy-header {
+		display: flex; align-items: center; gap: 0.5rem;
+		margin-bottom: 0.5rem; padding: 0 0.25rem;
+	}
+	.galaxy-icon { font-size: 1.1rem; }
+	.galaxy-name {
+		font-family: var(--font-heading); font-size: 0.8rem;
+		text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+	}
+
+	/* Portal items — full width, slide-open on tap */
+	.portal-list {
+		display: flex; flex-direction: column; gap: 0.6rem;
+	}
+	.portal-item {
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-left: 3px solid var(--portal-color);
+		border-radius: 12px;
+		overflow: hidden;
+		transition: all 0.2s ease;
+	}
+	.portal-item.open {
+		border-color: var(--portal-color);
+		background: color-mix(in srgb, var(--portal-bg, var(--surface)) 10%, var(--surface));
+		box-shadow: 0 4px 20px color-mix(in srgb, var(--portal-color) 12%, transparent);
+	}
+	.portal-row {
+		display: flex; align-items: center; gap: 1rem;
+		padding: 1rem 1.25rem;
+		border: none; background: transparent;
+		width: 100%; text-align: left; cursor: pointer;
+		color: var(--fg);
+	}
+	.portal-icon { font-size: 1.8rem; flex-shrink: 0; }
+	.portal-info { flex: 1; min-width: 0; }
+	.portal-name {
+		font-family: var(--font-heading); font-size: 1.05rem;
+		margin: 0; line-height: 1.2;
+	}
+	.portal-desc {
+		font-size: 0.78rem; color: var(--text-dim);
+		margin: 2px 0 0; line-height: 1.3;
+	}
+	.portal-writings {
+		font-size: 0.7rem; background: var(--portal-color);
+		color: #fff; border-radius: 10px; padding: 2px 8px; flex-shrink: 0;
+	}
+	.portal-chevron {
+		color: var(--portal-color); font-size: 1.4rem;
+		opacity: 0.5; transition: all 0.25s ease;
+		flex-shrink: 0; transform: rotate(0deg);
+	}
+	.portal-chevron.rotated {
+		transform: rotate(90deg);
+		opacity: 1;
+	}
+
+	/* Slide-down detail */
+	.portal-detail {
+		padding: 0 1.25rem 1rem;
+		animation: detail-slide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+	@keyframes detail-slide {
+		from { opacity: 0; transform: translateY(-8px); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 	.portal-enter {
 		display: inline-block;
-		padding: 0.4rem 1.2rem;
-		border: 1px solid var(--pc, #c9a87c);
-		color: var(--pc, #c9a87c);
-		border-radius: 20px;
-		text-decoration: none;
-		font-size: 0.85rem;
+		padding: 0.5rem 1.5rem;
+		border: 1px solid var(--portal-color);
+		color: var(--portal-color);
 		font-family: var(--font-heading);
+		font-size: 0.85rem;
+		border-radius: 24px;
+		text-decoration: none;
+		transition: all 0.2s;
 	}
-	.hint {
-		text-align: center;
-		color: rgba(255, 255, 255, 0.5);
-		font-size: 0.8rem;
+	.portal-enter:hover {
+		background: var(--portal-color);
+		color: #fff;
 	}
 
-	.fallback {
-		position: relative;
-		z-index: 2;
-		max-width: 600px;
-		margin: 2rem auto;
-		padding: 0 1rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-	.fallback-tab {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding: 1rem 1.25rem;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-left: 3px solid var(--c, #c9a87c);
-		border-radius: 12px;
-		text-decoration: none;
-		color: var(--fg);
-		font-family: var(--font-heading);
-	}
-	.fallback-tab:hover {
-		background: color-mix(in srgb, var(--c, #c9a87c) 8%, var(--surface));
+	.sr-only {
+		position: absolute; width: 1px; height: 1px;
+		padding: 0; margin: -1px; overflow: hidden;
+		clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 	}
 </style>
