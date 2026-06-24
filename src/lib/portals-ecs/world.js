@@ -60,16 +60,17 @@ function hexToRgb(hex) {
 
 // ─── Tab mesh factory ───────────────────────────────────────────────
 function createTabMesh(colorPrimary) {
-	const geo = new THREE.BoxGeometry(0.12, 0.08, 0.01);
 	const color = new THREE.Color(colorPrimary);
+	// Larger, brighter tab so it's visible
+	const geo = new THREE.BoxGeometry(0.3, 0.18, 0.02);
 	const mat = new THREE.MeshStandardMaterial({
-		color: 0x222226,
+		color: 0x333338,
 		emissive: color,
-		emissiveIntensity: 0.05,
+		emissiveIntensity: 0.3,
 		metalness: 0.3,
 		roughness: 0.6,
 		transparent: true,
-		opacity: 0.92,
+		opacity: 0.95,
 	});
 	return new THREE.Mesh(geo, mat);
 }
@@ -179,6 +180,9 @@ export async function initPortalWorld(container, { portals, galaxies }) {
 	world.camera.position.set(0, 0, 1.2);
 	world.camera.lookAt(0, 0, 0);
 
+	// Scene background — not pure black so objects are distinguishable
+	world.scene.background = new THREE.Color(0x0a0a12);
+
 	// Lighting — shared between modes, NarrativeSystem takes over in interior
 	const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 	world.scene.add(ambientLight);
@@ -273,9 +277,9 @@ export async function initPortalWorld(container, { portals, galaxies }) {
 	}
 
 	// ── 9. Portal tab entities ──
-	const RAIL_X = -0.85;
-	const RAIL_Y_START = 0.35;
-	const RAIL_SPACING = 0.1;
+	const RAIL_X = -0.6;
+	const RAIL_Y_START = 0.3;
+	const RAIL_SPACING = 0.22;
 
 	const galaxyIndexMap = {};
 	let galaxyGroupIdx = 0;
