@@ -18,7 +18,12 @@
 		async function boot() {
 			try {
 				log('Dynamic import @iwsdk/core...');
-				const { World, SessionMode, Transform } = await import('@iwsdk/core');
+				// IWSDK re-exports all of THREE — import everything from here
+				const {
+					World, Transform,
+					AmbientLight, DirectionalLight,
+					Mesh, BoxGeometry, MeshStandardMaterial,
+				} = await import('@iwsdk/core');
 				log('Import OK. Creating World...');
 
 				if (cancelled || !containerEl) return;
@@ -39,14 +44,13 @@
 				log(`Camera fov: ${world.camera.fov}, aspect: ${world.camera.aspect}`);
 
 				// ── Lights (required for MeshStandardMaterial) ──
-				world.scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-				const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+				world.scene.add(new AmbientLight(0xffffff, 1.0));
+				const dir = new DirectionalLight(0xffffff, 1.0);
 				dir.position.set(1, 1, 2);
 				world.scene.add(dir);
 				log('Lights added');
 
-				// ── Test 1: Red cube via createTransformEntity ──
-				const { Mesh, BoxGeometry, MeshStandardMaterial } = await import('three');
+				// ── Test 1: Red cube via createTransformEntity (ECS way) ──
 				const cubeGeo = new BoxGeometry(1, 1, 1);
 				const cubeMat = new MeshStandardMaterial({ color: 0xff0000, roughness: 0.4 });
 				const cubeMesh = new Mesh(cubeGeo, cubeMat);
@@ -58,17 +62,15 @@
 				cubePos[2] = 0;
 				log('Red cube entity created at (0,0,0)');
 
-				// Verify it's in the scene graph
+				// Verify scene graph
 				log(`cubeEntity.object3D: ${cubeEntity.object3D ? 'exists' : 'NULL'}`);
 				log(`cubeMesh.parent: ${cubeMesh.parent ? cubeMesh.parent.type : 'NULL'}`);
-				log(`Scene children: ${world.scene.children.length}`);
-
-				// List all scene children
+				log(`Scene children count: ${world.scene.children.length}`);
 				world.scene.children.forEach((child, i) => {
 					log(`  scene.child[${i}]: ${child.type} "${child.name || ''}" visible=${child.visible}`);
 				});
 
-				// ── Test 2: Also add directly to scene (bypass ECS) ──
+				// ── Test 2: Green cube added directly to scene ──
 				const greenCube = new Mesh(
 					new BoxGeometry(0.5, 0.5, 0.5),
 					new MeshStandardMaterial({ color: 0x00ff00, roughness: 0.4 })
@@ -91,7 +93,7 @@
 
 			} catch (err) {
 				log(`ERROR: ${err.message}`);
-				log(`Stack: ${err.stack?.split('\n').slice(0,3).join(' | ')}`);
+				log(`Stack: ${err.stack?.split('\n').slice(0, 3).join(' | ')}`);
 				status = `Failed: ${err.message}`;
 			}
 		}
