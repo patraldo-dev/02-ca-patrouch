@@ -183,6 +183,13 @@ export async function initPortalWorld(container, { portals, galaxies }) {
 	// Scene background — not pure black so objects are distinguishable
 	world.scene.background = new THREE.Color(0x0a0a12);
 
+	// DEBUG: Bright test sphere directly in front of camera
+	const testGeo = new THREE.SphereGeometry(0.15, 16, 16);
+	const testMat = new THREE.MeshBasicMaterial({ color: 0xff0066 });
+	const testSphere = new THREE.Mesh(testGeo, testMat);
+	testSphere.position.set(0, 0, 0);
+	world.scene.add(testSphere);
+
 	// Lighting — shared between modes, NarrativeSystem takes over in interior
 	const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 	world.scene.add(ambientLight);

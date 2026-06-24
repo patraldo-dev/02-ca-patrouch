@@ -118,6 +118,9 @@
 			<div class="boot-text">{bootStatus}</div>
 		{/if}
 	</div>
+{:else}
+	<!-- Debug badge stays visible -->
+	<div style="position:fixed;top:0.3rem;right:0.3rem;z-index:99999;padding:0.2rem 0.5rem;background:rgba(0,200,0,0.4);color:#0f0;font-family:monospace;font-size:0.5rem;border-radius:4px;">READY</div>
 {/if}
 
 <!-- Canvas container — covers entire viewport -->
