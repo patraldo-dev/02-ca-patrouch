@@ -56,9 +56,33 @@
 		}
 		boot();
 
+		// Tap listener directly on container (not overlay) — works in AR
+		function onTouchEnd(e) {
+			if (!api || phase !== 'ar') return;
+			if (e.changedTouches.length === 0) return;
+			const touch = e.changedTouches[0];
+			const rect = containerEl.getBoundingClientRect();
+			const ndcX = (touch.clientX - rect.left) / rect.width * 2 - 1;
+			const ndcY = -((touch.clientY - rect.top) / rect.height * 2 - 1);
+			const tapped = api.handleTap(ndcX, ndcY);
+			if (tapped) phase = 'transitioning';
+		}
+		function onClick(e) {
+			if (!api || phase !== 'ar') return;
+			const rect = containerEl.getBoundingClientRect();
+			const ndcX = (e.clientX - rect.left) / rect.width * 2 - 1;
+			const ndcY = -((e.clientY - rect.top) / rect.height * 2 - 1);
+			const tapped = api.handleTap(ndcX, ndcY);
+			if (tapped) phase = 'transitioning';
+		}
+		containerEl?.addEventListener('click', onClick);
+		containerEl?.addEventListener('touchend', onTouchEnd);
+
 		return () => {
 			cancelled = true;
 			window.removeEventListener('portal-transition-ready', handleTransitionReady);
+			containerEl?.removeEventListener('click', onClick);
+			containerEl?.removeEventListener('touchend', onTouchEnd);
 		};
 	});
 
@@ -108,17 +132,6 @@
 		}
 	}
 
-	function handleCanvasTap(e) {
-		if (!api || phase !== 'ar') return;
-		const rect = containerEl.getBoundingClientRect();
-		const ndcX = ((e.clientX || e.touches?.[0]?.clientX) - rect.left) / rect.width * 2 - 1;
-		const ndcY = -((e.clientY || e.touches?.[0]?.clientY) - rect.top) / rect.height * 2 + 1;
-		const tapped = api.handleTap(ndcX, ndcY);
-		if (tapped) {
-			phase = 'transitioning';
-		}
-	}
-
 	function handleExit() {
 		if (api) api.exit();
 		phase = 'preview';
@@ -164,11 +177,9 @@
 		</div>
 	</div>
 {:else if phase === 'ar'}
-	<div class="overlay ar-overlay" role="button" tabindex="0"
-		onclick={handleCanvasTap}
-		onkeydown={(e) => e.key === 'Enter' && handleCanvasTap(e)}>
+	<div class="overlay ar-overlay">
 		<div class="ar-hint">
-			<p>Toca el portal para entrar</p>
+			<p>Toca el aro para entrar</p>
 			<button class="btn-ghost" onclick={handleExit}>← Salir</button>
 		</div>
 	</div>
@@ -301,7 +312,7 @@
 
 	/* AR overlay */
 	.ar-overlay {
-		cursor: pointer;
+		pointer-events: none;
 	}
 	.ar-hint {
 		position: fixed;
