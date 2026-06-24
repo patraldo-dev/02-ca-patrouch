@@ -1,18 +1,20 @@
 <!--
 	Portal layout — bare canvas, no chrome.
-
 	The portals page IS the spatial world. Sits above all other layout elements.
 -->
 <script>
 	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 
 	let { children } = $props();
 
 	onMount(() => {
+		if (!browser) return;
 		document.body?.classList.add('portal-route');
 	});
 
 	onDestroy(() => {
+		if (!browser) return;
 		document.body?.classList.remove('portal-route');
 	});
 </script>
