@@ -376,7 +376,7 @@
             window.addEventListener('portal-tab-tap', (e) => {
                 const { portalId } = e.detail;
                 // Navigate to that portal's AR view
-                window.location.href = `/portals/booty/arbooty?theme=${portalId}`;
+                window.location.href = `/portals/enter/${portalId}`;
             });
 
             webxrState.onARStart = () => {

@@ -12,7 +12,7 @@ export async function GET({ locals }) {
         { url: '/write', priority: '0.8', changefreq: 'daily' },
         { url: '/about', priority: '0.5', changefreq: 'monthly' },
         { url: '/portals', priority: '0.7', changefreq: 'weekly' },
-        { url: '/portals/booty/arbooty', priority: '0.6', changefreq: 'weekly' },
+        { url: '/portals/enter', priority: '0.6', changefreq: 'weekly' },
         { url: '/login', priority: '0.3', changefreq: 'monthly' },
         { url: '/signup', priority: '0.3', changefreq: 'monthly' },
         { url: '/privacy', priority: '0.2', changefreq: 'yearly' },

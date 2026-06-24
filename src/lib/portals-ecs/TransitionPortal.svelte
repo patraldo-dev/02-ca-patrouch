@@ -156,7 +156,7 @@
 					</button>
 				{/if}
 				{#if !supports.ar && !supports.vr}
-					<a class="btn-secondary" href="/portals/booty/arbooty?theme={portalConfig?.id || ''}">
+					<a class="btn-secondary" href="/portals/enter/{portalConfig?.id || ''}">
 						📱 Ver sin XR
 					</a>
 				{/if}
@@ -191,7 +191,7 @@
 				<p class="error">{errorMsg}</p>
 			{/if}
 			<p>Tu dispositivo no soporta WebXR inmersivo.</p>
-			<a class="btn-secondary" href="/portals/booty/arbooty?theme={portalConfig?.id || ''}">
+			<a class="btn-secondary" href="/portals/enter/{portalConfig?.id || ''}">
 				📱 Ver experiencia alternativa
 			</a>
 		</div>

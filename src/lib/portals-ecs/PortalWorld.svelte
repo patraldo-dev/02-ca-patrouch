@@ -126,7 +126,7 @@
 		<section>
 			<h2>{galaxy.icon} {nameOf(galaxy)}</h2>
 			{#each galaxy.portals as portal}
-				<a href="/portals/booty/arbooty?theme={portal.id}">
+				<a href="/portals/enter/{portal.id}">
 					{nameOf(portal)} — {descOf(portal)}
 				</a>
 			{/each}
@@ -141,7 +141,7 @@
 	{#if activePortal}
 		<a
 			class="carousel-hero"
-			href="/portals/booty/arbooty?theme={activePortal.id}"
+			href="/portals/enter/{activePortal.id}"
 			style="--pv-color: {activePortal.color_primary};"
 		>
 			{#if activePortal.video_url}
@@ -214,7 +214,7 @@
 								<!-- Slide-down detail panel -->
 								{#if focusedPortalId === portal.id}
 									<div class="portal-detail">
-										<a class="portal-enter" href="/portals/booty/arbooty?theme={portal.id}">
+										<a class="portal-enter" href="/portals/enter/{portal.id}">
 											{$t('games.enter')} →
 										</a>
 									</div>

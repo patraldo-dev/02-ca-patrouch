@@ -38,7 +38,7 @@
             items: [
                 { key: 'find_the_ai', href: '/agora?author=both' + (data.serverLocale ? '&locale=' + data.serverLocale : ''), active: true },
                 { key: 'portals', href: '/portals', active: true },
-                { key: 'arbooty', href: '/portals/booty/arbooty', active: true },
+                { key: 'arbooty', href: '/portals/enter', active: true },
                 { key: 'challenges', href: '/write', active: false },
                 { key: 'weekly_challenge', href: '/write', active: false }
             ]
