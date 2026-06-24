@@ -135,7 +135,14 @@
 {/if}
 
 <!-- ECS Canvas — full screen, this IS the page -->
-<div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}></div>
+<div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}>
+	{#if !worldReady && !worldError}
+		<div class="boot-indicator">
+			<span class="boot-icon">⟡</span>
+			<span class="boot-text">...</span>
+		</div>
+	{/if}
+</div>
 
 <!-- Fallback: if WebGL/IWSDK failed -->
 {#if worldError}
@@ -211,6 +218,32 @@
 		width: 100% !important;
 		height: 100% !important;
 		display: block;
+	}
+
+	.boot-indicator {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		background: #050508;
+	}
+	.boot-icon {
+		font-size: 2.5rem;
+		color: #c9a87c;
+		animation: boot-spin 2s linear infinite;
+	}
+	.boot-text {
+		color: rgba(255,255,255,0.3);
+		font-size: 0.7rem;
+		letter-spacing: 0.3em;
+		text-transform: uppercase;
+	}
+	@keyframes boot-spin {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
 	}
 
 	/* Bumper */
