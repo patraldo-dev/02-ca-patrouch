@@ -179,35 +179,38 @@ export const BackgroundSystem = class extends createSystem({
 		}
 
 		for (const entity of this.queries.background.entities) {
-			const bgView = entity.getVectorView(ReactiveBackground);
-			const speed = bgView.driftSpeed[0];
+			const colorA = entity.getVectorView(ReactiveBackground, 'colorA');
+			const targetColorA = entity.getVectorView(ReactiveBackground, 'targetColorA');
+			const colorB = entity.getVectorView(ReactiveBackground, 'colorB');
+			const targetColorB = entity.getVectorView(ReactiveBackground, 'targetColorB');
+			const speed = entity.getValue(ReactiveBackground, 'driftSpeed');
 
 			if (targetA) {
-				bgView.targetColorA[0] = targetA.r;
-				bgView.targetColorA[1] = targetA.g;
-				bgView.targetColorA[2] = targetA.b;
+				targetColorA[0] = targetA.r;
+				targetColorA[1] = targetA.g;
+				targetColorA[2] = targetA.b;
 			}
 			if (targetB) {
-				bgView.targetColorB[0] = targetB.r;
-				bgView.targetColorB[1] = targetB.g;
-				bgView.targetColorB[2] = targetB.b;
+				targetColorB[0] = targetB.r;
+				targetColorB[1] = targetB.g;
+				targetColorB[2] = targetB.b;
 			}
 
 			// Lerp current toward target
 			const lerpFactor = 1 - Math.exp(-speed * delta);
-			bgView.colorA[0] += (bgView.targetColorA[0] - bgView.colorA[0]) * lerpFactor;
-			bgView.colorA[1] += (bgView.targetColorA[1] - bgView.colorA[1]) * lerpFactor;
-			bgView.colorA[2] += (bgView.targetColorA[2] - bgView.colorA[2]) * lerpFactor;
-			bgView.colorB[0] += (bgView.targetColorB[0] - bgView.colorB[0]) * lerpFactor;
-			bgView.colorB[1] += (bgView.targetColorB[1] - bgView.colorB[1]) * lerpFactor;
-			bgView.colorB[2] += (bgView.targetColorB[2] - bgView.colorB[2]) * lerpFactor;
+			colorA[0] += (targetColorA[0] - colorA[0]) * lerpFactor;
+			colorA[1] += (targetColorA[1] - colorA[1]) * lerpFactor;
+			colorA[2] += (targetColorA[2] - colorA[2]) * lerpFactor;
+			colorB[0] += (targetColorB[0] - colorB[0]) * lerpFactor;
+			colorB[1] += (targetColorB[1] - colorB[1]) * lerpFactor;
+			colorB[2] += (targetColorB[2] - colorB[2]) * lerpFactor;
 
 			// Push to shader
 			this.bgMesh.material.uniforms.uColorA.value.setRGB(
-				bgView.colorA[0], bgView.colorA[1], bgView.colorA[2]
+				colorA[0], colorA[1], colorA[2]
 			);
 			this.bgMesh.material.uniforms.uColorB.value.setRGB(
-				bgView.colorB[0], bgView.colorB[1], bgView.colorB[2]
+				colorB[0], colorB[1], colorB[2]
 			);
 			this.bgMesh.material.uniforms.uTime.value = time;
 		}
@@ -740,10 +743,10 @@ export const NarrativeSystem = class extends createSystem({
 		}
 
 		// Apply fog
-		if (this.scene.fog) {
-			this.scene.fog.density = this.currentFog;
+		if (this.world.scene.fog) {
+			this.world.scene.fog.density = this.currentFog;
 		} else if (this.currentFog > 0.001) {
-			this.scene.fog = new THREE.FogExp2(this.currentColor.getHex(), this.currentFog);
+			this.world.scene.fog = new THREE.FogExp2(this.currentColor.getHex(), this.currentFog);
 		}
 	}
 
@@ -1002,7 +1005,7 @@ export const CrystalInteractionSystem = class extends createSystem({
 		});
 
 		const points = new THREE.Points(geo, mat);
-		this.scene.add(points);
+		this.world.scene.add(points);
 		this.bursts.push({ points, geo, mat, velocities, age: 0, duration: 1.0 });
 	}
 
@@ -1027,7 +1030,7 @@ export const CrystalInteractionSystem = class extends createSystem({
 			burst.mat.size = 0.03 * (1 - lifeRatio * 0.5);
 
 			if (burst.age >= burst.duration) {
-				this.scene.remove(burst.points);
+				this.world.scene.remove(burst.points);
 				burst.geo.dispose();
 				burst.mat.dispose();
 				this.bursts.splice(i, 1);

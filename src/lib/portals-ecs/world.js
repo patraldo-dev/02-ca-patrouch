@@ -163,7 +163,7 @@ export async function initPortalWorld(container, { portals, galaxies }) {
 	// ── 1. Create World — non-immersive, XR on demand ──
 	const world = await World.create(container, {
 		xr: {
-			sessionMode: SessionMode.ImmersiveAR,
+			sessionMode: SessionMode.ImmersiveVR,
 			offer: 'none',
 		},
 		render: {
@@ -208,7 +208,7 @@ export async function initPortalWorld(container, { portals, galaxies }) {
 	world.registerComponent(NarrativeState);
 	world.registerComponent(PortalRing);
 	world.registerComponent(InteriorDecoration);
-	world.registerComponent(AudioSource);
+	// AudioSource is registered internally by IWSDK's AudioSystem — don't double-register
 
 	// ── 3. Globals ──
 	world.globals.onPortalFocus = null;
