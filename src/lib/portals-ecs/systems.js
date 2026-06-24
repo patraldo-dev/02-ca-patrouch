@@ -383,7 +383,7 @@ export const BumperSystem = class extends createSystem({
 	bumper: { required: [BumperPhase] },
 }, {
 	convergeDuration: { type: 'Float32', default: 1.0 },
-	holdDuration:     { type: 'Float32', default: 1.6 },
+	holdDuration:     { type: 'Float32', default: 0.8 },
 	shatterDuration:  { type: 'Float32', default: 0.7 },
 }) {
 	init() {

@@ -1,6 +1,6 @@
 export async function load({ platform }) {
     const db = platform?.env?.DB_book;
-    if (!db) return { galaxies: [], portals: [], count: 0 };
+    if (!db) return { galaxies: [], portals: [], count: 0, featuredPortal: null };
 
     try {
         const { results: portals } = await db.prepare(`
@@ -9,6 +9,7 @@ export async function load({ platform }) {
                 p.name_es, p.name_en, p.name_fr,
                 p.description_es, p.description_en, p.description_fr,
                 p.status, p.active_writings_count, p.video_url,
+                p.narrator_greeting, p.narrator_tone,
                 g.name_es as galaxy_name_es, g.name_en as galaxy_name_en, g.name_fr as galaxy_name_fr,
                 g.icon as galaxy_icon, g.sort_order as galaxy_sort
             FROM portals p
@@ -16,6 +17,11 @@ export async function load({ platform }) {
             WHERE p.status = 'active'
             ORDER BY g.sort_order ASC, p.discovered_at ASC
         `).all();
+
+        // Featured = most active writings, fallback to first
+        const featuredPortal = (portals && portals.length > 0)
+            ? [...portals].sort((a, b) => (b.active_writings_count || 0) - (a.active_writings_count || 0))[0]
+            : null;
 
         // Group by galaxy
         const galaxyMap = {};
@@ -37,10 +43,11 @@ export async function load({ platform }) {
         return {
             galaxies: Object.values(galaxyMap),
             portals: portals || [],
-            count: portals?.length || 0
+            count: portals?.length || 0,
+            featuredPortal
         };
     } catch (e) {
         console.error('Portals load error:', e);
-        return { galaxies: [], portals: [], count: 0 };
+        return { galaxies: [], portals: [], count: 0, featuredPortal: null };
     }
 }

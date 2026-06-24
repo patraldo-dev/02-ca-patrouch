@@ -39,6 +39,7 @@
 				api = await initPortalWorld(containerEl, {
 					portals: data.portals || [],
 					galaxies: data.galaxies || [],
+					featuredPortalId: data.featuredPortal?.id,
 				});
 				if (cancelled) return;
 
@@ -132,9 +133,10 @@
 	</div>
 {/if}
 
-<!-- Exit button -->
+<!-- Exit button + explore all -->
 {#if worldReady && mode === 'interior'}
 	<button class="exit-btn" onclick={() => api?.exitToIndex()}>←</button>
+	<button class="explore-btn" onclick={() => api?.exitToIndex()}>⟡</button>
 {/if}
 
 <!-- Fallback nav (if world fails) -->
@@ -230,6 +232,30 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+
+	.explore-btn {
+		position: fixed;
+		bottom: 1rem;
+		right: 1rem;
+		z-index: 99999;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		border: 1px solid rgba(201, 168, 124, 0.3);
+		background: rgba(0,0,0,0.5);
+		backdrop-filter: blur(10px);
+		color: #c9a87c;
+		font-size: 1.3rem;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s;
+	}
+	.explore-btn:hover {
+		border-color: rgba(201, 168, 124, 0.6);
+		color: #fff;
 	}
 
 	.fallback-nav {

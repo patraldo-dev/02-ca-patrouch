@@ -159,7 +159,7 @@ function generateToneWAV(frequency, durationSec = 2.0, sampleRate = 44100) {
 }
 
 // ─── Main initialization ────────────────────────────────────────────
-export async function initPortalWorld(container, { portals, galaxies }) {
+export async function initPortalWorld(container, { portals, galaxies, featuredPortalId }) {
 	// ── 0. Pre-flight checks ──
 	// Flush layout so container has real dimensions
 	await new Promise(r => requestAnimationFrame(r));
@@ -396,6 +396,11 @@ export async function initPortalWorld(container, { portals, galaxies }) {
 
 	world.globals.onBumperComplete = () => {
 		window.dispatchEvent(new CustomEvent('portal-bumper-done'));
+		// Auto-enter featured portal immediately after bumper
+		const targetId = featuredPortalId || (portals[0] && portals[0].id);
+		if (targetId) {
+			setTimeout(() => buildInterior(world, portalEntities, targetId, ambientLight, keyLight), 300);
+		}
 	};
 
 	world.globals.onPortalEnter = (portalId) => {
