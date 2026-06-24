@@ -3,89 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal World — WebGL Test</title>
+<title>WebGL Test</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; }
-#c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
-#boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: #050508; color: #c9a87c; font-family: system-ui, sans-serif; z-index: 100; }
-#boot.hidden { display: none; }
-.spinner { font-size: 2.5rem; animation: spin 2s linear infinite; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+* { margin: 0; padding: 0; }
+body { background: #050508; color: #c9a87c; font-family: system-ui, sans-serif; }
+canvas { display: block; width: 100vw; height: 100vh; }
+#log { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace; font-size: 0.6rem; padding: 0.5rem; max-height: 40vh; overflow-y: auto; z-index: 100; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="boot">
-  <div class="spinner">⟡</div>
-  <div style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;">loading</div>
-</div>
-<script type="module">
-import * as THREE from '/lib/three.module.js';
-
-try {
-  const canvas = document.getElementById('c');
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0a12);
-
-  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(0, 0, 3);
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-
-  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-  const key = new THREE.DirectionalLight(0xfff5e6, 0.6);
-  key.position.set(0.5, 1, 1);
-  scene.add(key);
-
-  // Pink sphere
-  const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.5, 32, 32),
-    new THREE.MeshStandardMaterial({ color: 0xff0066, emissive: 0xff0066, emissiveIntensity: 0.5 })
-  );
-  scene.add(sphere);
-
-  // Green box
-  const box = new THREE.Mesh(
-    new THREE.BoxGeometry(0.4, 0.4, 0.4),
-    new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 0.5 })
-  );
-  box.position.set(-1.2, 0, 0);
-  scene.add(box);
-
-  // Gold torus
-  const torus = new THREE.Mesh(
-    new THREE.TorusGeometry(0.3, 0.1, 16, 32),
-    new THREE.MeshStandardMaterial({ color: 0xc9a87c, emissive: 0xc9a87c, emissiveIntensity: 0.5 })
-  );
-  torus.position.set(1.2, 0, 0);
-  scene.add(torus);
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  function animate() {
-    requestAnimationFrame(animate);
-    sphere.rotation.y += 0.01;
-    box.rotation.x += 0.01;
-    box.rotation.y += 0.02;
-    torus.rotation.z += 0.02;
-    renderer.render(scene, camera);
+<div id="log"></div>
+<script>
+(function() {
+  var log = document.getElementById('log');
+  function msg(s) { log.innerHTML += s + '<br>'; log.scrollTop = log.scrollHeight; }
+  
+  msg('Step 1: Canvas 2D test');
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+  if (!ctx) { msg('FAIL: no 2D context'); return; }
+  msg('2D context OK');
+  
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  // Draw colored circles
+  ctx.fillStyle = '#0a0a12';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.fillStyle = '#ff0066';
+  ctx.beginPath();
+  ctx.arc(canvas.width * 0.5, canvas.height * 0.5, 80, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = '#00ff88';
+  ctx.beginPath();
+  ctx.arc(canvas.width * 0.25, canvas.height * 0.5, 60, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = '#c9a87c';
+  ctx.beginPath();
+  ctx.arc(canvas.width * 0.75, canvas.height * 0.5, 60, 0, Math.PI * 2);
+  ctx.fill();
+  
+  msg('Step 2: Drew 3 circles. Can you see pink/green/gold?');
+  
+  msg('Step 3: WebGL test');
+  try {
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) {
+      msg('WebGL NOT supported');
+    } else {
+      msg('WebGL supported! Version: ' + gl.getParameter(gl.VERSION));
+      msg('Renderer: ' + gl.getParameter(gl.RENDERER));
+      
+      // Clear to dark blue
+      gl.clearColor(0.04, 0.04, 0.07, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      msg('Step 4: Cleared WebGL canvas to dark blue');
+    }
+  } catch(e) {
+    msg('WebGL error: ' + e.message);
   }
-  animate();
-
-  document.getElementById('boot').classList.add('hidden');
-} catch (err) {
-  document.getElementById('boot').innerHTML =
-    '<div style="font-size:2rem;color:#ef4444;">⚠</div>' +
-    '<pre style="color:#ef4444;font-family:monospace;font-size:0.7rem;max-width:90vw;white-space:pre-wrap;text-align:center;">' +
-    (err.message || String(err)) + '</pre>';
-}
+  
+  msg('DONE');
+})();
 </script>
 </body>
 </html>
