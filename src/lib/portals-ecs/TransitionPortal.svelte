@@ -22,6 +22,17 @@
 	let phase = $state('preview'); // preview | ar | transitioning | vr | unsupported
 	let errorMsg = $state(null);
 	let supports = $state({ ar: false, vr: false });
+	let logs = $state([]);
+
+	function log(msg) {
+		const ts = new Date().toLocaleTimeString();
+		logs = [...logs.slice(-30), `[${ts}] ${msg}`];
+		console.log('[transition]', msg);
+	}
+
+	// Intercept console.log from transition-world.js
+	const origLog = console.log;
+	const origError = console.error;
 
 	function portalName() {
 		if (!portalConfig) return 'Portal';
@@ -32,6 +43,22 @@
 	}
 
 	onMount(() => {
+		// Intercept console to show in-page logs
+		console.log = (...args) => {
+			const msg = args.join(' ');
+			if (msg.includes('[transition]') || msg.includes('[InputSystem]') || msg.includes('select')) {
+				const ts = new Date().toLocaleTimeString();
+				logs = [...logs.slice(-30), `[${ts}] ${msg}`];
+			}
+			origLog.apply(console, args);
+		};
+		console.error = (...args) => {
+			const msg = args.join(' ');
+			const ts = new Date().toLocaleTimeString();
+			logs = [...logs.slice(-30), `[${ts}] ❌ ${msg}`];
+			origError.apply(console, args);
+		};
+
 		let cancelled = false;
 		async function boot() {
 			try {
@@ -85,6 +112,8 @@
 			window.removeEventListener('portal-session-ended', handleSessionEnded);
 			containerEl?.removeEventListener('click', onClick);
 			containerEl?.removeEventListener('touchend', onTouchEnd);
+			console.log = origLog;
+			console.error = origError;
 		};
 	});
 
@@ -97,20 +126,21 @@
 	});
 
 	function handleSessionEnded() {
+		log('Session ended (back button)');
 		phase = 'preview';
 	}
 
 	function handleTransitionReady() {
+		log('Transition ready → entering VR');
 		phase = 'transitioning';
-		// Small delay for visual effect, then enter VR
 		setTimeout(async () => {
 			if (!api) return;
 			try {
 				await api.enterVR();
 				phase = 'vr';
+				log('VR active after transition');
 			} catch (err) {
-				console.error('[TransitionPortal] VR entry failed:', err);
-				errorMsg = err.message;
+				log('VR transition error: ' + err.message);
 				phase = 'ar';
 			}
 		}, 500);
@@ -119,10 +149,12 @@
 	async function handleEnterAR() {
 		if (!api) return;
 		try {
+			log('Entering AR...');
 			await api.enterAR();
 			phase = 'ar';
+			log('AR active. Ring should be visible. Tap screen to interact.');
 		} catch (err) {
-			console.error('[TransitionPortal] AR entry failed:', err);
+			log('AR error: ' + err.message);
 			errorMsg = err.message;
 		}
 	}
@@ -130,10 +162,12 @@
 	async function handleEnterVRDirect() {
 		if (!api) return;
 		try {
+			log('Entering VR directly...');
 			await api.enterVR();
 			phase = 'vr';
+			log('VR active');
 		} catch (err) {
-			console.error('[TransitionPortal] VR direct entry failed:', err);
+			log('VR error: ' + err.message);
 			errorMsg = err.message;
 		}
 	}
@@ -218,6 +252,12 @@
 {#if errorMsg && phase !== 'unsupported'}
 	<div class="error-toast">{errorMsg}</div>
 {/if}
+
+<!-- In-page log panel -->
+<div class="log-panel">
+	<div class="log-header" onclick={() => logs = []}>logs ({logs.length}) — tap to clear</div>
+	<pre class="log-list">{logs.join('\n')}</pre>
+</div>
 
 <style>
 	.transition-container {
@@ -392,7 +432,7 @@
 	/* Error toast */
 	.error-toast {
 		position: fixed;
-		bottom: 1rem;
+		bottom: 8rem;
 		left: 50%;
 		transform: translateX(-50%);
 		background: rgba(239, 68, 68, 0.9);
@@ -401,5 +441,36 @@
 		border-radius: 20px;
 		font-size: 0.8rem;
 		z-index: 100;
+	}
+
+	/* Log panel — always visible */
+	.log-panel {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		max-height: 35vh;
+		background: rgba(0, 0, 0, 0.92);
+		color: #0f0;
+		font-family: monospace;
+		font-size: 0.6rem;
+		z-index: 50;
+		overflow: hidden;
+		border-top: 1px solid rgba(255,255,255,0.1);
+	}
+	.log-header {
+		padding: 0.3rem 0.5rem;
+		color: #888;
+		cursor: pointer;
+		border-bottom: 1px solid rgba(255,255,255,0.05);
+	}
+	.log-list {
+		padding: 0.3rem 0.5rem;
+		margin: 0;
+		max-height: 28vh;
+		overflow-y: auto;
+		white-space: pre-wrap;
+		word-break: break-all;
+		line-height: 1.3;
 	}
 </style>
