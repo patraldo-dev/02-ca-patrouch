@@ -33,13 +33,21 @@
 				bootStatus = 'loading';
 				const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
 				if (cancelled || !containerEl) { bootStatus = 'error'; worldError = 'No container'; return; }
-				api = await initPortalWorld(containerEl, {
-					portals: data.portals || [],
-					galaxies: data.galaxies || [],
-				});
-				if (cancelled) return;
-				worldReady = true;
-				bootStatus = 'ready';
+			api = await initPortalWorld(containerEl, {
+				portals: data.portals || [],
+				galaxies: data.galaxies || [],
+			});
+			if (cancelled) return;
+			// Verify canvas actually has dimensions
+			const canvas = containerEl.querySelector('canvas');
+			const rect = containerEl.getBoundingClientRect();
+			if (!canvas || rect.width === 0 || rect.height === 0) {
+				bootStatus = 'error';
+				worldError = `Canvas not sized: container ${rect.width}x${rect.height}, canvas ${canvas ? 'exists' : 'missing'}`;
+				return;
+			}
+			worldReady = true;
+			bootStatus = 'ready';
 			} catch (err) {
 				console.error('[PortalWorld] boot failed:', err);
 				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0,4).join('\n');
@@ -102,6 +110,13 @@
 			<div style="font-size:2.5rem;animation:spin 2s linear infinite;">⟡</div>
 			<div style="color:rgba(255,255,255,0.3);font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;">{bootStatus}</div>
 		{/if}
+	</div>
+{/if}
+
+<!-- Post-boot diagnostic (flashes briefly if canvas is broken) -->
+{#if bootStatus === 'ready'}
+	<div id="diag-flash" style="position:fixed;top:0.5rem;right:0.5rem;z-index:99998;padding:0.3rem 0.6rem;background:rgba(0,200,0,0.3);color:#0f0;font-family:monospace;font-size:0.5rem;border-radius:4px;">
+		OK
 	</div>
 {/if}
 
