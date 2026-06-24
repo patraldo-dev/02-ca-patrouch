@@ -316,34 +316,57 @@ export async function initTransitionWorld(container, portalConfig) {
 				}, 50);
 			});
 
+			console.log('[transition] AR session active:', !!world.session);
+			console.log('[transition] Session type:', world.session?.constructor?.name);
+
 			const pos = ringEntity.getVectorView(Transform, 'position');
 			pos[0] = 0; pos[1] = 1.2; pos[2] = -1.5;
 			sessionEntity.setValue(PortalSession, 'phase', 'ar-idle');
 
-			// In immersive-ar, DOM events don't fire — use XR session 'select' event
-			// On phone AR, select = screen tap. Check if ring is near center of view.
+			// WebXR 'select' event — fires on screen tap in phone AR
 			world.session.addEventListener('select', (event) => {
+				console.log('[transition] SELECT event fired!');
 				const currentPhase = sessionEntity.getValue(PortalSession, 'phase');
+				console.log('[transition] Current phase:', currentPhase);
 				if (currentPhase !== 'ar-idle') return;
 
-				// Project ring world position to screen space (NDC)
+				// Get ring world position
 				const ringWorldPos = new Vector3();
 				ringMesh.getWorldPosition(ringWorldPos);
-				const screenPos = ringWorldPos.clone().project(world.camera);
-				// NDC: x,y in [-1, 1], z is depth. Center of screen = (0, 0)
-				const distFromCenter = Math.sqrt(screenPos.x * screenPos.x + screenPos.y * screenPos.y);
-				console.log('[transition] select event, ring NDC:', screenPos.x.toFixed(2), screenPos.y.toFixed(2), 'dist:', distFromCenter.toFixed(2));
+				console.log('[transition] Ring world pos:', ringWorldPos.x, ringWorldPos.y, ringWorldPos.z);
 
-				// Visual feedback: pulse ring on any tap
+				// Get camera position and direction
+				const camPos = world.camera.position.clone();
+				const camDir = new Vector3();
+				world.camera.getWorldDirection(camDir);
+				console.log('[transition] Cam pos:', camPos.x, camPos.y, camPos.z);
+				console.log('[transition] Cam dir:', camDir.x, camDir.y, camDir.z);
+
+				// Angle between camera forward and direction to ring
+				const toRing = ringWorldPos.clone().sub(camPos);
+				const angle = camDir.angleTo(toRing);
+				console.log('[transition] Angle to ring:', (angle * 180 / Math.PI).toFixed(1), 'degrees');
+
+				// Pulse ring for visual feedback
 				ringEntity.setValue(PortalRing, 'pulsePhase', 0);
 
-				// If ring is roughly centered in view, cross the portal
-				if (distFromCenter < 0.5) {
-					console.log('[transition] Ring centered — crossing portal');
+				// Cross if looking roughly at ring (within 35 degrees)
+				if (angle < 0.6) {
+					console.log('[transition] ✅ Crossing portal!');
 					this.focusPortal();
 				} else {
-					console.log('[transition] Ring not centered, looking elsewhere');
+					console.log('[transition] ❌ Not looking at ring');
 				}
+			});
+
+			// Also try 'selectstart'/'selectend' pair as fallback
+			let selectStartTime = 0;
+			world.session.addEventListener('selectstart', () => {
+				selectStartTime = performance.now();
+				console.log('[transition] selectstart');
+			});
+			world.session.addEventListener('selectend', () => {
+				console.log('[transition] selectend, duration:', performance.now() - selectStartTime, 'ms');
 			});
 
 			// Cleanup on session end (e.g. back button)
