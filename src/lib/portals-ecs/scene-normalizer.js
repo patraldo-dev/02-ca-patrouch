@@ -105,6 +105,11 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
             fog_density: 0.0,
             light_intensity: 0.5,
         },
+        narrative_states: [
+            { label: 'Umbral',     mood: 'contemplativo',  hue_shift: 0,     intensity_mul: 1.0, fog_mul: 1.0, crystal_indices: [0,1] },
+            { label: 'Descenso',   mood: 'cálido',         hue_shift: 0.083, intensity_mul: 1.3, fog_mul: 0.4, crystal_indices: [0,1,2,3] },
+            { label: 'Revelación', mood: 'profundo',       hue_shift: 0.667, intensity_mul: 0.6, fog_mul: 3.0, crystal_indices: [0,1,2,3,4] },
+        ],
         palette: {
             primary: fallbackPrimary,
             secondary: '#4fc3f7',
@@ -220,6 +225,24 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
     normalized.spatial_layout.tab_orbit_radius = clamp(
         layout.tab_orbit_radius ?? layout.tabOrbitRadius, 1.5, 3.5, 2.5
     );
+
+    // ── Narrative States (max 5, AI-generated story arc) ──
+    const rawStates = raw.narrative_states ?? raw.narrativeStates;
+    if (Array.isArray(rawStates) && rawStates.length >= 2) {
+        normalized.narrative_states = rawStates
+            .filter(s => s && typeof s === 'object')
+            .map((s, i) => ({
+                label: typeof s.label === 'string' ? s.label.slice(0, 40).trim() : `Estado ${i}`,
+                mood: typeof s.mood === 'string' ? s.mood.slice(0, 40).trim() : 'contemplativo',
+                hue_shift: clamp(s.hue_shift ?? s.hueShift ?? i * 0.083, 0, 1, i * 0.083),
+                intensity_mul: clamp(s.intensity_mul ?? s.intensityMul, 0.2, 2.0, 1.0),
+                fog_mul: clamp(s.fog_mul ?? s.fogMul, 0.0, 5.0, 1.0),
+                crystal_indices: Array.isArray(s.crystal_indices ?? s.crystalIndices)
+                    ? (s.crystal_indices ?? s.crystalIndices).filter(n => Number.isInteger(n) && n >= 0 && n < 6)
+                    : [0, 1],
+            }))
+            .slice(0, 5);
+    }
 
     return normalized;
 }

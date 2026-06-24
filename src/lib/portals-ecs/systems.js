@@ -6,9 +6,13 @@
  *
  * Frame budget priorities (negative = before game logic, positive = after):
  *   -5  PortalInputSystem    — pointer/touch → state changes
+ *   -4  FocusHoldSystem      — hold-timer → enter portal (replaces menu)
  *   -3  TabSystem            — spring physics on tab positions
  *    0  BumperSystem         — brand bumper (runs only during intro)
  *    0  CarouselSystem       — cycle active slide
+ *    0  NarrativeSystem      — lighting conductor (interior mode)
+ *    0  ProximityRingSystem  — camera-distance ring reaction (interior mode)
+ *    0  EntryCinematicSystem — materialization sequence (interior mode)
  *    1  BackgroundSystem     — lerp colors toward focused portal
  *    2  ParticleSystem       — ambient dust mote movement
  *
@@ -29,6 +33,10 @@ import {
 	ReactiveBackground,
 	AmbientParticle,
 	CarouselSlide,
+	WorldMode,
+	NarrativeState,
+	PortalRing,
+	InteriorDecoration,
 } from './components.js';
 
 // ─── Tab System (priority -3) ───────────────────────────────────────
@@ -554,7 +562,7 @@ export const PortalInputSystem = class extends createSystem({
 			const intersects = this.raycaster.intersectObject(mesh, false);
 			if (intersects.length > 0 && intersects[0].distance < minDist) {
 				minDist = intersects[0].distance;
-				hitEntity = entity;
+			hitEntity = entity;
 			}
 		}
 
@@ -565,8 +573,9 @@ export const PortalInputSystem = class extends createSystem({
 					entity.setValue(PortalGate, 'state', 'focused');
 				} else {
 					const current = entity.getValue(PortalGate, 'state');
-					if (current === 'focused') {
+					if (current === 'focused' || current === 'entering') {
 						entity.setValue(PortalGate, 'state', 'idle');
+						entity.setValue(PortalGate, 'focusTimer', 0);
 					}
 				}
 			}
@@ -596,6 +605,432 @@ export const PortalInputSystem = class extends createSystem({
 			const targetEmissive = hovered ? 0.3 : 0.05;
 			if (mesh.material && mesh.material.emissiveIntensity !== undefined) {
 				mesh.material.emissiveIntensity += (targetEmissive - mesh.material.emissiveIntensity) * 0.1;
+			}
+		}
+	}
+};
+
+// ─── Focus Hold System (priority -4) ────────────────────────────────
+// Counts how long user holds focus on a portal. When the hold threshold
+// is reached, triggers mode transition to portal interior. This replaces
+// the old menu/button approach — user just touches and holds.
+export const FocusHoldSystem = class extends createSystem({
+	focused: {
+		required: [PortalGate, TabLayout],
+		where: [eq(PortalGate, 'state', 'focused')],
+	},
+	mode: { required: [WorldMode] },
+}) {
+	update(delta) {
+		const modeEntity = this.queries.mode.entities.values().next().value;
+		if (!modeEntity) return;
+		const mode = modeEntity.getValue(WorldMode, 'mode');
+		if (mode !== 'index') return;
+
+		for (const entity of this.queries.focused.entities) {
+			let timer = entity.getValue(PortalGate, 'focusTimer') + delta;
+			const threshold = entity.getValue(PortalGate, 'holdThreshold');
+			entity.setValue(PortalGate, 'focusTimer', timer);
+
+			// Visual feedback: scale grows as hold progresses
+			const progress = Math.min(timer / threshold, 1);
+			const scaleView = entity.getVectorView(Transform, 'scale');
+			const baseScale = 1.0;
+			const targetScale = baseScale + progress * 0.3;
+			scaleView[0] += (targetScale - scaleView[0]) * 0.15;
+			scaleView[1] += (targetScale - scaleView[1]) * 0.15;
+
+			// Emissive intensifies
+			const mesh = entity.object3D;
+			if (mesh?.material?.emissiveIntensity !== undefined) {
+				mesh.material.emissiveIntensity = 0.05 + progress * 0.5;
+			}
+
+			if (timer >= threshold) {
+				entity.setValue(PortalGate, 'state', 'entering');
+				const portalId = entity.getValue(PortalGate, 'portalId');
+				modeEntity.setValue(WorldMode, 'mode', 'transitioning');
+				modeEntity.setValue(WorldMode, 'activePortalId', portalId);
+				modeEntity.setValue(WorldMode, 'transitionProgress', 0);
+				this.globals.onPortalEnter?.(portalId);
+			}
+		}
+	}
+};
+
+// ─── Narrative System (priority 0, interior mode) ──────────────────
+// The conductor. Derives 3 lighting palettes from the portal's base color.
+// State advances on crystal interaction. Each state shifts hue, intensity,
+// and fog density. Immediate visual payoff — tap crystal, world changes mood.
+export const NarrativeSystem = class extends createSystem({
+	narrative: { required: [NarrativeState] },
+	mode: { required: [WorldMode] },
+}) {
+	init() {
+		this.ambientLight = null;
+		this.directionalLight = null;
+		this.currentColor = new THREE.Color(0x2d4a3e);
+		this.targetColor = new THREE.Color(0x2d4a3e);
+		this.currentIntensity = 0.5;
+		this.targetIntensity = 0.5;
+		this.currentFog = 0.0;
+		this.targetFog = 0.0;
+	}
+
+	update(delta) {
+		const modeEntity = this.queries.mode.entities.values().next().value;
+		if (!modeEntity) return;
+		const mode = modeEntity.getValue(WorldMode, 'mode');
+		if (mode !== 'interior') return;
+
+		const narrEntity = this.queries.narrative.entities.values().next().value;
+		if (!narrEntity) return;
+
+		// Smooth transition progress
+		let tProgress = narrEntity.getValue(NarrativeState, 'transitionProgress');
+		const tSpeed = narrEntity.getValue(NarrativeState, 'transitionSpeed');
+		tProgress = Math.min(tProgress + delta * tSpeed, 1);
+		narrEntity.setValue(NarrativeState, 'transitionProgress', tProgress);
+
+		// Snap target when transition starts
+		const targetIdx = narrEntity.getValue(NarrativeState, 'targetStateIndex');
+		const currentIdx = narrEntity.getValue(NarrativeState, 'stateIndex');
+
+		if (targetIdx !== currentIdx && tProgress >= 0.5) {
+			narrEntity.setValue(NarrativeState, 'stateIndex', targetIdx);
+		}
+
+		// Derive palette from state index
+		const stateIdx = currentIdx;
+		const baseHex = this.globals.portalBaseColor || '#c9a87c';
+		const baseColor = new THREE.Color(baseHex);
+		const hsl = baseColor.getHSL({});
+
+		// Each state: hue shift + intensity multiplier + fog multiplier
+		// Uses scene config narrative_states if provided by Mistral, else derived defaults
+		const sceneStates = this.globals.narrativeStates;
+		const stateConfigs = (sceneStates && sceneStates.length >= 2) ? sceneStates : [
+			{ hueShift: 0,    intensityMul: 1.0, fogMul: 1.0 },
+			{ hueShift: 0.083, intensityMul: 1.3, fogMul: 0.4 },
+			{ hueShift: 0.667, intensityMul: 0.6, fogMul: 3.0 },
+		];
+		const cfg = stateConfigs[stateIdx] || stateConfigs[0];
+
+		this.targetColor.setHSL(
+			(hsl.h + cfg.hueShift) % 1,
+			hsl.s,
+			Math.min(hsl.l * cfg.intensityMul, 0.9)
+		);
+		this.targetIntensity = 0.4 + cfg.intensityMul * 0.3;
+		this.targetFog = Math.min(0.03 * cfg.fogMul, 0.08);
+
+		// Lerp current toward target
+		const lerpFactor = 1 - Math.exp(-tSpeed * delta);
+		this.currentColor.lerp(this.targetColor, lerpFactor);
+		this.currentIntensity += (this.targetIntensity - this.currentIntensity) * lerpFactor;
+		this.currentFog += (this.targetFog - this.currentFog) * lerpFactor;
+
+		// Apply to lights
+		if (this.ambientLight) {
+			this.ambientLight.color.copy(this.currentColor);
+			this.ambientLight.intensity = this.currentIntensity;
+		}
+		if (this.directionalLight) {
+			this.directionalLight.color.copy(this.currentColor).lerp(new THREE.Color(0xffffff), 0.3);
+		}
+
+		// Apply fog
+		if (this.scene.fog) {
+			this.scene.fog.density = this.currentFog;
+		} else if (this.currentFog > 0.001) {
+			this.scene.fog = new THREE.FogExp2(this.currentColor.getHex(), this.currentFog);
+		}
+	}
+
+	setLights(ambient, directional) {
+		this.ambientLight = ambient;
+		this.directionalLight = directional;
+	}
+
+	advance() {
+		const narrEntity = this.queries.narrative.entities.values().next().value;
+		if (!narrEntity) return;
+		const maxStates = narrEntity.getValue(NarrativeState, 'maxStates');
+		const currentTarget = narrEntity.getValue(NarrativeState, 'targetStateIndex');
+		const next = (currentTarget + 1) % maxStates;
+		narrEntity.setValue(NarrativeState, 'targetStateIndex', next);
+		narrEntity.setValue(NarrativeState, 'transitionProgress', 0);
+	}
+};
+
+// ─── Proximity Ring System (priority 0, interior mode) ─────────────
+// Camera distance drives ring scale, emissive, pulse speed.
+// Cross triggerDistance → auto-transition (VR or cinematic).
+export const ProximityRingSystem = class extends createSystem({
+	rings: { required: [PortalRing, Transform] },
+	mode: { required: [WorldMode] },
+}) {
+	update(delta) {
+		const modeEntity = this.queries.mode.entities.values().next().value;
+		if (!modeEntity) return;
+		const mode = modeEntity.getValue(WorldMode, 'mode');
+		if (mode !== 'interior') return;
+
+		const cameraPos = this.camera.position;
+
+		for (const entity of this.queries.rings.entities) {
+			const ringPos = entity.getVectorView(Transform, 'position');
+			const dx = cameraPos.x - ringPos[0];
+			const dy = cameraPos.y - ringPos[1];
+			const dz = cameraPos.z - ringPos[2];
+			const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+			const activationRadius = entity.getValue(PortalRing, 'activationRadius');
+			const triggerDistance = entity.getValue(PortalRing, 'triggerDistance');
+
+			// Proximity: 0 = far, 1 = at trigger distance
+			const proximity = THREE.MathUtils.clamp(
+				1 - (distance - triggerDistance) / (activationRadius - triggerDistance),
+				0, 1
+			);
+			entity.setValue(PortalRing, 'proximity', proximity);
+
+			// Scale: grows as you approach
+			const baseScale = 1.0;
+			const scaleBoost = proximity * 0.5;
+			const scale = baseScale + scaleBoost;
+			const scaleView = entity.getVectorView(Transform, 'scale');
+			scaleView[0] += (scale - scaleView[0]) * 0.1;
+			scaleView[1] += (scale - scaleView[1]) * 0.1;
+			scaleView[2] += (scale - scaleView[2]) * 0.1;
+
+			// Pulse: faster as you approach
+			let pulse = entity.getValue(PortalRing, 'pulsePhase');
+			const pulseSpeed = 2 + proximity * 8;
+			pulse += delta * pulseSpeed;
+			entity.setValue(PortalRing, 'pulsePhase', pulse);
+
+			const pulseScale = 1 + Math.sin(pulse) * (0.02 + proximity * 0.08);
+			scaleView[0] *= pulseScale;
+			scaleView[1] *= pulseScale;
+
+			// Emissive intensity
+			const mesh = entity.object3D;
+			if (mesh) {
+				mesh.traverse((child) => {
+					if (child.material && child.material.emissiveIntensity !== undefined) {
+						child.material.emissiveIntensity = 0.3 + proximity * 0.7;
+					}
+				});
+			}
+
+			// Auto-transition on threshold cross
+			if (distance < triggerDistance) {
+				modeEntity.setValue(WorldMode, 'mode', 'transitioning');
+				modeEntity.setValue(WorldMode, 'transitionProgress', 0);
+				this.globals.onProximityTrigger?.();
+			}
+		}
+	}
+};
+
+// ─── Entry Cinematic System (priority 0, interior mode) ────────────
+// On entering interior mode, everything materializes from scale 0 / opacity 0
+// in sequence: ring → particles → crystals → pillars → ambient sound fades in.
+export const EntryCinematicSystem = class extends createSystem({
+	mode: { required: [WorldMode] },
+	decorations: { required: [InteriorDecoration, Transform] },
+}) {
+	update(delta) {
+		const modeEntity = this.queries.mode.entities.values().next().value;
+		if (!modeEntity) return;
+		const mode = modeEntity.getValue(WorldMode, 'mode');
+
+		if (mode !== 'interior' && mode !== 'transitioning') return;
+
+		let timer = modeEntity.getValue(WorldMode, 'cinematicTimer');
+		if (mode === 'interior' || mode === 'transitioning') {
+			timer += delta;
+			modeEntity.setValue(WorldMode, 'cinematicTimer', timer);
+		}
+
+		for (const entity of this.queries.decorations.entities) {
+			const delay = entity.getValue(InteriorDecoration, 'spawnDelay');
+			const localTime = Math.max(timer - delay, 0);
+			const matDuration = 0.8;
+			let materialized = Math.min(localTime / matDuration, 1);
+			// Ease out cubic
+			materialized = 1 - Math.pow(1 - materialized, 3);
+			entity.setValue(InteriorDecoration, 'materialized', materialized);
+
+			// Scale from 0
+			const scaleView = entity.getVectorView(Transform, 'scale');
+			scaleView[0] = materialized;
+			scaleView[1] = materialized;
+			scaleView[2] = materialized;
+
+			// Opacity
+			const mesh = entity.object3D;
+			if (mesh) {
+				mesh.traverse((child) => {
+					if (child.material) {
+						child.material.transparent = materialized < 1;
+						child.material.opacity = materialized;
+					}
+				});
+			}
+
+			// Float animation (only after materialized)
+			if (materialized > 0.5) {
+				const baseY = entity.getValue(InteriorDecoration, 'baseY');
+				const amp = entity.getValue(InteriorDecoration, 'floatAmp');
+				const speed = entity.getValue(InteriorDecoration, 'floatSpeed');
+				const phase = entity.getValue(InteriorDecoration, 'floatPhase');
+				const pos = entity.getVectorView(Transform, 'position');
+				pos[1] = baseY + Math.sin(timer * speed + phase) * amp;
+			}
+		}
+	}
+};
+
+// ─── Crystal Interaction System (priority -4, interior mode) ────────
+// Detects clicks/touches on crystal meshes via manual raycast.
+// On hit: calls advanceNarrative(), spawns a particle burst, dispatches event.
+// Works without InputSystem (which only activates inside XR sessions).
+export const CrystalInteractionSystem = class extends createSystem({
+	crystals: {
+		required: [InteriorDecoration, Transform],
+		where: [eq(InteriorDecoration, 'decoType', 'crystal')],
+	},
+	mode: { required: [WorldMode] },
+}) {
+	init() {
+		this.raycaster = new THREE.Raycaster();
+		this.pointer = new THREE.Vector2();
+		this.lastTapTime = 0;
+		this.bursts = []; // active particle bursts
+
+		this._onPointerDown = (e) => this._handleTap(e.clientX, e.clientY);
+		this.world.renderer.domElement.addEventListener('pointerdown', this._onPointerDown);
+		this.cleanupFuncs.push(() => {
+			this.world.renderer.domElement.removeEventListener('pointerdown', this._onPointerDown);
+		});
+	}
+
+	_handleTap(clientX, clientY) {
+		const modeEntity = this.queries.mode.entities.values().next().value;
+		if (!modeEntity) return;
+		const mode = modeEntity.getValue(WorldMode, 'mode');
+		if (mode !== 'interior') return;
+
+		// Throttle — prevent rapid multi-tap
+		const now = performance.now();
+		if (now - this.lastTapTime < 400) return;
+
+		const rect = this.world.renderer.domElement.getBoundingClientRect();
+		this.pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+		this.pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+		this.raycaster.setFromCamera(this.pointer, this.world.camera);
+
+		for (const entity of this.queries.crystals.entities) {
+			const mesh = entity.object3D;
+			if (!mesh) continue;
+			// Only tap fully materialized crystals
+			if (entity.getValue(InteriorDecoration, 'materialized') < 0.8) continue;
+
+			const intersects = this.raycaster.intersectObject(mesh, false);
+			if (intersects.length > 0) {
+				this.lastTapTime = now;
+				this._spawnBurst(mesh.position);
+				this._advanceNarrative();
+
+				// Visual: crystal flashes
+				if (mesh.material) {
+					const origEmissive = mesh.material.emissiveIntensity || 0.3;
+					mesh.material.emissiveIntensity = 2.0;
+					setTimeout(() => {
+						if (mesh.material) mesh.material.emissiveIntensity = origEmissive;
+					}, 300);
+				}
+
+				window.dispatchEvent(new CustomEvent('crystal-tapped', {
+					detail: { position: [mesh.position.x, mesh.position.y, mesh.position.z] }
+				}));
+				break;
+			}
+		}
+	}
+
+	_advanceNarrative() {
+		for (const sys of this.world.systems) {
+			if (sys instanceof NarrativeSystem) {
+				sys.advance();
+				return;
+			}
+		}
+	}
+
+	_spawnBurst(position) {
+		const count = 25;
+		const geo = new THREE.BufferGeometry();
+		const positions = new Float32Array(count * 3);
+		const velocities = [];
+
+		for (let i = 0; i < count; i++) {
+			positions[i * 3] = position.x;
+			positions[i * 3 + 1] = position.y;
+			positions[i * 3 + 2] = position.z;
+			const theta = Math.random() * Math.PI * 2;
+			const phi = Math.acos(2 * Math.random() - 1);
+			const speed = 0.5 + Math.random() * 1.5;
+			velocities.push([
+				Math.sin(phi) * Math.cos(theta) * speed,
+				Math.sin(phi) * Math.sin(theta) * speed,
+				Math.cos(phi) * speed,
+			]);
+		}
+
+		geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+		const mat = new THREE.PointsMaterial({
+			color: 0xffffff,
+			size: 0.03,
+			transparent: true,
+			opacity: 1,
+			blending: THREE.AdditiveBlending,
+			depthWrite: false,
+			sizeAttenuation: true,
+		});
+
+		const points = new THREE.Points(geo, mat);
+		this.scene.add(points);
+		this.bursts.push({ points, geo, mat, velocities, age: 0, duration: 1.0 });
+	}
+
+	update(delta) {
+		// Update active bursts
+		for (let i = this.bursts.length - 1; i >= 0; i--) {
+			const burst = this.bursts[i];
+			burst.age += delta;
+			const positions = burst.geo.attributes.position;
+
+			for (let j = 0; j < burst.velocities.length; j++) {
+				positions.array[j * 3] += burst.velocities[j][0] * delta;
+				positions.array[j * 3 + 1] += burst.velocities[j][1] * delta;
+				positions.array[j * 3 + 2] += burst.velocities[j][2] * delta;
+				// Gravity
+				burst.velocities[j][1] -= 2 * delta;
+			}
+			positions.needsUpdate = true;
+
+			const lifeRatio = burst.age / burst.duration;
+			burst.mat.opacity = Math.max(0, 1 - lifeRatio);
+			burst.mat.size = 0.03 * (1 - lifeRatio * 0.5);
+
+			if (burst.age >= burst.duration) {
+				this.scene.remove(burst.points);
+				burst.geo.dispose();
+				burst.mat.dispose();
+				this.bursts.splice(i, 1);
 			}
 		}
 	}

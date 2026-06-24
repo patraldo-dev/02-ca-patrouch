@@ -17,6 +17,7 @@ import { createComponent, Types } from '@iwsdk/core';
 // ─── Portal Gate ────────────────────────────────────────────────────
 // One per portal. Carries theme identity + interaction state.
 // Paired with a Transform for spatial position in the rail.
+// State machine: idle → focused → entering → inside → idle
 export const PortalGate = createComponent('portal-gate', {
 	portalId:      { type: Types.String,  default: '' },
 	galaxyId:      { type: Types.String,  default: '' },
@@ -26,8 +27,10 @@ export const PortalGate = createComponent('portal-gate', {
 	colorBg:       { type: Types.Color,   default: [1, 0.97, 0.88, 1] },
 	videoUrl:      { type: Types.String,  default: '' },
 	writingsCount: { type: Types.Int32,   default: 0 },
-	// dormant = hidden, idle = visible, focused = active tab, entering = AR transition
+	// idle = resting in rail, focused = user touched/hovered, entering = hold timer counting, inside = portal interior active
 	state:         { type: Types.String,  default: 'idle' },
+	focusTimer:    { type: Types.Float32, default: 0 },  // seconds held in focused state
+	holdThreshold: { type: Types.Float32, default: 1.2 }, // seconds to trigger enter
 });
 
 // ─── Tab Layout ─────────────────────────────────────────────────────
@@ -91,4 +94,50 @@ export const CarouselSlide = createComponent('carousel-slide', {
 	cycleDuration: { type: Types.Float32, default: 6 }, // seconds per slide
 	// Non-TypedArray reference for texture (managed outside columnar storage)
 	textureRef:  { type: Types.Object,  default: null },
+});
+
+// ─── World Mode ────────────────────────────────────────────────────
+// Single entity, singleton. Tracks whether we're in the spatial index
+// or inside a portal interior. Drives which systems are active.
+export const WorldMode = createComponent('world-mode', {
+	mode:              { type: Types.String, default: 'index' }, // 'index' | 'transitioning' | 'interior'
+	activePortalId:    { type: Types.String, default: '' },
+	transitionProgress: { type: Types.Float32, default: 0 },     // 0→1 during 'transitioning'
+	cinematicTimer:    { type: Types.Float32, default: 0 },     // entry cinematic elapsed
+});
+
+// ─── Narrative State ───────────────────────────────────────────────
+// The conductor. Lives on a singleton entity inside the portal interior.
+// stateIndex advances when user interacts with crystals. Each state
+// derives a new lighting palette from the portal's base color.
+export const NarrativeState = createComponent('narrative-state', {
+	stateIndex:         { type: Types.Int32,   default: 0 },
+	targetStateIndex:   { type: Types.Int32,   default: 0 },
+	transitionProgress:  { type: Types.Float32, default: 1 },    // 1 = settled, 0 = just changed
+	transitionSpeed:    { type: Types.Float32, default: 0.8 },
+	maxStates:          { type: Types.Int32,   default: 3 },
+});
+
+// ─── Portal Ring (interior mode) ──────────────────────────────────
+// The AR portal mouth. Proximity-based interaction — no tap needed.
+// Camera distance drives scale, emissive, particle speed.
+export const PortalRing = createComponent('portal-ring', {
+	radius:        { type: Types.Float32, default: 0.5 },
+	proximity:     { type: Types.Float32, default: 0 },   // 0=far, 1=touching
+	activationRadius: { type: Types.Float32, default: 2.5 },
+	triggerDistance:  { type: Types.Float32, default: 0.6 },
+	pulsePhase:    { type: Types.Float32, default: 0 },
+});
+
+// ─── Interior Decoration ──────────────────────────────────────────
+// Crystals, pillars, halos inside the portal interior.
+// Floats with offset sine waves. Reacts to narrative state.
+export const InteriorDecoration = createComponent('interior-decoration', {
+	decoType:    { type: Types.String,  default: 'crystal' }, // crystal | pillar | halo
+	floatPhase:  { type: Types.Float32, default: 0 },
+	floatSpeed:  { type: Types.Float32, default: 1.0 },
+	floatAmp:    { type: Types.Float32, default: 0.05 },
+	baseY:       { type: Types.Float32, default: 0 },
+	spawnDelay:  { type: Types.Float32, default: 0 },   // entry cinematic: seconds before materialize
+	materialized: { type: Types.Float32, default: 0 },  // 0→1 opacity/scale during cinematic
 });
