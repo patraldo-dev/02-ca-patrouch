@@ -184,10 +184,8 @@
 	</div>
 {:else if phase === 'ar'}
 	<div class="overlay ar-overlay">
-		<div class="ar-controls">
-			<button class="btn-cross" onclick={() => { if (api) { api.focusPortal(); phase = 'transitioning'; } }}>
-				Cruzar el portal →
-			</button>
+		<div class="ar-hint">
+			<p>Mira hacia el aro y toca la pantalla</p>
 			<button class="btn-ghost" onclick={handleExit}>← Salir</button>
 		</div>
 	</div>
@@ -322,33 +320,19 @@
 	.ar-overlay {
 		pointer-events: none;
 	}
-	.ar-controls {
+	.ar-hint {
 		position: fixed;
 		bottom: 2rem;
 		left: 50%;
 		transform: translateX(-50%);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.75rem;
+		text-align: center;
+		color: rgba(255,255,255,0.7);
+		font-size: 0.85rem;
 		pointer-events: auto;
 	}
-	.btn-cross {
-		font-family: var(--font-heading);
-		font-size: 1rem;
-		padding: 0.9rem 2.5rem;
-		border-radius: 28px;
-		border: none;
-		cursor: pointer;
-		background: var(--portal-color, #c9a87c);
-		color: #050508;
-		font-weight: 600;
-		box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-		animation: pulse-glow 2s ease-in-out infinite;
-	}
-	@keyframes pulse-glow {
-		0%, 100% { box-shadow: 0 4px 20px color-mix(in srgb, var(--portal-color, #c9a87c) 40%, transparent); }
-		50% { box-shadow: 0 4px 30px color-mix(in srgb, var(--portal-color, #c9a87c) 70%, transparent); }
+	.ar-hint p {
+		margin-bottom: 0.5rem;
+		text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 	}
 
 	/* Transition overlay */

@@ -321,29 +321,28 @@ export async function initTransitionWorld(container, portalConfig) {
 			sessionEntity.setValue(PortalSession, 'phase', 'ar-idle');
 
 			// In immersive-ar, DOM events don't fire — use XR session 'select' event
-			// For phone AR, select = screen tap. Raycast forward from camera.
+			// On phone AR, select = screen tap. Check if ring is near center of view.
 			world.session.addEventListener('select', (event) => {
 				const currentPhase = sessionEntity.getValue(PortalSession, 'phase');
 				if (currentPhase !== 'ar-idle') return;
 
-				// Raycast from camera forward through tap point
-				// For phone AR, input source ray approximates forward from camera
-				const raycaster = new Raycaster();
-				raycaster.setFromCamera(new Vector2(0, 0), world.camera);
-				const intersects = raycaster.intersectObject(ringMesh, true);
+				// Project ring world position to screen space (NDC)
+				const ringWorldPos = new Vector3();
+				ringMesh.getWorldPosition(ringWorldPos);
+				const screenPos = ringWorldPos.clone().project(world.camera);
+				// NDC: x,y in [-1, 1], z is depth. Center of screen = (0, 0)
+				const distFromCenter = Math.sqrt(screenPos.x * screenPos.x + screenPos.y * screenPos.y);
+				console.log('[transition] select event, ring NDC:', screenPos.x.toFixed(2), screenPos.y.toFixed(2), 'dist:', distFromCenter.toFixed(2));
 
-				if (intersects.length > 0) {
+				// Visual feedback: pulse ring on any tap
+				ringEntity.setValue(PortalRing, 'pulsePhase', 0);
+
+				// If ring is roughly centered in view, cross the portal
+				if (distFromCenter < 0.5) {
+					console.log('[transition] Ring centered — crossing portal');
 					this.focusPortal();
 				} else {
-					// Fallback: ring is the only object — if tap is anywhere near center, trigger
-					const ringPos = ringEntity.getVectorView(Transform, 'position');
-					const camDir = new Vector3();
-					world.camera.getWorldDirection(camDir);
-					const toRing = new Vector3(ringPos[0], ringPos[1], ringPos[2]).sub(world.camera.position);
-					const angle = camDir.angleTo(toRing);
-					if (angle < 0.5) { // ~28 degrees tolerance
-						this.focusPortal();
-					}
+					console.log('[transition] Ring not centered, looking elsewhere');
 				}
 			});
 
