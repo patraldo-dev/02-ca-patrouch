@@ -80,18 +80,17 @@ function createPortalRingMesh(colorHex) {
 	const group = new THREE.Group();
 	const color = new THREE.Color(colorHex);
 
-	const torusGeo = new THREE.TorusGeometry(0.5, 0.03, 16, 64);
-	const torusMat = new THREE.MeshStandardMaterial({
-		color, emissive: color, emissiveIntensity: 0.4,
-		transparent: true, opacity: 1,
+	const torusGeo = new THREE.TorusGeometry(0.8, 0.05, 16, 64);
+	const torusMat = new THREE.MeshBasicMaterial({
+		color, transparent: true, opacity: 1,
 	});
 	const torus = new THREE.Mesh(torusGeo, torusMat);
 	group.add(torus);
 
-	const membraneGeo = new THREE.CircleGeometry(0.48, 64);
+	const membraneGeo = new THREE.CircleGeometry(0.78, 64);
 	const membraneMat = new THREE.MeshBasicMaterial({
-		color: new THREE.Color(colorHex).multiplyScalar(0.3),
-		transparent: true, opacity: 0.15, side: THREE.DoubleSide,
+		color: new THREE.Color(colorHex).multiplyScalar(0.5),
+		transparent: true, opacity: 0.25, side: THREE.DoubleSide,
 	});
 	const membrane = new THREE.Mesh(membraneGeo, membraneMat);
 	membrane.position.z = 0.001;
@@ -104,10 +103,8 @@ function createPortalRingMesh(colorHex) {
 function createCrystalMesh(colorHex, scale = 1.0) {
 	const color = new THREE.Color(colorHex);
 	const geo = new THREE.OctahedronGeometry(0.15 * scale, 0);
-	const mat = new THREE.MeshStandardMaterial({
-		color, emissive: color.clone().multiplyScalar(0.5),
-		emissiveIntensity: 0.3, transparent: true, opacity: 0,
-		metalness: 0.8, roughness: 0.2,
+	const mat = new THREE.MeshBasicMaterial({
+		color, transparent: true, opacity: 0,
 	});
 	return new THREE.Mesh(geo, mat);
 }
@@ -115,11 +112,9 @@ function createCrystalMesh(colorHex, scale = 1.0) {
 function createPillarMesh(colorHex, height = 2.0) {
 	const color = new THREE.Color(colorHex);
 	const geo = new THREE.BoxGeometry(0.08, height, 0.08);
-	const mat = new THREE.MeshStandardMaterial({
-		color: color.clone().multiplyScalar(0.3),
-		emissive: color.clone().multiplyScalar(0.2),
-		emissiveIntensity: 0.2, transparent: true, opacity: 0,
-		metalness: 0.4, roughness: 0.5,
+	const mat = new THREE.MeshBasicMaterial({
+		color: color.clone().multiplyScalar(0.5),
+		transparent: true, opacity: 0,
 	});
 	return new THREE.Mesh(geo, mat);
 }
@@ -399,14 +394,14 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 		// Auto-enter featured portal immediately after bumper
 		const targetId = featuredPortalId || (portals[0] && portals[0].id);
 		if (targetId) {
-			setTimeout(() => buildInterior(world, portalEntities, targetId, ambientLight, keyLight), 300);
+			setTimeout(() => buildInterior(world, portalEntities, targetId, ambientLight, keyLight, portals.find(p => p.id === targetId)), 300);
 		}
 	};
 
 	world.globals.onPortalEnter = (portalId) => {
 		window.dispatchEvent(new CustomEvent('portal-enter', { detail: { portalId } }));
 		// Build interior after a short delay for the fade
-		setTimeout(() => buildInterior(world, portalEntities, portalId, ambientLight, keyLight), 100);
+		setTimeout(() => buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portals.find(p => p.id === portalId)), 100);
 	};
 
 	world.globals.onProximityTrigger = async () => {
@@ -493,14 +488,16 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 // ─── Interior Construction ──────────────────────────────────────────
 // Builds portal interior entities (ring, crystals, pillars, narrative state)
 // when transitioning from index mode to interior mode.
-function buildInterior(world, portalEntities, portalId, ambientLight, keyLight) {
+function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData) {
 	const portal = portalEntities.find((e) => e.getValue(PortalGate, 'portalId') === portalId);
-	if (!portal) return;
+	if (!portal) {
+		console.warn('[portals-ecs] buildInterior: portal not found:', portalId);
+		return;
+	}
 
-	const colorPrimary = portal.getValue(PortalGate, 'portalName')
-		? new THREE.Color().fromArray(portal.getVectorView(PortalGate, 'colorPrimary')).getHexString()
-		: 'c9a87c';
-	const colorHex = `#${colorPrimary}`;
+	// Get color from raw portal data (more reliable than extracting from ECS component)
+	const rawColor = portalData?.color_primary || '#c9a87c';
+	const colorHex = rawColor.startsWith('#') ? rawColor : `#${rawColor}`;
 
 	world.globals.portalBaseColor = colorHex;
 
@@ -527,7 +524,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight) 
 	const ringPos = ringEntity.getVectorView(Transform, 'position');
 		ringPos[0] = 0;
 	ringPos[1] = 0;
-	ringPos[2] = -1.5;
+	ringPos[2] = -2.0;
 	ringEntity.addComponent(PortalRing, {
 		radius: 0.5,
 		proximity: 0,
