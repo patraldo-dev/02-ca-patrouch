@@ -89,14 +89,15 @@
 				tabMeshes = [];
 
 				portals.forEach((portal, i) => {
-					const [r, g, b] = hexToRgb(portal.color_primary || '#c9a87c');
+					const colorHex = portal.color_primary || '#c9a87c';
+					const colorNum = parseInt(colorHex.replace('#', ''), 16);
 
 					// Tab mesh — a colored box
 					const geo = new BoxGeometry(TAB_WIDTH, TAB_HEIGHT, 0.02);
 					const mat = new MeshStandardMaterial({
-						color: { r, g, b },
-						emissive: { r: r * 0.3, g: g * 0.3, b: b * 0.3 },
-						emissiveIntensity: 0.4,
+						color: colorNum,
+						emissive: colorNum,
+						emissiveIntensity: 0.3,
 						roughness: 0.5,
 						metalness: 0.2,
 					});
@@ -113,7 +114,7 @@
 					mesh.userData.portalName = nameOf(portal);
 					mesh.userData.restY = pos[1];
 					mesh.userData.restX = 0;
-					mesh.userData.color = [r, g, b];
+					mesh.userData.colorHex = colorHex;
 
 					tabEntities.push(entity);
 					tabMeshes.push(mesh);
