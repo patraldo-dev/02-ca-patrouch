@@ -138,20 +138,21 @@
 	</div>
 {/if}
 
+<!-- Boot status (outside portal-canvas so it's always visible) -->
+{#if bootStatus !== 'ready'}
+	<div class="boot-indicator">
+		{#if bootStatus === 'error'}
+			<span class="boot-icon" style="color: #ef4444;">⚠</span>
+			<pre class="boot-error">{worldError}</pre>
+		{:else}
+			<span class="boot-icon">⟡</span>
+			<span class="boot-text">{bootStatus}</span>
+		{/if}
+	</div>
+{/if}
+
 <!-- ECS Canvas — full screen, this IS the page -->
-<div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}>
-	{#if bootStatus !== 'ready'}
-		<div class="boot-indicator">
-			{#if bootStatus === 'error'}
-				<span class="boot-icon" style="color: #ef4444;">⚠</span>
-				<pre class="boot-error">{worldError}</pre>
-			{:else}
-				<span class="boot-icon">⟡</span>
-				<span class="boot-text">{bootStatus}</span>
-			{/if}
-		</div>
-	{/if}
-</div>
+<div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}></div>
 
 <!-- Fallback: if WebGL/IWSDK failed -->
 {#if worldError}
@@ -230,8 +231,9 @@
 	}
 
 	.boot-indicator {
-		position: absolute;
+		position: fixed;
 		inset: 0;
+		z-index: 10000;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
