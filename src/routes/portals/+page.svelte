@@ -20,6 +20,7 @@
 	let containerEl = $state(null);
 	let worldReady = $state(false);
 	let worldError = $state(null);
+	let bootStatus = $state('init'); // init → loading → ready → error
 	let api = null;
 
 	// Reactive UI state (driven by ECS CustomEvents, minimal)
@@ -56,17 +57,20 @@
 		let cancelled = false;
 		async function boot() {
 			try {
+				bootStatus = 'loading';
 				const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
-				if (cancelled || !containerEl) return;
+				if (cancelled || !containerEl) { bootStatus = 'error'; worldError = 'No container'; return; }
 				api = await initPortalWorld(containerEl, {
 					portals: data.portals || [],
 					galaxies: data.galaxies || [],
 				});
 				if (cancelled) return;
 				worldReady = true;
+				bootStatus = 'ready';
 			} catch (err) {
 				console.error('[PortalWorld] IWSDK boot failed:', err);
-				worldError = err.message;
+				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0,3).join('\n');
+				bootStatus = 'error';
 			}
 		}
 		boot();
@@ -136,10 +140,15 @@
 
 <!-- ECS Canvas — full screen, this IS the page -->
 <div class="portal-canvas" class:ready={worldReady} bind:this={containerEl}>
-	{#if !worldReady && !worldError}
+	{#if bootStatus !== 'ready'}
 		<div class="boot-indicator">
-			<span class="boot-icon">⟡</span>
-			<span class="boot-text">...</span>
+			{#if bootStatus === 'error'}
+				<span class="boot-icon" style="color: #ef4444;">⚠</span>
+				<pre class="boot-error">{worldError}</pre>
+			{:else}
+				<span class="boot-icon">⟡</span>
+				<span class="boot-text">{bootStatus}</span>
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -244,6 +253,16 @@
 	@keyframes boot-spin {
 		from { transform: rotate(0deg); }
 		to { transform: rotate(360deg); }
+	}
+	.boot-error {
+		color: #ef4444;
+		font-size: 0.6rem;
+		font-family: monospace;
+		max-width: 90vw;
+		overflow-x: auto;
+		white-space: pre-wrap;
+		text-align: center;
+		padding: 0 1rem;
 	}
 
 	/* Bumper */
