@@ -783,6 +783,19 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		console.error('[portals-ecs] buildInterior: modeEntity is null!');
 	}
 
+	// ── VISIBLE TEST MESH — giant bright quad in front of camera ──
+	const testGeo = new THREE.PlaneGeometry(3, 3);
+	const testMat = new THREE.MeshBasicMaterial({
+		color: 0xff00ff,
+		transparent: true,
+		opacity: 0.8,
+		side: THREE.DoubleSide,
+	});
+	const testMesh = new THREE.Mesh(testGeo, testMat);
+	testMesh.position.set(0, 0, -1.5);
+	world.scene.add(testMesh);
+	domDebug('TEST MESH added: magenta quad at z=-1.5');
+
 	// Dispatch event for Svelte layer
 	window.dispatchEvent(new CustomEvent('portal-interior-ready', { detail: { portalId } }));
 	domDebug('=== buildInterior COMPLETE ===');
