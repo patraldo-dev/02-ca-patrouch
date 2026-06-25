@@ -642,12 +642,13 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			const aspect = texture.image.width / texture.image.height;
 			const geo = new THREE.PlaneGeometry(4 * aspect, 4);
 			const mat = new THREE.MeshBasicMaterial({
-				map: texture, transparent: true, opacity: 0.7,
+				map: texture, transparent: true, opacity: 0.35,
 				side: THREE.DoubleSide, depthWrite: false, fog: false,
 			});
 			const backdrop = new THREE.Mesh(geo, mat);
 			backdrop.position.set(0, 0, -4);
 			world.scene.add(backdrop);
+	\t\tbackdrop.renderOrder = -100;
 		});
 	} else {
 		const gradGeo = new THREE.PlaneGeometry(6, 4);
