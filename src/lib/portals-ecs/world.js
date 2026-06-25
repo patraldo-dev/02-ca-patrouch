@@ -777,6 +777,40 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	// Dispatch event for Svelte layer
 	window.dispatchEvent(new CustomEvent('portal-interior-ready', { detail: { portalId } }));
 	domDebug('=== buildInterior COMPLETE ===');
+
+	// Scene debug dump
+	let meshCount = 0;
+	let visibleMeshes = 0;
+	world.scene.traverse((obj) => {
+		if (obj.isMesh) {
+			meshCount++;
+			const mat = obj.material;
+			const op = mat?.opacity ?? 1;
+			const vis = obj.visible;
+			if (vis && op > 0.01) visibleMeshes++;
+		}
+	});
+	domDebug('Scene meshes: ' + meshCount + ', visible: ' + visibleMeshes);
+	domDebug('Camera pos: ' + world.camera.position.toArray().map(v=>v.toFixed(2)).join(','));
+	domDebug('Camera looking at scene with bg: ' + world.scene.background?.getHexString?.() ?? 'null');
+
+	// Check after 2s if decorations materialized
+	setTimeout(() => {
+		let decos = 0;
+		let matSum = 0;
+		for (const e of world.query({ required: [InteriorDecoration] }).iterate()) {
+			decos++;
+			matSum += e.getValue(InteriorDecoration, 'materialized');
+		}
+		domDebug('After 2s: ' + decos + ' decorations, avg materialized: ' + (decos > 0 ? (matSum/decos).toFixed(2) : 'N/A'));
+
+		// Re-count visible meshes
+		let visNow = 0;
+		world.scene.traverse((obj) => {
+			if (obj.isMesh && obj.visible && (obj.material?.opacity ?? 1) > 0.01) visNow++;
+		});
+		domDebug('After 2s visible meshes: ' + visNow);
+	}, 2000);
 }
 
 // ─── Interior Teardown ──────────────────────────────────────────────
