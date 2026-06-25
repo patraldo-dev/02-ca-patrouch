@@ -78,17 +78,20 @@ function createPortalRingMesh(colorHex) {
 	const group = new THREE.Group();
 	const color = new THREE.Color(colorHex);
 
-	const torusGeo = new THREE.TorusGeometry(0.8, 0.05, 16, 64);
+	// Brighter, larger torus
+	const torusGeo = new THREE.TorusGeometry(1.0, 0.08, 24, 96);
 	const torusMat = new THREE.MeshBasicMaterial({
-		color, transparent: true, opacity: 1,
+		color: color.clone().lerp(new THREE.Color(0xffffff), 0.3), // brighten
+		transparent: true, opacity: 1,
 	});
 	const torus = new THREE.Mesh(torusGeo, torusMat);
 	group.add(torus);
 
-	const membraneGeo = new THREE.CircleGeometry(0.78, 64);
+	// Brighter membrane
+	const membraneGeo = new THREE.CircleGeometry(0.98, 64);
 	const membraneMat = new THREE.MeshBasicMaterial({
-		color: new THREE.Color(colorHex).multiplyScalar(0.5),
-		transparent: true, opacity: 0.25, side: THREE.DoubleSide,
+		color: color.clone().lerp(new THREE.Color(0xffffff), 0.1),
+		transparent: true, opacity: 0.45, side: THREE.DoubleSide,
 	});
 	const membrane = new THREE.Mesh(membraneGeo, membraneMat);
 	membrane.position.z = 0.001;
@@ -102,7 +105,8 @@ function createCrystalMesh(colorHex, scale = 1.0) {
 	const color = new THREE.Color(colorHex);
 	const geo = new THREE.OctahedronGeometry(0.15 * scale, 0);
 	const mat = new THREE.MeshBasicMaterial({
-		color, transparent: true, opacity: 0,
+		color: color.clone().lerp(new THREE.Color(0xffffff), 0.4), // brighter
+		transparent: true, opacity: 0.9, // start visible immediately
 	});
 	return new THREE.Mesh(geo, mat);
 }
@@ -111,8 +115,8 @@ function createPillarMesh(colorHex, height = 2.0) {
 	const color = new THREE.Color(colorHex);
 	const geo = new THREE.BoxGeometry(0.08, height, 0.08);
 	const mat = new THREE.MeshBasicMaterial({
-		color: color.clone().multiplyScalar(0.5),
-		transparent: true, opacity: 0,
+		color: color.clone().lerp(new THREE.Color(0xffffff), 0.2),
+		transparent: true, opacity: 0.7, // start visible
 	});
 	return new THREE.Mesh(geo, mat);
 }
@@ -689,6 +693,11 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	// Reposition camera to face the ring
 	world.camera.position.set(0, 0.3, 0.5);
 	world.camera.lookAt(0, 0, -1.5);
+
+	// Add a point light at camera for visibility
+	const camLight = new THREE.PointLight(0xffffff, 2.0, 10);
+	camLight.position.copy(world.camera.position);
+	world.scene.add(camLight);
 
 	// Crystal decorations — floating around the ring
 	domDebug('Creating crystals...');
