@@ -288,16 +288,18 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	world.globals.launchXR = null;
 
 	// ── 4. Register systems by priority ──
+	// TEMPORARILY DISABLED: BackgroundSystem, ParticleSystem, CarouselSystem
+	// to isolate rendering issue
 	world.registerSystem(PortalInputSystem, { priority: -5 });
 	world.registerSystem(FocusHoldSystem, { priority: -4 });
 	world.registerSystem(CrystalInteractionSystem, { priority: -4 });
 	world.registerSystem(TabSystem, { priority: -3 });
-	world.registerSystem(CarouselSystem, { priority: 0 });
+	// world.registerSystem(CarouselSystem, { priority: 0 });
 	world.registerSystem(NarrativeSystem, { priority: 0 });
 	world.registerSystem(ProximityRingSystem, { priority: 0 });
 	world.registerSystem(EntryCinematicSystem, { priority: 0 });
-	world.registerSystem(BackgroundSystem, { priority: 1 });
-	world.registerSystem(ParticleSystem, { priority: 2 });
+	// world.registerSystem(BackgroundSystem, { priority: 1 });
+	// world.registerSystem(ParticleSystem, { priority: 2 });
 
 	// Wire NarrativeSystem lights
 	for (const sys of world.systems) {
@@ -316,13 +318,14 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 		cinematicTimer: 0,
 	});
 
-	// ── 6. Background entity ──
-	const bgEntity = world.createEntity();
-	bgEntity.addComponent(ReactiveBackground);
+	// ── 6. Background entity — TEMPORARILY DISABLED ──
+	// const bgEntity = world.createEntity();
+	// bgEntity.addComponent(ReactiveBackground);
 
 	// ── 7. Bumper handled by HTML overlay in Svelte — no ECS bumper entity ──
 
-	// ── 8. Ambient particles ──
+	// ── 8. Ambient particles — TEMPORARILY DISABLED ──
+	/*
 	const PARTICLE_COUNT = 60;
 	for (let i = 0; i < PARTICLE_COUNT; i++) {
 		const p = world.createTransformEntity();
@@ -339,6 +342,7 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 			size: 0.002 + Math.random() * 0.003,
 		});
 	}
+	*/
 
 	// ── 9. Portal tab entities ──
 	const RAIL_X = -0.6;
@@ -842,46 +846,28 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	domDebug('Scene meshes: ' + meshCount + ', visible: ' + visibleMeshes);
 	domDebug('Camera pos: ' + world.camera.position.toArray().map(v=>v.toFixed(2)).join(','));
 	domDebug('Camera looking at scene with bg: ' + world.scene.background?.getHexString?.() ?? 'null');
-
-	// Check after 2s if decorations materialized
-	setTimeout(() => {
-		let decos = 0;
-		let matSum = 0;
-		for (const e of world.query({ required: [InteriorDecoration] }).iterate()) {
-			decos++;
-			matSum += e.getValue(InteriorDecoration, 'materialized');
-		}
-		domDebug('After 2s: ' + decos + ' decorations, avg materialized: ' + (decos > 0 ? (matSum/decos).toFixed(2) : 'N/A'));
-
-		// Re-count visible meshes
-		let visNow = 0;
-		world.scene.traverse((obj) => {
-			if (obj.isMesh && obj.visible && (obj.material?.opacity ?? 1) > 0.01) visNow++;
-		});
-		domDebug('After 2s visible meshes: ' + visNow);
-	}, 2000);
 }
 
 // ─── Interior Teardown ──────────────────────────────────────────────
 function teardownInterior(world) {
-	// Find and destroy interior entities
+	// Find and destroy interior entities using world.entities (elics World has .entities map)
 	const toDestroy = [];
-	for (const entity of world.query({ required: [Transform] }).iterate()) {
-		if (entity.hasComponent(NarrativeState) ||
-			entity.hasComponent(PortalRing) ||
-			entity.hasComponent(InteriorDecoration)) {
+	for (const entity of world.entities.values()) {
+		if (entity.hasComponent?.(NarrativeState) ||
+			entity.hasComponent?.(PortalRing) ||
+			entity.hasComponent?.(InteriorDecoration)) {
 			toDestroy.push(entity);
 		}
 	}
 	toDestroy.forEach((e) => e.dispose());
 
 	// Make index entities visible again
-	for (const entity of world.query({ required: [PortalGate, TabLayout] }).iterate()) {
-		if (entity.object3D) {
-			entity.object3D.visible = true;
+	for (const entity of world.entities.values()) {
+		if (entity.hasComponent?.(PortalGate) && entity.hasComponent?.(TabLayout)) {
+			if (entity.object3D) entity.object3D.visible = true;
+			entity.setValue(PortalGate, 'state', 'idle');
+			entity.setValue(PortalGate, 'focusTimer', 0);
 		}
-		entity.setValue(PortalGate, 'state', 'idle');
-		entity.setValue(PortalGate, 'focusTimer', 0);
 	}
 }
 
