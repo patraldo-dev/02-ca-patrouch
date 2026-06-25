@@ -155,25 +155,12 @@ function generateToneWAV(frequency, durationSec = 2.0, sampleRate = 44100) {
 	return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
 }
 
-// ─── Main initialization ────────────────────────────────────────────
-// ─── Emergency DOM debug (no Svelte dependency) ─────────────────────
+// ─── Debug (console only) ──────────────────────────────
 function domDebug(msg) {
-	console.log('[DEBUG]', msg);
-	let el = document.getElementById('ecs-emergency-debug');
-	if (!el) {
-		el = document.createElement('div');
-		el.id = 'ecs-emergency-debug';
-		el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100001;background:rgba(0,0,0,0.9);color:#0f0;font-family:monospace;font-size:11px;padding:8px;border:2px solid #0f0;max-height:50vh;overflow-y:auto;pointer-events:none;white-space:pre-wrap;';
-		document.body.appendChild(el);
-	}
-	const line = document.createElement('div');
-	line.textContent = msg;
-	el.appendChild(line);
-	// Auto-scroll to bottom so latest lines are visible
-	el.scrollTop = el.scrollHeight;
+	console.log('[portals-ecs]', msg);
 }
 
-export async function initPortalWorld(container, { portals, galaxies, featuredPortalId }) {
+export async function initPortalWorld(container, { portals, galaxies, featuredPortalId, sceneConfigs }) {
 	domDebug('=== initPortalWorld START ===');
 	domDebug('portals count: ' + (portals?.length ?? 'undefined'));
 	domDebug('galaxies count: ' + (galaxies?.length ?? 'undefined'));
@@ -445,7 +432,7 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 				domDebug('Scheduling buildInterior in 300ms...');
 				setTimeout(() => {
 					domDebug('setTimeout fired, calling buildInterior...');
-					buildInterior(world, portalEntities, targetId, ambientLight, keyLight, portals.find(p => p.id === targetId), modeEntity);
+					buildInterior(world, portalEntities, targetId, ambientLight, keyLight, portals.find(p => p.id === targetId), modeEntity, sceneConfigs?.[targetId]);
 				}, 300);
 		} else {
 			domDebug('WARNING: No targetId - buildInterior will NOT be called');
@@ -455,7 +442,7 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	world.globals.onPortalEnter = (portalId) => {
 		window.dispatchEvent(new CustomEvent('portal-enter', { detail: { portalId } }));
 		// Build interior after a short delay for the fade
-		setTimeout(() => buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portals.find(p => p.id === portalId), modeEntity), 100);
+		setTimeout(() => buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portals.find(p => p.id === portalId), modeEntity, sceneConfigs?.[portalId]), 100);
 	};
 
 	world.globals.onProximityTrigger = async () => {
@@ -552,7 +539,7 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 // ─── Interior Construction ──────────────────────────────────────────
 // Builds portal interior entities (ring, crystals, pillars, narrative state)
 // when transitioning from index mode to interior mode.
-function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData, modeEntity) {
+function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData, modeEntity, sceneConfig) {
 	domDebug('buildInterior START, portalId: ' + portalId);
 	domDebug('portalEntities count: ' + portalEntities.length);
 
@@ -596,50 +583,56 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	domDebug('colorHex: ' + (portalData?.color_primary || '#c9a87c'));
 
 	// Get color from raw portal data ( more reliable than extracting from ECS component)
-	const rawColor = portalData?.color_primary || '#c9a87c';
-	const colorHex = rawColor.startsWith('#') ? rawColor : `#${rawColor}`;
-
+	// ── Resolve colors from sceneConfig or fallback to portalData ──
+	const palette = sceneConfig?.palette;
+	const ringColor = palette?.primary || (portalData?.color_primary || '#c9a87c');
+	const colorHex = ringColor.startsWith('#') ? ringColor : `#${ringColor}`;
 	world.globals.portalBaseColor = colorHex;
 
-	// Fade out index entities (tabs, carousel) — they'll be invisible
-	for (const entity of portalEntities) {
-		if (entity.object3D) {
-			entity.object3D.visible = false;
-		}
+	// Store narrative states from sceneConfig
+	if (sceneConfig?.narrative_states) {
+		world.globals.narrativeStates = sceneConfig.narrative_states;
 	}
 
-	// Create narrative state entity
-	domDebug('Creating narrative state entity...');
+	// Fade out index entities
+	for (const entity of portalEntities) {
+		if (entity.object3D) entity.object3D.visible = false;
+	}
+
+	// ── Narrative state entity ──
+	const numStates = sceneConfig?.narrative_states?.length || 3;
 	const narrEntity = world.createEntity();
 	narrEntity.addComponent(NarrativeState, {
 		stateIndex: 0,
 		targetStateIndex: 0,
 		transitionProgress: 1,
 		transitionSpeed: 0.8,
-		maxStates: 3,
+		maxStates: numStates,
 	});
 
-	// Create portal ring
-	domDebug('Creating portal ring...');
+	// ── Atmosphere ──
+	const atmos = sceneConfig?.atmosphere;
+	if (atmos) {
+		const fogDensity = atmos.fog_density || 0.03;
+		const fogColor = new THREE.Color(atmos.ambient_color || colorHex);
+		world.scene.fog = new THREE.FogExp2(fogColor, fogDensity);
+		ambientLight.intensity = (atmos.light_intensity || 0.5) * 2;
+		ambientLight.color.set(atmos.ambient_color || '#ffffff');
+	}
+
+	// ── Portal ring ──
 	const ringMesh = createPortalRingMesh(colorHex);
 	const ringEntity = world.createTransformEntity(ringMesh);
 	const ringPos = ringEntity.getVectorView(Transform, 'position');
-		ringPos[0] = 0;
-	ringPos[1] = 0;
-	ringPos[2] = -2.0;
+	ringPos[0] = 0; ringPos[1] = 0; ringPos[2] = -2.0;
 	ringEntity.addComponent(PortalRing, {
-		radius: 0.5,
-		proximity: 0,
-		activationRadius: 2.5,
-		triggerDistance: 0.6,
-		pulsePhase: 0,
+		radius: 0.5, proximity: 0,
+		activationRadius: 2.5, triggerDistance: 0.6, pulsePhase: 0,
 	});
 
-	// ── Backdrop image from Cloudflare Images ──
-	// Image ID stored in portal metadata as scene_image or backdrop_image_id
-	// URL pattern: https://imagedelivery.net/<hash>/<image_id>/<variant>
+	// ── Backdrop image ──
 	const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
-	const imageId = portalData?.scene_image || portalData?.backdrop_image_id;
+	const imageId = portalData?.scene_image;
 	if (imageId) {
 		const imageUrl = `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/cover`;
 		const loader = new THREE.TextureLoader();
@@ -647,143 +640,91 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		loader.load(imageUrl, (texture) => {
 			texture.colorSpace = THREE.SRGBColorSpace;
 			const aspect = texture.image.width / texture.image.height;
-			const geo = new THREE.PlaneGeometry(3 * aspect, 3);
+			const geo = new THREE.PlaneGeometry(4 * aspect, 4);
 			const mat = new THREE.MeshBasicMaterial({
-				map: texture,
-				transparent: true,
-				opacity: 0, // starts invisible, EntryCinematicSystem fades in via InteriorDecoration
-				side: THREE.DoubleSide,
-				depthWrite: false,
+				map: texture, transparent: true, opacity: 0.7,
+				side: THREE.DoubleSide, depthWrite: false, fog: false,
 			});
 			const backdrop = new THREE.Mesh(geo, mat);
-			backdrop.position.set(0, 0, -3.5);
+			backdrop.position.set(0, 0, -4);
 			world.scene.add(backdrop);
-
-			// Register as interior decoration so EntryCinematicSystem handles materialization
-			const backdropEntity = world.createTransformEntity(backdrop);
-			backdropEntity.addComponent(InteriorDecoration, {
-				decoType: 'backdrop',
-				floatPhase: 0,
-				floatSpeed: 0.1,
-				floatAmp: 0.005,
-				baseY: 0,
-				spawnDelay: 0.2, // appears first, before the ring
-				materialized: 0,
-			});
-		}, undefined, (err) => {
-			console.warn('[portals-ecs] Backdrop image failed to load:', imageUrl, err);
 		});
 	} else {
-		// No image — subtle gradient backdrop using portal color
 		const gradGeo = new THREE.PlaneGeometry(6, 4);
 		const gradMat = new THREE.ShaderMaterial({
-			transparent: true,
-			opacity: 0,
-			depthWrite: false,
-			side: THREE.DoubleSide,
-			uniforms: {
-				uColor: { value: new THREE.Color(colorHex) },
-			},
-			vertexShader: `
-				varying vec2 vUv;
-				void main() {
-					vUv = uv;
-					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-				}
-			`,
-			fragmentShader: `
-				uniform vec3 uColor;
-				varying vec2 vUv;
-				void main() {
-					float d = length(vUv - vec2(0.5, 0.5));
-					float alpha = smoothstep(0.8, 0.1, d) * 0.35;
-					gl_FragColor = vec4(uColor * 1.5, alpha);
-				}
-			`,
+			transparent: true, depthWrite: false, side: THREE.DoubleSide,
+			uniforms: { uColor: { value: new THREE.Color(colorHex) }, uOpacity: { value: 0.5 } },
+			vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+			fragmentShader: `uniform vec3 uColor; uniform float uOpacity; varying vec2 vUv; void main() { float d = length(vUv - vec2(0.5,0.5)); float a = smoothstep(0.8,0.1,d)*uOpacity; gl_FragColor = vec4(uColor*(1.5-d*0.5), a); }`,
 		});
 		const gradMesh = new THREE.Mesh(gradGeo, gradMat);
-		gradMesh.position.set(0, 0, -3.5);
+		gradMesh.position.set(0, 0, -4);
 		world.scene.add(gradMesh);
-
-		const gradEntity = world.createTransformEntity(gradMesh);
-		gradEntity.addComponent(InteriorDecoration, {
-			decoType: 'backdrop',
-			floatPhase: 0,
-			floatSpeed: 0.05,
-			floatAmp: 0.002,
-			baseY: 0,
-			spawnDelay: 0.2,
-			materialized: 0,
-		});
 	}
 
-	// Reposition camera to face the ring
+	// ── Camera ──
 	world.camera.position.set(0, 0.3, 0.5);
-	world.camera.lookAt(0, 0, -1.5);
-
-	// Add a point light at camera for visibility
+	world.camera.lookAt(0, 0, -2);
 	const camLight = new THREE.PointLight(0xffffff, 2.0, 10);
 	camLight.position.copy(world.camera.position);
 	world.scene.add(camLight);
 
-	// Crystal decorations — floating around the ring
-	domDebug('Creating crystals...');
-	const crystalPositions = [
-		[-1.2, 0.3, -2.5], [1.2, 0.8, -2.5], [0, 1.2, -3.0],
-		[-1.8, 0.6, -3.5], [1.8, 0.2, -3.0],
-	];
+	// ── Crystals from sceneConfig ──
+	const crystals = sceneConfig?.crystals || [];
+	const crystalColors = palette?.crystal_colors || [colorHex, '#4fc3f7', '#b5ead7', '#ce93d8'];
+	const ringRadius = sceneConfig?.spatial_layout?.crystal_ring_radius || 2;
+	const elevations = sceneConfig?.spatial_layout?.crystal_elevations || [0.8, 1.2, 1.5];
 
-	const crystalColors = [colorHex, '#4fc3f7', '#b5ead7', '#ce93d8'];
+	crystals.forEach((crystal, i) => {
+		const angle = (i / crystals.length) * Math.PI * 2;
+		const elev = elevations[i % elevations.length];
+		const cx = Math.cos(angle) * ringRadius;
+		const cy = elev - 0.5;
+		const cz = Math.sin(angle) * ringRadius - 2;
 
-	crystalPositions.forEach((pos, i) => {
-		const colorIdx = i % crystalColors.length;
-		const mesh = createCrystalMesh(crystalColors[colorIdx], 0.8 + Math.random() * 0.4);
+		const cColor = crystalColors[crystal.color_index % crystalColors.length] || colorHex;
+		const cScale = crystal.scale || 1;
+		const mesh = createCrystalMesh(cColor, cScale);
+		mesh.userData.crystalText = crystal.text || '';
+		mesh.userData.portalId = portalId;
+
 		const entity = world.createTransformEntity(mesh);
 		const p = entity.getVectorView(Transform, 'position');
-		p[0] = pos[0]; p[1] = pos[1]; p[2] = pos[2];
+		p[0] = cx; p[1] = cy; p[2] = cz;
 
 		entity.addComponent(InteriorDecoration, {
 			decoType: 'crystal',
 			floatPhase: Math.random() * Math.PI * 2,
-			floatSpeed: 0.8 + Math.random() * 0.6,
-			floatAmp: 0.03 + Math.random() * 0.04,
-			baseY: pos[1],
-			spawnDelay: 0.5 + i * 0.15,  // stagger materialization
-			materialized: 0,
+			floatSpeed: 0.6 + Math.random() * 0.4,
+			floatAmp: 0.04 + Math.random() * 0.03,
+			baseY: cy,
+			spawnDelay: 0,
+			materialized: 0.85,
 		});
 
-		// Spatial audio — each crystal emits a tone at its position
-		// Pitches form a pentatonic cluster: C, D, E, G, A (offset by crystal index)
-		const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00]; // C4, D4, E4, G4, A4
+		// Spatial audio — pentatonic tones per crystal
+		const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00];
 		const freq = pentatonic[i % pentatonic.length];
-		// Generate a short sine wave buffer as DataAudio URL
-		// AudioSource expects a file path, but we can use a data URI
 		const audioPath = generateToneWAV(freq, 2.0);
 		entity.addComponent(AudioSource, {
-			src: audioPath,
-			positional: true,
-			loop: true,
-			autoplay: true,
-			volume: 0.08,
-			refDistance: 0.8,
-			rolloffFactor: 2.0,
-			maxDistance: 8.0,
-			distanceModel: 'inverse',
-			playbackMode: PlaybackMode.Overlap,
+			src: audioPath, positional: true, loop: true, autoplay: true,
+			volume: 0.06, refDistance: 0.8, rolloffFactor: 2.0,
+			maxDistance: 8.0, distanceModel: 'inverse', playbackMode: PlaybackMode.Overlap,
 		});
 	});
 
-	// Pillars — structural elements
-	domDebug('Creating pillars...');
-	const pillarCount = 4;
+	// ── Pillars from sceneConfig ──
+	const decos = sceneConfig?.decorations || {};
+	const pillarCount = decos.pillar_count || 5;
+	const pillarHeight = decos.pillar_height || 2.2;
 	for (let i = 0; i < pillarCount; i++) {
-		const angle = (i / pillarCount) * Math.PI * 2;
-		const r = 1.8;
+		const angle = (i / pillarCount) * Math.PI * 2 + Math.PI / pillarCount;
+		const r = ringRadius + 0.8;
 		const px = Math.cos(angle) * r;
-		const pz = Math.sin(angle) * r - 1.5;
+		const pz = Math.sin(angle) * r - 2;
 		const py = -0.5;
 
-		const mesh = createPillarMesh(colorHex, 2.0 + Math.random() * 0.5);
+		const mesh = createPillarMesh(colorHex, pillarHeight);
 		const entity = world.createTransformEntity(mesh);
 		const p = entity.getVectorView(Transform, 'position');
 		p[0] = px; p[1] = py; p[2] = pz;
@@ -791,62 +732,43 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		entity.addComponent(InteriorDecoration, {
 			decoType: 'pillar',
 			floatPhase: Math.random() * Math.PI * 2,
-			floatSpeed: 0.3 + Math.random() * 0.2,
-			floatAmp: 0.01,
-			baseY: py,
-			spawnDelay: 1.2 + i * 0.2,
-			materialized: 0,
+			floatSpeed: 0.3, floatAmp: 0.01,
+			baseY: py, spawnDelay: 0, materialized: 0.7,
 		});
 	}
 
-	// Switch mode (modeEntity passed directly from initPortalWorld)
-	domDebug('Setting mode to interior...');
-	console.log('[2] modeEntity:', !!modeEntity, 'setting mode to interior');
-	window.dispatchEvent(new CustomEvent('portal-debug', { detail: '[2] modeEntity: ' + (!!modeEntity) }));
-	if (modeEntity) {
-		modeEntity.setValue(WorldMode, 'mode', 'interior');
-		modeEntity.setValue(WorldMode, 'cinematicTimer', 0);
-	} else {
-		console.error('[portals-ecs] buildInterior: modeEntity is null!');
+	// ── Halo — pulsing ring around the portal ──
+	if (decos.halo_radius) {
+		const haloGeo = new THREE.TorusGeometry(decos.halo_radius + 0.5, 0.02, 8, 64);
+		const haloMat = new THREE.MeshBasicMaterial({
+			color: new THREE.Color(palette?.accent || colorHex).lerp(new THREE.Color(0xffffff), 0.3),
+			transparent: true, opacity: 0.4,
+		});
+		const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+		haloMesh.position.set(0, 0, -2);
+		world.scene.add(haloMesh);
+
+		// Animate halo pulse via a decoration entity
+		const haloEntity = world.createTransformEntity(haloMesh);
+		haloEntity.addComponent(InteriorDecoration, {
+			decoType: 'pillar', // reuse float, but we'll pulse scale manually
+			floatPhase: 0, floatSpeed: decos.halo_pulse_speed || 0.5,
+			floatAmp: 0.001, baseY: 0, spawnDelay: 0, materialized: 0.4,
+		});
+		haloMesh.userData.isHalo = true;
+		haloMesh.userData.pulseSpeed = decos.halo_pulse_speed || 0.5;
 	}
 
-	// ── VISIBLE TEST MESH — giant bright quad in front of camera ──
-	const testGeo = new THREE.PlaneGeometry(3, 3);
-	const testMat = new THREE.MeshBasicMaterial({
-		color: 0xff00ff,
-		transparent: true,
-		opacity: 0.8,
-		side: THREE.DoubleSide,
-		fog: false, // immune to scene fog
-		depthTest: false, // always render on top
-	});
-	testMat.depthWrite = false;
-	const testMesh = new THREE.Mesh(testGeo, testMat);
-	testMesh.position.set(0, 0, -1.5);
-	testMesh.renderOrder = 999; // render last
-	world.scene.add(testMesh);
-	domDebug('TEST MESH added: magenta quad at z=-1.5, fog-immune, renderOrder=999');
+	// ── Switch mode ──
+	if (modeEntity) {
+		modeEntity.setValue(WorldMode, 'mode', 'interior');
+		modeEntity.setValue(WorldMode, 'cinematicTimer', 5); // start advanced so decorations are visible
+	}
 
-	// Dispatch event for Svelte layer
 	window.dispatchEvent(new CustomEvent('portal-interior-ready', { detail: { portalId } }));
-	domDebug('=== buildInterior COMPLETE ===');
-
-	// Scene debug dump
-	let meshCount = 0;
-	let visibleMeshes = 0;
-	world.scene.traverse((obj) => {
-		if (obj.isMesh) {
-			meshCount++;
-			const mat = obj.material;
-			const op = mat?.opacity ?? 1;
-			const vis = obj.visible;
-			if (vis && op > 0.01) visibleMeshes++;
-		}
-	});
-	domDebug('Scene meshes: ' + meshCount + ', visible: ' + visibleMeshes);
-	domDebug('Camera pos: ' + world.camera.position.toArray().map(v=>v.toFixed(2)).join(','));
-	domDebug('Camera looking at scene with bg: ' + world.scene.background?.getHexString?.() ?? 'null');
+	domDebug('buildInterior complete: ' + crystals.length + ' crystals, ' + pillarCount + ' pillars');
 }
+
 
 // ─── Interior Teardown ──────────────────────────────────────────────
 function teardownInterior(world) {

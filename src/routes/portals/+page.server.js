@@ -1,15 +1,16 @@
 export async function load({ platform }) {
     const db = platform?.env?.DB_book;
-    if (!db) return { galaxies: [], portals: [], count: 0, featuredPortal: null, _debug: 'NO_DB_BINDING' };
+    if (!db) return { galaxies: [], portals: [], count: 0, featuredPortal: null, sceneConfigs: {} };
 
     try {
-        const { results: portals, success, error } = await db.prepare(`
+        const { results: portals } = await db.prepare(`
             SELECT 
                 p.id, p.galaxy_id, p.icon, p.color_primary, p.color_bg, p.color_text,
                 p.name_es, p.name_en, p.name_fr,
                 p.description_es, p.description_en, p.description_fr,
                 p.status, p.active_writings_count, p.video_url,
                 p.narrator_greeting, p.narrator_tone,
+                p.scene_image,
                 g.name_es as galaxy_name_es, g.name_en as galaxy_name_en, g.name_fr as galaxy_name_fr,
                 g.icon as galaxy_icon, g.sort_order as galaxy_sort
             FROM portals p
@@ -17,6 +18,15 @@ export async function load({ platform }) {
             WHERE p.status = 'active'
             ORDER BY g.sort_order ASC, p.discovered_at ASC
         `).all();
+
+        // Fetch scene configs
+        const { results: sceneRows } = await db.prepare(`
+            SELECT portal_id, scene_config FROM portal_scenes
+        `).all();
+        const sceneConfigs = {};
+        for (const row of sceneRows || []) {
+            try { sceneConfigs[row.portal_id] = JSON.parse(row.scene_config); } catch {}
+        }
 
         // Featured = most active writings, fallback to first
         const featuredPortal = (portals && portals.length > 0)
@@ -45,10 +55,10 @@ export async function load({ platform }) {
             portals: portals || [],
             count: portals?.length || 0,
             featuredPortal,
-            _debug: `OK: ${portals?.length || 0} portals, success=${success}`
+            sceneConfigs,
         };
     } catch (e) {
         console.error('Portals load error:', e);
-        return { galaxies: [], portals: [], count: 0, featuredPortal: null, _debug: 'ERROR: ' + e.message };
+        return { galaxies: [], portals: [], count: 0, featuredPortal: null, sceneConfigs: {} };
     }
 }
