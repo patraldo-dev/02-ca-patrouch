@@ -522,12 +522,41 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData, modeEntity) {
 	domDebug('buildInterior START, portalId: ' + portalId);
 	domDebug('portalEntities count: ' + portalEntities.length);
-	domDebug('portalData: ' + (portalData ? JSON.stringify({id: portalData.id, name: portalData.name_es, color: portalData.color_primary}) : 'NULL'));
 
-	const portal = portalEntities.find((e) => e.getValue(PortalGate, 'portalId') === portalId);
+	// Check portalData safely
+	try {
+		const pDataInfo = portalData ? ('id=' + portalData.id + ' color=' + (portalData.color_primary || 'none')) : 'NULL';
+		domDebug('portalData: ' + pDataInfo);
+	} catch(e) {
+		domDebug('portalData debug error: ' + e.message);
+	}
+
+	// Find portal entity with error handling
+	let portal;
+	try {
+		domDebug('About to call find()...');
+		portal = portalEntities.find((e) => {
+			try {
+				return e.getValue(PortalGate, 'portalId') === portalId;
+			} catch(err) {
+				domDebug('getValue error in find: ' + err.message);
+				return false;
+			}
+		});
+		domDebug('find() returned: ' + (portal ? 'FOUND' : 'NOT FOUND'));
+	} catch(e) {
+		domDebug('find() threw: ' + e.message);
+		return;
+	}
+
 	if (!portal) {
 		domDebug('FAILED: portal entity not found for id: ' + portalId);
-		domDebug('Available portal ids: ' + portalEntities.map(e => e.getValue(PortalGate, 'portalId')).join(', '));
+		try {
+			const ids = portalEntities.map(e => {
+				try { return e.getValue(PortalGate, 'portalId'); } catch(_) { return '?'; }
+			});
+			domDebug('Available ids: ' + ids.join(', '));
+		} catch(_) {}
 		return;
 	}
 	domDebug('Portal entity found OK');
