@@ -384,14 +384,14 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 		// Auto-enter featured portal immediately.
 		const targetId = featuredPortalId || (portals[0] && portals[0].id);
 		if (targetId) {
-			setTimeout(() => buildInterior(world, portalEntities, targetId, ambientLight, keyLight, portals.find(p => p.id === targetId)), 300);
+					setTimeout(() => buildInterior(world, portalEntities, targetId, ambientLight, keyLight, portals.find(p => p.id === targetId), modeEntity), 300);
 		}
 	};
 
 	world.globals.onPortalEnter = (portalId) => {
 		window.dispatchEvent(new CustomEvent('portal-enter', { detail: { portalId } }));
 		// Build interior after a short delay for the fade
-		setTimeout(() => buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portals.find(p => p.id === portalId)), 100);
+		setTimeout(() => buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portals.find(p => p.id === portalId), modeEntity), 100);
 	};
 
 	world.globals.onProximityTrigger = async () => {
@@ -481,7 +481,7 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 // ─── Interior Construction ──────────────────────────────────────────
 // Builds portal interior entities (ring, crystals, pillars, narrative state)
 // when transitioning from index mode to interior mode.
-function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData) {
+function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData, modeEntity) {
 	const portal = portalEntities.find((e) => e.getValue(PortalGate, 'portalId') === portalId);
 	if (!portal) {
 		console.warn('[portals-ecs] buildInterior: portal not found:', portalId);
@@ -683,11 +683,12 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		});
 	}
 
-	// Switch mode
-	const modeEntity = world.query({ required: [WorldMode] }).iterate().next().value;
+	// Switch mode (modeEntity passed directly from initPortalWorld)
 	if (modeEntity) {
 		modeEntity.setValue(WorldMode, 'mode', 'interior');
 		modeEntity.setValue(WorldMode, 'cinematicTimer', 0);
+	} else {
+		console.error('[portals-ecs] buildInterior: modeEntity is null!');
 	}
 
 	// Dispatch event for Svelte layer
