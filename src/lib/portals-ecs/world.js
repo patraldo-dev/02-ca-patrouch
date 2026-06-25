@@ -540,7 +540,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	const portalDataRow = portals.find(p => p.id === portalId);
 	const imageId = portalDataRow?.scene_image || portalDataRow?.backdrop_image_id;
 	if (imageId) {
-		const imageUrl = `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/public`;
+		const imageUrl = `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/cover`;
 		const loader = new THREE.TextureLoader();
 		loader.crossOrigin = 'anonymous';
 		loader.load(imageUrl, (texture) => {
