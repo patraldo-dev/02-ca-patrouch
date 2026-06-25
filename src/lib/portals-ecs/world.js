@@ -721,7 +721,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			if (spiritScene && entity.object3D) {
 				const spiritClone = spiritScene.clone(true);
 				spiritClone.scale.setScalar(0.3 * cScale);
-				spiritClone.position.copy(entity.object3D.position);
+				spiritClone.position.set(cx, cy, cz);
 				spiritClone.userData.crystalText = crystal.text || '';
 				spiritClone.userData.portalId = portalId;
 				world.scene.add(spiritClone);

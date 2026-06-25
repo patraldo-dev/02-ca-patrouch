@@ -183,8 +183,8 @@
 
 <!-- Exit button + explore all -->
 {#if worldReady && mode === 'interior'}
-	<button class="exit-btn" onclick={() => api?.exitToIndex()}>←</button>
-	<button class="explore-btn" onclick={() => api?.exitToIndex()}>⟡</button>
+	<button class="exit-btn" style="pointer-events:auto;" onclick={(e) => { e.stopPropagation(); api?.exitToIndex(); }}>←</button>
+	<button class="explore-btn" style="pointer-events:auto;" onclick={(e) => { e.stopPropagation(); api?.exitToIndex(); }}>⟡</button>
 {/if}
 
 <!-- Fallback nav (if world fails) -->
