@@ -152,7 +152,30 @@ function generateToneWAV(frequency, durationSec = 2.0, sampleRate = 44100) {
 }
 
 // ─── Main initialization ────────────────────────────────────────────
+// ─── Emergency DOM debug (no Svelte dependency) ─────────────────────
+function domDebug(msg) {
+	console.log('[DEBUG]', msg);
+	let el = document.getElementById('ecs-emergency-debug');
+	if (!el) {
+		el = document.createElement('div');
+		el.id = 'ecs-emergency-debug';
+		el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100001;background:rgba(0,0,0,0.9);color:#0f0;font-family:monospace;font-size:11px;padding:8px;border:2px solid #0f0;max-height:50vh;overflow-y:auto;pointer-events:none;white-space:pre-wrap;';
+		document.body.appendChild(el);
+	}
+	const line = document.createElement('div');
+	line.textContent = msg;
+	el.appendChild(line);
+}
+
 export async function initPortalWorld(container, { portals, galaxies, featuredPortalId }) {
+	domDebug('=== initPortalWorld START ===');
+	domDebug('portals count: ' + (portals?.length ?? 'undefined'));
+	domDebug('galaxies count: ' + (galaxies?.length ?? 'undefined'));
+	domDebug('featuredPortalId: ' + (featuredPortalId ?? 'undefined'));
+	if (portals?.length > 0) {
+		domDebug('portal[0] id: ' + portals[0].id + ', name: ' + (portals[0].name_es || portals[0].name_en));
+	}
+
 	// ── 0. Pre-flight checks ──
 	// Flush layout so container has real dimensions
 	await new Promise(r => requestAnimationFrame(r));
@@ -380,11 +403,19 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	};
 
 	world.globals.onBumperComplete = () => {
+		domDebug('onBumperComplete callback entered');
 		// HTML bumper already played in Svelte overlay before ECS boot.
 		// Auto-enter featured portal immediately.
 		const targetId = featuredPortalId || (portals[0] && portals[0].id);
+		domDebug('onBumperComplete targetId: ' + (targetId ?? 'NONE'));
 		if (targetId) {
-					setTimeout(() => buildInterior(world, portalEntities, targetId, ambientLight, keyLight, portals.find(p => p.id === targetId), modeEntity), 300);
+				domDebug('Scheduling buildInterior in 300ms...');
+				setTimeout(() => {
+					domDebug('setTimeout fired, calling buildInterior...');
+					buildInterior(world, portalEntities, targetId, ambientLight, keyLight, portals.find(p => p.id === targetId), modeEntity);
+				}, 300);
+		} else {
+			domDebug('WARNING: No targetId - buildInterior will NOT be called');
 		}
 	};
 
@@ -418,8 +449,15 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 		}
 	};
 
+	domDebug('About to fire onBumperComplete...');
 	// ── Fire bumper-complete immediately (HTML bumper played before ECS boot) ──
-	world.globals.onBumperComplete?.();
+	try {
+		world.globals.onBumperComplete?.();
+		domDebug('onBumperComplete fired OK');
+	} catch(e) {
+		domDebug('onBumperComplete ERROR: ' + e.message);
+	}
+	domDebug('=== initPortalWorld DONE ===');
 
 	// ── 12. Public API ──
 	const api = {
@@ -482,15 +520,17 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 // Builds portal interior entities (ring, crystals, pillars, narrative state)
 // when transitioning from index mode to interior mode.
 function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData, modeEntity) {
-	console.log('[1] buildInterior called, portalId:', portalId);
-	window.dispatchEvent(new CustomEvent('portal-debug', { detail: '[1] buildInterior called, portalId: ' + portalId }));
+	domDebug('buildInterior START, portalId: ' + portalId);
+	domDebug('portalEntities count: ' + portalEntities.length);
+	domDebug('portalData: ' + (portalData ? JSON.stringify({id: portalData.id, name: portalData.name_es, color: portalData.color_primary}) : 'NULL'));
 
 	const portal = portalEntities.find((e) => e.getValue(PortalGate, 'portalId') === portalId);
 	if (!portal) {
-		console.warn('[portals-ecs] buildInterior: portal not found:', portalId);
-		window.dispatchEvent(new CustomEvent('portal-debug', { detail: '[1] FAILED: portal not found' }));
+		domDebug('FAILED: portal entity not found for id: ' + portalId);
+		domDebug('Available portal ids: ' + portalEntities.map(e => e.getValue(PortalGate, 'portalId')).join(', '));
 		return;
 	}
+	domDebug('Portal entity found OK');
 
 	// Get color from raw portal data (more reliable than extracting from ECS component)
 	const rawColor = portalData?.color_primary || '#c9a87c';
