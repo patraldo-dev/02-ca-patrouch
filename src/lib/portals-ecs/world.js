@@ -482,9 +482,13 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 // Builds portal interior entities (ring, crystals, pillars, narrative state)
 // when transitioning from index mode to interior mode.
 function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData, modeEntity) {
+	console.log('[1] buildInterior called, portalId:', portalId);
+	window.dispatchEvent(new CustomEvent('portal-debug', { detail: '[1] buildInterior called, portalId: ' + portalId }));
+
 	const portal = portalEntities.find((e) => e.getValue(PortalGate, 'portalId') === portalId);
 	if (!portal) {
 		console.warn('[portals-ecs] buildInterior: portal not found:', portalId);
+		window.dispatchEvent(new CustomEvent('portal-debug', { detail: '[1] FAILED: portal not found' }));
 		return;
 	}
 
@@ -684,6 +688,8 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	}
 
 	// Switch mode (modeEntity passed directly from initPortalWorld)
+	console.log('[2] modeEntity:', !!modeEntity, 'setting mode to interior');
+	window.dispatchEvent(new CustomEvent('portal-debug', { detail: '[2] modeEntity: ' + (!!modeEntity) }));
 	if (modeEntity) {
 		modeEntity.setValue(WorldMode, 'mode', 'interior');
 		modeEntity.setValue(WorldMode, 'cinematicTimer', 0);

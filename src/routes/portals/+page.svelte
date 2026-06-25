@@ -19,6 +19,7 @@
 	let mode = $state('index');
 	let bumperVersion = $state(null);
 	let bumperDone = $state(false);
+	let debugLogs = $state([]);
 
 	const BUMPER_DURATION = 6500;
 	const BUMPER_VERSIONS = [1, 2, 3, 4];
@@ -112,12 +113,18 @@
 		window.addEventListener('portal-interior-ready', onInteriorReady);
 		window.addEventListener('portal-exit-to-index', onExitToIndex);
 
+		function onDebug(e) {
+			debugLogs = [...debugLogs, e.detail];
+		}
+		window.addEventListener('portal-debug', onDebug);
+
 		return () => {
 			cancelled = true;
 			window.removeEventListener('portal-focus', onPortalFocus);
 			window.removeEventListener('portal-enter', onPortalEnter);
 			window.removeEventListener('portal-interior-ready', onInteriorReady);
 			window.removeEventListener('portal-exit-to-index', onExitToIndex);
+			window.removeEventListener('portal-debug', onDebug);
 		};
 	});
 
@@ -204,6 +211,15 @@
 		</section>
 	{/each}
 </nav>
+
+<!-- Debug overlay (temporary) -->
+{#if bumperDone && debugLogs.length > 0}
+	<div class="debug-overlay">
+		{#each debugLogs as log}
+			<div>{log}</div>
+		{/each}
+	</div>
+{/if}
 
 <style>
 	.bumper-overlay {
@@ -328,4 +344,22 @@
 	.fallback-nav a { display: block; padding: 0.4rem 0; color: #c9a87c; text-decoration: none; }
 
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+	.debug-overlay {
+		position: fixed;
+		top: 0.5rem;
+		left: 0.5rem;
+		right: 0.5rem;
+		z-index: 100000;
+		background: rgba(0,0,0,0.85);
+		color: #0f0;
+		font-family: monospace;
+		font-size: 0.65rem;
+		padding: 0.5rem;
+		border-radius: 6px;
+		border: 1px solid rgba(0,255,0,0.3);
+		max-height: 40vh;
+		overflow-y: auto;
+		pointer-events: none;
+	}
 </style>
