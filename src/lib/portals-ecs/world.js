@@ -813,11 +813,15 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		transparent: true,
 		opacity: 0.8,
 		side: THREE.DoubleSide,
+		fog: false, // immune to scene fog
+		depthTest: false, // always render on top
 	});
+	testMat.depthWrite = false;
 	const testMesh = new THREE.Mesh(testGeo, testMat);
 	testMesh.position.set(0, 0, -1.5);
+	testMesh.renderOrder = 999; // render last
 	world.scene.add(testMesh);
-	domDebug('TEST MESH added: magenta quad at z=-1.5');
+	domDebug('TEST MESH added: magenta quad at z=-1.5, fog-immune, renderOrder=999');
 
 	// Dispatch event for Svelte layer
 	window.dispatchEvent(new CustomEvent('portal-interior-ready', { detail: { portalId } }));
