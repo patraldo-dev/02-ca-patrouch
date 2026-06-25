@@ -182,6 +182,14 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 		domDebug('portal[0] id: ' + portals[0].id + ', name: ' + (portals[0].name_es || portals[0].name_en));
 	}
 
+	// ── Global error trap — display uncaught errors in DOM debug ──
+	window.addEventListener('error', (e) => {
+		domDebug('UNCAUGHT ERROR: ' + (e.message || e.error?.message || 'unknown') + ' at ' + (e.filename || '') + ':' + (e.lineno || ''));
+	});
+	window.addEventListener('unhandledrejection', (e) => {
+		domDebug('UNHANDLED REJECTION: ' + (e.reason?.message || e.reason || 'unknown'));
+	});
+
 	// ── 0. Pre-flight checks ──
 	// Flush layout so container has real dimensions
 	await new Promise(r => requestAnimationFrame(r));
@@ -223,6 +231,21 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 		)
 	]);
 	console.log('[portals-ecs] World.create resolved!');
+
+	// ── Wrap world.update to catch per-frame ECS errors ──
+	const origUpdate = world.update.bind(world);
+	let frameCount = 0;
+	world.update = function(delta, time) {
+		try {
+			origUpdate(delta, time);
+			frameCount++;
+			if (frameCount === 1) domDebug('First ECS update OK');
+			if (frameCount % 120 === 0) domDebug('ECS frame #' + frameCount + ' OK');
+		} catch(e) {
+			domDebug('ECS UPDATE ERROR frame #' + frameCount + ': ' + e.message + ' | ' + (e.stack||'').split('\\n')[1]);
+			throw e; // re-throw so we know if the loop dies
+		}
+	};
 
 	// Position camera for spatial browsing
 	world.camera.position.set(0, 0, 1.2);
