@@ -213,7 +213,6 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	// ── 2. Register custom components ──
 	world.registerComponent(PortalGate);
 	world.registerComponent(TabLayout);
-	world.registerComponent(BumperPhase);
 	world.registerComponent(ReactiveBackground);
 	world.registerComponent(AmbientParticle);
 	world.registerComponent(CarouselSlide);
