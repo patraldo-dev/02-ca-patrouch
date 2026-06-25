@@ -648,7 +648,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			const backdrop = new THREE.Mesh(geo, mat);
 			backdrop.position.set(0, 0, -4);
 			world.scene.add(backdrop);
-	\t\tbackdrop.renderOrder = -100;
+				backdrop.renderOrder = -100;
 		});
 	} else {
 		const gradGeo = new THREE.PlaneGeometry(6, 4);
