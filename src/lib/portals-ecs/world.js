@@ -165,6 +165,8 @@ function domDebug(msg) {
 	const line = document.createElement('div');
 	line.textContent = msg;
 	el.appendChild(line);
+	// Auto-scroll to bottom so latest lines are visible
+	el.scrollTop = el.scrollHeight;
 }
 
 export async function initPortalWorld(container, { portals, galaxies, featuredPortalId }) {
@@ -560,8 +562,9 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		return;
 	}
 	domDebug('Portal entity found OK');
+	domDebug('colorHex: ' + (portalData?.color_primary || '#c9a87c'));
 
-	// Get color from raw portal data (more reliable than extracting from ECS component)
+	// Get color from raw portal data ( more reliable than extracting from ECS component)
 	const rawColor = portalData?.color_primary || '#c9a87c';
 	const colorHex = rawColor.startsWith('#') ? rawColor : `#${rawColor}`;
 
@@ -575,6 +578,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	}
 
 	// Create narrative state entity
+	domDebug('Creating narrative state entity...');
 	const narrEntity = world.createEntity();
 	narrEntity.addComponent(NarrativeState, {
 		stateIndex: 0,
@@ -585,6 +589,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	});
 
 	// Create portal ring
+	domDebug('Creating portal ring...');
 	const ringMesh = createPortalRingMesh(colorHex);
 	const ringEntity = world.createTransformEntity(ringMesh);
 	const ringPos = ringEntity.getVectorView(Transform, 'position');
@@ -686,6 +691,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	world.camera.lookAt(0, 0, -1.5);
 
 	// Crystal decorations — floating around the ring
+	domDebug('Creating crystals...');
 	const crystalPositions = [
 		[-1.2, 0.3, -2.5], [1.2, 0.8, -2.5], [0, 1.2, -3.0],
 		[-1.8, 0.6, -3.5], [1.8, 0.2, -3.0],
@@ -732,6 +738,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	});
 
 	// Pillars — structural elements
+	domDebug('Creating pillars...');
 	const pillarCount = 4;
 	for (let i = 0; i < pillarCount; i++) {
 		const angle = (i / pillarCount) * Math.PI * 2;
@@ -757,6 +764,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	}
 
 	// Switch mode (modeEntity passed directly from initPortalWorld)
+	domDebug('Setting mode to interior...');
 	console.log('[2] modeEntity:', !!modeEntity, 'setting mode to interior');
 	window.dispatchEvent(new CustomEvent('portal-debug', { detail: '[2] modeEntity: ' + (!!modeEntity) }));
 	if (modeEntity) {
@@ -768,6 +776,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 
 	// Dispatch event for Svelte layer
 	window.dispatchEvent(new CustomEvent('portal-interior-ready', { detail: { portalId } }));
+	domDebug('=== buildInterior COMPLETE ===');
 }
 
 // ─── Interior Teardown ──────────────────────────────────────────────
