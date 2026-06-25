@@ -1,9 +1,9 @@
 export async function load({ platform }) {
     const db = platform?.env?.DB_book;
-    if (!db) return { galaxies: [], portals: [], count: 0, featuredPortal: null };
+    if (!db) return { galaxies: [], portals: [], count: 0, featuredPortal: null, _debug: 'NO_DB_BINDING' };
 
     try {
-        const { results: portals } = await db.prepare(`
+        const { results: portals, success, error } = await db.prepare(`
             SELECT 
                 p.id, p.galaxy_id, p.icon, p.color_primary, p.color_bg, p.color_text,
                 p.name_es, p.name_en, p.name_fr,
@@ -45,10 +45,11 @@ export async function load({ platform }) {
             galaxies: Object.values(galaxyMap),
             portals: portals || [],
             count: portals?.length || 0,
-            featuredPortal
+            featuredPortal,
+            _debug: `OK: ${portals?.length || 0} portals, success=${success}`
         };
     } catch (e) {
         console.error('Portals load error:', e);
-        return { galaxies: [], portals: [], count: 0, featuredPortal: null };
+        return { galaxies: [], portals: [], count: 0, featuredPortal: null, _debug: 'ERROR: ' + e.message };
     }
 }

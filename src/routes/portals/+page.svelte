@@ -20,6 +20,7 @@
 	let bumperVersion = $state(null);
 	let bumperDone = $state(false);
 	let debugLogs = $state([]);
+	let serverDebug = $state(data?._debug ?? 'none');
 
 	const BUMPER_DURATION = 6500;
 	const BUMPER_VERSIONS = [1, 2, 3, 4];
@@ -218,6 +219,13 @@
 		{#each debugLogs as log}
 			<div>{log}</div>
 		{/each}
+	</div>
+{/if}
+
+<!-- Server debug banner -->
+{#if serverDebug}
+	<div style="position:fixed;bottom:0;left:0;right:0;z-index:100001;background:rgba(255,0,0,0.85);color:#fff;font-family:monospace;font-size:11px;padding:4px;text-align:center;">
+		SERVER: {serverDebug} | portals: {data.portals?.length ?? 'undef'} | featured: {data.featuredPortal?.id ?? 'none'}
 	</div>
 {/if}
 
