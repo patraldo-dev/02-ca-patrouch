@@ -24,6 +24,7 @@ import {
 	AudioSource, PlaybackMode,
 } from '@iwsdk/core';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {
 	PortalGate,
 	TabLayout,
@@ -670,11 +671,21 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	camLight.position.copy(world.camera.position);
 	world.scene.add(camLight);
 
-	// ── Crystals from sceneConfig ──
+	// Crystals from sceneConfig with spirit GLB
 	const crystals = sceneConfig?.crystals || [];
 	const crystalColors = palette?.crystal_colors || [colorHex, '#4fc3f7', '#b5ead7', '#ce93d8'];
 	const ringRadius = sceneConfig?.spatial_layout?.crystal_ring_radius || 2;
 	const elevations = sceneConfig?.spatial_layout?.crystal_elevations || [0.8, 1.2, 1.5];
+
+	// Pre-load spirit GLB
+	const gltfLoader = new GLTFLoader();
+	const spiritLoadPromise = gltfLoader.loadAsync('/models/spirit.glb').then((gltf) => {
+		console.log('[portals-ecs] Spirit GLB loaded');
+		return gltf.scene;
+	}).catch((err) => {
+		console.warn('[portals-ecs] Spirit GLB failed:', err.message);
+		return null;
+	});
 
 	crystals.forEach((crystal, i) => {
 		const angle = (i / crystals.length) * Math.PI * 2;
@@ -685,6 +696,8 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 
 		const cColor = crystalColors[crystal.color_index % crystalColors.length] || colorHex;
 		const cScale = crystal.scale || 1;
+
+		// Start with fallback mesh, replace with GLB when loaded
 		const mesh = createCrystalMesh(cColor, cScale);
 		mesh.userData.crystalText = crystal.text || '';
 		mesh.userData.portalId = portalId;
@@ -703,7 +716,20 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			materialized: 0.85,
 		});
 
-		// Spatial audio — pentatonic tones per crystal
+		// Replace placeholder with spirit GLB when loaded
+		spiritLoadPromise.then((spiritScene) => {
+			if (spiritScene && entity.object3D) {
+				const spiritClone = spiritScene.clone(true);
+				spiritClone.scale.setScalar(0.3 * cScale);
+				spiritClone.position.copy(entity.object3D.position);
+				spiritClone.userData.crystalText = crystal.text || '';
+				spiritClone.userData.portalId = portalId;
+				world.scene.add(spiritClone);
+				entity.object3D.visible = false;
+			}
+		});
+
+		// Spatial audio
 		const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00];
 		const freq = pentatonic[i % pentatonic.length];
 		const audioPath = generateToneWAV(freq, 2.0);
