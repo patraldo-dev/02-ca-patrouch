@@ -27,7 +27,6 @@ import * as THREE from 'three';
 import {
 	PortalGate,
 	TabLayout,
-	BumperPhase,
 	ReactiveBackground,
 	AmbientParticle,
 	CarouselSlide,
@@ -38,7 +37,6 @@ import {
 } from './components.js';
 import {
 	TabSystem,
-	BumperSystem,
 	BackgroundSystem,
 	ParticleSystem,
 	CarouselSystem,
@@ -243,7 +241,6 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	world.registerSystem(FocusHoldSystem, { priority: -4 });
 	world.registerSystem(CrystalInteractionSystem, { priority: -4 });
 	world.registerSystem(TabSystem, { priority: -3 });
-	world.registerSystem(BumperSystem, { priority: 0 });
 	world.registerSystem(CarouselSystem, { priority: 0 });
 	world.registerSystem(NarrativeSystem, { priority: 0 });
 	world.registerSystem(ProximityRingSystem, { priority: 0 });
@@ -272,13 +269,7 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	const bgEntity = world.createEntity();
 	bgEntity.addComponent(ReactiveBackground);
 
-	// ── 7. Bumper entity (runs once) ──
-	const bumperEntity = world.createEntity();
-	bumperEntity.addComponent(BumperPhase, {
-		phase: 'converge',
-		elapsed: 0,
-		duration: 2.5,
-	});
+	// ── 7. Bumper handled by HTML overlay in Svelte — no ECS bumper entity ──
 
 	// ── 8. Ambient particles ──
 	const PARTICLE_COUNT = 60;
@@ -390,8 +381,8 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	};
 
 	world.globals.onBumperComplete = () => {
-		window.dispatchEvent(new CustomEvent('portal-bumper-done'));
-		// Auto-enter featured portal immediately after bumper
+		// HTML bumper already played in Svelte overlay before ECS boot.
+		// Auto-enter featured portal immediately.
 		const targetId = featuredPortalId || (portals[0] && portals[0].id);
 		if (targetId) {
 			setTimeout(() => buildInterior(world, portalEntities, targetId, ambientLight, keyLight, portals.find(p => p.id === targetId)), 300);
@@ -427,6 +418,9 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 			window.dispatchEvent(new CustomEvent('portal-cinematic-enter'));
 		}
 	};
+
+	// ── Fire bumper-complete immediately (HTML bumper played before ECS boot) ──
+	world.globals.onBumperComplete?.();
 
 	// ── 12. Public API ──
 	const api = {

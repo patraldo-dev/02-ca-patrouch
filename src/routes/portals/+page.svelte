@@ -17,6 +17,13 @@
 
 	let focusedPortal = $state(null);
 	let mode = $state('index');
+	let bumperVersion = $state(null);
+	let bumperDone = $state(false);
+
+	const BUMPER_DURATION = 6500;
+	const BUMPER_VERSIONS = [1, 2, 3, 4];
+
+	let _bootECS = null; // set inside onMount
 
 	function nameOf(item) {
 		const lang = $locale || 'es';
@@ -25,9 +32,33 @@
 		return item.name_es;
 	}
 
+	function skipBumper() {
+		bumperDone = true;
+		_bootECS?.();
+	}
+
 	onMount(() => {
 		let cancelled = false;
-		async function boot() {
+
+		bumperVersion = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
+
+		let bumperTimer = setTimeout(() => {
+			bumperDone = true;
+			bootECS();
+		}, BUMPER_DURATION);
+
+		function onBumperSkip(e) {
+			if (e.data?.type === 'bumper-skip') {
+				clearTimeout(bumperTimer);
+				bumperDone = true;
+				bootECS();
+			}
+		}
+		window.addEventListener('message', onBumperSkip);
+
+		async function bootECS() {
+			if (cancelled || api) return;
+			window.removeEventListener('message', onBumperSkip);
 			try {
 				bootStatus = 'loading';
 				const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
@@ -43,7 +74,6 @@
 				});
 				if (cancelled) return;
 
-				// Verify canvas has real dimensions
 				const canvas = containerEl.querySelector('canvas');
 				const rect = containerEl.getBoundingClientRect();
 				if (!canvas) {
@@ -65,7 +95,8 @@
 				bootStatus = 'error';
 			}
 		}
-		boot();
+
+		_bootECS = bootECS;
 
 		function onPortalFocus(e) {
 			focusedPortal = (data.portals || []).find(p => p.id === e.detail.portalId) || null;
@@ -108,8 +139,16 @@
 	All content is position:fixed to escape the <main> layout container.
 -->
 
-<!-- Boot / error indicator -->
-{#if bootStatus !== 'ready'}
+<!-- Bumper iframe overlay — random version, ~6.5s, then ECS boots -->
+{#if bumperVersion && !bumperDone}
+	<div class="bumper-overlay">
+		<iframe src="/portal-bumper-v{bumperVersion}.html" title="patrouch.ca" allow="autoplay"></iframe>
+		<button class="bumper-skip" onclick={skipBumper}>Saltar →</button>
+	</div>
+{/if}
+
+<!-- Boot / error indicator (only after bumper phase) -->
+{#if bumperDone && bootStatus !== 'ready'}
 	<div class="boot">
 		{#if bootStatus === 'error'}
 			<div class="boot-icon" style="color:#ef4444;">⚠</div>
@@ -122,8 +161,8 @@
 {:else}
 {/if}
 
-<!-- Canvas container — covers entire viewport -->
-<div style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:99998 !important;background:#0a0a12 !important;" bind:this={containerEl}></div>
+<!-- Canvas container — covers entire viewport (hidden during bumper) -->
+<div style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:99998 !important;background:#0a0a12 !important;{bumperDone ? '' : 'visibility:hidden;'}" bind:this={containerEl}></div>
 
 <!-- Focus label -->
 {#if worldReady && mode === 'index' && focusedPortal}
@@ -140,7 +179,7 @@
 {/if}
 
 <!-- Fallback nav (if world fails) -->
-{#if bootStatus === 'error'}
+{#if bumperDone && bootStatus === 'error'}
 	<div class="fallback-nav">
 		{#each data.galaxies as galaxy}
 			<section>
@@ -167,6 +206,38 @@
 </nav>
 
 <style>
+	.bumper-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 99999;
+		background: #050508;
+	}
+	.bumper-overlay iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+		display: block;
+	}
+	.bumper-skip {
+		position: fixed;
+		bottom: 1.5rem;
+		right: 1.5rem;
+		z-index: 100;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.15);
+		color: rgba(255,255,255,0.4);
+		padding: 0.4rem 1rem;
+		border-radius: 20px;
+		cursor: pointer;
+		font-size: 0.75rem;
+		backdrop-filter: blur(10px);
+		transition: all 0.2s;
+	}
+	.bumper-skip:hover {
+		color: #fff;
+		border-color: rgba(255,255,255,0.3);
+	}
+
 	.boot {
 		position: fixed;
 		inset: 0;
@@ -182,21 +253,6 @@
 	.boot-icon { font-size: 2.5rem; color: #c9a87c; }
 	.boot-text { color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; }
 	.boot-err { color: #ef4444; font-size: 0.6rem; font-family: monospace; max-width: 90vw; overflow-x: auto; white-space: pre-wrap; text-align: center; padding: 0 1rem; }
-
-	.canvas-host {
-		position: fixed;
-		inset: 0;
-		width: 100vw;
-		height: 100vh;
-		z-index: 99998;
-		background: #050508;
-	}
-
-	:global(.canvas-host canvas) {
-		width: 100% !important;
-		height: 100% !important;
-		display: block;
-	}
 
 	.focus-label {
 		position: fixed;
@@ -272,6 +328,4 @@
 	.fallback-nav a { display: block; padding: 0.4rem 0; color: #c9a87c; text-decoration: none; }
 
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
-
-	@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
