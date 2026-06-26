@@ -671,6 +671,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	const ringRadius = sceneConfig?.spatial_layout?.crystal_ring_radius || 2;
 	const elevations = sceneConfig?.spatial_layout?.crystal_elevations || [0.8, 1.2, 1.5];
 
+	const spiritMeshes = [];
 	// Pre-load spirit GLB
 	const gltfLoader = new GLTFLoader();
 	const spiritLoadPromise = gltfLoader.loadAsync('/models/spirit.glb').then((gltf) => {
@@ -827,7 +828,6 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	// ── Animation loop for ring pulse, spirit rotation, particles ──
 	const animTime = { value: 0 };
 	const ringObj = ringMesh; // the Group from createPortalRingMesh
-	const spiritMeshes = [];
 	const animLoop = () => {
 		animTime.value += 0.016;
 		const t = animTime.value;
