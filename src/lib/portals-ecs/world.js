@@ -721,7 +721,10 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			if (spiritScene && entity.object3D) {
 				const spiritClone = spiritScene.clone(true);
 				spiritClone.scale.setScalar(0.3 * cScale);
-				spiritClone.position.set(cx, cy, cz);
+				// Center the GLB origin
+				const box = new THREE.Box3().setFromObject(spiritClone);
+				const center = box.getCenter(new THREE.Vector3());
+				spiritClone.position.set(cx - center.x, cy - center.y, cz - center.z);
 				spiritClone.userData.crystalText = crystal.text || '';
 				spiritClone.userData.portalId = portalId;
 				world.scene.add(spiritClone);

@@ -171,7 +171,10 @@
 {/if}
 
 <!-- Canvas container — covers entire viewport (hidden during bumper) -->
-<div style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:99998 !important;background:#0a0a12 !important;{bumperDone ? '' : 'visibility:hidden;'}" bind:this={containerEl}></div>
+<div style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:99998 !important;background:#0a0a12 !important;pointer-events:none;{bumperDone ? '' : 'visibility:hidden;'}" bind:this={containerEl}></div>
+
+<!-- UI Overlay — above canvas, pointer-events:none container with pointer-events:auto children -->
+<div style="position:fixed;inset:0;z-index:100001;pointer-events:none;">
 
 <!-- Focus label -->
 {#if worldReady && mode === 'index' && focusedPortal}
@@ -183,8 +186,9 @@
 
 <!-- Exit button + explore all -->
 {#if worldReady && mode === 'interior'}
-	<button class="exit-btn" style="pointer-events:auto;" onclick={(e) => { e.stopPropagation(); api?.exitToIndex(); }}>←</button>
-	<button class="explore-btn" style="pointer-events:auto;" onclick={(e) => { e.stopPropagation(); api?.exitToIndex(); }}>⟡</button>
+	<button class="exit-btn" style="pointer-events:auto;position:fixed;top:1rem;left:1rem;z-index:100002;" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitToIndex(); }}>←</button>
+	<button class="explore-btn" style="pointer-events:auto;position:fixed;bottom:1rem;right:1rem;z-index:100002;" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitToIndex(); }}>⟡</button>
+</div>
 {/if}
 
 <!-- Fallback nav (if world fails) -->
