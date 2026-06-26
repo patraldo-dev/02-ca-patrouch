@@ -715,23 +715,21 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		spiritLoadPromise.then((spiritScene) => {
 			if (spiritScene && entity.object3D) {
 				const spiritClone = spiritScene.clone(true);
-				spiritClone.scale.setScalar(0.3 * cScale);
+				spiritClone.scale.setScalar(0.4 * cScale);
 				// Center the GLB origin
 				const box = new THREE.Box3().setFromObject(spiritClone);
 				const center = box.getCenter(new THREE.Vector3());
 				spiritClone.position.set(cx - center.x, cy - center.y, cz - center.z);
 				spiritClone.userData.crystalText = crystal.text || '';
 				spiritClone.userData.portalId = portalId;
-				// Replace materials with lit, colored, emissive
-				const cThree = new THREE.Color(cColor);
+				// Replace materials with unlit basic — guarantees color visibility regardless of scene lighting/fog
 				spiritClone.traverse((child) => {
 					if (child.isMesh && child.material) {
-						child.material = new THREE.MeshStandardMaterial({
-							color: cThree.clone(),
-							emissive: cThree.clone(),
-							emissiveIntensity: 0.5,
-							metalness: 0.3,
-							roughness: 0.5,
+						child.material = new THREE.MeshBasicMaterial({
+							color: new THREE.Color().setHSL(i / crystals.length, 1.0, 0.5),
+							transparent: true,
+							opacity: 0.85,
+							side: THREE.DoubleSide,
 						});
 					}
 				});
@@ -845,14 +843,11 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		// Animate spirit clones — rainbow cycling + float + rotate
 		for (const s of spiritMeshes) {
 			if (!s.rotation) continue;
-			// Rainbow color cycling like spirit-viewer
-			const hue = ((t * 0.1) + (s.userData.hueOffset || 0)) % 1;
+			// Rainbow color cycling — full saturation, MeshBasicMaterial ignores scene lighting
+			const hue = ((t * 0.15) + (s.userData.hueOffset || 0)) % 1;
 			s.traverse((child) => {
 				if (child.isMesh && child.material && child.material.color) {
-					child.material.color.setHSL(hue, 0.85, 0.55);
-					if (child.material.emissive) {
-						child.material.emissive.setHSL(hue, 0.85, 0.3);
-					}
+					child.material.color.setHSL(hue, 1.0, 0.5);
 				}
 			});
 			// Rotate
