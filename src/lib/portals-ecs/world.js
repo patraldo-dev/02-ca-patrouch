@@ -220,19 +220,11 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	]);
 	console.log('[portals-ecs] World.create resolved!');
 
-	// ── Wrap world.update to catch per-frame ECS errors ──
+	// ── Wrap world.update to catch per-frame ECS errors + run interior anim ──
 	const origUpdate = world.update.bind(world);
-	let frameCount = 0;
 	world.update = function(delta, time) {
-		try {
-			origUpdate(delta, time);
-			frameCount++;
-			if (frameCount === 1) domDebug('First ECS update OK');
-			if (frameCount % 120 === 0) domDebug('ECS frame #' + frameCount + ' OK');
-		} catch(e) {
-			domDebug('ECS UPDATE ERROR frame #' + frameCount + ': ' + e.message + ' | ' + (e.stack||'').split('\\n')[1]);
-			throw e; // re-throw so we know if the loop dies
-		}
+		origUpdate(delta, time);
+		if (world.globals._interiorAnimLoop) world.globals._interiorAnimLoop();
 	};
 
 	// Position camera for spatial browsing
@@ -243,10 +235,12 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	world.scene.background = new THREE.Color(0x0a0a12);
 
 
-	// Lighting — shared between modes, NarrativeSystem takes over in interior
-	const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+	// Lighting — hemisphere + directional for GLB visibility
+	const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
 	world.scene.add(ambientLight);
-	const keyLight = new THREE.DirectionalLight(0xfff5e6, 0.6);
+	const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444466, 0.8);
+	world.scene.add(hemiLight);
+	const keyLight = new THREE.DirectionalLight(0xfff5e6, 1.0);
 	keyLight.position.set(0.5, 1, 1);
 	world.scene.add(keyLight);
 
@@ -789,6 +783,89 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		haloMesh.userData.pulseSpeed = decos.halo_pulse_speed || 0.5;
 	}
 
+	// ── Particles — sparkle field around the portal ──
+	const particleCount = decos.particle_count || 20;
+	const particleGeo = new THREE.BufferGeometry();
+	const particlePositions = new Float32Array(particleCount * 3);
+	const particleColors = new Float32Array(particleCount * 3);
+	for (let i = 0; i < particleCount; i++) {
+		particlePositions[i * 3] = (Math.random() - 0.5) * 6;
+		particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 4;
+		particlePositions[i * 3 + 2] = -1 + (Math.random() - 0.5) * 4;
+		const c = new THREE.Color(crystalColors[i % crystalColors.length] || colorHex);
+		particleColors[i * 3] = c.r;
+		particleColors[i * 3 + 1] = c.g;
+		particleColors[i * 3 + 2] = c.b;
+	}
+	particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+	particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+	const particleMat = new THREE.PointsMaterial({
+		size: 0.04, vertexColors: true, transparent: true, opacity: 0.8,
+		blending: THREE.AdditiveBlending, depthWrite: false,
+	});
+	const particles = new THREE.Points(particleGeo, particleMat);
+	world.scene.add(particles);
+
+	// ── Animation loop for ring pulse, spirit rotation, particles ──
+	const animTime = { value: 0 };
+	const ringObj = ringMesh; // the Group from createPortalRingMesh
+	const spiritMeshes = [];
+	const animLoop = () => {
+		animTime.value += 0.016;
+		const t = animTime.value;
+
+		// Pulse the ring (scale torus children)
+		if (ringObj && ringObj.children[0]) {
+			const pulse = 1 + Math.sin(t * 1.5) * 0.05;
+			ringObj.children[0].scale.setScalar(pulse);
+			// Pulsate membrane opacity
+			if (ringObj.children[1] && ringObj.children[1].material) {
+				ringObj.children[1].material.opacity = 0.3 + Math.sin(t * 1.5) * 0.15;
+			}
+		}
+
+		// Rotate spirit clones
+		for (const s of spiritMeshes) {
+			if (s.rotation) {
+				s.rotation.y += 0.01;
+				s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed + s.userData.phase) * 0.05;
+			}
+		}
+
+		// Drift particles
+		if (particles) {
+			const pos = particleGeo.attributes.position.array;
+			for (let i = 0; i < particleCount; i++) {
+				pos[i * 3 + 1] += 0.003;
+				if (pos[i * 3 + 1] > 2) pos[i * 3 + 1] = -2;
+			}
+			particleGeo.attributes.position.needsUpdate = true;
+		}
+	};
+
+	// Register animation in globals so it runs
+	world.globals._interiorAnimLoop = animLoop;
+
+	// Patch spirit load to track meshes for animation
+	const origSpiritLoad = spiritLoadPromise.then;
+	spiritLoadPromise.then((spiritScene) => {
+		if (spiritScene) {
+			// Track all loaded spirit clones
+			setTimeout(() => {
+				world.scene.traverse((obj) => {
+					if (obj.userData && obj.userData.crystalText && obj.type === 'Group') {
+						if (!spiritMeshes.includes(obj)) {
+							obj.userData.baseY = obj.position.y;
+							obj.userData.floatSpeed = 0.5 + Math.random() * 0.5;
+							obj.userData.phase = Math.random() * Math.PI * 2;
+							spiritMeshes.push(obj);
+						}
+					}
+				});
+			}, 500);
+		}
+	});
+
 	// ── Switch mode ──
 	if (modeEntity) {
 		modeEntity.setValue(WorldMode, 'mode', 'interior');
@@ -802,7 +879,8 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 
 // ─── Interior Teardown ──────────────────────────────────────────────
 function teardownInterior(world) {
-	// Find and destroy interior entities using world.entities (elics World has .entities map)
+	// Kill animation loop
+	world.globals._interiorAnimLoop = null;
 	const toDestroy = [];
 	for (const entity of world.entities.values()) {
 		if (entity.hasComponent?.(NarrativeState) ||
