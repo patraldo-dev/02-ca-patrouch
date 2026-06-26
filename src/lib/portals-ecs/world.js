@@ -721,6 +721,24 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 				spiritClone.position.set(cx - center.x, cy - center.y, cz - center.z);
 				spiritClone.userData.crystalText = crystal.text || '';
 				spiritClone.userData.portalId = portalId;
+				// Replace materials with lit, colored, emissive
+				const cThree = new THREE.Color(cColor);
+				spiritClone.traverse((child) => {
+					if (child.isMesh && child.material) {
+						child.material = new THREE.MeshStandardMaterial({
+							color: cThree.clone(),
+							emissive: cThree.clone(),
+							emissiveIntensity: 0.5,
+							metalness: 0.3,
+							roughness: 0.5,
+						});
+					}
+				});
+				spiritClone.userData.baseY = cy;
+				spiritClone.userData.floatSpeed = 0.5 + Math.random() * 0.5;
+				spiritClone.userData.phase = Math.random() * Math.PI * 2;
+				spiritClone.userData.hueOffset = (i / crystals.length);
+				spiritMeshes.push(spiritClone);
 				world.scene.add(spiritClone);
 				entity.object3D.visible = false;
 			}
@@ -824,12 +842,23 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			}
 		}
 
-		// Rotate spirit clones
+		// Animate spirit clones — rainbow cycling + float + rotate
 		for (const s of spiritMeshes) {
-			if (s.rotation) {
-				s.rotation.y += 0.01;
-				s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed + s.userData.phase) * 0.05;
-			}
+			if (!s.rotation) continue;
+			// Rainbow color cycling like spirit-viewer
+			const hue = ((t * 0.1) + (s.userData.hueOffset || 0)) % 1;
+			s.traverse((child) => {
+				if (child.isMesh && child.material && child.material.color) {
+					child.material.color.setHSL(hue, 0.85, 0.55);
+					if (child.material.emissive) {
+						child.material.emissive.setHSL(hue, 0.85, 0.3);
+					}
+				}
+			});
+			// Rotate
+			s.rotation.y += 0.01;
+			// Float
+			s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed + s.userData.phase) * 0.05;
 		}
 
 		// Drift particles
@@ -845,26 +874,6 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 
 	// Register animation in globals so it runs
 	world.globals._interiorAnimLoop = animLoop;
-
-	// Patch spirit load to track meshes for animation
-	const origSpiritLoad = spiritLoadPromise.then;
-	spiritLoadPromise.then((spiritScene) => {
-		if (spiritScene) {
-			// Track all loaded spirit clones
-			setTimeout(() => {
-				world.scene.traverse((obj) => {
-					if (obj.userData && obj.userData.crystalText && obj.type === 'Group') {
-						if (!spiritMeshes.includes(obj)) {
-							obj.userData.baseY = obj.position.y;
-							obj.userData.floatSpeed = 0.5 + Math.random() * 0.5;
-							obj.userData.phase = Math.random() * Math.PI * 2;
-							spiritMeshes.push(obj);
-						}
-					}
-				});
-			}, 500);
-		}
-	});
 
 	// ── Switch mode ──
 	if (modeEntity) {
