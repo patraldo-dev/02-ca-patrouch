@@ -857,6 +857,15 @@ export const EntryCinematicSystem = class extends createSystem({
 			modeEntity.setValue(WorldMode, 'cinematicTimer', timer);
 		}
 
+		console.log('[EntryCinematic] mode:', mode, 'timer:', timer);
+		if (!modeEntity) return;
+
+		if (mode !== 'interior' && mode !== 'transitioning') return;
+		if (mode === 'interior' || mode === 'transitioning') {
+			timer += delta;
+			modeEntity.setValue(WorldMode, 'cinematicTimer', timer);
+		}
+
 		for (const entity of this.queries.decorations.entities) {
 			const delay = entity.getValue(InteriorDecoration, 'spawnDelay');
 			const localTime = Math.max(timer - delay, 0);

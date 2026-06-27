@@ -142,18 +142,3 @@ export const InteriorDecoration = createComponent('interior-decoration', {
 	materialized: { type: Types.Float32, default: 0 },  // 0→1 opacity/scale during cinematic
 });
 
-// ─── Crystal Test Component ────────────────────────────────────────
-// Component for testing crystal and spirit animations
-export const CrystalTest = createComponent('crystal-test', {
-	testType:       { type: Types.String,  default: 'simple' }, // 'simple', 'ultra', 'portal'
-	colorIndex:     { type: Types.Float32, default: 0 },
-	isAnimating:    { type: Types.Boolean, default: true },
-	rotationSpeed:  { type: Types.Float32, default: 0.01 },
-	floatSpeed:     { type: Types.Float32, default: 0.001 },
-	scale:          { type: Types.Float32, default: 1.0 },
-	// Reference to GLB model if using portal test
-	glbModel:       { type: Types.String,  default: '' },
-	// Test configuration
-	text:           { type: Types.String,  default: '' },
-	position:       { type: Types.Vec3,    default: [0, 0, 0] },
-});

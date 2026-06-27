@@ -536,6 +536,8 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 // Builds portal interior entities (ring, crystals, pillars, narrative state)
 // when transitioning from index mode to interior mode.
 function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portalData, modeEntity, sceneConfig) {
+	console.log('[buildInterior] called for:', portalId);
+	console.log('[buildInterior] modeEntity found:', !!modeEntity);
 	domDebug('buildInterior START, portalId: ' + portalId);
 	domDebug('portalEntities count: ' + portalEntities.length);
 
@@ -872,10 +874,10 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	world.globals._interiorAnimLoop = animLoop;
 
 	// ── Switch mode ──
-	if (modeEntity) {
-		modeEntity.setValue(WorldMode, 'mode', 'interior');
-		modeEntity.setValue(WorldMode, 'cinematicTimer', 5); // start advanced so decorations are visible
-	}
+	modeEntity.setValue(WorldMode, 'mode', 'interior');
+	modeEntity.setValue(WorldMode, 'cinematicTimer', 5); // start advanced so decorations are visible
+	// Ensure the modeEntity is properly referenced
+	world.globals.modeEntity = modeEntity;
 
 	window.dispatchEvent(new CustomEvent('portal-interior-ready', { detail: { portalId } }));
 	domDebug('buildInterior complete: ' + crystals.length + ' crystals, ' + pillarCount + ' pillars');
