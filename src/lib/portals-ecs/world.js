@@ -913,4 +913,3 @@ export function destroyPortalWorld(world) {
 		world.renderer.domElement?.remove();
 	}
 }
-\n\t// ── 6. Crystal test entities (for development testing) ──\n\t// Create test entities for the crystal and spirit animations\n\tfunction createCrystalTest(world, testType = 'simple', position = [0, 0, 0]) {\n\t\tconst entity = world.createEntity();\n\t\tentity.addComponent(Transform, {\n\t\t\tposition: position,\n\t\t\tscale: [1, 1, 1],\n\t\t\trotation: [0, 0, 0],\n\t\t});\n\t\tentity.addComponent(CrystalTest, {\n\t\t\ttestType: testType,\n\t\t\tcolorIndex: 0,\n\t\t\tisAnimating: true,\n\t\t\trotationSpeed: 0.01,\n\t\t\tfloatSpeed: 0.001,\n\t\t\tscale: 1.0,\n\t\t\ttext: 'Test crystal for development',\n\t\t\tposition: position,\n\t\t});\n\t\treturn entity;\n\t}\n\n\t// Create sample test entities\n\tcreateCrystalTest(world, 'simple', [-2, 1.5, -3]);\n\tcreateCrystalTest(world, 'ultra', [2, 1.5, -3]);\n\tcreateCrystalTest(world, 'portal', [0, 1.5, -3]);
