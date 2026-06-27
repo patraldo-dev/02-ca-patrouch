@@ -1038,3 +1038,4 @@ export const CrystalInteractionSystem = class extends createSystem({
 		}
 	}
 };
+\n// ─── Crystal Test System (priority 2) ───────────────────────────────\n// Handles crystal and spirit animations for testing purposes\nexport const CrystalTestSystem = class extends createSystem({\n\tcrystalTests: { required: [CrystalTest, Transform] },\n}, {\n\tpriority: { type: 'Int32', default: 2 },\n}) {\n\tupdate(delta) {\n\t\tfor (const entity of this.crystalTests) {\n\t\t\tconst test = entity.getValue(CrystalTest);\n\t\t\tconst transform = entity.getVectorView(Transform, 'position');\n\t\t\t\n\t\t\tif (test.isAnimating) {\n\t\t\t\t// Rotation animation\n\t\t\t\tconst rotation = entity.object3D.rotation;\n\t\t\t\trotation.y += test.rotationSpeed;\n\t\t\t\t\n\t\t\t\t// Float animation\n\t\t\t\tconst pos = transform.get();\n\t\t\t\tpos.y += Math.sin(Date.now() * 0.001 * test.floatSpeed) * 0.001;\n\t\t\t\ttransform.set(pos);\n\t\t\t}\n\t\t}\n\t},\n};
