@@ -38,7 +38,6 @@ function nameOf(item) {
 		let cancelled = false;
 
 		// Skip bumper entirely — boot ECS immediately.
-		// The bumper was adding 6.5s of fragility before the user sees anything.
 		bumperDone = true;
 
 		async function bootECS() {
@@ -124,6 +123,9 @@ function nameOf(item) {
 		}
 
 		window.addEventListener('portal-debug', onDebug);
+
+		// Boot ECS immediately — no bumper gate.
+		bootECS();
 
 		return () => {
 			cancelled = true;
