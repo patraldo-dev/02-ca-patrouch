@@ -21,6 +21,8 @@
 	let bumperDone = $state(false);
 	let debugLogs = $state([]);
 	let serverDebug = $state(null);
+	let crystalText = $state(null); // shown when crystal is tapped
+	let xrSupport = $state({ ar: false, vr: false });
 
 	const BUMPER_DURATION = 6500;
 	const BUMPER_VERSIONS = [1, 2, 3, 4];
@@ -118,6 +120,20 @@
 		function onDebug(e) {
 			debugLogs = [...debugLogs, e.detail];
 		}
+		function onCrystalTap(e) {
+			if (e.detail?.text) {
+				crystalText = e.detail.text;
+				// Auto-hide after 5 seconds
+				setTimeout(() => { crystalText = null; }, 5000);
+			}
+		}
+		window.addEventListener('crystal-tapped', onCrystalTap);
+
+		// Check XR support on boot
+		if (api?.checkSupport) {
+			api.checkSupport().then(s => { xrSupport = s; });
+		}
+
 		window.addEventListener('portal-debug', onDebug);
 
 		return () => {
@@ -127,6 +143,7 @@
 			window.removeEventListener('portal-interior-ready', onInteriorReady);
 			window.removeEventListener('portal-exit-to-index', onExitToIndex);
 			window.removeEventListener('portal-debug', onDebug);
+			window.removeEventListener('crystal-tapped', onCrystalTap);
 		};
 	});
 
@@ -187,6 +204,26 @@
 {#if worldReady && mode === 'interior'}
 	<button class="exit-btn" style="pointer-events:auto !important;z-index:100002 !important;" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitToIndex(); }}>←</button>
 	<button class="explore-btn" style="pointer-events:auto !important;z-index:100002 !important;" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitToIndex(); }}>⟡</button>
+
+	<!-- XR Entry Buttons -->
+	<div class="xr-buttons" style="pointer-events:auto !important;z-index:100002 !important;">
+		{#if xrSupport.ar}
+			<button class="xr-btn ar-btn" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.enterAR(); }}>🥽 AR</button>
+		{/if}
+		{#if xrSupport.vr}
+			<button class="xr-btn vr-btn" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.enterVR(); }}>🕶️ VR</button>
+		{/if}
+	</div>
+{/if}
+
+<!-- Crystal Text Overlay -->
+{#if crystalText}
+	<div class="crystal-overlay" onclick={() => { crystalText = null; }}>
+		<div class="crystal-text-card">
+			<p>{crystalText}</p>
+			<span class="crystal-close">× tap to dismiss</span>
+		</div>
+	</div>
 {/if}
 
 <!-- Fallback nav (if world fails) -->
@@ -341,6 +378,70 @@
 	.fallback-nav a { display: block; padding: 0.4rem 0; color: #c9a87c; text-decoration: none; }
 
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+	.xr-buttons {
+		position: fixed;
+		bottom: 1rem;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 99999;
+		display: flex;
+		gap: 0.6rem;
+	}
+	.xr-btn {
+		padding: 0.5rem 1.2rem;
+		border-radius: 20px;
+		border: 1px solid rgba(255,255,255,0.2);
+		background: rgba(0,0,0,0.6);
+		backdrop-filter: blur(12px);
+		color: #fff;
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-family: system-ui, sans-serif;
+	}
+	.xr-btn:hover {
+		border-color: rgba(201, 168, 124, 0.6);
+		background: rgba(201, 168, 124, 0.15);
+	}
+	.ar-btn { border-color: rgba(100, 200, 255, 0.3); }
+	.vr-btn { border-color: rgba(200, 100, 255, 0.3); }
+
+	.crystal-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 100003;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0,0,0,0.4);
+		backdrop-filter: blur(8px);
+		cursor: pointer;
+	}
+	.crystal-text-card {
+		max-width: 85vw;
+		max-height: 60vh;
+		overflow-y: auto;
+		padding: 1.5rem 2rem;
+		background: rgba(15, 15, 25, 0.9);
+		border: 1px solid rgba(201, 168, 124, 0.3);
+		border-radius: 12px;
+		box-shadow: 0 0 40px rgba(201, 168, 124, 0.15);
+	}
+	.crystal-text-card p {
+		color: #f0e6d6;
+		font-size: 1.05rem;
+		line-height: 1.6;
+		font-family: 'Georgia', 'Times New Roman', serif;
+		font-style: italic;
+		margin: 0;
+	}
+	.crystal-close {
+		display: block;
+		margin-top: 0.8rem;
+		font-size: 0.7rem;
+		color: rgba(255,255,255,0.3);
+		text-align: center; }
 
 	.debug-overlay {
 		position: fixed;

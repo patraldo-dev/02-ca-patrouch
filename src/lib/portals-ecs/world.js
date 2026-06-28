@@ -527,6 +527,19 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 				features: { anchors: true, hitTest: true, planeDetection: true },
 			});
 		},
+
+		// Enter VR (if supported)
+		async enterVR() {
+			const { launchXR } = await import('@iwsdk/core');
+			launchXR(world, {
+				sessionMode: SessionMode.ImmersiveVR,
+				referenceSpace: {
+					type: ReferenceSpaceType.LocalFloor,
+					fallbackOrder: [ReferenceSpaceType.Local, ReferenceSpaceType.Viewer],
+				},
+				features: { anchors: false },
+			});
+		},
 	};
 
 	return api;

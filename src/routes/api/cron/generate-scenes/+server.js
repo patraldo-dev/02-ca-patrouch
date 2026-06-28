@@ -28,6 +28,16 @@ Output ONLY valid JSON matching this schema (no markdown, no explanation):
     "accent": "#hex",
     "crystal_colors": ["#hex", "#hex", "#hex", "#hex"]
   },
+  "narrative_states": [
+    {
+      "label": "string - name of this story phase in Spanish (e.g. 'Umbral', 'Descenso', 'Revelación')",
+      "mood": "string - emotional descriptor in Spanish",
+      "hue_shift": 0.0-1.0,
+      "intensity_mul": 0.2-2.0,
+      "fog_mul": 0.0-5.0,
+      "crystal_indices": [0, 1, ...]
+    }
+  ],
   "decorations": {
     "particle_count": 15-50,
     "particle_style": "sparkle|dust|ember|bubble|snow",
@@ -50,6 +60,7 @@ Output ONLY valid JSON matching this schema (no markdown, no explanation):
 }
 
 Rules:
+- narrative_states: generate exactly 3 story arc phases that reflect the emotional journey of the writings. Each phase should have a unique Spanish label and mood. Hue shift 0=original color, 0.083=warm shift, 0.667=cold/complementary shift. The arc should progress: contemplative → intense → profound.
 - crystal_colors must have exactly 4 hex colors
 - crystals: extract 4-6 of the most evocative short phrases from the writings (max 6)
 - ambient_texts: 2-4 very short fragments (max 80 chars) that drift as text motes

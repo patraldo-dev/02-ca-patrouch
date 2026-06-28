@@ -944,33 +944,61 @@ export const CrystalInteractionSystem = class extends createSystem({
 		this.pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
 		this.raycaster.setFromCamera(this.pointer, this.world.camera);
 
+		// Build a list of raycastable crystal meshes: both entity.object3D
+		// (the invisible octahedron) and spirit GLB clones (visible meshes
+		// with userData.crystalText added directly to world.scene).
+		const crystalMeshes = [];
+		const entityMap = new Map(); // mesh → entity for callback lookup
 		for (const entity of this.queries.crystals.entities) {
-			const mesh = entity.object3D;
-			if (!mesh) continue;
-			// Only tap fully materialized crystals
 			if (entity.getValue(InteriorDecoration, 'materialized') < 0.8) continue;
-
-			const intersects = this.raycaster.intersectObject(mesh, false);
-			if (intersects.length > 0) {
-				this.lastTapTime = now;
-				this._spawnBurst(mesh.position);
-				this._advanceNarrative();
-
-				// Visual: crystal flashes
-				if (mesh.material) {
-					const origEmissive = mesh.material.emissiveIntensity || 0.3;
-					mesh.material.emissiveIntensity = 2.0;
-					setTimeout(() => {
-						if (mesh.material) mesh.material.emissiveIntensity = origEmissive;
-					}, 300);
-				}
-
-				window.dispatchEvent(new CustomEvent('crystal-tapped', {
-					detail: { position: [mesh.position.x, mesh.position.y, mesh.position.z] }
-				}));
-				break;
+			if (entity.object3D) {
+				crystalMeshes.push(entity.object3D);
+				entityMap.set(entity.object3D, entity);
 			}
 		}
+		// Also collect spirit clones from the scene
+		this.world.scene.traverse((child) => {
+			if (child.userData?.crystalText) {
+				crystalMeshes.push(child);
+			}
+		});
+
+		if (crystalMeshes.length === 0) return;
+		const intersects = this.raycaster.intersectObjects(crystalMeshes, true);
+		if (intersects.length === 0) return;
+
+		this.lastTapTime = now;
+		const hit = intersects[0];
+		const hitPoint = hit.point;
+
+		// Walk up the parent chain to find userData.crystalText
+		let crystalText = '';
+		let crystalObj = hit.object;
+		while (crystalObj && !crystalText) {
+			crystalText = crystalObj.userData?.crystalText || '';
+			if (crystalText) break;
+			crystalObj = crystalObj.parent;
+		}
+
+		this._spawnBurst(hitPoint);
+		this._advanceNarrative();
+
+		// Visual: crystal flashes — flash the hit object and its parents
+		const flashTarget = hit.object;
+		if (flashTarget.material) {
+			const origOpacity = flashTarget.material.opacity ?? 0.85;
+			flashTarget.material.opacity = 1;
+			setTimeout(() => {
+				if (flashTarget.material) flashTarget.material.opacity = origOpacity;
+			}, 300);
+		}
+
+		window.dispatchEvent(new CustomEvent('crystal-tapped', {
+			detail: {
+				position: [hitPoint.x, hitPoint.y, hitPoint.z],
+				text: crystalText,
+			}
+		}));
 	}
 
 	_advanceNarrative() {
