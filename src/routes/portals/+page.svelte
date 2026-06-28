@@ -45,18 +45,28 @@ function nameOf(item) {
 			if (cancelled || api) return;
 			try {
 				bootStatus = 'loading';
-				const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
-				if (cancelled || !containerEl) {
-					bootStatus = 'error';
-					worldError = 'Container not found';
-					return;
-				}
-				api = await initPortalWorld(containerEl, {
-					portals: data.portals || [],
-					galaxies: data.galaxies || [],
-					featuredPortalId: data.featuredPortal?.id,
-					sceneConfigs: data.sceneConfigs || {},
-				});
+
+				// Hard timeout on entire boot — if IWSDK hangs on this device,
+				// fall through to the portal gallery instead of spinning forever.
+				const bootPromise = (async () => {
+					const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
+					if (cancelled || !containerEl) {
+						throw new Error('Container not found');
+					}
+					const result = await initPortalWorld(containerEl, {
+						portals: data.portals || [],
+						galaxies: data.galaxies || [],
+						featuredPortalId: data.featuredPortal?.id,
+						sceneConfigs: data.sceneConfigs || {},
+					});
+					return result;
+				})();
+
+				const timeoutPromise = new Promise((_, reject) =>
+					setTimeout(() => reject(new Error('IWSDK boot timeout after 15s')), 15000)
+				);
+
+				api = await Promise.race([bootPromise, timeoutPromise]);
 				if (cancelled) return;
 
 				const canvas = containerEl.querySelector('canvas');
@@ -160,7 +170,7 @@ function nameOf(item) {
 			<pre class="boot-err">{worldError}</pre>
 		{:else}
 			<div class="boot-icon">⟡</div>
-			<div class="boot-text">{bootStatus}</div>
+			<div class="boot-text">Cargando mundo…</div>
 		{/if}
 	</div>
 {:else}
