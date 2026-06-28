@@ -34,11 +34,30 @@ function nameOf(item) {
 		return item.name_es;
 	}
 
+	function skipBumper() {
+		bumperDone = true;
+		bootECS();
+	}
+
 	onMount(() => {
 		let cancelled = false;
 
-		// Skip bumper entirely — boot ECS immediately.
-		bumperDone = true;
+		// Bumper intro — gives polish while ECS loads behind it.
+		bumperVersion = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
+
+		let bumperTimer = setTimeout(() => {
+			bumperDone = true;
+			bootECS();
+		}, BUMPER_DURATION);
+
+		function onBumperSkip(e) {
+			if (e.data?.type === 'bumper-skip') {
+				clearTimeout(bumperTimer);
+				bumperDone = true;
+				bootECS();
+			}
+		}
+		window.addEventListener('message', onBumperSkip);
 
 		async function bootECS() {
 			if (cancelled || api) return;
@@ -123,9 +142,6 @@ function nameOf(item) {
 		}
 
 		window.addEventListener('portal-debug', onDebug);
-
-		// Boot ECS immediately — no bumper gate.
-		bootECS();
 
 		return () => {
 			cancelled = true;
