@@ -27,42 +27,22 @@
 	const BUMPER_DURATION = 6500;
 	const BUMPER_VERSIONS = [1, 2, 3, 4];
 
-	let _bootECS = null; // set inside onMount
-
-	function nameOf(item) {
+function nameOf(item) {
 		const lang = $locale || 'es';
 		if (lang === 'en') return item.name_en || item.name_es;
 		if (lang === 'fr') return item.name_fr || item.name_es;
 		return item.name_es;
 	}
 
-	function skipBumper() {
-		bumperDone = true;
-		_bootECS?.();
-	}
-
 	onMount(() => {
 		let cancelled = false;
 
-		bumperVersion = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
-
-		let bumperTimer = setTimeout(() => {
-			bumperDone = true;
-			bootECS();
-		}, BUMPER_DURATION);
-
-		function onBumperSkip(e) {
-			if (e.data?.type === 'bumper-skip') {
-				clearTimeout(bumperTimer);
-				bumperDone = true;
-				bootECS();
-			}
-		}
-		window.addEventListener('message', onBumperSkip);
+		// Skip bumper entirely — boot ECS immediately.
+		// The bumper was adding 6.5s of fragility before the user sees anything.
+		bumperDone = true;
 
 		async function bootECS() {
 			if (cancelled || api) return;
-			window.removeEventListener('message', onBumperSkip);
 			try {
 				bootStatus = 'loading';
 				const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
@@ -101,7 +81,6 @@
 			}
 		}
 
-		_bootECS = bootECS;
 
 		function onPortalFocus(e) {
 			focusedPortal = (data.portals || []).find(p => p.id === e.detail.portalId) || null;
@@ -226,30 +205,32 @@
 	</div>
 {/if}
 
-<!-- Fallback nav (if world fails) -->
+<!-- Fallback gallery (if world fails) — no loop, links to writing content -->
 {#if bumperDone && bootStatus === 'error'}
 	<div class="fallback-nav">
-		{#each data.galaxies as galaxy}
-			<section>
-				<h2>{galaxy.icon} {nameOf(galaxy)}</h2>
-				{#each galaxy.portals as portal}
-					<a href="/portals/enter/{portal.id}">{portal.icon} {nameOf(portal)}</a>
-				{/each}
-			</section>
-		{/each}
+		<div class="fallback-header">
+			<p class="fallback-msg">No se pudo cargar el mundo espacial.</p>
+			<button class="retry-btn" onclick={() => location.reload()}>↻ Reintentar</button>
+		</div>
+		<div class="portal-gallery">
+			{#each data.portals as portal}
+				<a class="portal-card" href="/agora?portal={portal.id}" style="--c: {portal.color_primary}">
+					<span class="portal-card-icon">{portal.icon}</span>
+					<span class="portal-card-name">{nameOf(portal)}</span>
+					{#if portal.active_writings_count}
+						<span class="portal-card-count">{portal.active_writings_count} escritos</span>
+					{/if}
+				</a>
+			{/each}
+		</div>
 	</div>
 {/if}
 
 <!-- Screen reader nav -->
 <nav class="sr" aria-label="Portals">
 	<h1>{$t('games.title')}</h1>
-	{#each data.galaxies as galaxy}
-		<section>
-			<h2>{nameOf(galaxy)}</h2>
-			{#each galaxy.portals as portal}
-				<a href="/portals/enter/{portal.id}">{nameOf(portal)}</a>
-			{/each}
-		</section>
+	{#each data.portals as portal}
+		<a href="/agora?portal={portal.id}">{nameOf(portal)}</a>
 	{/each}
 </nav>
 
@@ -374,8 +355,43 @@
 		color: #e0e0e0;
 		font-family: system-ui, sans-serif;
 	}
-	.fallback-nav h2 { font-size: 0.8rem; color: #888; text-transform: uppercase; margin: 1rem 0 0.3rem; }
-	.fallback-nav a { display: block; padding: 0.4rem 0; color: #c9a87c; text-decoration: none; }
+	.fallback-header { text-align: center; margin-bottom: 2rem; }
+	.fallback-msg { color: #888; font-size: 0.9rem; margin-bottom: 1rem; }
+	.retry-btn {
+		padding: 0.5rem 1.5rem;
+		border-radius: 24px;
+		border: 1px solid rgba(201,168,124,0.4);
+		background: rgba(201,168,124,0.1);
+		color: #c9a87c;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.portal-gallery {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+		gap: 1rem;
+		max-width: 600px;
+		margin: 0 auto;
+	}
+	.portal-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 1.5rem 1rem;
+		border-radius: 12px;
+		background: rgba(255,255,255,0.03);
+		border: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
+		text-decoration: none;
+		transition: all 0.2s;
+	}
+	.portal-card:hover {
+		background: color-mix(in srgb, var(--c) 10%, transparent);
+		border-color: var(--c);
+	}
+	.portal-card-icon { font-size: 2rem; }
+	.portal-card-name { color: var(--c); font-size: 0.85rem; font-weight: 600; text-align: center; }
+	.portal-card-count { color: #666; font-size: 0.7rem; }
 
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 

@@ -48,7 +48,11 @@
 		{/if}
 
 		<a class="enter-spatial" href="/portals">
-			⟡ {$t('games.enter') || 'Enter'}
+			⟡ {$t('games.enter') || 'Mundo Espacial'}
+		</a>
+
+		<a class="enter-agora" href="/agora?portal={portal?.id}">
+			📝 Escritos
 		</a>
 
 		{#if portal?.active_writings_count > 0}
@@ -129,6 +133,16 @@
 		background: var(--portal-color);
 		color: #050508;
 	}
+	.enter-agora {
+		display: inline-block;
+		margin-top: 1rem;
+		color: var(--text-dim);
+		font-size: 0.85rem;
+		text-decoration: none;
+		border-bottom: 1px solid transparent;
+		transition: border-color 0.2s;
+	}
+	.enter-agora:hover { border-color: var(--text-dim); }
 	.writings-count {
 		color: var(--muted);
 		font-size: 0.75rem;
