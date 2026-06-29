@@ -27,6 +27,13 @@
 	const BUMPER_DURATION = 6500;
 	const BUMPER_VERSIONS = [1, 2, 3, 4];
 
+	// Projection mode — ?project=true skips bumper, hides UI, auto-enters featured portal
+	const projectMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('project') === 'true';
+	const projectLoop = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('loop') === 'true';
+	let projectNarrativeTimer = null;
+	let projectLoopTimer = null;
+	let projectPortalIdx = 0;
+
 function nameOf(item) {
 		const lang = $locale || 'es';
 		if (lang === 'en') return item.name_en || item.name_es;
@@ -41,24 +48,31 @@ function nameOf(item) {
 	onMount(() => {
 		let cancelled = false;
 
-		// Bumper intro plays while ECS boots in parallel.
-		bumperVersion = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
-
-		// Boot ECS immediately — by the time the bumper finishes (~6.5s),
-		// the world should be ready.
-		bootECS();
-
-		let bumperTimer = setTimeout(() => {
+		// Projection mode: skip bumper, go straight to world
+		if (projectMode) {
 			bumperDone = true;
-		}, BUMPER_DURATION);
+			bumperVersion = null;
+			bootECS();
+		} else {
+			// Bumper intro plays while ECS boots in parallel.
+			bumperVersion = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
 
-		function onBumperSkip(e) {
-			if (e.data?.type === 'bumper-skip') {
-				clearTimeout(bumperTimer);
+			// Boot ECS immediately — by the time the bumper finishes (~6.5s),
+			// the world should be ready.
+			bootECS();
+
+			let bumperTimer = setTimeout(() => {
 				bumperDone = true;
+			}, BUMPER_DURATION);
+
+			function onBumperSkip(e) {
+				if (e.data?.type === 'bumper-skip') {
+					clearTimeout(bumperTimer);
+					bumperDone = true;
+				}
 			}
+			window.addEventListener('message', onBumperSkip);
 		}
-		window.addEventListener('message', onBumperSkip);
 
 		async function bootECS() {
 			if (cancelled || api) return;
@@ -103,6 +117,34 @@ function nameOf(item) {
 
 				worldReady = true;
 				bootStatus = 'ready';
+
+				// Projection mode: auto-enter featured portal + start auto-advance
+				if (projectMode && data.featuredPortal) {
+					setTimeout(() => {
+						if (api) {
+							const targetId = new URLSearchParams(window.location.search).get('portal') || data.featuredPortal.id;
+							api.switchPortal(targetId);
+							focusedPortal = data.portals.find(p => p.id === targetId);
+						}
+					}, 800);
+
+					// Auto-advance narrative every 90s
+					projectNarrativeTimer = setInterval(() => {
+						if (api) api.advanceNarrative();
+					}, 90000);
+
+					// Loop through portals every 5 min
+					if (projectLoop && data.portals.length > 1) {
+						projectLoopTimer = setInterval(() => {
+							projectPortalIdx = (projectPortalIdx + 1) % data.portals.length;
+							const next = data.portals[projectPortalIdx];
+							if (next && api) {
+								api.switchPortal(next.id);
+								focusedPortal = next;
+							}
+						}, 300000);
+					}
+				}
 			} catch (err) {
 				console.error('[PortalWorld] boot failed:', err);
 				worldError = (err.message || String(err)) + '\n' + (err.stack || '').split('\n').slice(0, 6).join('\n');
@@ -146,6 +188,8 @@ function nameOf(item) {
 
 		return () => {
 			cancelled = true;
+			if (projectNarrativeTimer) clearInterval(projectNarrativeTimer);
+			if (projectLoopTimer) clearInterval(projectLoopTimer);
 			window.removeEventListener('portal-focus', onPortalFocus);
 			window.removeEventListener('portal-enter', onPortalEnter);
 			window.removeEventListener('portal-interior-ready', onInteriorReady);
@@ -174,7 +218,7 @@ function nameOf(item) {
 -->
 
 <!-- Bumper iframe overlay — random version, ~6.5s, then ECS boots -->
-{#if bumperVersion && !bumperDone}
+{#if bumperVersion && !bumperDone && !projectMode}
 	<div class="bumper-overlay">
 		<iframe src="/portal-bumper-v{bumperVersion}.html" title="patrouch.ca" allow="autoplay"></iframe>
 		<button class="bumper-skip" onclick={skipBumper}>Saltar →</button>
@@ -201,7 +245,7 @@ function nameOf(item) {
 <!-- UI Overlay removed — using fixed positioning on each element instead -->
 
 <!-- Focus label -->
-{#if worldReady && mode === 'index' && focusedPortal}
+{#if worldReady && mode === 'index' && focusedPortal && !projectMode}
 	<div class="focus-label" style="--c: {focusedPortal.color_primary}; pointer-events:none; z-index:100001;">
 		<span>{focusedPortal.icon}</span>
 		<span style="color: var(--c)">{nameOf(focusedPortal)}</span>
@@ -209,7 +253,7 @@ function nameOf(item) {
 {/if}
 
 <!-- Exit button + explore all -->
-{#if worldReady && mode === 'interior'}
+{#if worldReady && mode === 'interior' && !projectMode}
 	<button class="exit-btn" style="pointer-events:auto !important;z-index:100002 !important;" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitToIndex(); }}>←</button>
 
 	<!-- Portal Switcher -->

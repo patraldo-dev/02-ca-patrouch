@@ -718,8 +718,8 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	const spiritMeshes = [];
 	// Pre-load spirit GLB
 	const gltfLoader = new GLTFLoader();
-	const spiritLoadPromise = gltfLoader.loadAsync('/models/spirit.glb').then((gltf) => {
-		console.log('[portals-ecs] Spirit GLB loaded');
+	const spiritLoadPromise = gltfLoader.loadAsync('/api/assets/models/spirit.glb').then((gltf) => {
+		console.log('[portals-ecs] Spirit GLB loaded from R2');
 		return gltf.scene;
 	}).catch((err) => {
 		console.warn('[portals-ecs] Spirit GLB failed:', err.message);
