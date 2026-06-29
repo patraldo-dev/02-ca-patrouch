@@ -41,6 +41,21 @@ function nameOf(item) {
 		return item.name_es;
 	}
 
+	// Map portal IDs to Antoine artwork IDs (same as bumper v4 ARTWORKS)
+	const PORTAL_ART = {
+		'arboleda': '12c79899-fb93-4885-508f-d2da0a2fbf00',
+		'fiesta': 'bd4602b0-149d-42f8-e872-f697b64c7d00',
+		'oceano': '5c7fb409-1aa2-45a9-8466-296077e18e00',
+		'narrador': 'f8a136eb-363e-4a24-0f54-70bb4f4bf800',
+		'cosmos': '5c28fef5-cff0-4ddd-b4af-100d29bad100',
+		'urbano': '62355ddb-0f6c-4251-5d8e-37a455e44000',
+		'suenos': '85319dc7-ae16-48f8-9500-608ba174eb00',
+		'nostalgias-espirituales': '26fe40df-7745-41dc-7491-97cb36a32f00',
+	};
+	function portalPortalArt(id) {
+		return PORTAL_ART[id] || Object.values(PORTAL_ART)[0];
+	}
+
 	function skipBumper() {
 		bumperDone = true;
 	}
@@ -210,6 +225,19 @@ function nameOf(item) {
 
 <svelte:head>
 	<title>{$t('games.title')}</title>
+	<style>
+		/* Force landscape suggestion on portrait */
+		@media (orientation: portrait) and (max-width: 768px) {
+			.portals-rotate-hint { display: flex !important; }
+		}
+		/* Hide site navbar/footer completely */
+		:global(nav:not(.portal-switcher):not(.sr)),
+		:global(header:not(.focus-label)),
+		:global(.navbar),
+		:global(.footer),
+		:global(.cart),
+		:global(.shopping-cart) { display: none !important; }
+	</style>
 </svelte:head>
 
 <!--
@@ -256,15 +284,23 @@ function nameOf(item) {
 {#if worldReady && mode === 'interior' && !projectMode}
 	<button class="exit-btn" style="pointer-events:auto !important;z-index:100002 !important;" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitToIndex(); }}>←</button>
 
-	<!-- Portal Switcher -->
+	<!-- Portal Switcher — Antoine artwork pills -->
 	<div class="portal-switcher" style="pointer-events:auto !important;z-index:100002 !important;">
-		{#each data.portals as portal}
+		{#each data.portals as portal, i}
 			<button
 				class="portal-pill {focusedPortal?.id === portal.id ? 'active' : ''}"
-				style="--pc: {portal.color_primary}"
+				style="--pc: {portal.color_primary}; animation-delay: {i * 0.08}s;"
 				onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.switchPortal(portal.id); focusedPortal = portal; }}
 				title={nameOf(portal)}
-			>{portal.icon}</button>
+			>
+				<img
+					src="https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/{portalPortalArt(portal.id)}/segment=foreground,width=64"
+					alt={nameOf(portal)}
+					loading="lazy"
+					onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+				/>
+				<span class="pill-fallback" style="display:none; color: var(--pc);">{portal.icon}</span>
+			</button>
 		{/each}
 	</div>
 
@@ -501,8 +537,8 @@ function nameOf(item) {
 		justify-content: flex-end;
 	}
 	.portal-pill {
-		width: 40px;
-		height: 40px;
+		width: 44px;
+		height: 44px;
 		border-radius: 50%;
 		border: 1px solid rgba(255,255,255,0.15);
 		background: rgba(0,0,0,0.6);
@@ -513,7 +549,25 @@ function nameOf(item) {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		opacity: 0.6;
+		opacity: 0;
+		animation: pillAppear 0.4s ease forwards;
+		overflow: hidden;
+		padding: 0;
+	}
+	.portal-pill img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 50%;
+	}
+	.pill-fallback {
+		width: 100%; height: 100%;
+		display: flex; align-items: center; justify-content: center;
+		font-size: 1.1rem;
+	}
+	@keyframes pillAppear {
+		from { opacity: 0; transform: translateY(20px) scale(0.5); }
+		to { opacity: 0.6; transform: translateY(0) scale(1); }
 	}
 	.portal-pill:hover {
 		opacity: 1;
