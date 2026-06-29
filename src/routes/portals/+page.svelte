@@ -297,7 +297,7 @@ function nameOf(item) {
 					src="https://imagedelivery.net/4bRSwPonOXfEIBVZiDXg0w/{portalPortalArt(portal.id)}/segment=foreground,width=64"
 					alt={nameOf(portal)}
 					loading="lazy"
-					onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+					onerror={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling?.style.setProperty('display', 'flex'); }}
 				/>
 				<span class="pill-fallback" style="display:none; color: var(--pc);">{portal.icon}</span>
 			</button>
