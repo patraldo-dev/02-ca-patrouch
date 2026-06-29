@@ -36,25 +36,26 @@ function nameOf(item) {
 
 	function skipBumper() {
 		bumperDone = true;
-		bootECS();
 	}
 
 	onMount(() => {
 		let cancelled = false;
 
-		// Bumper intro — gives polish while ECS loads behind it.
+		// Bumper intro plays while ECS boots in parallel.
 		bumperVersion = BUMPER_VERSIONS[Math.floor(Math.random() * BUMPER_VERSIONS.length)];
+
+		// Boot ECS immediately — by the time the bumper finishes (~6.5s),
+		// the world should be ready.
+		bootECS();
 
 		let bumperTimer = setTimeout(() => {
 			bumperDone = true;
-			bootECS();
 		}, BUMPER_DURATION);
 
 		function onBumperSkip(e) {
 			if (e.data?.type === 'bumper-skip') {
 				clearTimeout(bumperTimer);
 				bumperDone = true;
-				bootECS();
 			}
 		}
 		window.addEventListener('message', onBumperSkip);
@@ -210,9 +211,20 @@ function nameOf(item) {
 <!-- Exit button + explore all -->
 {#if worldReady && mode === 'interior'}
 	<button class="exit-btn" style="pointer-events:auto !important;z-index:100002 !important;" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitToIndex(); }}>←</button>
-	<button class="explore-btn" style="pointer-events:auto !important;z-index:100002 !important;" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitToIndex(); }}>⟡</button>
 
-	<!-- XR Entry Buttons -->
+	<!-- Portal Switcher -->
+	<div class="portal-switcher" style="pointer-events:auto !important;z-index:100002 !important;">
+		{#each data.portals as portal}
+			<button
+				class="portal-pill {focusedPortal?.id === portal.id ? 'active' : ''}"
+				style="--pc: {portal.color_primary}"
+				onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.switchPortal(portal.id); focusedPortal = portal; }}
+				title={nameOf(portal)}
+			>{portal.icon}</button>
+		{/each}
+	</div>
+
+	<!-- XR Mode Buttons -->
 	<div class="xr-buttons" style="pointer-events:auto !important;z-index:100002 !important;">
 		{#if xrSupport.ar}
 			<button class="xr-btn ar-btn" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.enterAR(); }}>🥽 AR</button>
@@ -220,6 +232,7 @@ function nameOf(item) {
 		{#if xrSupport.vr}
 			<button class="xr-btn vr-btn" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.enterVR(); }}>🕶️ VR</button>
 		{/if}
+		<button class="xr-btn flat-btn" onclick={(e) => { e.preventDefault(); e.stopPropagation(); api?.exitXR(); }}>🖥️ 3D</button>
 	</div>
 {/if}
 
@@ -432,6 +445,42 @@ function nameOf(item) {
 		display: flex;
 		gap: 0.6rem;
 	}
+	.portal-switcher {
+		position: fixed;
+		bottom: 1rem;
+		right: 1rem;
+		z-index: 99999;
+		display: flex;
+		gap: 0.3rem;
+		flex-wrap: wrap;
+		max-width: 180px;
+		justify-content: flex-end;
+	}
+	.portal-pill {
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		border: 1px solid rgba(255,255,255,0.15);
+		background: rgba(0,0,0,0.6);
+		backdrop-filter: blur(10px);
+		font-size: 0.9rem;
+		cursor: pointer;
+		transition: all 0.2s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0.5;
+	}
+	.portal-pill:hover {
+		opacity: 1;
+		border-color: var(--pc);
+	}
+	.portal-pill.active {
+		opacity: 1;
+		border-color: var(--pc);
+		box-shadow: 0 0 8px var(--pc);
+	}
+
 	.xr-btn {
 		padding: 0.5rem 1.2rem;
 		border-radius: 20px;

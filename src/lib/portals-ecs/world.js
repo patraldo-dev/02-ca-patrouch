@@ -508,6 +508,18 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 			window.dispatchEvent(new CustomEvent('portal-exit-to-index'));
 		},
 
+		// Switch directly to another portal (teardown current interior, build new one)
+		switchPortal(portalId) {
+			const portal = portals.find(p => p.id === portalId);
+			if (!portal) return;
+			teardownInterior(world);
+			modeEntity.setValue(WorldMode, 'mode', 'transitioning');
+			window.dispatchEvent(new CustomEvent('portal-enter', { detail: { portalId } }));
+			setTimeout(() => {
+				buildInterior(world, portalEntities, portalId, ambientLight, keyLight, portal, modeEntity, sceneConfigs?.[portalId]);
+			}, 150);
+		},
+
 		// Check XR support
 		async checkSupport() {
 			const ar = await navigator.xr?.isSessionSupported('immersive-ar') ?? false;
@@ -515,8 +527,9 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 			return { ar, vr };
 		},
 
-		// Enter AR (if supported)
+		// Enter AR — exit any active session first
 		async enterAR() {
+			if (world.session) world.exitXR();
 			const { launchXR } = await import('@iwsdk/core');
 			launchXR(world, {
 				sessionMode: SessionMode.ImmersiveAR,
@@ -528,8 +541,9 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 			});
 		},
 
-		// Enter VR (if supported)
+		// Enter VR — exit any active session first
 		async enterVR() {
+			if (world.session) world.exitXR();
 			const { launchXR } = await import('@iwsdk/core');
 			launchXR(world, {
 				sessionMode: SessionMode.ImmersiveVR,
@@ -537,8 +551,13 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 					type: ReferenceSpaceType.LocalFloor,
 					fallbackOrder: [ReferenceSpaceType.Local, ReferenceSpaceType.Viewer],
 				},
-				features: { anchors: false },
+				features: {},
 			});
+		},
+
+		// Exit XR back to 3D flat mode
+		exitXR() {
+			world.exitXR();
 		},
 	};
 
