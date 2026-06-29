@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "iwsdk-dev-mcp": {
+      "command": "node",
+      "args": [
+        "/home/patrouch/.openclaw/workspace/spirit-preview/node_modules/@iwsdk/vite-plugin-dev/dist/mcp-server.js",
+        "--port",
+        "8091",
+        "--client-version",
+        "0.3.1"
+      ]
+    }
+  }
+}
