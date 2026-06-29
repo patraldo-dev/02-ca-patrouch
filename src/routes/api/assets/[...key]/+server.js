@@ -1,4 +1,4 @@
-// Serve R2 objects with proper content-type
+// Serve R2 objects with proper content-type — catch-all for nested keys like models/spirit.glb
 export async function GET({ params, platform }) {
     const r2 = platform?.env?.R2_ASSETS;
     if (!r2) return new Response('R2 not configured', { status: 500 });
@@ -6,9 +6,8 @@ export async function GET({ params, platform }) {
     const key = params.key;
     const object = await r2.get(key);
 
-    if (!object) return new Response('Not found', { status: 404 });
+    if (!object) return new Response('Not found: ' + key, { status: 404 });
 
-    // Determine content-type from extension
     const ext = key.split('.').pop()?.toLowerCase();
     const types = {
         'glb': 'model/gltf-binary',
