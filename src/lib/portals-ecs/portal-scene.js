@@ -424,7 +424,7 @@ export async function boot(container) {
 }
 
 // Auto-boot if container exists (for direct script loading)
-const autoContainer = document.getElementById('portal-scene-container') || document.getElementById('scene-container');
+const autoContainer = (typeof document !== 'undefined') ? (document.getElementById('portal-scene-container') || document.getElementById('scene-container')) : null;
 if (autoContainer) {
 	boot(autoContainer).then((world) => {
 	console.log('[portals] World booted with ECS');
