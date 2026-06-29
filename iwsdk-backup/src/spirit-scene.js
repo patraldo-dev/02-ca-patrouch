@@ -165,15 +165,21 @@ loader.load(
     spiritRoot.position.set(0, -0.8, 0);
     spiritRoot.scale.setScalar(0.75);
 
-    // Material enhancement — unlit, bright, ghostly
+    // Material enhancement — Antoine artwork textured on GLB
+    const spiritTex = texLoader.load(
+      `https://imagedelivery.net/${CF_HASH}/${ARTWORKS[0]}/segment=foreground,width=512`,
+      (tex) => { tex.colorSpace = THREE.SRGBColorSpace; }
+    );
     spiritRoot.traverse((child) => {
       if (child.isMesh) {
         child.material = new THREE.MeshBasicMaterial({
-          color: new THREE.Color().setHSL(0.08, 0.8, 0.6), // warm amber start
+          map: spiritTex,
+          color: 0xffffff,
           transparent: true,
-          opacity: 0.9,
+          opacity: 0.85,
           side: THREE.DoubleSide,
           depthWrite: false,
+          blending: THREE.AdditiveBlending,
         });
       }
     });
@@ -310,18 +316,10 @@ function animate() {
     spiritMixer.update(dt);
   }
 
-  // Spirit gentle float + rainbow color
+  // Spirit gentle float
   if (spiritRoot) {
     spiritRoot.position.y = -0.8 + Math.sin(t * 0.5) * 0.15;
     spiritRoot.rotation.y += 0.02;
-
-    // Rainbow HSL cycling — bright and visible
-    const hue = (t * 0.12) % 1;
-    spiritRoot.traverse((child) => {
-      if (child.isMesh && child.material && child.material.color) {
-        child.material.color.setHSL(hue, 0.9, 0.6);
-      }
-    });
   }
 
   // Particle drift
