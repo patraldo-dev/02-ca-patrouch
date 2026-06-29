@@ -24,7 +24,6 @@ import {
 	AudioSource, PlaybackMode,
 } from '@iwsdk/core';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {
 	PortalGate,
 	TabLayout,
@@ -697,15 +696,15 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 	const elevations = sceneConfig?.spatial_layout?.crystal_elevations || [0.8, 1.2, 1.5];
 
 	const spiritMeshes = [];
-	// Pre-load spirit GLB
-	const gltfLoader = new GLTFLoader();
-	const spiritLoadPromise = gltfLoader.loadAsync('https://r2.mexicanbold.com/72fpsEFLSpirit-enhanced.glb').then((gltf) => {
-		console.log('[portals-ecs] Spirit GLB loaded from mexicanbold R2');
-		return gltf.scene;
-	}).catch((err) => {
-		console.warn('[portals-ecs] Spirit GLB failed:', err.message);
-		return null;
-	});
+	const PORTAL_ARTWORKS = [
+		'12c79899-fb93-4885-508f-d2da0a2fbf00','bd4602b0-149d-42f8-e872-f697b64c7d00',
+		'5c7fb409-1aa2-45a9-8466-296077e18e00','f8a136eb-363e-4a24-0f54-70bb4f4bf800',
+		'5c28fef5-cff0-4ddd-b4af-100d29bad100','62355ddb-0f6c-4251-5d8e-37a455e44000',
+		'85319dc7-ae16-48f8-9500-608ba174eb00','26fe40df-7745-41dc-7491-97cb36a32f00',
+	];
+	const CF_IMAGES_HASH_PROD = '4bRSwPonOXfEIBVZiDXg0w';
+	const texLoader = new THREE.TextureLoader();
+	texLoader.crossOrigin = 'anonymous';
 
 	crystals.forEach((crystal, i) => {
 		const angle = (i / crystals.length) * Math.PI * 2;
@@ -717,10 +716,38 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		const cColor = crystalColors[crystal.color_index % crystalColors.length] || colorHex;
 		const cScale = crystal.scale || 1;
 
-		// Start with fallback mesh, replace with GLB when loaded
+		// Art cube — 6 faces with Antoine artwork
+		const cubeMats = [];
+		for (let f = 0; f < 6; f++) {
+			const faceArt = PORTAL_ARTWORKS[(i * 6 + f) % PORTAL_ARTWORKS.length];
+			const fMat = new THREE.MeshBasicMaterial({
+				color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide,
+			});
+			texLoader.load(
+				`https://imagedelivery.net/${CF_IMAGES_HASH_PROD}/${faceArt}/segment=foreground,width=256`,
+				(tex) => {
+					tex.colorSpace = THREE.SRGBColorSpace;
+					fMat.map = tex; fMat.opacity = 0.92; fMat.needsUpdate = true;
+				}
+			);
+			cubeMats.push(fMat);
+		}
+		const cubeSize = 0.5 * cScale;
+		const artCube = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), cubeMats);
+		artCube.position.set(cx, cy, cz);
+		artCube.userData.crystalText = crystal.text || '';
+		artCube.userData.portalId = portalId;
+		artCube.userData.baseY = cy;
+		artCube.userData.floatSpeed = 0.5 + Math.random() * 0.5;
+		artCube.userData.phase = Math.random() * Math.PI * 2;
+		world.scene.add(artCube);
+		spiritMeshes.push(artCube);
+
+		// Invisible crystal placeholder (for raycast/tap detection)
 		const mesh = createCrystalMesh(cColor, cScale);
 		mesh.userData.crystalText = crystal.text || '';
 		mesh.userData.portalId = portalId;
+		mesh.material.opacity = 0;
 
 		const entity = world.createTransformEntity(mesh);
 		const p = entity.getVectorView(Transform, 'position');
@@ -731,65 +758,8 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			floatPhase: Math.random() * Math.PI * 2,
 			floatSpeed: 0.6 + Math.random() * 0.4,
 			floatAmp: 0.04 + Math.random() * 0.03,
-			baseY: cy,
-			spawnDelay: 0,
-			materialized: 1.0,
+			baseY: cy, spawnDelay: 0, materialized: 1.0,
 		});
-
-		// Make sure the placeholder is visible immediately
-		if (entity.object3D) {
-			entity.object3D.visible = true;
-			entity.object3D.traverse(child => {
-				if (child.material) {
-					child.material.opacity = 0.9;
-					child.material.transparent = true;
-				}
-			});
-		}
-
-		// Replace placeholder with spirit GLB when loaded
-		spiritLoadPromise.then((spiritScene) => {
-			if (spiritScene && entity.object3D) {
-				const spiritClone = spiritScene.clone(true);
-				spiritClone.scale.setScalar(0.6 * cScale); // bigger spirit
-				// Center the GLB origin
-				const box = new THREE.Box3().setFromObject(spiritClone);
-				const center = box.getCenter(new THREE.Vector3());
-				spiritClone.position.set(cx - center.x, cy - center.y, cz - center.z);
-				spiritClone.userData.crystalText = crystal.text || '';
-				spiritClone.userData.portalId = portalId;
-				// Replace materials with unlit basic — guarantees color visibility regardless of scene lighting/fog
-				spiritClone.traverse((child) => {
-					if (child.isMesh && child.material) {
-						child.material = new THREE.MeshBasicMaterial({
-							color: new THREE.Color().setHSL(i / crystals.length, 1.0, 0.5),
-							transparent: true,
-							opacity: 0.85,
-							side: THREE.DoubleSide,
-						});
-					}
-				});
-				spiritClone.userData.baseY = cy;
-				spiritClone.userData.floatSpeed = 0.5 + Math.random() * 0.5;
-				spiritClone.userData.phase = Math.random() * Math.PI * 2;
-				spiritClone.userData.hueOffset = (i / crystals.length);
-				spiritMeshes.push(spiritClone);
-				world.scene.add(spiritClone);
-				// Hide placeholder only after GLB is actually visible
-				entity.object3D.visible = false;
-			}
-		});
-
-		// Spatial audio
-		// Audio disabled — was causing unstoppable sound on some devices
-		// const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00];
-		// const freq = pentatonic[i % pentatonic.length];
-		// const audioPath = generateToneWAV(freq, 2.0);
-		// entity.addComponent(AudioSource, {
-		// 	src: audioPath, positional: true, loop: true, autoplay: true,
-		// 	volume: 0.06, refDistance: 0.8, rolloffFactor: 2.0,
-		// 	maxDistance: 8.0, distanceModel: 'inverse', playbackMode: PlaybackMode.Overlap,
-		// });
 	});
 
 	// ── Pillars from sceneConfig ──
@@ -878,19 +848,11 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			}
 		}
 
-		// Animate spirit clones — rainbow cycling + float + rotate
+			// Animate art cubes — rotate + float
 		for (const s of spiritMeshes) {
 			if (!s.rotation) continue;
-			// Rainbow color cycling — full saturation, MeshBasicMaterial ignores scene lighting
-			const hue = ((t * 0.15) + (s.userData.hueOffset || 0)) % 1;
-			s.traverse((child) => {
-				if (child.isMesh && child.material && child.material.color) {
-					child.material.color.setHSL(hue, 1.0, 0.5);
-				}
-			});
-			// Rotate
-			s.rotation.y += 0.03;
-			// Float
+			s.rotation.x += 0.005;
+			s.rotation.y += 0.008;
 			s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed + s.userData.phase) * 0.12;
 		}
 
