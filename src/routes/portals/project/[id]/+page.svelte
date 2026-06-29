@@ -82,10 +82,6 @@
 <svelte:head>
 	<title>{data?.portal?.name_es || 'Projection'}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-</svelte:head>
-
-<!-- Kill all chrome -->
-<svelte:head>
 	<style>
 		html, body { margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #050508 !important; }
 		nav, header, footer { display: none !important; }
