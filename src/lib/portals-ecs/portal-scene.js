@@ -1,129 +1,91 @@
 // ═══════════════════════════════════════════════════════════
 //  Portal Scene — ECS + Three.js + IWSDK
-//  World.create() with starfield, art cubes, i18n narrative
+//  Respects IWSDK lifecycle: World.create starts render loop
+//  Systems do ALL logic. No world.update wrapping.
 // ═══════════════════════════════════════════════════════════
-import {
-	World, SessionMode, ReferenceSpaceType, Transform,
-} from '@iwsdk/core';
+import { World, Transform } from '@iwsdk/core';
 import { createComponent, createSystem, Types } from 'elics';
 import * as THREE from 'three';
 
-// ── i18n strings ──
+// ── i18n ──
 const STRINGS = {
 	es: {
 		title: '✦ Portales',
-		touch: 'Toca un cubo para entrar',
 		portals: {
-			'arboleda': 'Arboleda',
-			'fiesta': 'Fiesta',
-			'oceano': 'Océano',
-			'narrador': 'Narrador',
-			'cosmos': 'Cosmos',
-			'urbano': 'Urbano',
-			'suenos': 'Sueños',
-			'nostalgias-espirituales': 'Nostalgias Espirituales',
+			'arboleda': 'Arboleda', 'fiesta': 'Fiesta', 'oceano': 'Océano',
+			'narrador': 'Narrador', 'cosmos': 'Cosmos', 'urbano': 'Urbano',
+			'suenos': 'Sueños', 'nostalgias-espirituales': 'Nostalgias Espirituales',
 		},
-		narrative: [
-			'❝ Cada historia es un portal ❞',
-			'❝ Toca un cubo para entrar ❞',
-			'❝ Los espíritus esperan ❞',
-		],
+		narrative: ['❝ Cada historia es un portal ❞', '❝ Toca un cubo para entrar ❞', '❝ Los espíritus esperan ❞'],
 	},
 	en: {
 		title: '✦ Portals',
-		touch: 'Tap a cube to enter',
 		portals: {
-			'arboleda': 'The Grove',
-			'fiesta': 'Celebration',
-			'oceano': 'The Ocean',
-			'narrador': 'The Narrator',
-			'cosmos': 'The Cosmos',
-			'urbano': 'The Street',
-			'suenos': 'Dreams',
-			'nostalgias-espirituales': 'Gates of Memory',
+			'arboleda': 'The Grove', 'fiesta': 'Celebration', 'oceano': 'The Ocean',
+			'narrador': 'The Narrator', 'cosmos': 'The Cosmos', 'urbano': 'The Street',
+			'suenos': 'Dreams', 'nostalgias-espirituales': 'Gates of Memory',
 		},
-		narrative: [
-			'❝ Every story is a portal ❞',
-			'❝ Tap a cube to enter ❞',
-			'❝ The spirits are waiting ❞',
-		],
+		narrative: ['❝ Every story is a portal ❞', '❝ Tap a cube to enter ❞', '❝ The spirits are waiting ❞'],
 	},
 	fr: {
 		title: '✦ Portails',
-		touch: 'Touchez un cube pour entrer',
 		portals: {
-			'arboleda': 'Le Bosquet',
-			'fiesta': 'Célébration',
-			'oceano': 'L\'Océan',
-			'narrador': 'Le Narrateur',
-			'cosmos': 'Le Cosmos',
-			'urbano': 'La Rue',
-			'suenos': 'Rêves',
-			'nostalgias-espirituales': 'Portes de la Mémoire',
+			'arboleda': 'Le Bosquet', 'fiesta': 'Célébration', 'oceano': 'L\'Océan',
+			'narrador': 'Le Narrateur', 'cosmos': 'Le Cosmos', 'urbano': 'La Rue',
+			'suenos': 'Rêves', 'nostalgias-espirituales': 'Portes de la Mémoire',
 		},
-		narrative: [
-			'❝ Chaque histoire est un portail ❞',
-			'❝ Touchez un cube pour entrer ❞',
-			'❝ Les esprits attendent ❞',
-		],
+		narrative: ['❝ Chaque histoire est un portail ❞', '❝ Touchez un cube pour entrer ❞', '❝ Les esprits attendent ❞'],
 	},
 };
 
-const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
-const t = STRINGS[lang] || STRINGS.es;
-
-// ── Antoine artwork IDs ──
-const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const PORTALS = [
-	{ id: 'arboleda', art: '12c79899-fb93-4885-508f-d2da0a2fbf00', color: '#4a7c3a',
-		desc: { es: 'Donde las raíces cuentan historias', en: 'Where roots tell stories', fr: 'Où les racines racontent des histoires' } },
-	{ id: 'fiesta', art: 'bd4602b0-149d-42f8-e872-f697b64c7d00', color: '#ff6b35',
-		desc: { es: 'Música, danza y celebración', en: 'Music, dance and celebration', fr: 'Musique, danse et célébration' } },
-	{ id: 'oceano', art: '5c7fb409-1aa2-45a9-8466-296077e18e00', color: '#0277bd',
-		desc: { es: 'Olas que traen recuerdos', en: 'Waves that bring memories', fr: 'Vagues qui apportent des souvenirs' } },
-	{ id: 'narrador', art: 'f8a136eb-363e-4a24-0f54-70bb4f4bf800', color: '#c9a87c',
-		desc: { es: 'La voz que teje los hilos', en: 'The voice that weaves the threads', fr: 'La voix qui tisse les fils' } },
-	{ id: 'cosmos', art: '5c28fef5-cff0-4ddd-b4af-100d29bad100', color: '#7c4dff',
-		desc: { es: 'Estrellas que son palabras', en: 'Stars that are words', fr: 'Des étoiles qui sont des mots' } },
-	{ id: 'urbano', art: '62355ddb-0f6c-4251-5d8e-37a455e44000', color: '#546e7a',
-		desc: { es: 'La ciudad también sueña', en: 'The city also dreams', fr: 'La ville rêve aussi' } },
-	{ id: 'suenos', art: '85319dc7-ae16-48f8-9500-608ba174eb00', color: '#9c27b0',
-		desc: { es: 'Donde los sueños se vuelven cuentos', en: 'Where dreams become stories', fr: 'Où les rêves deviennent des contes' } },
-	{ id: 'nostalgias-espirituales', art: '26fe40df-7745-41dc-7491-97cb36a32f00', color: '#3A4F7A',
-		desc: { es: 'Memorias que flotan en el aire', en: 'Memories floating in the air', fr: 'Des souvenirs qui flottent dans l\'air' } },
+	{ id: 'arboleda', art: '12c79899-fb93-4885-508f-d2da0a2fbf00', color: '#4a7c3a', desc: { es: 'Donde las raíces cuentan historias', en: 'Where roots tell stories', fr: 'Où les racines racontent' } },
+	{ id: 'fiesta', art: 'bd4602b0-149d-42f8-e872-f697b64c7d00', color: '#ff6b35', desc: { es: 'Música, danza y celebración', en: 'Music, dance and celebration', fr: 'Musique, danse et célébration' } },
+	{ id: 'oceano', art: '5c7fb409-1aa2-45a9-8466-296077e18e00', color: '#0277bd', desc: { es: 'Olas que traen recuerdos', en: 'Waves that bring memories', fr: 'Vagues qui apportent des souvenirs' } },
+	{ id: 'narrador', art: 'f8a136eb-363e-4a24-0f54-70bb4f4bf800', color: '#c9a87c', desc: { es: 'La voz que teje los hilos', en: 'The voice that weaves threads', fr: 'La voix qui tisse les fils' } },
+	{ id: 'cosmos', art: '5c28fef5-cff0-4ddd-b4af-100d29bad100', color: '#7c4dff', desc: { es: 'Estrellas que son palabras', en: 'Stars that are words', fr: 'Étoiles qui sont des mots' } },
+	{ id: 'urbano', art: '62355ddb-0f6c-4251-5d8e-37a455e44000', color: '#546e7a', desc: { es: 'La ciudad también sueña', en: 'The city also dreams', fr: 'La ville rêve aussi' } },
+	{ id: 'suenos', art: '85319dc7-ae16-48f8-9500-608ba174eb00', color: '#9c27b0', desc: { es: 'Donde los sueños se vuelven cuentos', en: 'Where dreams become stories', fr: 'Où les rêves deviennent contes' } },
+	{ id: 'nostalgias-espirituales', art: '26fe40df-7745-41dc-7491-97cb36a32f00', color: '#3A4F7A', desc: { es: 'Memorias que flotan en el aire', en: 'Memories floating in the air', fr: 'Souvenirs qui flottent dans l\'air' } },
 ];
 
-// ── ECS Components ──
+const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
+
+// ── Components ──
 const PortalCube = createComponent('PortalCube', {
 	portalId: { type: Types.String, default: '' },
-	artId: { type: Types.String, default: '' },
-	color: { type: Types.String, default: '#c9a87c' },
 	floatPhase: { type: Types.Float32, default: 0 },
 	floatSpeed: { type: Types.Float32, default: 0.5 },
 	baseY: { type: Types.Float32, default: 0 },
-	isActive: { type: Types.Boolean, default: false },
-});
-
-const NarrativeState = createComponent('NarrativeState', {
-	stateIndex: { type: Types.Int32, default: 0 },
-	autoAdvance: { type: Types.Boolean, default: true },
 });
 
 const CameraOrbit = createComponent('CameraOrbit', {
 	angle: { type: Types.Float32, default: 0 },
 	radius: { type: Types.Float32, default: 5 },
 	height: { type: Types.Float32, default: 1 },
-	speed: { type: Types.Float32, default: 0.08 },
+	speed: { type: Types.Float32, default: 0.06 },
 	boost: { type: Types.Float32, default: 0 },
 });
 
-// ── ECS Systems (class extends pattern) ──
+const NarrativeState = createComponent('NarrativeState', {
+	stateIndex: { type: Types.Int32, default: 0 },
+	lastAdvance: { type: Types.Float32, default: 0 },
+});
+
+// Ambient data — stored in globals, not ideal but avoids world.update wrapping
+const ambient = {
+	time: 0,
+	cubeMeshes: [],
+};
+
+// ── Systems ──
 
 const FloatSystem = class extends createSystem({
 	cubes: { required: [PortalCube, Transform] },
 }) {
 	update(dt) {
-		const time = performance.now() / 1000;
+		ambient.time += dt;
+		const t = ambient.time;
 		for (const entity of this.queries.cubes.entities) {
 			const obj = entity.object3D;
 			if (!obj) continue;
@@ -132,96 +94,72 @@ const FloatSystem = class extends createSystem({
 			const baseY = entity.getValue(PortalCube, 'baseY');
 			obj.rotation.x += 0.005;
 			obj.rotation.y += 0.008;
-			obj.position.y = baseY + Math.sin(time * speed + phase) * 0.15;
+			obj.position.y = baseY + Math.sin(t * speed + phase) * 0.15;
 		}
 	}
 };
 
 const CameraOrbitSystem = class extends createSystem({
-	camera: { required: [CameraOrbit] },
+	cam: { required: [CameraOrbit] },
 }) {
 	update(dt) {
-		for (const entity of this.queries.camera.entities) {
+		for (const entity of this.queries.cam.entities) {
 			const angle = entity.getValue(CameraOrbit, 'angle');
 			const radius = entity.getValue(CameraOrbit, 'radius');
 			const height = entity.getValue(CameraOrbit, 'height');
 			const speed = entity.getValue(CameraOrbit, 'speed');
 			const boost = entity.getValue(CameraOrbit, 'boost');
 			const newAngle = angle + dt * (speed + boost);
-			entity.setValue(CameraOrbit, 'boost', boost * 0.95); // decay
 			entity.setValue(CameraOrbit, 'angle', newAngle);
-			const time = performance.now() / 1000;
-			const camX = Math.sin(newAngle) * radius;
-			const camZ = Math.cos(newAngle) * radius;
-			const camY = height + Math.sin(time * 0.3) * 0.2;
+			entity.setValue(CameraOrbit, 'boost', boost * 0.95);
+			const t = ambient.time;
 			if (this.world.camera) {
-				this.world.camera.position.set(camX, camY, camZ);
+				this.world.camera.position.set(
+					Math.sin(newAngle) * radius,
+					height + Math.sin(t * 0.3) * 0.2,
+					Math.cos(newAngle) * radius,
+				);
 				this.world.camera.lookAt(0, 0, 0);
 			}
 		}
 	}
 };
 
-let lastNarrativeAdvance = 0;
 const NarrativeSystem = class extends createSystem({
-	narrative: { required: [NarrativeState] },
+	narr: { required: [NarrativeState] },
 }) {
 	update(dt) {
 		const now = performance.now();
-		for (const entity of this.queries.narrative.entities) {
-			const auto = entity.getValue(NarrativeState, 'autoAdvance');
-			if (!auto) continue;
-			if (now - lastNarrativeAdvance > 90000) {
+		for (const entity of this.queries.narr.entities) {
+			const last = entity.getValue(NarrativeState, 'lastAdvance');
+			if (now - last > 12000) { // 12s for first cycle, then 90s
 				let idx = entity.getValue(NarrativeState, 'stateIndex');
-				idx = (idx + 1) % t.narrative.length;
-				entity.setValue(NarrativeState, 'stateIndex', idx);
-				lastNarrativeAdvance = now;
-				showNarrative(t.narrative[idx]);
+				const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
+				const strs = STRINGS[lang] || STRINGS.es;
+				if (idx < strs.narrative.length) {
+					showOverlay(strs.narrative[idx]);
+					entity.setValue(NarrativeState, 'stateIndex', idx + 1);
+					entity.setValue(NarrativeState, 'lastAdvance', now);
+				}
 			}
 		}
 	}
 };
 
-// ── Narrative overlay ──
-let overlayEl = null;
-function showNarrative(text) {
-	if (overlayEl) overlayEl.remove();
-	overlayEl = document.createElement('div');
-	overlayEl.style.cssText = `
-		position: fixed; top: 15%; left: 50%; transform: translateX(-50%);
-		color: #c9a87c; font-family: Georgia, serif;
-		font-size: clamp(16px, 3.5vw, 24px); letter-spacing: 0.05em;
-		text-shadow: 0 0 20px rgba(201,168,124,0.6);
-		opacity: 0; transition: opacity 1.5s ease;
-		pointer-events: none; z-index: 100; text-align: center; max-width: 80vw;
-	`;
-	overlayEl.textContent = text;
-	document.body.appendChild(overlayEl);
-	requestAnimationFrame(() => { overlayEl.style.opacity = '1'; });
-	setTimeout(() => { if (overlayEl) overlayEl.style.opacity = '0'; }, 4000);
-}
-
-// ── Title overlay ──
-function showTitle() {
+// ── Overlay helpers ──
+function showOverlay(text) {
 	const el = document.createElement('div');
-	el.style.cssText = `
-		position: fixed; top: 5%; left: 50%; transform: translateX(-50%);
-		color: #c9a87c; font-family: Georgia, serif;
-		font-size: clamp(18px, 4vw, 28px); letter-spacing: 0.1em;
-		text-shadow: 0 0 30px rgba(201,168,124,0.4);
-		opacity: 0; transition: opacity 2s ease;
-		pointer-events: none; z-index: 100;
-	`;
-	el.textContent = t.title;
+	el.style.cssText = `position:fixed;top:15%;left:50%;transform:translateX(-50%);color:#c9a87c;font-family:Georgia,serif;font-size:clamp(16px,3.5vw,24px);letter-spacing:0.05em;text-shadow:0 0 20px rgba(201,168,124,0.6);opacity:0;transition:opacity 1.5s ease;pointer-events:none;z-index:100;text-align:center;max-width:80vw;white-space:pre-line;`;
+	el.textContent = text;
 	document.body.appendChild(el);
-	requestAnimationFrame(() => { el.style.opacity = '0.8'; });
+	requestAnimationFrame(() => { el.style.opacity = '1'; });
+	setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 1500); }, 4000);
 }
 
-// ── Boot the world ──
+// ── Boot ──
 export async function boot(container) {
 	if (!container) return null;
 
-	// Visual boot indicator
 	const statusEl = document.createElement('div');
 	statusEl.style.cssText = 'position:fixed;top:10px;left:10px;color:#0f0;font-family:monospace;font-size:12px;z-index:999999;background:rgba(0,0,0,0.8);padding:4px 8px;border-radius:4px;';
 	statusEl.textContent = 'boot: starting...';
@@ -235,205 +173,161 @@ export async function boot(container) {
 				render: { defaultLighting: false },
 				features: { locomotion: false, grabbing: false, physics: false },
 			}),
-			new Promise((_, rej) => setTimeout(() => rej(new Error('World.create timeout 10s')), 10000)),
+			new Promise((_, rej) => setTimeout(() => rej(new Error('World.create timeout')), 10000)),
 		]);
-		statusEl.textContent = 'boot: World OK, registering...';
 
-	// Register components
-	world.registerComponent(PortalCube);
-	world.registerComponent(NarrativeState);
-	world.registerComponent(CameraOrbit);
+		statusEl.textContent = 'boot: registering ECS...';
+		world.registerComponent(PortalCube);
+		world.registerComponent(CameraOrbit);
+		world.registerComponent(NarrativeState);
+		world.registerSystem(FloatSystem, { priority: 0 });
+		world.registerSystem(CameraOrbitSystem, { priority: 0 });
+		world.registerSystem(NarrativeSystem, { priority: 0 });
 
-	// Register systems
-	world.registerSystem(FloatSystem, { priority: 0 });
-	world.registerSystem(CameraOrbitSystem, { priority: 0 });
-	world.registerSystem(NarrativeSystem, { priority: 0 });
+		const scene = world.scene;
+		const camera = world.camera;
 
-	const scene = world.scene;
-	const camera = world.camera;
+		// ── Scene setup (pure Three.js, before render loop starts) ──
+		scene.background = new THREE.Color(0x05030a);
+		scene.fog = new THREE.FogExp2(0x0a0612, 0.03);
 
-	// ── Scene atmosphere ──
-	scene.background = new THREE.Color(0x05030a);
-	scene.fog = new THREE.FogExp2(0x0a0612, 0.03);
+		// Lighting
+		scene.add(new THREE.AmbientLight(0x2a1f3d, 0.6));
+		const keyLight = new THREE.PointLight(0xc9a87c, 3, 20);
+		keyLight.position.set(2, 3, 2);
+		scene.add(keyLight);
+		const rimLight = new THREE.PointLight(0x4a6fa5, 2, 15);
+		rimLight.position.set(-3, 1, -2);
+		scene.add(rimLight);
 
-	// ── Lighting ──
-	scene.add(new THREE.AmbientLight(0x2a1f3d, 0.6));
-	const keyLight = new THREE.PointLight(0xc9a87c, 3, 20);
-	keyLight.position.set(2, 3, 2);
-	scene.add(keyLight);
-	const rimLight = new THREE.PointLight(0x4a6fa5, 2, 15);
-	rimLight.position.set(-3, 1, -2);
-	scene.add(rimLight);
-	const underLight = new THREE.PointLight(0x8b5cf6, 1.5, 8);
-	underLight.position.set(0, -2, 1);
-	scene.add(underLight);
-
-	// ── Starfield particles ──
-	const STAR_COUNT = 600;
-	const starGeo = new THREE.BufferGeometry();
-	const starPos = new Float32Array(STAR_COUNT * 3);
-	const starCol = new Float32Array(STAR_COUNT * 3);
-	for (let i = 0; i < STAR_COUNT; i++) {
-		const r = 3 + Math.random() * 8;
-		const theta = Math.random() * Math.PI * 2;
-		const phi = Math.acos(2 * Math.random() - 1);
-		starPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
-		starPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
-		starPos[i*3+2] = r * Math.cos(phi);
-		const hue = 0.05 + Math.random() * 0.15;
-		const c = new THREE.Color().setHSL(hue, 0.7, 0.5 + Math.random() * 0.3);
-		starCol[i*3] = c.r; starCol[i*3+1] = c.g; starCol[i*3+2] = c.b;
-	}
-	starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-	starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
-	const starMat = new THREE.PointsMaterial({
-		size: 0.05, vertexColors: true, transparent: true, opacity: 0.7,
-		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
-	});
-	const stars = new THREE.Points(starGeo, starMat);
-	scene.add(stars);
-
-	// ── Ground glow ──
-	const discGeo = new THREE.CircleGeometry(3, 64);
-	const discMat = new THREE.MeshBasicMaterial({
-		color: 0x1a0a2e, transparent: true, opacity: 0.4, side: THREE.DoubleSide,
-	});
-	const disc = new THREE.Mesh(discGeo, discMat);
-	disc.rotation.x = -Math.PI / 2;
-	disc.position.y = -1.8;
-	scene.add(disc);
-
-	// ── Portal art cubes — ECS entities ──
-	const texLoader = new THREE.TextureLoader();
-	texLoader.crossOrigin = 'anonymous';
-	const cubeEntities = [];
-
-	PORTALS.forEach((portal, i) => {
-		const angle = (i / PORTALS.length) * Math.PI * 2;
-		const radius = 2.5;
-		const cx = Math.cos(angle) * radius;
-		const cy = 0.2 + (i % 3) * 0.4;
-		const cz = Math.sin(angle) * radius - 1;
-
-		// 6 faces — each cube has its own distinct set of 6 artworks
-		const cubeMats = [];
-		for (let f = 0; f < 6; f++) {
-			const faceArt = PORTALS[(i + f) % PORTALS.length].art;
-			const fMat = new THREE.MeshBasicMaterial({
-				color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide,
-			});
-			texLoader.load(
-				`https://imagedelivery.net/${CF_HASH}/${faceArt}/segment=foreground,width=256`,
-				(tex) => {
-					tex.colorSpace = THREE.SRGBColorSpace;
-					fMat.map = tex; fMat.opacity = 0.92; fMat.needsUpdate = true;
-				}
-			);
-			cubeMats.push(fMat);
+		// Starfield
+		const N = 600;
+		const sg = new THREE.BufferGeometry();
+		const sp = new Float32Array(N * 3);
+		const sc = new Float32Array(N * 3);
+		for (let i = 0; i < N; i++) {
+			const r = 3 + Math.random() * 8;
+			const theta = Math.random() * Math.PI * 2;
+			const phi = Math.acos(2 * Math.random() - 1);
+			sp[i*3] = r * Math.sin(phi) * Math.cos(theta);
+			sp[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
+			sp[i*3+2] = r * Math.cos(phi);
+			const c = new THREE.Color().setHSL(0.05 + Math.random() * 0.15, 0.7, 0.5 + Math.random() * 0.3);
+			sc[i*3] = c.r; sc[i*3+1] = c.g; sc[i*3+2] = c.b;
 		}
+		sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+		sg.setAttribute('color', new THREE.BufferAttribute(sc, 3));
+		const stars = new THREE.Points(sg, new THREE.PointsMaterial({
+			size: 0.05, vertexColors: true, transparent: true, opacity: 0.7,
+			blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
+		}));
+		scene.add(stars);
 
-		const cubeSize = 0.6;
-		const cubeMesh = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), cubeMats);
-		cubeMesh.position.set(cx, cy, cz);
-		cubeMesh.userData.portalId = portal.id;
+		// Ground glow
+		const disc = new THREE.Mesh(
+			new THREE.CircleGeometry(3, 64),
+			new THREE.MeshBasicMaterial({ color: 0x1a0a2e, transparent: true, opacity: 0.4, side: THREE.DoubleSide }),
+		);
+		disc.rotation.x = -Math.PI / 2;
+		disc.position.y = -1.8;
+		scene.add(disc);
 
-		// Create ECS entity with the cube
-		const entity = world.createTransformEntity(cubeMesh);
-		entity.addComponent(PortalCube, {
-			portalId: portal.id,
-			artId: portal.art,
-			color: portal.color,
-			floatPhase: Math.random() * Math.PI * 2,
-			floatSpeed: 0.4 + Math.random() * 0.4,
-			baseY: cy,
-			isActive: false,
-		});
-		cubeEntities.push({ entity, mesh: cubeMesh, portal });
+		// ── Portal art cubes as ECS entities ──
+		const texLoader = new THREE.TextureLoader();
+		texLoader.crossOrigin = 'anonymous';
 
-		// Glow ring behind each cube
-		const glowGeo = new THREE.RingGeometry(0.4, 0.5, 32);
-		const glowMat = new THREE.MeshBasicMaterial({
-			color: new THREE.Color(portal.color), transparent: true, opacity: 0.15, side: THREE.DoubleSide,
-		});
-		const glow = new THREE.Mesh(glowGeo, glowMat);
-		glow.position.set(cx, cy, cz - 0.1);
-		scene.add(glow);
-	});
+		PORTALS.forEach((portal, i) => {
+			const angle = (i / PORTALS.length) * Math.PI * 2;
+			const radius = 2.5;
+			const cx = Math.cos(angle) * radius;
+			const cy = 0.2 + (i % 3) * 0.4;
+			const cz = Math.sin(angle) * radius - 1;
 
-	// ── Camera orbit entity ──
-	const camEntity = world.createEntity();
-	camEntity.addComponent(CameraOrbit, {
-		angle: 0, radius: 5, height: 1, speed: 0.06,
-	});
-
-	// ── Narrative entity ──
-	const narrEntity = world.createEntity();
-	narrEntity.addComponent(NarrativeState, {
-		stateIndex: 0, autoAdvance: true,
-	});
-
-	// ── Wrap world.update to animate stars, lights, disc ──
-	const origUpdate = world.update.bind(world);
-	world.update = function(delta, time) {
-		origUpdate(delta, time);
-		const t = time / 1000;
-		// Star drift
-		stars.rotation.y += delta * 0.02;
-		// Light pulse
-		keyLight.intensity = 3 + Math.sin(t * 0.8) * 0.5;
-		rimLight.intensity = 2 + Math.cos(t * 0.6) * 0.4;
-		underLight.intensity = 1.5 + Math.sin(t * 1.2) * 0.3;
-		// Disc pulse
-		disc.material.opacity = 0.3 + Math.sin(t * 0.5) * 0.15;
-	};
-
-	// ── Tap/Click — raycaster against cube meshes ──
-	const raycaster = new THREE.Raycaster();
-	const pointer = new THREE.Vector2();
-
-	function onPointerDown(e) {
-		const x = e.touches ? e.touches[0].clientX : e.clientX;
-		const y = e.touches ? e.touches[0].clientY : e.clientY;
-		pointer.x = (x / window.innerWidth) * 2 - 1;
-		pointer.y = -(y / window.innerHeight) * 2 + 1;
-		raycaster.setFromCamera(pointer, camera);
-
-		// Boost camera orbit on every tap
-		camEntity.setValue(CameraOrbit, 'boost', 1.5);
-
-		const meshes = cubeEntities.map(c => c.mesh);
-		const hits = raycaster.intersectObjects(meshes);
-		if (hits.length > 0) {
-			const hit = hits[0].object;
-			const portalId = hit.userData.portalId;
-			const portal = PORTALS.find(p => p.id === portalId);
-			if (portal) {
-				// Flash the cube
-				hit.material.forEach(m => { if (m.opacity) { m._origOpacity = m.opacity; m.opacity = 1; } });
-				setTimeout(() => {
-					hit.material.forEach(m => { if (m._origOpacity != null) m.opacity = m._origOpacity; });
-				}, 200);
-
-				showNarrative(`⟡ ${t.portals[portalId] || portalId}\n${portal.desc[lang] || portal.desc.es}`);
-
-				// Mark active in ECS
-				cubeEntities.forEach(c => c.entity.setValue(PortalCube, 'isActive', c.portal.id === portalId));
-
-				// Dispatch event for Svelte layer
-				window.dispatchEvent(new CustomEvent('portal-tapped', { detail: { portalId } }));
+			// 6 faces — each cube has its own set of 6 artworks
+			const mats = [];
+			for (let f = 0; f < 6; f++) {
+				const faceArt = PORTALS[(i + f) % PORTALS.length].art;
+				const m = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide });
+				texLoader.load(
+					`https://imagedelivery.net/${CF_HASH}/${faceArt}/segment=foreground,width=256`,
+					(tex) => { tex.colorSpace = THREE.SRGBColorSpace; m.map = tex; m.opacity = 0.92; m.needsUpdate = true; },
+				);
+				mats.push(m);
 			}
-		}
-	}
-	container.addEventListener('pointerdown', onPointerDown);
-	container.addEventListener('touchstart', onPointerDown);
 
-	// ── Title ──
-		showTitle();
-		setTimeout(() => showNarrative(t.narrative[0]), 2000);
-		lastNarrativeAdvance = performance.now();
+			const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), mats);
+			mesh.position.set(cx, cy, cz);
+			mesh.userData.portalId = portal.id;
+			mesh.userData.desc = portal.desc;
 
+			const entity = world.createTransformEntity(mesh);
+			entity.addComponent(PortalCube, {
+				portalId: portal.id,
+				floatPhase: Math.random() * Math.PI * 2,
+				floatSpeed: 0.4 + Math.random() * 0.4,
+				baseY: cy,
+			});
+			ambient.cubeMeshes.push(mesh);
+
+			// Glow ring
+			const glow = new THREE.Mesh(
+				new THREE.RingGeometry(0.4, 0.5, 32),
+				new THREE.MeshBasicMaterial({ color: new THREE.Color(portal.color), transparent: true, opacity: 0.15, side: THREE.DoubleSide }),
+			);
+			glow.position.set(cx, cy, cz - 0.1);
+			scene.add(glow);
+		});
+
+		// Camera orbit entity
+		const camEntity = world.createEntity();
+		camEntity.addComponent(CameraOrbit, { angle: 0, radius: 5, height: 1, speed: 0.06, boost: 0 });
+
+		// Narrative entity
+		const narrEntity = world.createEntity();
+		narrEntity.addComponent(NarrativeState, { stateIndex: 0, lastAdvance: performance.now() });
+
+		// ── Tap handler ──
+		const raycaster = new THREE.Raycaster();
+		const pointer = new THREE.Vector2();
+
+		container.addEventListener('pointerdown', (e) => {
+			// Boost orbit
+			camEntity.setValue(CameraOrbit, 'boost', 1.5);
+
+			// Raycast cubes
+			pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+			pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+			raycaster.setFromCamera(pointer, camera);
+			const hits = raycaster.intersectObjects(ambient.cubeMeshes);
+			if (hits.length > 0) {
+				const hit = hits[0].object;
+				const portalId = hit.userData.portalId;
+				const desc = hit.userData.desc;
+				const lang = document.documentElement?.lang || 'es';
+				const strs = STRINGS[lang] || STRINGS.es;
+				const name = strs.portals[portalId] || portalId;
+				const description = desc?.[lang] || desc?.es || '';
+				// Flash
+				hit.material.forEach(m => { if (m.opacity) { m._o = m.opacity; m.opacity = 1; } });
+				setTimeout(() => hit.material.forEach(m => { if (m._o != null) m.opacity = m._o; }), 200);
+				showOverlay(`⟡ ${name}\n${description}`);
+			}
+		});
+
+		container.addEventListener('touchstart', (e) => {
+			if (e.touches.length === 0) return;
+			const touch = e.touches[0];
+			container.dispatchEvent(new PointerEvent('pointerdown', { clientX: touch.clientX, clientY: touch.clientY }));
+		});
+
+		// Title
 		statusEl.textContent = 'boot: ready!';
 		setTimeout(() => statusEl.remove(), 2000);
+
+		// First narrative
+		const lang = document.documentElement?.lang || 'es';
+		const strs = STRINGS[lang] || STRINGS.es;
+		setTimeout(() => showOverlay(strs.narrative[0]), 1000);
 
 		return world;
 	} catch (err) {
@@ -442,22 +336,4 @@ export async function boot(container) {
 		console.error('[portals] boot failed:', err);
 		return null;
 	}
-}
-
-// Auto-boot if container exists (for direct script loading)
-const autoContainer = (typeof document !== 'undefined') ? (document.getElementById('portal-scene-container') || document.getElementById('scene-container')) : null;
-if (autoContainer) {
-	boot(autoContainer).then((world) => {
-	console.log('[portals] World booted with ECS');
-
-	// Check XR support
-	if (navigator.xr?.isSessionSupported) {
-		Promise.all([
-			navigator.xr.isSessionSupported('immersive-ar').catch(() => false),
-			navigator.xr.isSessionSupported('immersive-vr').catch(() => false),
-		]).then(([ar, vr]) => {
-			window.dispatchEvent(new CustomEvent('xr-support', { detail: { ar, vr } }));
-		});
-	}
-}).catch(err => console.error('[portals] boot failed:', err));
 }
