@@ -781,14 +781,15 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		});
 
 		// Spatial audio
-		const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00];
-		const freq = pentatonic[i % pentatonic.length];
-		const audioPath = generateToneWAV(freq, 2.0);
-		entity.addComponent(AudioSource, {
-			src: audioPath, positional: true, loop: true, autoplay: true,
-			volume: 0.06, refDistance: 0.8, rolloffFactor: 2.0,
-			maxDistance: 8.0, distanceModel: 'inverse', playbackMode: PlaybackMode.Overlap,
-		});
+		// Audio disabled — was causing unstoppable sound on some devices
+		// const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00];
+		// const freq = pentatonic[i % pentatonic.length];
+		// const audioPath = generateToneWAV(freq, 2.0);
+		// entity.addComponent(AudioSource, {
+		// 	src: audioPath, positional: true, loop: true, autoplay: true,
+		// 	volume: 0.06, refDistance: 0.8, rolloffFactor: 2.0,
+		// 	maxDistance: 8.0, distanceModel: 'inverse', playbackMode: PlaybackMode.Overlap,
+		// });
 	});
 
 	// ── Pillars from sceneConfig ──
