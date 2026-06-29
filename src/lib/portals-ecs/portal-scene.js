@@ -48,6 +48,25 @@ const STRINGS = {
 			'❝ The spirits are waiting ❞',
 		],
 	},
+	fr: {
+		title: '✦ Portails',
+		touch: 'Touchez un cube pour entrer',
+		portals: {
+			'arboleda': 'Le Bosquet',
+			'fiesta': 'Célébration',
+			'oceano': 'L\'Océan',
+			'narrador': 'Le Narrateur',
+			'cosmos': 'Le Cosmos',
+			'urbano': 'La Rue',
+			'suenos': 'Rêves',
+			'nostalgias-espirituales': 'Portes de la Mémoire',
+		},
+		narrative: [
+			'❝ Chaque histoire est un portail ❞',
+			'❝ Touchez un cube pour entrer ❞',
+			'❝ Les esprits attendent ❞',
+		],
+	},
 };
 
 const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
@@ -56,14 +75,22 @@ const t = STRINGS[lang] || STRINGS.es;
 // ── Antoine artwork IDs ──
 const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const PORTALS = [
-	{ id: 'arboleda', art: '12c79899-fb93-4885-508f-d2da0a2fbf00', color: '#4a7c3a' },
-	{ id: 'fiesta', art: 'bd4602b0-149d-42f8-e872-f697b64c7d00', color: '#ff6b35' },
-	{ id: 'oceano', art: '5c7fb409-1aa2-45a9-8466-296077e18e00', color: '#0277bd' },
-	{ id: 'narrador', art: 'f8a136eb-363e-4a24-0f54-70bb4f4bf800', color: '#c9a87c' },
-	{ id: 'cosmos', art: '5c28fef5-cff0-4ddd-b4af-100d29bad100', color: '#7c4dff' },
-	{ id: 'urbano', art: '62355ddb-0f6c-4251-5d8e-37a455e44000', color: '#546e7a' },
-	{ id: 'suenos', art: '85319dc7-ae16-48f8-9500-608ba174eb00', color: '#9c27b0' },
-	{ id: 'nostalgias-espirituales', art: '26fe40df-7745-41dc-7491-97cb36a32f00', color: '#3A4F7A' },
+	{ id: 'arboleda', art: '12c79899-fb93-4885-508f-d2da0a2fbf00', color: '#4a7c3a',
+		desc: { es: 'Donde las raíces cuentan historias', en: 'Where roots tell stories', fr: 'Où les racines racontent des histoires' } },
+	{ id: 'fiesta', art: 'bd4602b0-149d-42f8-e872-f697b64c7d00', color: '#ff6b35',
+		desc: { es: 'Música, danza y celebración', en: 'Music, dance and celebration', fr: 'Musique, danse et célébration' } },
+	{ id: 'oceano', art: '5c7fb409-1aa2-45a9-8466-296077e18e00', color: '#0277bd',
+		desc: { es: 'Olas que traen recuerdos', en: 'Waves that bring memories', fr: 'Vagues qui apportent des souvenirs' } },
+	{ id: 'narrador', art: 'f8a136eb-363e-4a24-0f54-70bb4f4bf800', color: '#c9a87c',
+		desc: { es: 'La voz que teje los hilos', en: 'The voice that weaves the threads', fr: 'La voix qui tisse les fils' } },
+	{ id: 'cosmos', art: '5c28fef5-cff0-4ddd-b4af-100d29bad100', color: '#7c4dff',
+		desc: { es: 'Estrellas que son palabras', en: 'Stars that are words', fr: 'Des étoiles qui sont des mots' } },
+	{ id: 'urbano', art: '62355ddb-0f6c-4251-5d8e-37a455e44000', color: '#546e7a',
+		desc: { es: 'La ciudad también sueña', en: 'The city also dreams', fr: 'La ville rêve aussi' } },
+	{ id: 'suenos', art: '85319dc7-ae16-48f8-9500-608ba174eb00', color: '#9c27b0',
+		desc: { es: 'Donde los sueños se vuelven cuentos', en: 'Where dreams become stories', fr: 'Où les rêves deviennent des contes' } },
+	{ id: 'nostalgias-espirituales', art: '26fe40df-7745-41dc-7491-97cb36a32f00', color: '#3A4F7A',
+		desc: { es: 'Memorias que flotan en el aire', en: 'Memories floating in the air', fr: 'Des souvenirs qui flottent dans l\'air' } },
 ];
 
 // ── ECS Components ──
@@ -375,7 +402,7 @@ export async function boot(container) {
 					hit.material.forEach(m => { if (m._origOpacity != null) m.opacity = m._origOpacity; });
 				}, 200);
 
-				showNarrative(`⟡ ${t.portals[portalId] || portalId}`);
+				showNarrative(`⟡ ${t.portals[portalId] || portalId}\n${portal.desc[lang] || portal.desc.es}`);
 
 				// Mark active in ECS
 				cubeEntities.forEach(c => c.entity.setValue(PortalCube, 'isActive', c.portal.id === portalId));
