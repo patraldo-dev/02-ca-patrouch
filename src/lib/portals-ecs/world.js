@@ -280,7 +280,7 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 	world.registerSystem(NarrativeSystem, { priority: 0 });
 	world.registerSystem(ProximityRingSystem, { priority: 0 });
 	world.registerSystem(EntryCinematicSystem, { priority: 0 });
-	world.registerSystem(CrystalTestSystem, { priority: 2 });
+	// world.registerSystem(CrystalTestSystem, { priority: 2 }); // Removed — never defined
 	// world.registerSystem(BackgroundSystem, { priority: 1 });
 	// world.registerSystem(ParticleSystem, { priority: 2 });
 
