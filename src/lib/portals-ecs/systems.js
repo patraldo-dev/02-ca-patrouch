@@ -852,19 +852,8 @@ export const EntryCinematicSystem = class extends createSystem({
 		if (mode !== 'interior' && mode !== 'transitioning') return;
 
 		let timer = modeEntity.getValue(WorldMode, 'cinematicTimer');
-		if (mode === 'interior' || mode === 'transitioning') {
-			timer += delta;
-			modeEntity.setValue(WorldMode, 'cinematicTimer', timer);
-		}
-
-		console.log('[EntryCinematic] mode:', mode, 'timer:', timer);
-		if (!modeEntity) return;
-
-		if (mode !== 'interior' && mode !== 'transitioning') return;
-		if (mode === 'interior' || mode === 'transitioning') {
-			timer += delta;
-			modeEntity.setValue(WorldMode, 'cinematicTimer', timer);
-		}
+		timer += delta;
+		modeEntity.setValue(WorldMode, 'cinematicTimer', timer);
 
 		for (const entity of this.queries.decorations.entities) {
 			const delay = entity.getValue(InteriorDecoration, 'spawnDelay');

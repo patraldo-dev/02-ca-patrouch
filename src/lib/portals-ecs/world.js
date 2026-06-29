@@ -752,8 +752,19 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			floatAmp: 0.04 + Math.random() * 0.03,
 			baseY: cy,
 			spawnDelay: 0,
-			materialized: 0.85,
+			materialized: 1.0,
 		});
+
+		// Make sure the placeholder is visible immediately
+		if (entity.object3D) {
+			entity.object3D.visible = true;
+			entity.object3D.traverse(child => {
+				if (child.material) {
+					child.material.opacity = 0.9;
+					child.material.transparent = true;
+				}
+			});
+		}
 
 		// Replace placeholder with spirit GLB when loaded
 		spiritLoadPromise.then((spiritScene) => {
@@ -783,6 +794,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 				spiritClone.userData.hueOffset = (i / crystals.length);
 				spiritMeshes.push(spiritClone);
 				world.scene.add(spiritClone);
+				// Hide placeholder only after GLB is actually visible
 				entity.object3D.visible = false;
 			}
 		});
@@ -818,7 +830,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 			decoType: 'pillar',
 			floatPhase: Math.random() * Math.PI * 2,
 			floatSpeed: 0.3, floatAmp: 0.01,
-			baseY: py, spawnDelay: 0, materialized: 0.7,
+			baseY: py, spawnDelay: 0, materialized: 1.0,
 		});
 	}
 
