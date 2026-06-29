@@ -147,13 +147,19 @@ const NarrativeSystem = class extends createSystem({
 };
 
 // ── Overlay helpers ──
+let currentOverlay = null;
 function showOverlay(text) {
+	if (currentOverlay) { currentOverlay.remove(); currentOverlay = null; }
 	const el = document.createElement('div');
-	el.style.cssText = 'position:fixed!important;top:15%!important;left:50%!important;transform:translateX(-50%)!important;color:#c9a87c!important;font-family:Georgia,serif!important;font-size:22px!important;letter-spacing:0.05em!important;text-shadow:0 0 20px rgba(201,168,124,0.8)!important;opacity:0;transition:opacity 1.5s ease;pointer-events:none;z-index:2147483647!important;text-align:center!important;max-width:80vw!important;white-space:pre-line!important;display:block!important;';
+	el.style.cssText = 'position:fixed!important;top:15%!important;left:50%!important;transform:translateX(-50%)!important;color:#c9a87c!important;font-family:Georgia,serif!important;font-size:22px!important;letter-spacing:0.05em!important;text-shadow:0 0 20px rgba(201,168,124,0.8)!important;opacity:0;transition:opacity 0.8s ease;pointer-events:none;z-index:2147483647!important;text-align:center!important;max-width:80vw!important;white-space:pre-line!important;display:block!important;';
 	el.textContent = text;
 	document.body.appendChild(el);
+	currentOverlay = el;
 	requestAnimationFrame(() => { el.style.opacity = '1'; });
-	setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 1500); }, 5000);
+	setTimeout(() => {
+		el.style.opacity = '0';
+		setTimeout(() => { if (el === currentOverlay) currentOverlay = null; el.remove(); }, 800);
+	}, 3500);
 }
 
 // ── Boot ──
