@@ -149,11 +149,11 @@ const NarrativeSystem = class extends createSystem({
 // ── Overlay helpers ──
 function showOverlay(text) {
 	const el = document.createElement('div');
-	el.style.cssText = `position:fixed;top:15%;left:50%;transform:translateX(-50%);color:#c9a87c;font-family:Georgia,serif;font-size:clamp(16px,3.5vw,24px);letter-spacing:0.05em;text-shadow:0 0 20px rgba(201,168,124,0.6);opacity:0;transition:opacity 1.5s ease;pointer-events:none;z-index:100;text-align:center;max-width:80vw;white-space:pre-line;`;
+	el.style.cssText = 'position:fixed!important;top:15%!important;left:50%!important;transform:translateX(-50%)!important;color:#c9a87c!important;font-family:Georgia,serif!important;font-size:22px!important;letter-spacing:0.05em!important;text-shadow:0 0 20px rgba(201,168,124,0.8)!important;opacity:0;transition:opacity 1.5s ease;pointer-events:none;z-index:2147483647!important;text-align:center!important;max-width:80vw!important;white-space:pre-line!important;display:block!important;';
 	el.textContent = text;
 	document.body.appendChild(el);
 	requestAnimationFrame(() => { el.style.opacity = '1'; });
-	setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 1500); }, 4000);
+	setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 1500); }, 5000);
 }
 
 // ── Boot ──
@@ -324,10 +324,14 @@ export async function boot(container) {
 		statusEl.textContent = 'boot: ready!';
 		setTimeout(() => statusEl.remove(), 2000);
 
-		// First narrative
+		// First narrative — hardcoded fallback + i18n
 		const lang = document.documentElement?.lang || 'es';
 		const strs = STRINGS[lang] || STRINGS.es;
-		setTimeout(() => showOverlay(strs.narrative[0]), 1000);
+		console.log('[portals] lang:', lang, 'narrative[0]:', strs.narrative[0]);
+		setTimeout(() => {
+			console.log('[portals] firing first narrative');
+			showOverlay(strs.narrative[0]);
+		}, 1000);
 
 		return world;
 	} catch (err) {
