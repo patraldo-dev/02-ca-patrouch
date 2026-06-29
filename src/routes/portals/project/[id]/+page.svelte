@@ -1,103 +1,67 @@
 <!--
 	/portals/project/[id] — Projection Mode
-	
 	Fullscreen portal interior for projection mapping.
-	No UI chrome. No bumper. Auto-advancing narrative.
-	Wide aspect. High particle density.
-	
-	?loop=true  → cycles through all portals every 5 minutes
 -->
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { page } from '$app/state';
 
 	let { data } = $props();
 
-	let containerEl = $state(null);
-	let api = null;
-	let currentPortalId = $state(data.portal?.id);
-	let narrativeIndex = $state(0);
-	let portalIndex = $state(0);
-
-	const NARRATIVE_INTERVAL = 90000;   // 90 seconds
-	const LOOP_INTERVAL = 300000;       // 5 minutes
-	const loopMode = $derived(page.url.searchParams.get('loop') === 'true');
-
-	let narrativeTimer = null;
-	let loopTimer = null;
+	let containerEl = null;
+	let errorMsg = data?.errorMsg || (!data?.portal ? 'No portal data' : null);
 
 	onMount(() => {
-		if (!data.portal) {
-			console.error('[projection] No portal data. Error:', data.error || 'unknown', 'allData keys:', Object.keys(data));
-			const errEl = document.createElement('div');
-			errEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#ef4444;font-family:monospace;font-size:14px;z-index:99999;background:rgba(0,0,0,0.9);padding:2rem;border-radius:8px;max-width:80vw;';
-			errEl.textContent = 'Projection: ' + (data.error || 'No portal data. Keys: ' + Object.keys(data).join(','));
-			document.body.appendChild(errEl);
+		if (errorMsg || !data?.portal) {
+			console.error('[projection]', errorMsg);
 			return;
 		}
 
 		let cancelled = false;
+		let narrativeTimer = null;
+		let loopTimer = null;
+		let api = null;
+		let portalIdx = 0;
+
+		const loopMode = new URLSearchParams(window.location.search).get('loop') === 'true';
 
 		async function boot() {
 			try {
 				const { initPortalWorld } = await import('$lib/portals-ecs/world.js');
 
-				// Build portals array — just this portal, or all for loop mode
 				const portals = loopMode ? data.allPortals : [data.portal];
 				const galaxies = [];
-				const sceneConfigs = data.sceneConfigs || {};
 
 				api = await initPortalWorld(containerEl, {
 					portals,
 					galaxies,
 					featuredPortalId: data.portal.id,
-					sceneConfigs,
+					sceneConfigs: data.sceneConfigs || {},
 				});
 
 				if (cancelled || !api) return;
 
-				// Immediately enter the portal interior — skip index mode
+				// Enter portal interior immediately
 				setTimeout(() => {
-					enterPortal(data.portal.id);
-				}, 500);
+					if (api) api.switchPortal(data.portal.id);
+				}, 800);
 
-				// Start narrative auto-advance
-				startNarrativeTimer();
+				// Auto-advance narrative every 90s
+				narrativeTimer = setInterval(() => {
+					if (api) api.advanceNarrative();
+				}, 90000);
 
-				// Start loop timer if enabled
+				// Loop through portals every 5 min
 				if (loopMode && data.allPortals.length > 1) {
-					startLoopTimer();
+					loopTimer = setInterval(() => {
+						portalIdx = (portalIdx + 1) % data.allPortals.length;
+						const next = data.allPortals[portalIdx];
+						if (next && api) api.switchPortal(next.id);
+					}, 300000);
 				}
 			} catch (err) {
-				console.error('[projection] Boot failed:', err);
+				console.error('[projection] boot failed:', err);
+				errorMsg = 'Boot: ' + (err.message || String(err));
 			}
-		}
-
-		function enterPortal(portalId) {
-			if (!api) return;
-			api.switchPortal(portalId);
-			currentPortalId = portalId;
-			narrativeIndex = 0;
-		}
-
-		function startNarrativeTimer() {
-			if (narrativeTimer) clearInterval(narrativeTimer);
-			narrativeTimer = setInterval(() => {
-				if (!api) return;
-				api.advanceNarrative();
-				narrativeIndex++;
-			}, NARRATIVE_INTERVAL);
-		}
-
-		function startLoopTimer() {
-			if (loopTimer) clearInterval(loopTimer);
-			loopTimer = setInterval(() => {
-				portalIndex = (portalIndex + 1) % data.allPortals.length;
-				const next = data.allPortals[portalIndex];
-				if (next) {
-					enterPortal(next.id);
-				}
-			}, LOOP_INTERVAL);
 		}
 
 		boot();
@@ -106,65 +70,32 @@
 			cancelled = true;
 			if (narrativeTimer) clearInterval(narrativeTimer);
 			if (loopTimer) clearInterval(loopTimer);
+			if (api?.world) {
+				import('$lib/portals-ecs/world.js').then(({ destroyPortalWorld }) => {
+					destroyPortalWorld(api.world);
+				});
+			}
 		};
 	});
-
-	onDestroy(() => {
-		if (narrativeTimer) clearInterval(narrativeTimer);
-		if (loopTimer) clearInterval(loopTimer);
-		if (api?.world) {
-			import('$lib/portals-ecs/world.js').then(({ destroyPortalWorld }) => {
-				destroyPortalWorld(api.world);
-			});
-		}
-	});
-
-	function nameOf(p) {
-		if (!p) return '';
-		const lang = document?.documentElement?.lang || 'es';
-		if (lang === 'en') return p.name_en || p.name_es;
-		if (lang === 'fr') return p.name_fr || p.name_es;
-		return p.name_es;
-	}
 </script>
 
 <svelte:head>
-	<title>{nameOf(data.portal)} — Projection</title>
+	<title>{data?.portal?.name_es || 'Projection'}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+</svelte:head>
+
+<!-- Kill all chrome -->
+<svelte:head>
 	<style>
-		/* Kill all default margins and scroll */
-		html, body {
-			margin: 0 !important;
-			padding: 0 !important;
-			overflow: hidden !important;
-			background: #050508 !important;
-			width: 100vw;
-			height: 100vh;
-		}
-		/* Hide any layout chrome that might bleed through */
-		nav, header, footer, .navbar, .footer {
-			display: none !important;
-		}
+		html, body { margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #050508 !important; }
+		nav, header, footer { display: none !important; }
 	</style>
 </svelte:head>
 
-<!-- Pure scene container — nothing else on screen -->
-<div
-	style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:99999 !important;background:#050508 !important;"
-	bind:this={containerEl}
-></div>
-
-<!-- Screen reader only -->
-<nav class="sr" aria-label="Projection">
-	<h1>{nameOf(data.portal)}</h1>
-</nav>
-
-<style>
-	.sr {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip: rect(0,0,0,0);
-	}
-</style>
+{#if errorMsg}
+	<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#050508;color:#ef4444;font-family:monospace;font-size:14px;z-index:99999;padding:2rem;text-align:center;">
+		⚠ {errorMsg}
+	</div>
+{:else}
+	<div style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:99999 !important;background:#050508 !important;" bind:this={containerEl}></div>
+{/if}
