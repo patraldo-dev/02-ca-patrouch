@@ -667,31 +667,12 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		activationRadius: 2.5, triggerDistance: 0.6, pulsePhase: 0,
 	});
 
-	// ── Backdrop image ──
-	const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
-	const imageId = portalData?.scene_image;
-	if (imageId) {
-		const imageUrl = `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/cover`;
-		const loader = new THREE.TextureLoader();
-		loader.crossOrigin = 'anonymous';
-		loader.load(imageUrl, (texture) => {
-			texture.colorSpace = THREE.SRGBColorSpace;
-			const aspect = texture.image.width / texture.image.height;
-			const geo = new THREE.PlaneGeometry(4 * aspect, 4);
-			const mat = new THREE.MeshBasicMaterial({
-				map: texture, transparent: true, opacity: 0.35,
-				side: THREE.DoubleSide, depthWrite: false, fog: false,
-			});
-			const backdrop = new THREE.Mesh(geo, mat);
-			backdrop.position.set(0, 0, -4);
-			world.scene.add(backdrop);
-				backdrop.renderOrder = -100;
-		});
-	} else {
-		const gradGeo = new THREE.PlaneGeometry(6, 4);
+	// ── Backdrop — gradient only, no image ──
+	{
+		const gradGeo = new THREE.PlaneGeometry(8, 6);
 		const gradMat = new THREE.ShaderMaterial({
 			transparent: true, depthWrite: false, side: THREE.DoubleSide,
-			uniforms: { uColor: { value: new THREE.Color(colorHex) }, uOpacity: { value: 0.5 } },
+			uniforms: { uColor: { value: new THREE.Color(colorHex) }, uOpacity: { value: 0.3 } },
 			vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
 			fragmentShader: `uniform vec3 uColor; uniform float uOpacity; varying vec2 vUv; void main() { float d = length(vUv - vec2(0.5,0.5)); float a = smoothstep(0.8,0.1,d)*uOpacity; gl_FragColor = vec4(uColor*(1.5-d*0.5), a); }`,
 		});
