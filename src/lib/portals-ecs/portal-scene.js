@@ -221,11 +221,23 @@ function showTitle() {
 export async function boot(container) {
 	if (!container) return null;
 
-	const world = await World.create(container, {
-		xr: { offer: 'none' },
-		render: { defaultLighting: false },
-		features: { locomotion: false, grabbing: false, physics: false },
-	});
+	// Visual boot indicator
+	const statusEl = document.createElement('div');
+	statusEl.style.cssText = 'position:fixed;top:10px;left:10px;color:#0f0;font-family:monospace;font-size:12px;z-index:999999;background:rgba(0,0,0,0.8);padding:4px 8px;border-radius:4px;';
+	statusEl.textContent = 'boot: starting...';
+	document.body.appendChild(statusEl);
+
+	try {
+		statusEl.textContent = 'boot: World.create...';
+		const world = await Promise.race([
+			World.create(container, {
+				xr: { offer: 'none' },
+				render: { defaultLighting: false },
+				features: { locomotion: false, grabbing: false, physics: false },
+			}),
+			new Promise((_, rej) => setTimeout(() => rej(new Error('World.create timeout 10s')), 10000)),
+		]);
+		statusEl.textContent = 'boot: World OK, registering...';
 
 	// Register components
 	world.registerComponent(PortalCube);
@@ -416,11 +428,20 @@ export async function boot(container) {
 	container.addEventListener('touchstart', onPointerDown);
 
 	// ── Title ──
-	showTitle();
-	setTimeout(() => showNarrative(t.narrative[0]), 2000);
-	lastNarrativeAdvance = performance.now();
+		showTitle();
+		setTimeout(() => showNarrative(t.narrative[0]), 2000);
+		lastNarrativeAdvance = performance.now();
 
-	return world;
+		statusEl.textContent = 'boot: ready!';
+		setTimeout(() => statusEl.remove(), 2000);
+
+		return world;
+	} catch (err) {
+		statusEl.textContent = 'boot ERROR: ' + (err.message || String(err));
+		statusEl.style.color = '#ef4444';
+		console.error('[portals] boot failed:', err);
+		return null;
+	}
 }
 
 // Auto-boot if container exists (for direct script loading)
