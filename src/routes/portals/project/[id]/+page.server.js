@@ -14,33 +14,32 @@ export async function load({ params, platform }) {
                 p.description_es, p.description_en, p.description_fr,
                 p.status, p.active_writings_count, p.video_url,
                 p.narrator_greeting, p.narrator_tone,
-                p.scene_image,
-                g.name_es as galaxy_name_es, g.name_en as galaxy_name_en, g.name_fr as galaxy_name_fr,
-                g.icon as galaxy_icon, g.sort_order as galaxy_sort
-            FROM portals p
-            JOIN galaxies g ON p.galaxy_id = g.id
-            WHERE p.id = ?1 AND p.status = 'active'
-        `).bind(portalId).first();
-
-        if (!portal) return { portal: null, allPortals: [], sceneConfigs: {} };
-
-        // Fetch all active portals for loop mode (ordered by galaxy)
-        const { results: allPortals } = await db.prepare(`
-            SELECT 
-                p.id, p.galaxy_id, p.icon, p.color_primary, p.color_bg, p.color_text,
-                p.name_es, p.name_en, p.name_fr,
-                p.description_es, p.description_en, p.description_fr,
-                p.status, p.active_writings_count, p.video_url,
-                p.narrator_greeting, p.narrator_tone,
                 p.scene_image
             FROM portals p
-            WHERE p.status = 'active'
-            ORDER BY p.galaxy_id ASC, p.discovered_at ASC
+            WHERE p.id = ? AND p.status = 'active'
+        `).bind(portalId).first();
+
+        if (!portal) {
+            console.error('[projection] Portal not found:', portalId);
+            return { portal: null, allPortals: [], sceneConfigs: {} };
+        }
+
+        // Fetch all active portals for loop mode
+        const { results: allPortals } = await db.prepare(`
+            SELECT 
+                id, galaxy_id, icon, color_primary, color_bg, color_text,
+                name_es, name_en, name_fr,
+                description_es, description_en, description_fr,
+                status, active_writings_count, video_url,
+                narrator_greeting, narrator_tone, scene_image
+            FROM portals
+            WHERE status = 'active'
+            ORDER BY galaxy_id ASC, discovered_at ASC
         `).all();
 
         // Fetch scene config for this portal
         const sceneRow = await db.prepare(`
-            SELECT scene_config FROM portal_scenes WHERE portal_id = ?1
+            SELECT scene_config FROM portal_scenes WHERE portal_id = ?
         `).bind(portalId).first();
         
         let sceneConfig = null;
