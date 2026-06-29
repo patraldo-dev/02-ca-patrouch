@@ -511,7 +511,14 @@ export async function initPortalWorld(container, { portals, galaxies, featuredPo
 		// Switch directly to another portal (teardown current interior, build new one)
 		switchPortal(portalId) {
 			const portal = portals.find(p => p.id === portalId);
-			if (!portal) return;
+			if (!portal) {
+				console.warn('[portals-ecs] switchPortal: portal not found:', portalId);
+				return;
+			}
+			if (!modeEntity || !world.entities) {
+				console.warn('[portals-ecs] switchPortal: world not ready');
+				return;
+			}
 			teardownInterior(world);
 			modeEntity.setValue(WorldMode, 'mode', 'transitioning');
 			window.dispatchEvent(new CustomEvent('portal-enter', { detail: { portalId } }));
@@ -922,22 +929,25 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 function teardownInterior(world) {
 	// Kill animation loop
 	world.globals._interiorAnimLoop = null;
+	if (!world.entities) return;
 	const toDestroy = [];
 	for (const entity of world.entities.values()) {
-		if (entity.hasComponent?.(NarrativeState) ||
-			entity.hasComponent?.(PortalRing) ||
-			entity.hasComponent?.(InteriorDecoration)) {
+		if (entity?.hasComponent?.(NarrativeState) ||
+			entity?.hasComponent?.(PortalRing) ||
+			entity?.hasComponent?.(InteriorDecoration)) {
 			toDestroy.push(entity);
 		}
 	}
-	toDestroy.forEach((e) => e.dispose());
+	toDestroy.forEach((e) => { try { e.dispose(); } catch(err) {} });
 
 	// Make index entities visible again
 	for (const entity of world.entities.values()) {
-		if (entity.hasComponent?.(PortalGate) && entity.hasComponent?.(TabLayout)) {
+		if (entity?.hasComponent?.(PortalGate) && entity?.hasComponent?.(TabLayout)) {
 			if (entity.object3D) entity.object3D.visible = true;
-			entity.setValue(PortalGate, 'state', 'idle');
-			entity.setValue(PortalGate, 'focusTimer', 0);
+			try {
+				entity.setValue(PortalGate, 'state', 'idle');
+				entity.setValue(PortalGate, 'focusTimer', 0);
+			} catch(err) {}
 		}
 	}
 }
