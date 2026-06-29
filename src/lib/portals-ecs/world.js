@@ -80,7 +80,7 @@ function createPortalRingMesh(colorHex) {
 	const color = new THREE.Color(colorHex);
 
 	// Brighter, larger torus
-	const torusGeo = new THREE.TorusGeometry(1.0, 0.08, 24, 96);
+	const torusGeo = new THREE.TorusGeometry(1.2, 0.12, 24, 96);
 	const torusMat = new THREE.MeshBasicMaterial({
 		color: color.clone().lerp(new THREE.Color(0xffffff), 0.3), // brighten
 		transparent: true, opacity: 1,
@@ -89,7 +89,7 @@ function createPortalRingMesh(colorHex) {
 	group.add(torus);
 
 	// Brighter membrane
-	const membraneGeo = new THREE.CircleGeometry(0.98, 64);
+	const membraneGeo = new THREE.CircleGeometry(1.18, 64);
 	const membraneMat = new THREE.MeshBasicMaterial({
 		color: color.clone().lerp(new THREE.Color(0xffffff), 0.1),
 		transparent: true, opacity: 0.45, side: THREE.DoubleSide,
@@ -104,10 +104,10 @@ function createPortalRingMesh(colorHex) {
 // ─── Interior decoration factory ────────────────────────────────────
 function createCrystalMesh(colorHex, scale = 1.0) {
 	const color = new THREE.Color(colorHex);
-	const geo = new THREE.OctahedronGeometry(0.15 * scale, 0);
+	const geo = new THREE.OctahedronGeometry(0.25 * scale, 0); // bigger
 	const mat = new THREE.MeshBasicMaterial({
 		color: color.clone().lerp(new THREE.Color(0xffffff), 0.4), // brighter
-		transparent: true, opacity: 0.9, // start visible immediately
+		transparent: true, opacity: 0.9,
 	});
 	return new THREE.Mesh(geo, mat);
 }
@@ -693,9 +693,11 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		world.scene.add(gradMesh);
 	}
 
-	// ── Camera ──
-	world.camera.position.set(0, 0.3, 0.5);
-	world.camera.lookAt(0, 0, -2);
+	// ── Camera ── positioned to see the ring and crystals clearly
+	world.camera.position.set(0, 0.5, 1.5);
+	world.camera.lookAt(0, 0.2, -2);
+	world.camera.fov = 70;
+	world.camera.updateProjectionMatrix();
 	const camLight = new THREE.PointLight(0xffffff, 2.0, 10);
 	camLight.position.copy(world.camera.position);
 	world.scene.add(camLight);
@@ -750,7 +752,7 @@ function buildInterior(world, portalEntities, portalId, ambientLight, keyLight, 
 		spiritLoadPromise.then((spiritScene) => {
 			if (spiritScene && entity.object3D) {
 				const spiritClone = spiritScene.clone(true);
-				spiritClone.scale.setScalar(0.4 * cScale);
+				spiritClone.scale.setScalar(0.6 * cScale); // bigger spirit
 				// Center the GLB origin
 				const box = new THREE.Box3().setFromObject(spiritClone);
 				const center = box.getCenter(new THREE.Vector3());

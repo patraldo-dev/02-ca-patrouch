@@ -451,34 +451,35 @@ function nameOf(item) {
 		right: 1rem;
 		z-index: 99999;
 		display: flex;
-		gap: 0.3rem;
+		gap: 0.4rem;
 		flex-wrap: wrap;
-		max-width: 180px;
+		max-width: 240px;
 		justify-content: flex-end;
 	}
 	.portal-pill {
-		width: 32px;
-		height: 32px;
+		width: 40px;
+		height: 40px;
 		border-radius: 50%;
 		border: 1px solid rgba(255,255,255,0.15);
 		background: rgba(0,0,0,0.6);
 		backdrop-filter: blur(10px);
-		font-size: 0.9rem;
+		font-size: 1.1rem;
 		cursor: pointer;
 		transition: all 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		opacity: 0.5;
+		opacity: 0.6;
 	}
 	.portal-pill:hover {
 		opacity: 1;
 		border-color: var(--pc);
+		transform: scale(1.1);
 	}
 	.portal-pill.active {
 		opacity: 1;
 		border-color: var(--pc);
-		box-shadow: 0 0 8px var(--pc);
+		box-shadow: 0 0 12px var(--pc);
 	}
 
 	.xr-btn {
