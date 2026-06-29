@@ -1,3 +1,3 @@
-// Ensure this route is SSR'd and not prerendered
+// Projection route — CSR only, no SSR needed
 export const prerender = false;
-export const ssr = true;
+export const ssr = false;
