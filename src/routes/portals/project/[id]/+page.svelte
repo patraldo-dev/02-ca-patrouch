@@ -28,7 +28,11 @@
 
 	onMount(() => {
 		if (!data.portal) {
-			console.error('[projection] No portal data');
+			console.error('[projection] No portal data. Error:', data.error || 'unknown', 'allData keys:', Object.keys(data));
+			const errEl = document.createElement('div');
+			errEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#ef4444;font-family:monospace;font-size:14px;z-index:99999;background:rgba(0,0,0,0.9);padding:2rem;border-radius:8px;max-width:80vw;';
+			errEl.textContent = 'Projection: ' + (data.error || 'No portal data. Keys: ' + Object.keys(data).join(','));
+			document.body.appendChild(errEl);
 			return;
 		}
 

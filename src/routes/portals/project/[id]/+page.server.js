@@ -1,53 +1,52 @@
 // Projection mode — loads a single portal + all portal IDs for loop cycling
-export async function load({ params, platform }) {
-    const db = platform?.env?.DB_book;
-    if (!db) return { portal: null, allPortals: [], sceneConfigs: {} };
+import { error } from '@sveltejs/kit';
 
+export async function load({ params, platform }) {
     const portalId = params.id;
+    console.log('[projection] load() called, portalId:', portalId);
+    console.log('[projection] platform exists:', !!platform);
+    console.log('[projection] platform.env exists:', !!platform?.env);
+
+    const db = platform?.env?.DB_book;
+    console.log('[projection] DB_book exists:', !!db);
+
+    if (!db) {
+        console.error('[projection] No DB_book available');
+        return { portal: null, allPortals: [], sceneConfigs: {}, error: 'No database' };
+    }
 
     try {
-        // Fetch the requested portal
+        // Fetch the requested portal — same pattern as enter/[id] which works
         const portal = await db.prepare(`
-            SELECT 
-                p.id, p.galaxy_id, p.icon, p.color_primary, p.color_bg, p.color_text,
-                p.name_es, p.name_en, p.name_fr,
-                p.description_es, p.description_en, p.description_fr,
-                p.status, p.active_writings_count, p.video_url,
-                p.narrator_greeting, p.narrator_tone,
-                p.scene_image
-            FROM portals p
-            WHERE p.id = ? AND p.status = 'active'
+            SELECT id, galaxy_id, icon, color_primary, color_bg, color_text,
+                   name_es, name_en, name_fr,
+                   description_es, description_en, description_fr,
+                   status, active_writings_count, video_url,
+                   narrator_greeting, narrator_tone, scene_image
+            FROM portals WHERE id = ? AND status = 'active'
         `).bind(portalId).first();
+
+        console.log('[projection] portal query result:', portal ? `found ${portal.id}` : 'NOT FOUND');
 
         if (!portal) {
             console.error('[projection] Portal not found:', portalId);
-            return { portal: null, allPortals: [], sceneConfigs: {} };
+            return { portal: null, allPortals: [], sceneConfigs: {}, error: 'Portal not found: ' + portalId };
         }
 
         // Fetch all active portals for loop mode
         const { results: allPortals } = await db.prepare(`
-            SELECT 
-                id, galaxy_id, icon, color_primary, color_bg, color_text,
-                name_es, name_en, name_fr,
-                description_es, description_en, description_fr,
-                status, active_writings_count, video_url,
-                narrator_greeting, narrator_tone, scene_image
-            FROM portals
-            WHERE status = 'active'
+            SELECT id, galaxy_id, icon, color_primary, color_bg, color_text,
+                   name_es, name_en, name_fr,
+                   description_es, description_en, description_fr,
+                   status, active_writings_count, video_url,
+                   narrator_greeting, narrator_tone, scene_image
+            FROM portals WHERE status = 'active'
             ORDER BY galaxy_id ASC, discovered_at ASC
         `).all();
 
-        // Fetch scene config for this portal
-        const sceneRow = await db.prepare(`
-            SELECT scene_config FROM portal_scenes WHERE portal_id = ?
-        `).bind(portalId).first();
-        
-        let sceneConfig = null;
-        if (sceneRow?.scene_config) {
-            try { sceneConfig = JSON.parse(sceneRow.scene_config); } catch {}
-        }
+        console.log('[projection] allPortals count:', allPortals?.length);
 
-        // Also fetch all scene configs (for loop mode)
+        // Fetch all scene configs
         const { results: sceneRows } = await db.prepare(`
             SELECT portal_id, scene_config FROM portal_scenes
         `).all();
@@ -59,11 +58,10 @@ export async function load({ params, platform }) {
         return {
             portal,
             allPortals: allPortals || [],
-            sceneConfig,
             sceneConfigs,
         };
     } catch (e) {
-        console.error('Projection load error:', e);
-        return { portal: null, allPortals: [], sceneConfigs: {} };
+        console.error('[projection] load error:', e);
+        return { portal: null, allPortals: [], sceneConfigs: {}, error: String(e) };
     }
 }
