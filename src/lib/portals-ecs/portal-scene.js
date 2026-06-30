@@ -463,7 +463,6 @@ export async function boot(container, options = {}) {
 				// Tap anywhere in portal = exit
 				exitPortal();
 			}
-			}
 		});
 
 		container.addEventListener('touchstart', (e) => {
