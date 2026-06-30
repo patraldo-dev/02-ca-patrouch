@@ -149,15 +149,27 @@ let currentOverlay = null;
 
 function showPortalOverlay(name, desc, portalColor) {
 	if (currentOverlay) { currentOverlay.remove(); currentOverlay = null; }
+
+	// A11y: brighten color toward WCAG AA on dark background
+	const textColors = {
+		'#4a7c3a': '#578947',
+		'#0277bd': '#0f84ca',
+		'#7c4dff': '#895aff',
+		'#546e7a': '#617b87',
+		'#9c27b0': '#c24dd6',
+		'#3A4F7A': '#6d82ad',
+	};
+	const safeColor = textColors[portalColor] || portalColor;
+
 	const wrap = document.createElement('div');
 	wrap.style.cssText = `position:fixed!important;top:18%!important;left:50%!important;transform:translateX(-50%)!important;text-align:center!important;max-width:80vw!important;opacity:0;transition:opacity 0.8s ease;pointer-events:none;z-index:2147483647!important;display:block!important;`;
 
 	const heading = document.createElement('div');
-	heading.style.cssText = `color:${portalColor}!important;font-family:Georgia,serif!important;font-size:clamp(16px,3.2vw,22px)!important;font-weight:600!important;letter-spacing:0.08em!important;text-transform:uppercase!important;text-shadow:0 0 16px ${portalColor}99!important;margin-bottom:6px!important;`;
+	heading.style.cssText = `color:${safeColor}!important;font-family:Georgia,serif!important;font-size:clamp(20px,4vw,30px)!important;font-weight:700!important;letter-spacing:0.08em!important;text-transform:uppercase!important;text-shadow:0 0 16px ${safeColor}cc!important;margin-bottom:8px!important;`;
 	heading.textContent = `\u27e1 ${name}`;
 
 	const subtitle = document.createElement('div');
-	subtitle.style.cssText = `color:${portalColor}aa!important;font-family:"Courier New",monospace!important;font-size:clamp(13px,2.5vw,17px)!important;font-style:italic!important;letter-spacing:0.03em!important;text-shadow:0 0 12px ${portalColor}44!important;`;
+	subtitle.style.cssText = `color:${safeColor}!important;font-family:"Courier New",monospace!important;font-size:clamp(16px,3vw,22px)!important;font-style:italic!important;letter-spacing:0.03em!important;text-shadow:0 0 12px ${safeColor}66!important;`;
 	subtitle.textContent = desc;
 
 	wrap.appendChild(heading);
