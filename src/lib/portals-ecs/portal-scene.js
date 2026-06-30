@@ -137,7 +137,7 @@ const NarrativeSystem = class extends createSystem({
 				const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
 				const strs = STRINGS[lang] || STRINGS.es;
 				if (idx < strs.narrative.length) {
-					showOverlay(strs.narrative[idx]);
+					showOverlay(strs.narrative[idx], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
 					entity.setValue(NarrativeState, 'stateIndex', idx + 1);
 					entity.setValue(NarrativeState, 'lastAdvance', now);
 				}
@@ -148,10 +148,15 @@ const NarrativeSystem = class extends createSystem({
 
 // ── Overlay helpers ──
 let currentOverlay = null;
-function showOverlay(text) {
+
+function showOverlay(text, options = {}) {
 	if (currentOverlay) { currentOverlay.remove(); currentOverlay = null; }
+	const color = options.color || '#c9a87c';
+	const font = options.font || '"Courier New", monospace';
+	const size = options.size || '22px';
+	const glow = options.glow || color;
 	const el = document.createElement('div');
-	el.style.cssText = 'position:fixed!important;top:15%!important;left:50%!important;transform:translateX(-50%)!important;color:#c9a87c!important;font-family:Georgia,serif!important;font-size:22px!important;letter-spacing:0.05em!important;text-shadow:0 0 20px rgba(201,168,124,0.8)!important;opacity:0;transition:opacity 0.8s ease;pointer-events:none;z-index:2147483647!important;text-align:center!important;max-width:80vw!important;white-space:pre-line!important;display:block!important;';
+	el.style.cssText = `position:fixed!important;top:15%!important;left:50%!important;transform:translateX(-50%)!important;color:${color}!important;font-family:${font}!important;font-size:${size}!important;letter-spacing:0.05em!important;text-shadow:0 0 20px ${glow}99, 0 0 40px ${glow}44!important;opacity:0;transition:opacity 0.8s ease;pointer-events:none;z-index:2147483647!important;text-align:center!important;max-width:80vw!important;white-space:pre-line!important;display:block!important;`;
 	el.textContent = text;
 	document.body.appendChild(el);
 	currentOverlay = el;
@@ -308,7 +313,8 @@ export async function boot(container) {
 			if (hits.length > 0) {
 				const hit = hits[0].object;
 				const portalId = hit.userData.portalId;
-				const desc = hit.userData.desc;
+				const portal = PORTALS.find(p => p.id === portalId);
+				const desc = portal?.desc || hit.userData.desc;
 				const lang = document.documentElement?.lang || 'es';
 				const strs = STRINGS[lang] || STRINGS.es;
 				const name = strs.portals[portalId] || portalId;
@@ -316,7 +322,12 @@ export async function boot(container) {
 				// Flash
 				hit.material.forEach(m => { if (m.opacity) { m._o = m.opacity; m.opacity = 1; } });
 				setTimeout(() => hit.material.forEach(m => { if (m._o != null) m.opacity = m._o; }), 200);
-				showOverlay(`⟡ ${name}\n${description}`);
+				showOverlay(`⟡ ${name}\n${description}`, {
+					color: portal.color,
+					glow: portal.color,
+					font: '"Courier New", monospace',
+					size: 'clamp(16px, 3vw, 22px)',
+				});
 			}
 		});
 
@@ -336,7 +347,7 @@ export async function boot(container) {
 		console.log('[portals] lang:', lang, 'narrative[0]:', strs.narrative[0]);
 		setTimeout(() => {
 			console.log('[portals] firing first narrative');
-			showOverlay(strs.narrative[0]);
+			showOverlay(strs.narrative[0], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
 		}, 1000);
 
 		return world;
