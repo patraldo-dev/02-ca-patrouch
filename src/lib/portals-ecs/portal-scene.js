@@ -132,15 +132,13 @@ const NarrativeSystem = class extends createSystem({
 		const now = performance.now();
 		for (const entity of this.queries.narr.entities) {
 			const last = entity.getValue(NarrativeState, 'lastAdvance');
-			if (now - last > 12000) { // 12s for first cycle, then 90s
+			if (now - last > 12000) { // 12s narrative cycle, loops
 				let idx = entity.getValue(NarrativeState, 'stateIndex');
 				const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
 				const strs = STRINGS[lang] || STRINGS.es;
-				if (idx < strs.narrative.length) {
-					showOverlay(strs.narrative[idx], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
-					entity.setValue(NarrativeState, 'stateIndex', idx + 1);
-					entity.setValue(NarrativeState, 'lastAdvance', now);
-				}
+				showOverlay(strs.narrative[idx], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
+				entity.setValue(NarrativeState, 'stateIndex', (idx + 1) % strs.narrative.length);
+				entity.setValue(NarrativeState, 'lastAdvance', now);
 			}
 		}
 	}
