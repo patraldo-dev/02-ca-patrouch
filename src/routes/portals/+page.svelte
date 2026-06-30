@@ -21,10 +21,7 @@
 		async function boot() {
 			try {
 				const mod = await import('$lib/portals-ecs/portal-scene.js');
-				await mod.boot(containerEl, {
-					portals: data.portals || [],
-					sceneConfigs: data.sceneConfigs || {},
-				});
+				await mod.boot(containerEl);
 				if (cancelled) return;
 				booted = true;
 

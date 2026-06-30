@@ -6,7 +6,6 @@
 import { World, Transform } from '@iwsdk/core';
 import { createComponent, createSystem, Types } from 'elics';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // ── i18n ──
 const STRINGS = {
@@ -169,8 +168,7 @@ function showOverlay(text, options = {}) {
 }
 
 // ── Boot ──
-export async function boot(container, options = {}) {
-	const { portals = [], sceneConfigs = {} } = options;
+export async function boot(container) {
 	if (!container) return null;
 
 	const statusEl = document.createElement('div');
@@ -299,150 +297,6 @@ export async function boot(container, options = {}) {
 		const narrEntity = world.createEntity();
 		narrEntity.addComponent(NarrativeState, { stateIndex: 0, lastAdvance: performance.now() });
 
-		// ── Portal interior state ──
-		let inPortal = false;
-		let interiorGroup = null;
-		let spiritMixer = null;
-		const gltfLoader = new GLTFLoader();
-
-		async function enterPortal(portalId) {
-			if (inPortal) return;
-			inPortal = true;
-
-			const portal = PORTALS.find(p => p.id === portalId);
-			if (!portal) return;
-			const sceneConfig = sceneConfigs[portalId] || {};
-			const palette = sceneConfig.palette || {};
-			const ringColor = palette.primary || portal.color;
-			const crystals = sceneConfig.crystals || [];
-			const lang = document.documentElement?.lang || 'es';
-			const strs = STRINGS[lang] || STRINGS.es;
-
-			// Fade out index scene
-			ambient.cubeMeshes.forEach(m => { m.visible = false; });
-			stars.visible = false;
-			disc.visible = false;
-			camEntity.setValue(CameraOrbit, 'speed', 0);
-			camEntity.setValue(CameraOrbit, 'boost', 0);
-
-			// Create interior group
-			interiorGroup = new THREE.Group();
-			scene.add(interiorGroup);
-
-			// Portal ring
-			const ringMesh = new THREE.Mesh(
-				new THREE.TorusGeometry(1.2, 0.06, 16, 96),
-				new THREE.MeshBasicMaterial({ color: new THREE.Color(ringColor), transparent: true, opacity: 0.9 }),
-			);
-			ringMesh.position.set(0, 0, -2);
-			interiorGroup.add(ringMesh);
-
-			// Ring membrane
-			const membrane = new THREE.Mesh(
-				new THREE.CircleGeometry(1.18, 64),
-				new THREE.MeshBasicMaterial({ color: new THREE.Color(ringColor).lerp(new THREE.Color(0xffffff), 0.2), transparent: true, opacity: 0.3, side: THREE.DoubleSide }),
-			);
-			membrane.position.set(0, 0, -1.99);
-			interiorGroup.add(membrane);
-
-			// Spirit GLB
-			gltfLoader.loadAsync('https://r2.mexicanbold.com/72fpsEFLSpirit-enhanced.glb').then((gltf) => {
-				const spirit = gltf.scene;
-				spirit.scale.setScalar(0.6);
-				spirit.position.set(0, 0.3, -2);
-				spirit.traverse((child) => {
-					if (child.isMesh) {
-						child.material = new THREE.MeshBasicMaterial({
-							color: new THREE.Color(ringColor).lerp(new THREE.Color(0xffffff), 0.3),
-							transparent: true, opacity: 0.8,
-							side: THREE.DoubleSide, depthWrite: false,
-							blending: THREE.AdditiveBlending,
-						});
-					}
-				});
-				interiorGroup.add(spirit);
-				spiritMixer = new THREE.AnimationMixer(spirit);
-				gltf.animations.forEach((clip) => {
-					if (clip.name === 'morph_original') return;
-					const action = spiritMixer.clipAction(clip);
-					if (clip.name === 'zoom_in') { action.setLoop(THREE.LoopOnce, 1); action.clampWhenFinished = true; }
-					else action.setLoop(THREE.LoopRepeat);
-					action.play();
-				});
-				console.log('[portals] Spirit loaded for', portalId);
-			}).catch(err => console.warn('[portals] Spirit failed:', err.message));
-
-			// Crystals with texts
-			const crystalColors = palette.crystal_colors || [ringColor, '#4fc3f7', '#b5ead7', '#ce93d8'];
-			const crystalRingRadius = sceneConfig.spatial_layout?.crystal_ring_radius || 2;
-			const crystalEntities = [];
-
-			crystals.forEach((crystal, i) => {
-				const angle = (i / crystals.length) * Math.PI * 2;
-				const elev = (sceneConfig.spatial_layout?.crystal_elevations || [0.8, 1.2, 1.5])[i % 3];
-				const cx = Math.cos(angle) * crystalRingRadius;
-				const cy = (elev || 1) - 0.5;
-				const cz = Math.sin(angle) * crystalRingRadius - 2;
-				const cColor = crystalColors[crystal.color_index % crystalColors.length] || ringColor;
-
-				const cm = new THREE.Mesh(
-					new THREE.OctahedronGeometry(0.2, 0),
-					new THREE.MeshBasicMaterial({ color: new THREE.Color(cColor).lerp(new THREE.Color(0xffffff), 0.4), transparent: true, opacity: 0.9 }),
-				);
-				cm.position.set(cx, cy, cz);
-				cm.userData.text = crystal.text || '';
-				cm.userData.isCrystal = true;
-				interiorGroup.add(cm);
-				crystalEntities.push(cm);
-			});
-
-			// Camera closer
-			camera.position.set(0, 0.5, 1);
-			camera.lookAt(0, 0, -2);
-
-			// Welcome text
-			showOverlay(`${strs.portals[portalId] || portalId}\n${portal.desc?.[lang] || ''}`, {
-				color: ringColor, glow: ringColor, font: 'Georgia, serif', size: 'clamp(18px, 4vw, 28px)',
-			});
-
-			window.dispatchEvent(new CustomEvent('portal-tapped', { detail: { portalId } }));
-
-			// Crystal tap — show text
-			function onInteriorTap(e) {
-				pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-				pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-				raycaster.setFromCamera(pointer, camera);
-				const hits = raycaster.intersectObjects(crystalEntities);
-				if (hits.length > 0 && hits[0].object.userData.text) {
-					showOverlay(`❝ ${hits[0].object.userData.text} ❞`, {
-						color: ringColor, glow: ringColor, font: 'Georgia, serif', size: 'clamp(16px, 3vw, 22px)',
-					});
-				}
-			}
-			container.addEventListener('pointerdown', onInteriorTap);
-			interiorGroup.userData.cleanup = () => container.removeEventListener('pointerdown', onInteriorTap);
-		}
-
-		function exitPortal() {
-			if (!inPortal || !interiorGroup) return;
-			inPortal = false;
-			if (interiorGroup.userData.cleanup) interiorGroup.userData.cleanup();
-			scene.remove(interiorGroup);
-			interiorGroup.traverse(obj => {
-				if (obj.geometry) obj.geometry.dispose();
-				if (obj.material) { Array.isArray(obj.material) ? obj.material.forEach(m => m.dispose()) : obj.material.dispose(); }
-			});
-			interiorGroup = null;
-			spiritMixer = null;
-			ambient.cubeMeshes.forEach(m => { m.visible = true; });
-			stars.visible = true;
-			disc.visible = true;
-			camEntity.setValue(CameraOrbit, 'speed', 0.06);
-			const lang = document.documentElement?.lang || 'es';
-			const strs = STRINGS[lang] || STRINGS.es;
-			showOverlay(strs.narrative[1], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
-		}
-
 		// ── Tap handler ──
 		const raycaster = new THREE.Raycaster();
 		const pointer = new THREE.Vector2();
@@ -456,12 +310,24 @@ export async function boot(container, options = {}) {
 			pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 			raycaster.setFromCamera(pointer, camera);
 			const hits = raycaster.intersectObjects(ambient.cubeMeshes);
-			if (hits.length > 0 && !inPortal) {
-				const portalId = hits[0].object.userData.portalId;
-				enterPortal(portalId);
-			} else if (inPortal) {
-				// Tap anywhere in portal = exit
-				exitPortal();
+			if (hits.length > 0) {
+				const hit = hits[0].object;
+				const portalId = hit.userData.portalId;
+				const portal = PORTALS.find(p => p.id === portalId);
+				const desc = portal?.desc || hit.userData.desc;
+				const lang = document.documentElement?.lang || 'es';
+				const strs = STRINGS[lang] || STRINGS.es;
+				const name = strs.portals[portalId] || portalId;
+				const description = desc?.[lang] || desc?.es || '';
+				// Flash
+				hit.material.forEach(m => { if (m.opacity) { m._o = m.opacity; m.opacity = 1; } });
+				setTimeout(() => hit.material.forEach(m => { if (m._o != null) m.opacity = m._o; }), 200);
+				showOverlay(`⟡ ${name}\n${description}`, {
+					color: portal.color,
+					glow: portal.color,
+					font: '"Courier New", monospace',
+					size: 'clamp(16px, 3vw, 22px)',
+				});
 			}
 		});
 
