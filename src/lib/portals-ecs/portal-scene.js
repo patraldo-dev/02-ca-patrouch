@@ -137,7 +137,7 @@ const NarrativeSystem = class extends createSystem({
 				const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
 				const strs = STRINGS[lang] || STRINGS.es;
 				if (idx < strs.narrative.length) {
-					showOverlay(strs.narrative[idx], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(28px, 6vw, 48px)' });
+					showOverlay(strs.narrative[idx], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
 					entity.setValue(NarrativeState, 'stateIndex', idx + 1);
 					entity.setValue(NarrativeState, 'lastAdvance', now);
 				}
@@ -148,6 +148,27 @@ const NarrativeSystem = class extends createSystem({
 
 // ── Overlay helpers ──
 let currentOverlay = null;
+
+function showPortalOverlay(name, desc, portalColor) {
+	if (currentOverlay) { currentOverlay.remove(); currentOverlay = null; }
+	const wrap = document.createElement('div');
+	wrap.style.cssText = `position:fixed!important;top:18%!important;left:50%!important;transform:translateX(-50%)!important;text-align:center!important;max-width:80vw!important;opacity:0;transition:opacity 0.8s ease;pointer-events:none;z-index:2147483647!important;display:block!important;`;
+
+	const heading = document.createElement('div');
+	heading.style.cssText = `color:${portalColor}!important;font-family:Georgia,serif!important;font-size:clamp(16px,3.2vw,22px)!important;font-weight:600!important;letter-spacing:0.08em!important;text-transform:uppercase!important;text-shadow:0 0 16px ${portalColor}99!important;margin-bottom:6px!important;`;
+	heading.textContent = `\u27e1 ${name}`;
+
+	const subtitle = document.createElement('div');
+	subtitle.style.cssText = `color:${portalColor}aa!important;font-family:"Courier New",monospace!important;font-size:clamp(13px,2.5vw,17px)!important;font-style:italic!important;letter-spacing:0.03em!important;text-shadow:0 0 12px ${portalColor}44!important;`;
+	subtitle.textContent = desc;
+
+	wrap.appendChild(heading);
+	wrap.appendChild(subtitle);
+	document.body.appendChild(wrap);
+	currentOverlay = wrap;
+	requestAnimationFrame(() => { wrap.style.opacity = '1'; });
+	setTimeout(() => { wrap.style.opacity = '0'; setTimeout(() => { if (wrap === currentOverlay) currentOverlay = null; wrap.remove(); }, 800); }, 4000);
+}
 
 function showOverlay(text, options = {}) {
 	if (currentOverlay) { currentOverlay.remove(); currentOverlay = null; }
@@ -322,12 +343,7 @@ export async function boot(container) {
 				// Flash
 				hit.material.forEach(m => { if (m.opacity) { m._o = m.opacity; m.opacity = 1; } });
 				setTimeout(() => hit.material.forEach(m => { if (m._o != null) m.opacity = m._o; }), 200);
-				showOverlay(`⟡ ${name}\n${description}`, {
-					color: portal.color,
-					glow: portal.color,
-					font: '"Courier New", monospace',
-					size: 'clamp(30px, 7vw, 56px)',
-				});
+			showPortalOverlay(name, description, portal.color);
 			}
 		});
 
@@ -347,7 +363,7 @@ export async function boot(container) {
 		console.log('[portals] lang:', lang, 'narrative[0]:', strs.narrative[0]);
 		setTimeout(() => {
 			console.log('[portals] firing first narrative');
-			showOverlay(strs.narrative[0], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(28px, 6vw, 48px)' });
+			showOverlay(strs.narrative[0], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
 		}, 1000);
 
 		return world;
