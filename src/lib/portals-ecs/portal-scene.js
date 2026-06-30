@@ -137,7 +137,7 @@ const NarrativeSystem = class extends createSystem({
 				const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
 				const strs = STRINGS[lang] || STRINGS.es;
 				if (idx < strs.narrative.length) {
-					showOverlay(strs.narrative[idx], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
+					showOverlay(strs.narrative[idx], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(28px, 6vw, 48px)' });
 					entity.setValue(NarrativeState, 'stateIndex', idx + 1);
 					entity.setValue(NarrativeState, 'lastAdvance', now);
 				}
@@ -326,7 +326,7 @@ export async function boot(container) {
 					color: portal.color,
 					glow: portal.color,
 					font: '"Courier New", monospace',
-					size: 'clamp(16px, 3vw, 22px)',
+					size: 'clamp(30px, 7vw, 56px)',
 				});
 			}
 		});
@@ -347,7 +347,7 @@ export async function boot(container) {
 		console.log('[portals] lang:', lang, 'narrative[0]:', strs.narrative[0]);
 		setTimeout(() => {
 			console.log('[portals] firing first narrative');
-			showOverlay(strs.narrative[0], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(18px, 3.5vw, 26px)' });
+			showOverlay(strs.narrative[0], { font: 'Georgia, serif', color: '#e8d5b5', size: 'clamp(28px, 6vw, 48px)' });
 		}, 1000);
 
 		return world;
