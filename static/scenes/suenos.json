@@ -30,8 +30,8 @@
     "primary": "#c24dd6",
     "secondary": "#c24dd688",
     "accent": "#c24dd6cc",
-    "background": "#06030a",
-    "fog_color": "#0c0612",
+    "background": "#080210",
+    "fog_color": "#10041a",
     "fog_density": 0.025,
     "safe_text_color": "#c24dd6"
   },
@@ -41,8 +41,8 @@
       "intensity": 0.6
     },
     "key_light": {
-      "color": "#c24dd6",
-      "intensity": 3,
+      "color": "#cc33cc",
+      "intensity": 4,
       "distance": 20,
       "position": [
         2,
@@ -51,8 +51,8 @@
       ]
     },
     "rim_light": {
-      "color": "#4a6fa5",
-      "intensity": 2,
+      "color": "#770077",
+      "intensity": 2.5,
       "distance": 15,
       "position": [
         -3,
@@ -61,8 +61,8 @@
       ]
     },
     "under_light": {
-      "color": "#8b5cf6",
-      "intensity": 1.5,
+      "color": "#ff66ff",
+      "intensity": 2,
       "distance": 8,
       "position": [
         0,
@@ -77,8 +77,8 @@
     "size": 0.05,
     "opacity": 0.7,
     "color_range": {
-      "hue_start": 0.05,
-      "hue_span": 0.15,
+      "hue_start": 0.83,
+      "hue_span": 0.08,
       "saturation": 0.7,
       "lightness_min": 0.5,
       "lightness_max": 0.8
