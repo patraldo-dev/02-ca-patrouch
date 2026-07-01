@@ -1,0 +1,275 @@
+{
+  "$schema": "portal-scene.v1",
+  "portal": {
+    "id": "arboleda",
+    "names": {
+      "es": "Arboleda",
+      "en": "The Grove",
+      "fr": "Le Bosquet"
+    },
+    "descriptions": {
+      "es": "Donde las raíces cuentan historias",
+      "en": "Where roots tell stories",
+      "fr": "Où les racines racontent"
+    },
+    "source_stories": [],
+    "keywords": [
+      "raíces",
+      "memoria",
+      "ancestros",
+      "naturaleza",
+      "pertenencia"
+    ],
+    "themes": [
+      "ancestral memory",
+      "natural cycles",
+      "belonging"
+    ],
+    "art": "12c79899-fb93-4885-508f-d2da0a2fbf00"
+  },
+  "palette": {
+    "primary": "#578947",
+    "secondary": "#3a5c28",
+    "accent": "#8fbf5f",
+    "background": "#05030a",
+    "fog_color": "#0d180a",
+    "fog_density": 0.025,
+    "safe_text_color": "#578947"
+  },
+  "lighting": {
+    "ambient": {
+      "color": "#1a2f12",
+      "intensity": 0.6
+    },
+    "key_light": {
+      "color": "#578947",
+      "intensity": 3,
+      "distance": 20,
+      "position": [
+        2,
+        3,
+        2
+      ]
+    },
+    "rim_light": {
+      "color": "#4a6fa5",
+      "intensity": 2,
+      "distance": 15,
+      "position": [
+        -3,
+        1,
+        -2
+      ]
+    },
+    "under_light": {
+      "color": "#8b5cf6",
+      "intensity": 1.5,
+      "distance": 8,
+      "position": [
+        0,
+        -2,
+        1
+      ]
+    }
+  },
+  "ambient_particles": {
+    "count": 500,
+    "spawn_radius": 8,
+    "size": 0.05,
+    "opacity": 0.7,
+    "color_range": {
+      "hue_start": 0.2,
+      "hue_span": 0.12,
+      "saturation": 0.7,
+      "lightness_min": 0.5,
+      "lightness_max": 0.8
+    },
+    "drift_speed": 0.02
+  },
+  "narrative_states": [
+    {
+      "label": "greeting",
+      "hue_shift": 0,
+      "intensity_mul": 1,
+      "fog_mul": 1
+    },
+    {
+      "label": "discovery",
+      "hue_shift": 0.083,
+      "intensity_mul": 1.3,
+      "fog_mul": 0.4
+    },
+    {
+      "label": "revelation",
+      "hue_shift": 0.333,
+      "intensity_mul": 0.7,
+      "fog_mul": 2.5
+    }
+  ],
+  "narrative_texts": {
+    "es": [
+      "❝ Cada historia es un portal ❞",
+      "❝ Toca un cubo para entrar ❞",
+      "❝ Los espíritus esperan ❞"
+    ],
+    "en": [
+      "❝ Every story is a portal ❞",
+      "❝ Tap a cube to enter ❞",
+      "❝ The spirits are waiting ❞"
+    ],
+    "fr": [
+      "❝ Chaque histoire est un portail ❞",
+      "❝ Touchez un cube pour entrer ❞",
+      "❝ Les esprits attendent ❞"
+    ]
+  },
+  "crystals": [
+    {
+      "id": "crystal-1",
+      "position": [
+        1.2,
+        0.8,
+        -0.5
+      ],
+      "scale": 0.3,
+      "text": {
+        "es": "Las raíces recuerdan lo que las hojas olvidan",
+        "en": "Roots remember what leaves forget",
+        "fr": "Les racines se souviennent quand les feuilles oublient"
+      }
+    },
+    {
+      "id": "crystal-2",
+      "position": [
+        -0.8,
+        1.2,
+        0.8
+      ],
+      "scale": 0.25,
+      "text": {
+        "es": "Bajo la tierra, todos somos semilla",
+        "en": "Under the earth, we are all seeds",
+        "fr": "Sous la terre, nous sommes toutes graines"
+      }
+    },
+    {
+      "id": "crystal-3",
+      "position": [
+        0.5,
+        -0.3,
+        1
+      ],
+      "scale": 0.2,
+      "text": {
+        "es": "El bosque susurra en lenguas antiguas",
+        "en": "The forest whispers in ancient tongues",
+        "fr": "La forêt chuchote en langues anciennes"
+      }
+    }
+  ],
+  "interior_decorations": [
+    {
+      "type": "pillar",
+      "position": [
+        2,
+        -0.5,
+        -2
+      ],
+      "scale": [
+        0.3,
+        2,
+        0.3
+      ],
+      "color": "#3a5c28",
+      "spawn_delay": 0.3,
+      "float": {
+        "amp": 0.02,
+        "speed": 0.3,
+        "phase": 0
+      }
+    },
+    {
+      "type": "pillar",
+      "position": [
+        -2,
+        -0.5,
+        -1.5
+      ],
+      "scale": [
+        0.25,
+        1.8,
+        0.25
+      ],
+      "color": "#3a5c28",
+      "spawn_delay": 0.5,
+      "float": {
+        "amp": 0.03,
+        "speed": 0.4,
+        "phase": 1.5
+      }
+    },
+    {
+      "type": "ring",
+      "position": [
+        0,
+        -0.8,
+        0
+      ],
+      "inner_radius": 0.8,
+      "outer_radius": 1.2,
+      "color": "#578947",
+      "activation_radius": 3,
+      "trigger_distance": 0.5
+    }
+  ],
+  "portal_links": [
+    {
+      "target": "fiesta",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "oceano",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "narrador",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "cosmos",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "urbano",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "suenos",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "nostalgias",
+      "affinity": 0.5,
+      "reason": ""
+    }
+  ],
+  "audio": {
+    "ambient": "arboleda-drone.mp3",
+    "crystal_tap": "chime-bell.mp3",
+    "volume": 0.3
+  },
+  "camera": {
+    "orbit": {
+      "radius_a": 5,
+      "radius_b": 3.5,
+      "height": 1,
+      "speed": 0.05
+    }
+  }
+}

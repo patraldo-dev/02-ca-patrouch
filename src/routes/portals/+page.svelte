@@ -20,8 +20,8 @@
 
 		async function boot() {
 			try {
-				const mod = await import('$lib/portals-ecs/portal-scene.js');
-				await mod.boot(containerEl);
+				const mod = await import('$lib/portals-ecs/world-builder.js');
+				await mod.bootPortalEngine(containerEl);
 				if (cancelled) return;
 				booted = true;
 

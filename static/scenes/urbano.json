@@ -1,0 +1,164 @@
+{
+  "$schema": "portal-scene.v1",
+  "portal": {
+    "id": "urbano",
+    "names": {
+      "es": "Urbano",
+      "en": "The Street",
+      "fr": "La Rue"
+    },
+    "descriptions": {
+      "es": "La ciudad también sueña",
+      "en": "The city also dreams",
+      "fr": "La ville rêve aussi"
+    },
+    "source_stories": [],
+    "keywords": [],
+    "themes": [],
+    "art": "62355ddb-0f6c-4251-5d8e-37a455e44000"
+  },
+  "palette": {
+    "primary": "#617b87",
+    "secondary": "#617b8788",
+    "accent": "#617b87cc",
+    "background": "#040608",
+    "fog_color": "#080d10",
+    "fog_density": 0.025,
+    "safe_text_color": "#617b87"
+  },
+  "lighting": {
+    "ambient": {
+      "color": "#617b8722",
+      "intensity": 0.6
+    },
+    "key_light": {
+      "color": "#617b87",
+      "intensity": 3,
+      "distance": 20,
+      "position": [
+        2,
+        3,
+        2
+      ]
+    },
+    "rim_light": {
+      "color": "#4a6fa5",
+      "intensity": 2,
+      "distance": 15,
+      "position": [
+        -3,
+        1,
+        -2
+      ]
+    },
+    "under_light": {
+      "color": "#8b5cf6",
+      "intensity": 1.5,
+      "distance": 8,
+      "position": [
+        0,
+        -2,
+        1
+      ]
+    }
+  },
+  "ambient_particles": {
+    "count": 500,
+    "spawn_radius": 8,
+    "size": 0.05,
+    "opacity": 0.7,
+    "color_range": {
+      "hue_start": 0.05,
+      "hue_span": 0.15,
+      "saturation": 0.7,
+      "lightness_min": 0.5,
+      "lightness_max": 0.8
+    },
+    "drift_speed": 0.02
+  },
+  "narrative_states": [
+    {
+      "label": "greeting",
+      "hue_shift": 0,
+      "intensity_mul": 1,
+      "fog_mul": 1
+    },
+    {
+      "label": "discovery",
+      "hue_shift": 0.083,
+      "intensity_mul": 1.3,
+      "fog_mul": 0.4
+    },
+    {
+      "label": "revelation",
+      "hue_shift": 0.333,
+      "intensity_mul": 0.7,
+      "fog_mul": 2.5
+    }
+  ],
+  "narrative_texts": {
+    "es": [
+      "❝ Las calles guardan pasos ajenos ❞",
+      "❝ La ciudad tiene memoria de cemento ❞",
+      "❝ Cada ventana es un ojo ❞"
+    ],
+    "en": [
+      "❝ Streets hold the steps of strangers ❞",
+      "❝ The city has a memory of concrete ❞",
+      "❝ Every window is an eye ❞"
+    ],
+    "fr": [
+      "❝ Les rues gardent les pas des autres ❞",
+      "❝ La ville a une mémoire de béton ❞",
+      "❝ Chaque fenêtre est un œil ❞"
+    ]
+  },
+  "crystals": [],
+  "interior_decorations": [],
+  "portal_links": [
+    {
+      "target": "arboleda",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "fiesta",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "oceano",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "narrador",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "cosmos",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "suenos",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "nostalgias",
+      "affinity": 0.5,
+      "reason": ""
+    }
+  ],
+  "audio": {},
+  "camera": {
+    "orbit": {
+      "radius_a": 5,
+      "radius_b": 3.5,
+      "height": 1,
+      "speed": 0.06
+    }
+  }
+}
