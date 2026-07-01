@@ -45,7 +45,15 @@
 					throw new Error('No scene config found for arboleda (neither D1 nor static)');
 				}
 
-				const { bootPortalEngine } = await import('$lib/portals-ecs/world-builder.js');
+				const { bootPortalEngine, registerSceneRenderer } = await import('$lib/portals-ecs/world-builder.js');
+
+				// Register custom scene renderers for specific portals
+				const { buildDesertScene } = await import('$lib/portals-ecs/desert-scene.js');
+				// Portals that should show the desert scene
+				for (const pid of ['urbano', 'mysterious-market']) {
+					registerSceneRenderer(pid, buildDesertScene);
+				}
+
 				await bootPortalEngine(containerEl, configs);
 				if (cancelled) return;
 				booted = true;

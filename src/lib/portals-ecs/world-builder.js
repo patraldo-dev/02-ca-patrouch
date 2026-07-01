@@ -7,6 +7,18 @@ import { createComponent, createSystem, Types } from 'elics';
 import * as THREE from 'three';
 import { buildEnvironment } from './environments.js';
 
+// ── Scene Renderer Registry ──
+// Custom per-portal scene renderers (desert, ocean-floor, etc.)
+// Keyed by portal ID. If a portal has a custom renderer, rebuildScene uses it
+// instead of the default starfield + cubes.
+const SCENE_RENDERERS = {};
+export function registerSceneRenderer(portalId, buildFn) {
+	SCENE_RENDERERS[portalId] = buildFn;
+}
+export function hasSceneRenderer(portalId) {
+	return !!SCENE_RENDERERS[portalId];
+}
+
 // ── ECS Components ──
 
 const PortalCube = createComponent('PortalCube', {
@@ -134,6 +146,12 @@ const nav = {
 function rebuildScene(world, portalId) {
 	const scene = world.scene;
 
+	// Cleanup previous custom scene if any
+	if (world._customSceneCleanup) {
+		world._customSceneCleanup();
+		world._customSceneCleanup = null;
+	}
+
 	// Remove tracked scene objects (lights, stars, cubes)
 	if (world._sceneObjects) {
 		for (const obj of world._sceneObjects) {
@@ -156,6 +174,16 @@ function rebuildScene(world, portalId) {
 		}
 	}
 	world._sceneEntities = [];
+
+	// Check for custom scene renderer first
+	if (hasSceneRenderer(portalId)) {
+		const handle = SCENE_RENDERERS[portalId](world, config);
+		// Store cleanup for next transition
+		world._customSceneCleanup = handle?.cleanup || null;
+		nav.currentPortalId = portalId;
+		if (nav.history[nav.history.length - 1] !== portalId) nav.history.push(portalId);
+		return;
+	}
 
 	const config = nav.allConfigs[portalId];
 	if (!config) {
