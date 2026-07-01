@@ -252,18 +252,26 @@ function rebuildScene(world, portalId) {
 		const cy = 0.2 + (i % 3) * 0.4;
 		const cz = Math.sin(angle) * radius - 1;
 
-		// Each face shows the target portal's own artwork
+		// Each face shows a different artwork from the full collection
 		const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 		const texLoader = new THREE.TextureLoader();
 		texLoader.crossOrigin = 'anonymous';
 
+		// Collect all art IDs from all configs — each face picks a random one
+		const allArtIds = Object.values(nav.allConfigs)
+			.map(c => c.portal?.art)
+			.filter(a => a && a !== '12c79899-fb93-4885-508f-d2da0a2fbf00'); // exclude placeholder
+		if (allArtIds.length === 0) allArtIds.push(tc.portal.art);
+
 		const cubeMats = [];
 		for (let f = 0; f < 6; f++) {
+			// Each face gets a random artwork from the collection
+			const faceArt = allArtIds[Math.floor(Math.random() * allArtIds.length)];
 			const fMat = new THREE.MeshBasicMaterial({
 				color: new THREE.Color(tc.palette.primary), transparent: true, opacity: 0.8, side: THREE.DoubleSide,
 			});
 			texLoader.load(
-				`https://imagedelivery.net/${CF_HASH}/${tc.portal.art}/segment=foreground,width=256`,
+				`https://imagedelivery.net/${CF_HASH}/${faceArt}/segment=foreground,width=256`,
 				(tex) => {
 					tex.colorSpace = THREE.SRGBColorSpace;
 					fMat.map = tex;
