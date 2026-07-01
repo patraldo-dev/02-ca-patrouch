@@ -1,38 +1,41 @@
 {
   "$schema": "portal-scene.v1",
+  "environment": {
+    "type": "memory"
+  },
   "portal": {
-    "id": "nostalgias",
+    "id": "passage-to-the-past",
     "names": {
-      "es": "Nostalgias",
-      "en": "Gates of Memory",
-      "fr": "Portes de la Mémoire"
+      "es": "Pasaje al Pasado",
+      "en": "Passage to the Past",
+      "fr": "Passage vers le Passé"
     },
     "descriptions": {
-      "es": "Memorias que flotan en el aire",
-      "en": "Memories floating in the air",
-      "fr": "Souvenirs qui flottent dans l'air"
+      "es": "Vistas de tiempos pasados",
+      "en": "Slices of past times",
+      "fr": "Coups d’oeil du passé"
     },
     "source_stories": [],
     "keywords": [],
     "themes": [],
-    "art": "26fe40df-7745-41dc-7491-97cb36a32f00"
+    "art": "12c79899-fb93-4885-508f-d2da0a2fbf00"
   },
   "palette": {
-    "primary": "#6d82ad",
-    "secondary": "#6d82ad88",
-    "accent": "#6d82adcc",
+    "primary": "#4B0082",
+    "secondary": "#4B008288",
+    "accent": "#4B0082cc",
     "background": "#020410",
-    "fog_color": "#04081a",
-    "fog_density": 0.045,
-    "safe_text_color": "#6d82ad"
+    "fog_color": "#020410",
+    "fog_density": 0.04,
+    "safe_text_color": "#9370DB"
   },
   "lighting": {
     "ambient": {
-      "color": "#6d82ad22",
+      "color": "#4B008222",
       "intensity": 0.6
     },
     "key_light": {
-      "color": "#3a5cb8",
+      "color": "#4B0082",
       "intensity": 4,
       "distance": 20,
       "position": [
@@ -42,7 +45,7 @@
       ]
     },
     "rim_light": {
-      "color": "#1a2a5c",
+      "color": "#4B0082",
       "intensity": 2.5,
       "distance": 15,
       "position": [
@@ -52,7 +55,7 @@
       ]
     },
     "under_light": {
-      "color": "#6080dd",
+      "color": "#9370DB",
       "intensity": 2,
       "distance": 8,
       "position": [
@@ -63,54 +66,34 @@
     }
   },
   "ambient_particles": {
-    "count": 500,
+    "count": 400,
     "spawn_radius": 8,
     "size": 0.05,
-    "opacity": 0.7,
+    "opacity": 0.6,
     "color_range": {
-      "hue_start": 0.64,
-      "hue_span": 0.08,
-      "saturation": 0.7,
-      "lightness_min": 0.5,
-      "lightness_max": 0.8
+      "hue_start": 0.5,
+      "hue_span": 0.1,
+      "saturation": 0.6,
+      "lightness_min": 0.4,
+      "lightness_max": 0.7
     },
     "drift_speed": 0.02
   },
-  "narrative_states": [
-    {
-      "label": "greeting",
-      "hue_shift": 0,
-      "intensity_mul": 1,
-      "fog_mul": 1
-    },
-    {
-      "label": "discovery",
-      "hue_shift": 0.083,
-      "intensity_mul": 1.3,
-      "fog_mul": 0.4
-    },
-    {
-      "label": "revelation",
-      "hue_shift": 0.333,
-      "intensity_mul": 0.7,
-      "fog_mul": 2.5
-    }
-  ],
   "narrative_texts": {
     "es": [
-      "❝ Lo que se fue aún respira ❞",
-      "❝ El aire recuerda lo que olvidamos ❞",
-      "❝ Tocar el pasado es posible ❞"
+      "❝ Los ecos del pasado resuenan ❞",
+      "❝ Cada objeto cuenta una historia ❞",
+      "❝ Lo olvidado espera ser recordado ❞"
     ],
     "en": [
-      "❝ What left still breathes ❞",
-      "❝ The air remembers what we forgot ❞",
-      "❝ Touching the past is possible ❞"
+      "❝ Echoes of the past resound ❞",
+      "❝ Every object tells a story ❞",
+      "❝ The forgotten waits to be remembered ❞"
     ],
     "fr": [
-      "❝ Ce qui est parti respire encore ❞",
-      "❝ L'air se souvient de ce que nous oublions ❞",
-      "❝ Toucher le passé est possible ❞"
+      "❝ Les échos du passé résonnent ❞",
+      "❝ Chaque objet raconte une histoire ❞",
+      "❝ L’oublié attend d’être rappelé ❞"
     ]
   },
   "crystals": [],
@@ -152,7 +135,7 @@
       "reason": ""
     },
     {
-      "target": "passage-to-the-past",
+      "target": "nostalgias",
       "affinity": 0.5,
       "reason": ""
     },
@@ -171,12 +154,9 @@
   "camera": {
     "orbit": {
       "radius_a": 5,
-      "radius_b": 4,
+      "radius_b": 3.5,
       "height": 1,
-      "speed": 0.035
+      "speed": 0.05
     }
-  },
-  "environment": {
-    "type": "memory"
   }
 }

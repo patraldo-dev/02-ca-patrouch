@@ -1,0 +1,162 @@
+{
+  "$schema": "portal-scene.v1",
+  "environment": {
+    "type": "city"
+  },
+  "portal": {
+    "id": "mysterious-market",
+    "names": {
+      "es": "Mercado Misterioso",
+      "en": "Mysterious Market",
+      "fr": "Marché Mystérieux"
+    },
+    "descriptions": {
+      "es": "Un mercado muy extraño",
+      "en": "A very strange market",
+      "fr": "Un marché très étrange"
+    },
+    "source_stories": [],
+    "keywords": [],
+    "themes": [],
+    "art": "12c79899-fb93-4885-508f-d2da0a2fbf00"
+  },
+  "palette": {
+    "primary": "#3498db",
+    "secondary": "#3498db88",
+    "accent": "#3498dbcc",
+    "background": "#040208",
+    "fog_color": "#040208",
+    "fog_density": 0.04,
+    "safe_text_color": "#5DADE2"
+  },
+  "lighting": {
+    "ambient": {
+      "color": "#3498db22",
+      "intensity": 0.6
+    },
+    "key_light": {
+      "color": "#3498db",
+      "intensity": 4,
+      "distance": 20,
+      "position": [
+        2,
+        3,
+        2
+      ]
+    },
+    "rim_light": {
+      "color": "#3498db",
+      "intensity": 2.5,
+      "distance": 15,
+      "position": [
+        -3,
+        1,
+        -2
+      ]
+    },
+    "under_light": {
+      "color": "#5DADE2",
+      "intensity": 2,
+      "distance": 8,
+      "position": [
+        0,
+        -2,
+        1
+      ]
+    }
+  },
+  "ambient_particles": {
+    "count": 400,
+    "spawn_radius": 8,
+    "size": 0.05,
+    "opacity": 0.6,
+    "color_range": {
+      "hue_start": 0.5,
+      "hue_span": 0.1,
+      "saturation": 0.6,
+      "lightness_min": 0.4,
+      "lightness_max": 0.7
+    },
+    "drift_speed": 0.02
+  },
+  "narrative_texts": {
+    "es": [
+      "❝ Los ecos del pasado resuenan ❞",
+      "❝ Cada objeto cuenta una historia ❞",
+      "❝ Lo olvidado espera ser recordado ❞"
+    ],
+    "en": [
+      "❝ Echoes of the past resound ❞",
+      "❝ Every object tells a story ❞",
+      "❝ The forgotten waits to be remembered ❞"
+    ],
+    "fr": [
+      "❝ Les échos du passé résonnent ❞",
+      "❝ Chaque objet raconte une histoire ❞",
+      "❝ L’oublié attend d’être rappelé ❞"
+    ]
+  },
+  "crystals": [],
+  "interior_decorations": [],
+  "portal_links": [
+    {
+      "target": "arboleda",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "fiesta",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "oceano",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "narrador",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "cosmos",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "urbano",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "suenos",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "nostalgias",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "passage-to-the-past",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "spectral-dreams",
+      "affinity": 0.5,
+      "reason": ""
+    }
+  ],
+  "audio": {},
+  "camera": {
+    "orbit": {
+      "radius_a": 5,
+      "radius_b": 3.5,
+      "height": 1,
+      "speed": 0.05
+    }
+  }
+}

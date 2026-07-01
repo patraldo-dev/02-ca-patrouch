@@ -257,6 +257,21 @@
       "target": "nostalgias",
       "affinity": 0.5,
       "reason": ""
+    },
+    {
+      "target": "passage-to-the-past",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "spectral-dreams",
+      "affinity": 0.5,
+      "reason": ""
+    },
+    {
+      "target": "mysterious-market",
+      "affinity": 0.5,
+      "reason": ""
     }
   ],
   "audio": {

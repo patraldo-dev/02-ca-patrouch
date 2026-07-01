@@ -22,7 +22,7 @@
 			try {
 				// Merge SSR configs (from D1/Mistral) with static fallbacks
 				const SSR_CONFIGS = data?.sceneConfigs || {};
-				const PORTAL_IDS = ['arboleda', 'fiesta', 'narrador', 'oceano', 'cosmos', 'urbano', 'suenos', 'nostalgias'];
+				const PORTAL_IDS = ['arboleda','fiesta','oceano','narrador','cosmos','urbano','suenos','nostalgias','passage-to-the-past','spectral-dreams','mysterious-market'];
 				const configs = {};
 
 				// First load static fallbacks (ensures environment.type, camera, etc.)
