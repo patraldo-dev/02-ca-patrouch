@@ -24,9 +24,9 @@
     "primary": "#4B0082",
     "secondary": "#4B008288",
     "accent": "#4B0082cc",
-    "background": "#0e0818",
-    "fog_color": "#120a22",
-    "fog_density": 0.045,
+    "background": "#14081a",
+    "fog_color": "#180a22",
+    "fog_density": 0.03,
     "safe_text_color": "#9370DB"
   },
   "lighting": {

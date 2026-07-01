@@ -193,8 +193,46 @@ function rebuildScene(world, portalId) {
 	underLight.position.set(...lighting.under_light.position);
 	scene.add(underLight); track(underLight);
 
-	// ── Environment (unique per portal type) ──
-	const envHandle = buildEnvironment(config, scene, track);
+	// ── Environment: main portal uses original starfield, destinations use themed scenes ──
+	let envHandle;
+	if (portalId === 'arboleda') {
+		// Original starfield for main portal
+		const ap = config.ambient_particles;
+		const starGeo = new THREE.BufferGeometry();
+		const starPos = new Float32Array(ap.count * 3);
+		const starCol = new Float32Array(ap.count * 3);
+		for (let i = 0; i < ap.count; i++) {
+			const r = 3 + Math.random() * ap.spawn_radius;
+			const theta = Math.random() * Math.PI * 2;
+			const phi = Math.acos(2 * Math.random() - 1);
+			starPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+			starPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
+			starPos[i*3+2] = r * Math.cos(phi);
+			const hue = ap.color_range.hue_start + Math.random() * ap.color_range.hue_span;
+			const c = new THREE.Color().setHSL(hue, ap.color_range.saturation,
+				ap.color_range.lightness_min + Math.random() * (ap.color_range.lightness_max - ap.color_range.lightness_min));
+			starCol[i*3] = c.r; starCol[i*3+1] = c.g; starCol[i*3+2] = c.b;
+		}
+		starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+		starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+		const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+			size: ap.size, vertexColors: true, transparent: true, opacity: ap.opacity,
+			blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
+		}));
+		scene.add(stars); track(stars);
+		envHandle = {
+			update(dt, time) {
+				stars.rotation.y += dt * ap.drift_speed;
+				const tt = time / 1000;
+				keyLight.intensity = lighting.key_light.intensity + Math.sin(tt * 0.8) * 0.5;
+				rimLight.intensity = lighting.rim_light.intensity + Math.cos(tt * 0.6) * 0.4;
+				underLight.intensity = lighting.under_light.intensity + Math.sin(tt * 1.2) * 0.3;
+			}
+		};
+	} else {
+		// Destination portal: themed static environment
+		envHandle = buildEnvironment(config, scene, track);
+	}
 
 	// Store lights for environment animation
 	world._lights = { ambient: ambientLight, key: keyLight, rim: rimLight, under: underLight };
