@@ -44,8 +44,8 @@ function buildOcean(config, scene, track) {
 	geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
 	const mat = new THREE.PointsMaterial({
-		color: new THREE.Color(0x00ddff),
-		size: 0.06, transparent: true, opacity: 0.4,
+		color: new THREE.Color(0x33ccff),
+		size: 0.12, transparent: true, opacity: 0.6,
 		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	const bubbles = new THREE.Points(geo, mat);
@@ -55,7 +55,7 @@ function buildOcean(config, scene, track) {
 	const waterGeo = new THREE.PlaneGeometry(16, 16, 24, 24);
 	const waterMat = new THREE.MeshBasicMaterial({
 		color: new THREE.Color(p.primary),
-		transparent: true, opacity: 0.08,
+		transparent: true, opacity: 0.15,
 		side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false,
 	});
 	const water = new THREE.Mesh(waterGeo, waterMat);
@@ -111,8 +111,8 @@ function buildForest(config, scene, track) {
 	geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
 	const mat = new THREE.PointsMaterial({
-		color: new THREE.Color(0xddcc44),
-		size: 0.04, transparent: true, opacity: 0.6,
+		color: new THREE.Color(0xffdd44),
+		size: 0.08, transparent: true, opacity: 0.8,
 		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	const pollen = new THREE.Points(geo, mat);
@@ -190,7 +190,7 @@ function buildCelebration(config, scene, track) {
 	geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
 	const mat = new THREE.PointsMaterial({
-		size: 0.08, vertexColors: true, transparent: true, opacity: 0.8,
+		size: 0.12, vertexColors: true, transparent: true, opacity: 0.9,
 		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	const confetti = new THREE.Points(geo, mat);
@@ -271,7 +271,7 @@ function buildCosmos(config, scene, track) {
 	geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
 	const mat = new THREE.PointsMaterial({
-		size: 0.04, vertexColors: true, transparent: true, opacity: 0.9,
+		size: 0.05, vertexColors: true, transparent: true, opacity: 0.95,
 		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	const stars = new THREE.Points(geo, mat);
@@ -354,8 +354,8 @@ function buildCity(config, scene, track) {
 	geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
 	const mat = new THREE.PointsMaterial({
-		color: new THREE.Color(0x6688aa),
-		size: 0.03, transparent: true, opacity: 0.4,
+		color: new THREE.Color(0x88aacc),
+		size: 0.06, transparent: true, opacity: 0.5,
 		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	const rain = new THREE.Points(geo, mat);
@@ -404,7 +404,7 @@ function buildDream(config, scene, track) {
 	geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
 	const mat = new THREE.PointsMaterial({
-		size: 0.25, vertexColors: true, transparent: true, opacity: 0.3,
+		size: 0.35, vertexColors: true, transparent: true, opacity: 0.4,
 		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	const orbs = new THREE.Points(geo, mat);
@@ -490,8 +490,8 @@ function buildTheater(config, scene, track) {
 	geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
 	const mat = new THREE.PointsMaterial({
-		color: new THREE.Color(0xddbb77),
-		size: 0.03, transparent: true, opacity: 0.5,
+		color: new THREE.Color(0xffdd88),
+		size: 0.05, transparent: true, opacity: 0.7,
 		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	const dust = new THREE.Points(geo, mat);
@@ -542,8 +542,8 @@ function buildMemory(config, scene, track) {
 	geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
 	const mat = new THREE.PointsMaterial({
-		color: new THREE.Color(0xb8a070),
-		size: 0.025, transparent: true, opacity: 0.35,
+		color: new THREE.Color(0xddb870),
+		size: 0.04, transparent: true, opacity: 0.5,
 		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
 	});
 	const dust = new THREE.Points(geo, mat);

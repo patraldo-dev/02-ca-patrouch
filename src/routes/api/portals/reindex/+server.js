@@ -14,9 +14,9 @@ import { json } from '@sveltejs/kit';
  * color palette, trigger keywords). New galaxy + portal auto-inserted into D1.
  */
 
-const ACTIVATION_THRESHOLD = 3;
-const DISCOVERY_THRESHOLD = 3; // min unmatched writings to trigger AI discovery
-const MIN_SHARED_KEYWORDS = 2; // min keywords shared across unmatched writings
+const ACTIVATION_THRESHOLD = 5;
+const DISCOVERY_THRESHOLD = 10; // min unmatched writings to trigger AI discovery
+const MIN_SHARED_KEYWORDS = 3; // min keywords shared across unmatched writings
 
 export async function POST({ platform, request }) {
     const db = platform?.env?.DB_book;

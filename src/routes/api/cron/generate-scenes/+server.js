@@ -140,10 +140,9 @@ export async function POST({ platform, request }) {
                 return triggers.some(t => text.includes(t.toLowerCase()));
             }).slice(0, 8); // max 8 writings per portal
 
-            // If no matches, use 3 random writings as fallback
-            const sourceWritings = matchedWritings.length >= 2
-                ? matchedWritings
-                : writings.slice(0, 3);
+            // Skip portals without enough matched writings — keep existing config
+            if (matchedWritings.length < 3) continue;
+            const sourceWritings = matchedWritings;
 
             const sourceIds = sourceWritings.map(w => w.id);
 
