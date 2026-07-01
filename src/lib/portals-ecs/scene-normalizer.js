@@ -52,6 +52,31 @@ const PARTICLE_STYLE_ALIASES = {
     'melancholic': 'snow',
 };
 
+// ── Valid environment types ──
+const VALID_ENVIRONMENT_TYPES = ['forest', 'ocean', 'celebration', 'space', 'city', 'dream', 'theater', 'memory'];
+
+const ENVIRONMENT_TYPE_ALIASES = {
+	'tree': 'forest', 'trees': 'forest', 'woods': 'forest', 'grove': 'forest', 'jungle': 'forest',
+	'sea': 'ocean', 'water': 'ocean', 'underwater': 'ocean', 'marine': 'ocean', 'waves': 'ocean',
+	'party': 'celebration', 'fiesta': 'celebration', 'festival': 'celebration', 'carnival': 'celebration',
+	'cosmos': 'space', 'cosmic': 'space', 'stars': 'space', 'galaxy': 'space', 'universe': 'space',
+	'urban': 'city', 'street': 'city', 'building': 'city', 'metropolis': 'city',
+	'dreams': 'dream', 'dreamscape': 'dream', 'surreal': 'dream', 'clouds': 'dream',
+	'stage': 'theater', 'spotlight': 'theater', 'performance': 'theater', 'narrative': 'theater',
+	'memories': 'memory', 'nostalgia': 'memory', 'sepia': 'memory', 'photo': 'memory', 'photos': 'memory',
+};
+
+function normalizeEnvironmentType(raw) {
+	if (typeof raw !== 'string') return null;
+	const lower = raw.toLowerCase().trim();
+	if (VALID_ENVIRONMENT_TYPES.includes(lower)) return lower;
+	if (ENVIRONMENT_TYPE_ALIASES[lower]) return ENVIRONMENT_TYPE_ALIASES[lower];
+	for (const valid of VALID_ENVIRONMENT_TYPES) {
+		if (lower.includes(valid)) return valid;
+	}
+	return null;
+}
+
 function normalizeParticleStyle(raw) {
     if (typeof raw !== 'string') return 'dust';
     const lower = raw.toLowerCase().trim();
@@ -98,6 +123,9 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
         source_writings: [],
         generated_at: new Date().toISOString(),
         quality: 'medium',
+        environment: {
+            type: null, // will be set from raw if valid
+        },
         atmosphere: {
             mood: 'contemplative',
             intensity: 0.5,
@@ -136,6 +164,12 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
     };
 
     if (!raw || typeof raw !== 'object') return normalized;
+
+    // ── Environment type (determines unique visual world) ──
+    const envType = normalizeEnvironmentType(raw.environment?.type ?? raw.environment_type);
+    if (envType) {
+        normalized.environment = { type: envType };
+    }
 
     // ── Atmosphere ──
     const atmo = raw.atmosphere || {};

@@ -1,4 +1,5 @@
 // Barrel exports for the Portals ECS module
-export { PortalGate, TabLayout, BumperPhase, ReactiveBackground, AmbientParticle, CarouselSlide, WorldMode, NarrativeState, PortalRing, InteriorDecoration } from './components.js';
-export { TabSystem, BumperSystem, BackgroundSystem, ParticleSystem, CarouselSystem, PortalInputSystem, FocusHoldSystem, NarrativeSystem, ProximityRingSystem, EntryCinematicSystem, CrystalInteractionSystem } from './systems.js';
-export { initPortalWorld, destroyPortalWorld } from './world.js';
+// world-builder.js is the single canonical engine
+export { boot, bootPortalEngine } from './world-builder.js';
+export { normalizeSceneConfig } from './scene-normalizer.js';
+export { buildEnvironment } from './environments.js';

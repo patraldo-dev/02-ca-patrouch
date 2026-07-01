@@ -382,23 +382,11 @@ function rebuildScene(world, portalId) {
 	console.log('[portals] Scene built:', portalId, 'cubes:', cubeMeshes.length);
 }
 
-// ── Boot Portal Engine — loads configs + boots world in one call ──
+// ── Boot Portal Engine — accepts pre-merged configs (SSR + static fallbacks) ──
 
-export async function bootPortalEngine(container) {
-	const portalIds = ['arboleda', 'fiesta', 'narrador', 'oceano', 'cosmos', 'urbano', 'suenos', 'nostalgias'];
-	const configs = {};
-	for (const id of portalIds) {
-		try {
-			const resp = await fetch(`/scenes/${id}.json`);
-			if (resp.ok) {
-				configs[id] = await resp.json();
-			}
-		} catch (err) {
-			console.warn(`[portals] Failed to load ${id}:`, err.message);
-		}
-	}
-	if (!configs.arboleda) {
-		throw new Error('No index config (arboleda.json) found');
+export async function bootPortalEngine(container, configs) {
+	if (!configs || !configs.arboleda) {
+		throw new Error('bootPortalEngine: configs.arboleda is required');
 	}
 	return boot(container, configs.arboleda, configs);
 }

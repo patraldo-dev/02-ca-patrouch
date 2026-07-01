@@ -1,7 +1,7 @@
 <!--
 	/portals — ECS Portal Scene
-	World.create() + Three.js + Antoine art cubes
-	No bumper. No index mode. Pure scene.
+	Config-driven world powered by Mistral-generated scene configs.
+	Scene configs come from D1 via SSR (data.sceneConfigs), not static files.
 -->
 <script>
 	import { onMount, onDestroy } from 'svelte';
@@ -20,17 +20,40 @@
 
 		async function boot() {
 			try {
-				const mod = await import('$lib/portals-ecs/world-builder.js');
-				await mod.bootPortalEngine(containerEl);
+				// Merge SSR configs (from D1/Mistral) with static fallbacks
+				const SSR_CONFIGS = data?.sceneConfigs || {};
+				const PORTAL_IDS = ['arboleda', 'fiesta', 'narrador', 'oceano', 'cosmos', 'urbano', 'suenos', 'nostalgias'];
+				const configs = {};
+
+				// First load static fallbacks (ensures environment.type, camera, etc.)
+				for (const id of PORTAL_IDS) {
+					try {
+						const resp = await fetch(`/scenes/${id}.json`);
+						if (resp.ok) configs[id] = await resp.json();
+					} catch {}
+				}
+
+				// Overlay SSR configs from Mistral — these win when present
+				for (const id of PORTAL_IDS) {
+					if (SSR_CONFIGS[id]) {
+						// Deep merge: SSR overrides matching keys, static provides structure
+						configs[id] = deepMerge(configs[id] || {}, SSR_CONFIGS[id]);
+					}
+				}
+
+				if (!configs.arboleda) {
+					throw new Error('No scene config found for arboleda (neither D1 nor static)');
+				}
+
+				const { bootPortalEngine } = await import('$lib/portals-ecs/world-builder.js');
+				await bootPortalEngine(containerEl, configs);
 				if (cancelled) return;
 				booted = true;
 
-				// Listen for portal taps
 				window.addEventListener('portal-tapped', (e) => {
 					selectedPortal = e.detail.portalId;
 				});
 
-				// Listen for XR support
 				window.addEventListener('xr-support', (e) => {
 					xrSupport = e.detail;
 				});
@@ -47,6 +70,20 @@
 			cancelled = true;
 		};
 	});
+
+	function deepMerge(base, overlay) {
+		// Static provides environment.type, camera, portal_links (structure)
+		// SSR/Mistral provides palette, crystals, narrative_texts, atmosphere, narrative_states
+		const result = { ...base };
+		for (const key of Object.keys(overlay)) {
+			if (overlay[key] && typeof overlay[key] === 'object' && !Array.isArray(overlay[key])) {
+				result[key] = { ...(base[key] || {}), ...overlay[key] };
+			} else if (overlay[key] != null) {
+				result[key] = overlay[key];
+			}
+		}
+		return result;
+	}
 
 	function nameOf(portalId) {
 		if (!portalId) return '';
