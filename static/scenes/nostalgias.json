@@ -23,7 +23,7 @@
     "accent": "#6d82adcc",
     "background": "#020410",
     "fog_color": "#04081a",
-    "fog_density": 0.025,
+    "fog_density": 0.045,
     "safe_text_color": "#6d82ad"
   },
   "lighting": {
@@ -156,9 +156,12 @@
   "camera": {
     "orbit": {
       "radius_a": 5,
-      "radius_b": 3.5,
+      "radius_b": 4,
       "height": 1,
-      "speed": 0.06
+      "speed": 0.035
     }
+  },
+  "environment": {
+    "type": "memory"
   }
 }

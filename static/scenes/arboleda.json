@@ -33,7 +33,7 @@
     "accent": "#8fbf5f",
     "background": "#020804",
     "fog_color": "#04140a",
-    "fog_density": 0.025,
+    "fog_density": 0.04,
     "safe_text_color": "#578947"
   },
   "lighting": {
@@ -266,10 +266,13 @@
   },
   "camera": {
     "orbit": {
-      "radius_a": 5,
-      "radius_b": 3.5,
-      "height": 1,
-      "speed": 0.05
+      "radius_a": 4.5,
+      "radius_b": 3,
+      "height": 1.5,
+      "speed": 0.04
     }
+  },
+  "environment": {
+    "type": "forest"
   }
 }

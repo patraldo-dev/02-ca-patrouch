@@ -32,7 +32,7 @@
     "accent": "#ff6b35cc",
     "background": "#0a0202",
     "fog_color": "#140404",
-    "fog_density": 0.025,
+    "fog_density": 0.02,
     "safe_text_color": "#ff6b35"
   },
   "lighting": {
@@ -164,10 +164,13 @@
   "audio": {},
   "camera": {
     "orbit": {
-      "radius_a": 5,
-      "radius_b": 3.5,
-      "height": 1,
-      "speed": 0.06
+      "radius_a": 4,
+      "radius_b": 3,
+      "height": 1.5,
+      "speed": 0.08
     }
+  },
+  "environment": {
+    "type": "celebration"
   }
 }

@@ -32,7 +32,7 @@
     "accent": "#0f84cacc",
     "background": "#020610",
     "fog_color": "#04101f",
-    "fog_density": 0.025,
+    "fog_density": 0.06,
     "safe_text_color": "#0f84ca"
   },
   "lighting": {
@@ -164,10 +164,13 @@
   "audio": {},
   "camera": {
     "orbit": {
-      "radius_a": 5,
-      "radius_b": 3.5,
-      "height": 1,
-      "speed": 0.06
+      "radius_a": 6,
+      "radius_b": 4,
+      "height": 0.5,
+      "speed": 0.04
     }
+  },
+  "environment": {
+    "type": "ocean"
   }
 }

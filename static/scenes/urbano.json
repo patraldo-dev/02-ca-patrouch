@@ -23,7 +23,7 @@
     "accent": "#617b87cc",
     "background": "#040406",
     "fog_color": "#080810",
-    "fog_density": 0.025,
+    "fog_density": 0.04,
     "safe_text_color": "#617b87"
   },
   "lighting": {
@@ -156,9 +156,12 @@
   "camera": {
     "orbit": {
       "radius_a": 5,
-      "radius_b": 3.5,
-      "height": 1,
-      "speed": 0.06
+      "radius_b": 4,
+      "height": 0.8,
+      "speed": 0.05
     }
+  },
+  "environment": {
+    "type": "city"
   }
 }

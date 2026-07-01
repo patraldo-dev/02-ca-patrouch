@@ -5,6 +5,7 @@
 import { World, Transform } from '@iwsdk/core';
 import { createComponent, createSystem, Types } from 'elics';
 import * as THREE from 'three';
+import { buildEnvironment } from './environments.js';
 
 // ── ECS Components ──
 
@@ -192,30 +193,12 @@ function rebuildScene(world, portalId) {
 	underLight.position.set(...lighting.under_light.position);
 	scene.add(underLight); track(underLight);
 
-	// ── Starfield ──
-	const ap = config.ambient_particles;
-	const starGeo = new THREE.BufferGeometry();
-	const starPos = new Float32Array(ap.count * 3);
-	const starCol = new Float32Array(ap.count * 3);
-	for (let i = 0; i < ap.count; i++) {
-		const r = 3 + Math.random() * ap.spawn_radius;
-		const theta = Math.random() * Math.PI * 2;
-		const phi = Math.acos(2 * Math.random() - 1);
-		starPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
-		starPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
-		starPos[i*3+2] = r * Math.cos(phi);
-		const hue = ap.color_range.hue_start + Math.random() * ap.color_range.hue_span;
-		const c = new THREE.Color().setHSL(hue, ap.color_range.saturation,
-			ap.color_range.lightness_min + Math.random() * (ap.color_range.lightness_max - ap.color_range.lightness_min));
-		starCol[i*3] = c.r; starCol[i*3+1] = c.g; starCol[i*3+2] = c.b;
-	}
-	starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-	starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
-	const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
-		size: ap.size, vertexColors: true, transparent: true, opacity: ap.opacity,
-		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
-	}));
-	scene.add(stars); track(stars);
+	// ── Environment (unique per portal type) ──
+	const envHandle = buildEnvironment(config, scene, track);
+
+	// Store lights for environment animation
+	world._lights = { ambient: ambientLight, key: keyLight, rim: rimLight, under: underLight };
+	world._envHandle = envHandle;
 
 	// ── Portal cubes from portal_links ──
 	const links = config.portal_links || [];
@@ -359,36 +342,36 @@ function rebuildScene(world, portalId) {
 	const texts = config.narrative_texts[lang] || config.narrative_texts.es;
 	world.globals.narrativeTexts = texts;
 
-	// ── Update animation wrapper ──
+	// ── Update animation wrapper (uses world-level refs, no stale closures) ──
 	if (!world._updateWrapped) {
 		const origUpdate = world.update.bind(world);
 		world.update = function(delta, time) {
 			origUpdate(delta, time);
-			const tt = time / 1000;
 
-			// Narrative cycling
-			const narrLast = narrEntity.getValue(NarrativeState, 'lastAdvance');
-			if (performance.now() - narrLast > 12000) {
-				const idx = narrEntity.getValue(NarrativeState, 'stateIndex');
-				const currentTexts = world.globals.narrativeTexts || texts;
-				if (currentTexts.length > 0) {
-					showOverlay(currentTexts[idx]);
-					narrEntity.setValue(NarrativeState, 'stateIndex', (idx + 1) % currentTexts.length);
-					narrEntity.setValue(NarrativeState, 'lastAdvance', performance.now());
-				}
+			// Environment animation (particles, decorations, light movement)
+			if (world._envHandle?.update) {
+				world._envHandle.update(delta, time, world._lights);
 			}
 
-			// Star + light animation
-			if (stars && stars.material) {
-				stars.rotation.y += delta * ap.drift_speed;
-				keyLight.intensity = lighting.key_light.intensity + Math.sin(tt * 0.8) * 0.5;
-				rimLight.intensity = lighting.rim_light.intensity + Math.cos(tt * 0.6) * 0.4;
-				underLight.intensity = lighting.under_light.intensity + Math.sin(tt * 1.2) * 0.3;
-				// (disc removed)
+			// Narrative cycling
+			if (world._narrEntity && world._narrTexts) {
+				const narrLast = world._narrEntity.getValue(NarrativeState, 'lastAdvance');
+				if (performance.now() - narrLast > 12000) {
+					const idx = world._narrEntity.getValue(NarrativeState, 'stateIndex');
+					if (world._narrTexts.length > 0) {
+						showOverlay(world._narrTexts[idx]);
+						world._narrEntity.setValue(NarrativeState, 'stateIndex', (idx + 1) % world._narrTexts.length);
+						world._narrEntity.setValue(NarrativeState, 'lastAdvance', performance.now());
+					}
+				}
 			}
 		};
 		world._updateWrapped = true;
 	}
+
+	// Store narrative refs on world for the wrapper
+	world._narrEntity = narrEntity;
+	world._narrTexts = texts;
 
 	// ── First narrative ──
 	setTimeout(() => showOverlay(texts[0]), 1500);
