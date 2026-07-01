@@ -239,7 +239,7 @@ function rebuildScene(world, portalId) {
 		const cubeMats = [];
 		for (let f = 0; f < 6; f++) {
 			const fMat = new THREE.MeshBasicMaterial({
-				color: new THREE.Color(tc.palette.primary), transparent: true, opacity: 0, side: THREE.DoubleSide,
+				color: new THREE.Color(tc.palette.primary), transparent: true, opacity: 0.8, side: THREE.DoubleSide,
 			});
 			texLoader.load(
 				`https://imagedelivery.net/${CF_HASH}/${tc.portal.art}/segment=foreground,width=256`,
@@ -280,16 +280,7 @@ function rebuildScene(world, portalId) {
 		world._sceneEntities.push(entity);
 		cubeMeshes.push(cubeMesh);
 
-		// Glow ring
-		const glow = new THREE.Mesh(
-			new THREE.RingGeometry(0.4, 0.5, 32),
-			new THREE.MeshBasicMaterial({
-				color: new THREE.Color(tc.palette.primary),
-				transparent: true, opacity: 0.15, side: THREE.DoubleSide,
-			}),
-		);
-		glow.position.set(cx, cy, cz - 0.1);
-		scene.add(glow); track(glow);
+		// (glow ring removed — was looking like flat circles)
 	});
 
 	// ── Narrative entity ──
@@ -346,8 +337,17 @@ function rebuildScene(world, portalId) {
 			const desc = tc.portal.descriptions[lang] || tc.portal.descriptions.es;
 			showPortalOverlay(name, desc, tc.palette.safe_text_color);
 
+			// Flash transition
+			const flash = document.createElement('div');
+			flash.style.cssText = 'position:fixed;inset:0;background:' + tc.palette.primary + ';opacity:0;transition:opacity 0.3s ease;pointer-events:none;z-index:9998;';
+			document.body.appendChild(flash);
+			requestAnimationFrame(() => { flash.style.opacity = '0.6'; });
+			setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 300); }, 600);
+
+			console.log('[portals] Navigating:', nav.currentPortalId, '→', targetId);
+
 			// Navigate after delay
-			setTimeout(() => rebuildScene(world, targetId), 2000);
+			setTimeout(() => rebuildScene(world, targetId), 1500);
 		}
 	}
 
@@ -401,48 +401,34 @@ function rebuildScene(world, portalId) {
 
 // ── Boot ──
 
-export async function bootPortalEngine(container) {
-	// Load all scene configs
-	const portalIds = ['arboleda', 'fiesta', 'narrador', 'oceano', 'cosmos', 'urbano', 'suenos', 'nostalgias'];
-	const allConfigs = {};
-	for (const id of portalIds) {
-		try {
-			const resp = await fetch(`/scenes/${id}.json`);
-			if (resp.ok) {
-				allConfigs[id] = await resp.json();
-				console.log(`[portals] Loaded config: ${id}`);
-			}
-		} catch (err) {
-			console.warn(`[portals] Failed to load ${id}:`, err.message);
-		}
-	}
-	if (!allConfigs.arboleda) {
-		console.error('[portals] No index config found');
-		return null;
-	}
-
+export async function boot(container, indexConfig, allConfigs) {
 	const world = await World.create(container, {
 		xr: { offer: 'none' },
 		render: { defaultLighting: false },
 		features: { locomotion: false, grabbing: false, physics: false },
 	});
 
+	// Register components
 	world.registerComponent(PortalCube);
 	world.registerComponent(CameraOrbit);
 	world.registerComponent(NarrativeState);
 
+	// Register systems
 	world.registerSystem(FloatSystem, { priority: 0 });
 	world.registerSystem(CameraOrbitSystem, { priority: 0 });
 
+	// Init tracking
 	world._sceneObjects = [];
 	world._sceneEntities = [];
 
+	// Store configs
 	nav.allConfigs = allConfigs;
 	nav.history = [];
 
-	rebuildScene(world, 'arboleda');
+	// Build initial scene
+	rebuildScene(world, indexConfig.portal.id);
 
-	console.log('[portals] World booted: arboleda');
+	console.log('[portals] World booted:', indexConfig.portal.id);
 
 	return world;
 }
