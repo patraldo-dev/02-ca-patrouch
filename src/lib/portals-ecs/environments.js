@@ -16,8 +16,13 @@ export function buildEnvironment(config, scene, track) {
 // ═══ OCEAN ═══
 function buildOcean(config, scene, track) {
 	const p = config.palette;
-	const bc = 400;
-	const bGeo = new THREE.BufferGeometry();
+
+	// Sand floor
+	const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshBasicMaterial({ color: 0x1a3a4a, transparent: true, opacity: 0.6 }));
+	floor.rotation.x = -Math.PI/2; floor.position.y = -2.5;
+	scene.add(floor); track(floor);
+
+	// Bubbles = new THREE.BufferGeometry();
 	const bPos = new Float32Array(bc * 3), bSpd = new Float32Array(bc), bSway = new Float32Array(bc);
 	for (let i = 0; i < bc; i++) {
 		bPos[i*3]=((Math.random()-0.5)*12); bPos[i*3+1]=((Math.random()-0.5)*8); bPos[i*3+2]=((Math.random()-0.5)*12);
@@ -111,6 +116,11 @@ function buildOcean(config, scene, track) {
 
 // ═══ FOREST ═══
 function buildForest(config, scene, track) {
+	// Ground
+	const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshBasicMaterial({ color: 0x0a1a08, transparent: true, opacity: 0.5 }));
+	ground.rotation.x = -Math.PI/2; ground.position.y = -1.5;
+	scene.add(ground); track(ground);
+
 	const pc = 300;
 	const pGeo = new THREE.BufferGeometry();
 	const pPos = new Float32Array(pc*3), pPh = new Float32Array(pc);
@@ -168,6 +178,11 @@ function buildForest(config, scene, track) {
 
 // ═══ CELEBRATION ═══
 function buildCelebration(config, scene, track) {
+	// Floor
+	const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshBasicMaterial({ color: 0x1a0a00, transparent: true, opacity: 0.4 }));
+	floor.rotation.x = -Math.PI/2; floor.position.y = -1.5;
+	scene.add(floor); track(floor);
+
 	const cc = 400;
 	const cGeo = new THREE.BufferGeometry();
 	const cPos = new Float32Array(cc*3), cCol = new Float32Array(cc*3);
@@ -293,33 +308,67 @@ function buildCosmos(config, scene, track) {
 	};
 }
 
-// ═══ CITY ═══
+// ═══ CITY (Manhattan-style) ═══
 function buildCity(config, scene, track) {
 	const p = config.palette;
+
+	// Street grid floor
+	const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshBasicMaterial({ color: 0x0c0c14, transparent: true, opacity: 0.5 }));
+	floor.rotation.x = -Math.PI/2; floor.position.y = -1.5;
+	scene.add(floor); track(floor);
+
+	// Street lines
+	for (let si = -2; si <= 2; si++) {
+		const street = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 20), new THREE.MeshBasicMaterial({ color: 0x444455, transparent: true, opacity: 0.25 }));
+		street.rotation.x = -Math.PI/2; street.position.set(si*4, -1.49, 0);
+		scene.add(street); track(street);
+	}
+
 	const winMeshes = [];
-	for (let i = 0; i < 14; i++) {
-		const w = 0.8+Math.random()*1.2, h = 2+Math.random()*5, d = 0.8+Math.random()*1.2;
-		const boxGeo = new THREE.BoxGeometry(w, h, d);
-		const edges = new THREE.EdgesGeometry(boxGeo);
-		const b = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: new THREE.Color(p.primary).multiplyScalar(0.5+Math.random()*0.3), transparent: true, opacity: 0.3+Math.random()*0.2 }));
-		const a = (i/14)*Math.PI*2, r = 3+Math.random()*4;
-		b.position.set(Math.cos(a)*r, h/2-1.5, Math.sin(a)*r);
-		scene.add(b); track(b); boxGeo.dispose();
-		for (let wi = 0; wi < Math.floor(h*3); wi++) {
-			const lit = Math.random() > 0.4;
-			const wm = new THREE.MeshBasicMaterial({ color: lit ? 0xffdd66 : 0x222233, transparent: true, opacity: lit ? 0.7 : 0.2, blending: lit ? THREE.AdditiveBlending : THREE.NormalBlending });
-			const win = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.06), wm);
-			const face = Math.floor(Math.random()*4), off = w/2+0.01, wy = -1.5+Math.random()*h;
-			if (face===0) win.position.set(b.position.x+off, wy, b.position.z+(Math.random()-0.5)*d);
-			else if (face===1) win.position.set(b.position.x-off, wy, b.position.z+(Math.random()-0.5)*d);
-			else if (face===2) { win.position.set(b.position.x+(Math.random()-0.5)*w, wy, b.position.z+off); win.rotation.y = Math.PI/2; }
-			else { win.position.set(b.position.x+(Math.random()-0.5)*w, wy, b.position.z-off); win.rotation.y = Math.PI/2; }
-			scene.add(win); track(win);
-			if (lit) winMeshes.push({ mesh: win, baseOp: 0.7 });
+	for (let i = 0; i < 18; i++) {
+		const w = 1+Math.random()*1.5, h = 4+Math.random()*8, d = 1+Math.random()*1.5;
+		const angle = (i/18)*Math.PI*2, r = 3+Math.random()*5;
+		const bx = Math.cos(angle)*r, bz = Math.sin(angle)*r;
+
+		// Solid building
+		const building = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color: 0x111122, transparent: true, opacity: 0.8 }));
+		building.position.set(bx, h/2-1.5, bz);
+		scene.add(building); track(building);
+
+		// Edge outline
+		const edges = new THREE.EdgesGeometry(building.geometry);
+		const el = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: new THREE.Color(p.primary).multiplyScalar(0.6), transparent: true, opacity: 0.4 }));
+		el.position.copy(building.position);
+		scene.add(el); track(el);
+
+		// Windows grid
+		for (let wr = 0; wr < Math.floor(h/0.5); wr++) {
+			for (let wc = 0; wc < Math.floor(w/0.4); wc++) {
+				if (Math.random() < 0.3) continue;
+
+				const lit = Math.random() > 0.35;
+				const wm = new THREE.MeshBasicMaterial({ color: lit ? 0xffdd66 : 0x222244, transparent: true, opacity: lit ? 0.6 : 0.15, blending: lit ? THREE.AdditiveBlending : THREE.NormalBlending });
+				const win = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.12), wm);
+				win.position.set(bx - w/2 + 0.2 + wc*0.35, -1.5 + 0.3 + wr*0.45, bz + d/2 + 0.01);
+				scene.add(win); track(win);
+				if (lit) winMeshes.push({ mesh: win, baseOp: 0.6 });
+			}
 		}
 	}
-	const moon = new THREE.Mesh(new THREE.CircleGeometry(0.8, 32), new THREE.MeshBasicMaterial({ color: 0xddeeff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false }));
-	moon.position.set(-5, 4, -8); scene.add(moon); track(moon);
+	// Moon
+	const moon = new THREE.Mesh(new THREE.CircleGeometry(1, 32), new THREE.MeshBasicMaterial({ color: 0xddeeff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending }));
+	moon.position.set(-6, 5, -10); scene.add(moon); track(moon);
+
+	// Vehicles (yellow taxis + orange buses on streets)
+	const vehicles = [];
+	for (let vi = 0; vi < 4; vi++) {
+		const vg = new THREE.BoxGeometry(0.8, 0.25, 0.35);
+		const vm = new THREE.MeshBasicMaterial({ color: vi%2===0 ? 0xffcc00 : 0xff6633, transparent: true, opacity: 0.5 });
+		const v = new THREE.Mesh(vg, vm);
+		v.position.set((Math.floor(Math.random()*4)-2)*4, -1.3, -8+vi*4);
+		v.userData = { speed: 0.5+Math.random()*0.5 };
+		scene.add(v); track(v); vehicles.push(v);
+	}
 
 	const rc = 400;
 	const rGeo = new THREE.BufferGeometry();
@@ -334,7 +383,8 @@ function buildCity(config, scene, track) {
 			const rp = rGeo.attributes.position.array;
 			for (let i = 0; i < rc; i++) { rp[i*3+1] -= rSpd[i]*dt; if (rp[i*3+1]<-3) { rp[i*3]=(Math.random()-0.5)*14; rp[i*3+1]=6+Math.random()*4; rp[i*3+2]=(Math.random()-0.5)*14; } }
 			rGeo.attributes.position.needsUpdate = true;
-			for (const w of winMeshes) if (Math.random() > 0.99) w.mesh.material.opacity = w.baseOp * (Math.random() > 0.5 ? 0.3 : 1.2);
+			for (const v of vehicles) { v.position.z += v.userData.speed*dt; if (v.position.z > 10) v.position.z = -10; }
+			for (const w of winMeshes) if (Math.random() > 0.995) w.mesh.material.opacity = w.baseOp * (Math.random() > 0.5 ? 0.2 : 1.3);
 			if (lights.under) lights.under.intensity = config.lighting.under_light.intensity + (Math.random() > 0.95 ? 4 : 0);
 		},
 	};
