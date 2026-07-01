@@ -401,34 +401,48 @@ function rebuildScene(world, portalId) {
 
 // ── Boot ──
 
-export async function boot(container, indexConfig, allConfigs) {
+export async function bootPortalEngine(container) {
+	// Load all scene configs
+	const portalIds = ['arboleda', 'fiesta', 'narrador', 'oceano', 'cosmos', 'urbano', 'suenos', 'nostalgias'];
+	const allConfigs = {};
+	for (const id of portalIds) {
+		try {
+			const resp = await fetch(`/scenes/${id}.json`);
+			if (resp.ok) {
+				allConfigs[id] = await resp.json();
+				console.log(`[portals] Loaded config: ${id}`);
+			}
+		} catch (err) {
+			console.warn(`[portals] Failed to load ${id}:`, err.message);
+		}
+	}
+	if (!allConfigs.arboleda) {
+		console.error('[portals] No index config found');
+		return null;
+	}
+
 	const world = await World.create(container, {
 		xr: { offer: 'none' },
 		render: { defaultLighting: false },
 		features: { locomotion: false, grabbing: false, physics: false },
 	});
 
-	// Register components
 	world.registerComponent(PortalCube);
 	world.registerComponent(CameraOrbit);
 	world.registerComponent(NarrativeState);
 
-	// Register systems
 	world.registerSystem(FloatSystem, { priority: 0 });
 	world.registerSystem(CameraOrbitSystem, { priority: 0 });
 
-	// Init tracking
 	world._sceneObjects = [];
 	world._sceneEntities = [];
 
-	// Store configs
 	nav.allConfigs = allConfigs;
 	nav.history = [];
 
-	// Build initial scene
-	rebuildScene(world, indexConfig.portal.id);
+	rebuildScene(world, 'arboleda');
 
-	console.log('[portals] World booted:', indexConfig.portal.id);
+	console.log('[portals] World booted: arboleda');
 
 	return world;
 }
