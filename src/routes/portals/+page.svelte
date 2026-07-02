@@ -51,11 +51,13 @@
 				const { buildDesertScene } = await import('$lib/portals-ecs/desert-scene.js');
 				const { buildOceanScene } = await import('$lib/portals-ecs/ocean-scene.js');
 				const { buildForestScene } = await import('$lib/portals-ecs/forest-scene.js');
+				const { buildCosmosScene } = await import('$lib/portals-ecs/cosmos-scene.js');
 				for (const pid of Object.keys(configs)) {
 					if (pid === 'arboleda') continue;
 					const envType = configs[pid]?.environment?.type;
 					if (envType === 'ocean') registerSceneRenderer(pid, buildOceanScene);
 					else if (envType === 'forest') registerSceneRenderer(pid, buildForestScene);
+					else if (envType === 'space') registerSceneRenderer(pid, buildCosmosScene);
 					else registerSceneRenderer(pid, buildDesertScene);
 				}
 
