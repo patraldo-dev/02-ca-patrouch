@@ -229,6 +229,25 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 	hull.position.set(2, 4.5, -4);
 	scene.add(hull); track.push(hull);
 
+	// ═══ OCEAN CURRENT — flowing particles drifting in one direction ═══
+	const currentCount = 150;
+	const curGeo = new THREE.BufferGeometry();
+	const curPos = new Float32Array(currentCount * 3);
+	const curSpd = new Float32Array(currentCount);
+	for (let i = 0; i < currentCount; i++) {
+		curPos[i*3] = -8 - Math.random() * 6; // start from one side
+		curPos[i*3+1] = -1 + Math.random() * 3;
+		curPos[i*3+2] = (Math.random() - 0.5) * 14;
+		curSpd[i] = 0.3 + Math.random() * 0.4;
+	}
+	curGeo.setAttribute('position', new THREE.BufferAttribute(curPos, 3));
+	const current = new THREE.Points(curGeo, new THREE.PointsMaterial({
+		color: 0x88ccff, size: 0.05, transparent: true, opacity: 0.4,
+		blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
+	}));
+	scene.add(current); track.push(current);
+	const currentGeo = curGeo; // ref for update loop
+
 	// ═══ ROCKS ═══
 	for (let i = 0; i < 6; i++) {
 		const rg = new THREE.DodecahedronGeometry(0.4 + Math.random() * 0.3, 0);
@@ -316,6 +335,15 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 
 		// Animate water ceiling shader
 		ceilingMat.uniforms.time.value = tt;
+
+		// Ocean current flowing left to right
+		const cp = currentGeo.attributes.position.array;
+		for (let i = 0; i < currentCount; i++) {
+			cp[i*3] += curSpd[i] * delta;
+			cp[i*3+1] += Math.sin(tt * 0.5 + i) * 0.003;
+			if (cp[i*3] > 10) { cp[i*3] = -8 - Math.random() * 4; cp[i*3+1] = -1 + Math.random() * 3; cp[i*3+2] = (Math.random()-0.5)*14; }
+		}
+		currentGeo.attributes.position.needsUpdate = true;
 
 		// Seaweed swaying
 		for (const s of swayItems) {

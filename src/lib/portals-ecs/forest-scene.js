@@ -170,6 +170,43 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 		scene.add(shaft); track.push(shaft);
 	}
 
+	// ═══ FIREPIT WITH SMOKE ═══
+	// Stone ring
+	for (let i = 0; i < 8; i++) {
+		const a = (i/8) * Math.PI * 2;
+		const stone = new THREE.Mesh(
+			new THREE.DodecahedronGeometry(0.12, 0),
+			new THREE.MeshBasicMaterial({ color: 0x554433, transparent: true, opacity: 0.7 }),
+		);
+		stone.position.set(Math.cos(a) * 0.5, -1.35, Math.sin(a) * 0.5);
+		scene.add(stone); track.push(stone);
+	}
+	// Fire glow
+	const fireGlow = new THREE.Mesh(
+		new THREE.SphereGeometry(0.15, 8, 8),
+		new THREE.MeshBasicMaterial({ color: 0xff6622, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }),
+	);
+	fireGlow.position.set(0, -1.2, 0);
+	scene.add(fireGlow); track.push(fireGlow);
+	const fireLight = new THREE.PointLight(0xff6622, 1.5, 5);
+	fireLight.position.set(0, -1, 0);
+	scene.add(fireLight); track.push(fireLight);
+	// Smoke particles
+	const smokeCount = 40;
+	const smokeGeo = new THREE.BufferGeometry();
+	const smokePos = new Float32Array(smokeCount * 3);
+	const smokeLife = new Float32Array(smokeCount);
+	for (let i = 0; i < smokeCount; i++) {
+		smokePos[i*3] = (Math.random()-0.5) * 0.1; smokePos[i*3+1] = -1 + Math.random() * 4; smokePos[i*3+2] = (Math.random()-0.5) * 0.1;
+		smokeLife[i] = Math.random();
+	}
+	smokeGeo.setAttribute('position', new THREE.BufferAttribute(smokePos, 3));
+	const smoke = new THREE.Points(smokeGeo, new THREE.PointsMaterial({
+		color: 0x999999, size: 0.2, transparent: true, opacity: 0.15,
+		blending: THREE.NormalBlending, depthWrite: false, sizeAttenuation: true,
+	}));
+	scene.add(smoke); track.push(smoke);
+
 	// ═══ LIGHTING ═══
 	const ambient = new THREE.AmbientLight(0x445522, 0.4); scene.add(ambient); track.push(ambient);
 	const key = new THREE.PointLight(0x88ff44, 0.6, 20); key.position.set(0, 4, 0); scene.add(key); track.push(key);
@@ -218,6 +255,27 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 		const tt = time / 1000;
 		if (birdCalls.length > 0 && Math.random() < 0.008) birdCalls[Math.floor(Math.random()*birdCalls.length)].call();
 		if (cricketSounds.length > 0 && Math.random() < 0.02) cricketSounds[Math.floor(Math.random()*cricketSounds.length)].chirp();
+
+		// Firepit flicker
+		fireGlow.material.opacity = 0.5 + Math.sin(tt * 8) * 0.2 + Math.sin(tt * 13) * 0.1;
+		fireGlow.scale.setScalar(0.8 + Math.sin(tt * 6) * 0.15);
+		fireLight.intensity = 1.2 + Math.sin(tt * 7) * 0.4;
+
+		// Smoke rising
+		const sPos = smokeGeo.attributes.position.array;
+		for (let i = 0; i < smokeCount; i++) {
+			sPos[i*3+1] += delta * 0.4;
+			sPos[i*3] += Math.sin(tt + i) * 0.008;
+			smokeLife[i] -= delta * 0.15;
+			if (smokeLife[i] <= 0 || sPos[i*3+1] > 4) {
+				sPos[i*3] = (Math.random()-0.5) * 0.1;
+				sPos[i*3+1] = -1;
+				sPos[i*3+2] = (Math.random()-0.5) * 0.1;
+				smokeLife[i] = 1.0;
+			}
+		}
+		smokeGeo.attributes.position.needsUpdate = true;
+		smoke.material.opacity = 0.1 + Math.sin(tt * 0.5) * 0.05;
 		for (const f of fireflies) {
 			f.mesh.position.y = f.baseY + Math.sin(tt*0.5+f.phase)*0.3;
 			f.mesh.position.x += Math.sin(tt*0.3+f.phase)*0.005;

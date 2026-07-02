@@ -244,6 +244,52 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 		scene.add(bush); track.push(bush);
 	}
 
+	// ═══ TURTLE — slowly walking through the desert ═══
+	const turtle = new THREE.Group();
+	// Shell
+	const shell = new THREE.Mesh(
+		new THREE.SphereGeometry(0.25, 12, 8, 0, Math.PI*2, 0, Math.PI/2),
+		new THREE.MeshBasicMaterial({ color: 0x4a7a3a, transparent: true, opacity: 0.7 }),
+	);
+	shell.scale.set(1, 0.5, 1.2);
+	shell.position.y = 0.08;
+	turtle.add(shell);
+	// Shell pattern (hexagon dots)
+	for (let hx = -1; hx <= 1; hx++) {
+		for (let hz = -1; hz <= 1; hz++) {
+			if (Math.abs(hx) + Math.abs(hz) > 1) continue;
+			const dot = new THREE.Mesh(
+				new THREE.CircleGeometry(0.04, 6),
+				new THREE.MeshBasicMaterial({ color: 0x2a4a1a, transparent: true, opacity: 0.6 }),
+			);
+			dot.rotation.x = -Math.PI/2;
+			dot.position.set(hx * 0.1, 0.14, hz * 0.1);
+			turtle.add(dot);
+		}
+	}
+	// Head
+	const head = new THREE.Mesh(
+		new THREE.SphereGeometry(0.08, 8, 6),
+		new THREE.MeshBasicMaterial({ color: 0x5a8a4a, transparent: true, opacity: 0.7 }),
+	);
+	head.position.set(0.3, 0.05, 0);
+	turtle.add(head);
+	// Legs
+	for (let lx = -1; lx <= 1; lx += 2) {
+		for (let lz = -1; lz <= 1; lz += 2) {
+			const leg = new THREE.Mesh(
+				new THREE.SphereGeometry(0.06, 6, 4),
+				new THREE.MeshBasicMaterial({ color: 0x4a6a3a, transparent: true, opacity: 0.6 }),
+			);
+			leg.position.set(lx * 0.15, -0.02, lz * 0.15);
+			leg.scale.set(0.8, 0.5, 1.2);
+			turtle.add(leg);
+		}
+	}
+	turtle.position.set(3, -1.45, -3);
+	scene.add(turtle); track.push(turtle);
+	const turtleState = { angle: 0, radius: 3.5, legPhase: 0 };
+
 	// ═══ LIGHTING ═══
 	const ambient = new THREE.AmbientLight(0xffaa66, 0.5);
 	scene.add(ambient); track.push(ambient);
@@ -340,7 +386,16 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 			m.material.opacity = pulse;
 			m.scale.setScalar(0.8 + pulse*0.4);
 		}
-		// Float labels + pulse cactus glows
+		// Turtle walking slowly in a circle
+		turtleState.angle += delta * 0.08;
+		turtle.position.x = Math.cos(turtleState.angle) * turtleState.radius;
+		turtle.position.z = Math.sin(turtleState.angle) * turtleState.radius;
+		turtle.rotation.y = -turtleState.angle + Math.PI / 2;
+		// Turtle bob
+		turtle.position.y = -1.45 + Math.abs(Math.sin(turtleState.legPhase) * 0.02);
+		turtleState.legPhase += delta * 2;
+
+		// Label float
 		for (const l of labels) {
 			l.sprite.position.y = l.baseY + Math.sin(tt * 0.8 + l.phase) * 0.08;
 			l.glow.material.opacity = l.baseOpacity + Math.sin(tt * 2 + l.phase) * 0.25;
