@@ -47,10 +47,16 @@
 
 				const { bootPortalEngine, registerSceneRenderer } = await import('$lib/portals-ecs/world-builder.js');
 
-				// Register desert scene for ALL portals so any cube tap works
+				// Register custom scene renderers
 				const { buildDesertScene } = await import('$lib/portals-ecs/desert-scene.js');
+				const { buildOceanScene } = await import('$lib/portals-ecs/ocean-scene.js');
+				const { buildForestScene } = await import('$lib/portals-ecs/forest-scene.js');
 				for (const pid of Object.keys(configs)) {
-					if (pid !== 'arboleda') registerSceneRenderer(pid, buildDesertScene);
+					if (pid === 'arboleda') continue;
+					const envType = configs[pid]?.environment?.type;
+					if (envType === 'ocean') registerSceneRenderer(pid, buildOceanScene);
+					else if (envType === 'forest') registerSceneRenderer(pid, buildForestScene);
+					else registerSceneRenderer(pid, buildDesertScene);
 				}
 
 				// Check for direct link: /portals?portal=urbano
