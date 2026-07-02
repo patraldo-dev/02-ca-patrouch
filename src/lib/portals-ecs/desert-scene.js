@@ -197,6 +197,13 @@ export function buildDesertScene(world, config = {}) {
 	const oldBg = scene.background;
 	scene.background = new THREE.Color(0xff9933);
 
+	// Reset camera to level forward-facing position
+	if (world.camera) {
+		world.camera.position.set(0, 1.5, 5);
+		world.camera.lookAt(0, 0, -5);
+		world.camera.rotation.z = 0;
+	}
+
 	// ═══ SOUND OBJECTS ═══
 	let windModulator = null;
 	try {
