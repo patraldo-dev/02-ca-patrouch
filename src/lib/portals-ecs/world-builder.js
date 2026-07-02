@@ -189,7 +189,9 @@ function rebuildScene(world, portalId) {
 
 	// Check for custom scene renderer
 	if (hasSceneRenderer(portalId)) {
-		const handle = SCENE_RENDERERS[portalId](world, config);
+		const handle = SCENE_RENDERERS[portalId](world, config, nav.allConfigs, (targetId) => {
+			rebuildScene(world, targetId);
+		});
 		world._customSceneCleanup = handle?.cleanup || null;
 		return;
 	}

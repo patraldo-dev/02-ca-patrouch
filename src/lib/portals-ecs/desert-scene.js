@@ -60,13 +60,37 @@ function createDroneSound(ctx) {
  * @param {Object} config - Scene config (palette, etc.)
  * @returns {{ cleanup: () => void }} cleanup handle
  */
-export function buildDesertScene(world, config = {}) {
+// Create floating text label as a sprite
+function makeTextSprite(text, color) {
+	const canvas = document.createElement('canvas');
+	canvas.width = 256; canvas.height = 64;
+	const ctx = canvas.getContext('2d');
+	ctx.fillStyle = 'rgba(0,0,0,0)';
+	ctx.fillRect(0, 0, 256, 64);
+	ctx.font = 'bold 28px Georgia, serif';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	const hex = '#' + color.getHexString();
+	ctx.shadowColor = 'rgba(0,0,0,0.8)';
+	ctx.shadowBlur = 8;
+	ctx.fillStyle = hex;
+	ctx.fillText(text, 128, 32);
+	const tex = new THREE.CanvasTexture(canvas);
+	tex.colorSpace = THREE.SRGBColorSpace;
+	const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.85, depthWrite: false });
+	return new THREE.Sprite(mat);
+}
+
+export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate = null) {
 	const scene = world.scene;
 	const track = [];
 	const swayItems = [];
 	const soundMarkers = [];
 	const chirpSounds = [];
 	const audioNodes = [];
+	const tapTargets = []; // cacti that are gateways
+	const labels = []; // floating text sprites
+	const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
 
 	// ═══ SKY ═══
 	const skyMat = new THREE.ShaderMaterial({
@@ -125,7 +149,7 @@ export function buildDesertScene(world, config = {}) {
 		scene.add(dune); track.push(dune);
 	}
 
-	// ═══ CACTI ═══
+	// ═══ CACTI — each is a gateway to another portal ═══
 	function makeCactus(x, z, scale = 1) {
 		const group = new THREE.Group();
 		const green = 0x2d6a2d;
@@ -154,12 +178,49 @@ export function buildDesertScene(world, config = {}) {
 		return group;
 	}
 
-	for (const c of [
+	// Assign portal IDs to cacti — each cactus is a gateway
+	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const cactiPositions = [
 		{ x: -3, z: -5, s: 1.2 }, { x: 4, z: -8, s: 0.9 }, { x: -6, z: -12, s: 1.5 },
 		{ x: 7, z: -6, s: 0.7 }, { x: 0, z: -15, s: 1.1 }, { x: -10, z: -8, s: 0.8 },
-	]) {
+	];
+
+	for (let i = 0; i < cactiPositions.length; i++) {
+		const c = cactiPositions[i];
 		const cactus = makeCactus(c.x, c.z, c.s);
+		const portalId = portalIds[i % portalIds.length];
+		const portalConfig = allConfigs[portalId];
+		const portalColor = portalConfig ? new THREE.Color(portalConfig.palette?.primary || 0x88ff88) : new THREE.Color(0x88ff88);
+		const portalName = portalConfig ? (portalConfig.portal?.names?.[lang] || portalConfig.portal?.names?.es || portalId) : portalId;
+
+		// Glow halo at base (destination portal color)
+		const glow = new THREE.Mesh(
+			new THREE.RingGeometry(0.5 * c.s, 0.8 * c.s, 24),
+			new THREE.MeshBasicMaterial({ color: portalColor, transparent: true, opacity: 0.25, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }),
+		);
+		glow.rotation.x = -Math.PI / 2;
+		glow.position.set(c.x, -1.48, c.z);
+		scene.add(glow); track.push(glow);
+
+		// Glow sphere at top (pulses)
+		const topGlow = new THREE.Mesh(
+			new THREE.SphereGeometry(0.1 * c.s, 8, 8),
+			new THREE.MeshBasicMaterial({ color: portalColor, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending }),
+		);
+		topGlow.position.set(c.x, -1.5 + 1.7 * c.s, c.z);
+		scene.add(topGlow); track.push(topGlow);
+
+		// Floating label (canvas texture)
+		const label = makeTextSprite(portalName, portalColor);
+		label.position.set(c.x, -1.5 + 2.3 * c.s, c.z);
+		label.scale.set(1.2, 0.3, 1);
+		scene.add(label); track.push(label);
+
+		cactus.userData = { portalId, isGateway: true };
+		for (const child of cactus.children) child.userData = cactus.userData;
 		scene.add(cactus); track.push(cactus);
+		tapTargets.push(cactus);
+		labels.push({ sprite: label, baseY: label.position.y, phase: Math.random() * Math.PI * 2, glow: topGlow, baseOpacity: 0.6 });
 		swayItems.push({ obj: cactus, phase: Math.random()*Math.PI*2, amp: 0.015, spd: 0.5+Math.random()*0.3 });
 	}
 
@@ -246,7 +307,26 @@ export function buildDesertScene(world, config = {}) {
 		console.warn('[desert] Audio setup failed:', e.message);
 	}
 
-	// ═══ UPDATE LOOP (sway + chirps + pulse) ═══
+	// ═══ TAP HANDLER — tap a cactus to navigate ═══
+	const raycaster = new THREE.Raycaster();
+	function onPointerDown(event) {
+		const x = (event.clientX !== undefined ? event.clientX : event.touches?.[0]?.clientX) / window.innerWidth * 2 - 1;
+		const y = -((event.clientY !== undefined ? event.clientY : event.touches?.[0]?.clientY) / window.innerHeight) * 2 + 1;
+		raycaster.setFromCamera({ x, y }, world.camera);
+		const hits = raycaster.intersectObjects(tapTargets, true);
+		if (hits.length > 0) {
+			let target = hits[0].object;
+			while (target && !target.userData?.portalId) target = target.parent;
+			if (target?.userData?.portalId) {
+				console.log('[desert] Navigating to', target.userData.portalId);
+				if (onNavigate) onNavigate(target.userData.portalId);
+			}
+		}
+	}
+	world.renderer.domElement.addEventListener('pointerdown', onPointerDown);
+	world.renderer.domElement.addEventListener('touchstart', onPointerDown);
+
+	// ═══ UPDATE LOOP (sway + chirps + pulse + label float) ═══
 	const prevUpdate = world.update.bind(world);
 	world.update = function(delta, time) {
 		prevUpdate(delta, time);
@@ -260,9 +340,15 @@ export function buildDesertScene(world, config = {}) {
 			m.material.opacity = pulse;
 			m.scale.setScalar(0.8 + pulse*0.4);
 		}
+		// Float labels + pulse cactus glows
+		for (const l of labels) {
+			l.sprite.position.y = l.baseY + Math.sin(tt * 0.8 + l.phase) * 0.08;
+			l.glow.material.opacity = l.baseOpacity + Math.sin(tt * 2 + l.phase) * 0.25;
+			l.glow.scale.setScalar(0.9 + Math.sin(tt * 2 + l.phase) * 0.15);
+		}
 	};
 
-	console.log('[desert] Scene built with', track.length, 'objects');
+	console.log('[desert] Scene built with', track.length, 'objects, cacti gateways active');
 
 	return {
 		cleanup() {
@@ -272,6 +358,8 @@ export function buildDesertScene(world, config = {}) {
 			scene.background = oldBg;
 			scene.fog = null;
 			world.update = prevUpdate;
+			world.renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+			world.renderer.domElement.removeEventListener('touchstart', onPointerDown);
 		},
 	};
 }
