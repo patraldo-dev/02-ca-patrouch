@@ -175,16 +175,6 @@ function rebuildScene(world, portalId) {
 	}
 	world._sceneEntities = [];
 
-	// Check for custom scene renderer first
-	if (hasSceneRenderer(portalId)) {
-		const handle = SCENE_RENDERERS[portalId](world, config);
-		// Store cleanup for next transition
-		world._customSceneCleanup = handle?.cleanup || null;
-		nav.currentPortalId = portalId;
-		if (nav.history[nav.history.length - 1] !== portalId) nav.history.push(portalId);
-		return;
-	}
-
 	const config = nav.allConfigs[portalId];
 	if (!config) {
 		console.error('[portals] No config for', portalId);
@@ -192,8 +182,16 @@ function rebuildScene(world, portalId) {
 	}
 
 	nav.currentPortalId = portalId;
-	if (nav.history[nav.history.length - 1] !== portalId) {
-		nav.history.push(portalId);
+	if (nav.history[nav.history.length - 1] !== portalId) nav.history.push(portalId);
+
+	// Sync URL
+	window.history.pushState({ portalId }, '', `/portals/${portalId}`);
+
+	// Check for custom scene renderer
+	if (hasSceneRenderer(portalId)) {
+		const handle = SCENE_RENDERERS[portalId](world, config);
+		world._customSceneCleanup = handle?.cleanup || null;
+		return;
 	}
 
 	const palette = config.palette;
@@ -491,8 +489,17 @@ export async function boot(container, indexConfig, allConfigs) {
 	nav.allConfigs = allConfigs;
 	nav.history = [];
 
-	// Build initial scene
-	rebuildScene(world, indexConfig.portal.id);
+	// Build initial scene (respect direct link if set)
+	const initialPortal = indexConfig._initialPortal || indexConfig.portal.id;
+	rebuildScene(world, initialPortal);
+
+	// Browser back/forward support
+	window.addEventListener('popstate', (event) => {
+		const pid = event.state?.portalId;
+		if (pid && nav.allConfigs[pid]) {
+			rebuildScene(world, pid);
+		}
+	});
 
 	console.log('[portals] World booted:', indexConfig.portal.id);
 

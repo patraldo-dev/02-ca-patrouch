@@ -47,11 +47,16 @@
 
 				const { bootPortalEngine, registerSceneRenderer } = await import('$lib/portals-ecs/world-builder.js');
 
-				// Register custom scene renderers for specific portals
+				// Register desert scene for ALL portals so any cube tap works
 				const { buildDesertScene } = await import('$lib/portals-ecs/desert-scene.js');
-				// Portals that should show the desert scene
-				for (const pid of ['urbano', 'mysterious-market']) {
-					registerSceneRenderer(pid, buildDesertScene);
+				for (const pid of Object.keys(configs)) {
+					if (pid !== 'arboleda') registerSceneRenderer(pid, buildDesertScene);
+				}
+
+				// Check for direct link: /portals?portal=urbano
+				const urlPortal = new URLSearchParams(window.location.search).get('portal');
+				if (urlPortal && configs[urlPortal]) {
+					configs.arboleda._initialPortal = urlPortal;
 				}
 
 				await bootPortalEngine(containerEl, configs);
