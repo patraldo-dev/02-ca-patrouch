@@ -1,0 +1,85 @@
+/**
+ * Shared SSR data loading for the portals spatial experience.
+ *
+ * Used by both:
+ *   - src/routes/portals/+page.server.js        (the index/landing world)
+ *   - src/routes/portals/[id]/+page.server.js   (direct links to a portal)
+ *
+ * Both routes boot the same engine; the only difference is which portal the
+ * engine starts in. Keeping the load logic here means the two pages can never
+ * drift apart on what data they provide to the renderer.
+ */
+
+/**
+ * Load galaxies, portals, and Mistral-generated scene configs from D1.
+ * Returns a safe empty shape if the DB binding is missing or the query fails,
+ * so a missing binding never crashes the page — it just renders with fallbacks.
+ *
+ * @param {D1Database} db - platform.env.DB_book
+ * @returns {Promise<{ galaxies: Array, portals: Array, count: number, featuredPortal: object|null, sceneConfigs: object }>}
+ */
+export async function loadPortalsData(db) {
+	if (!db) {
+		return { galaxies: [], portals: [], count: 0, featuredPortal: null, sceneConfigs: {} };
+	}
+
+	try {
+		const { results: portals } = await db.prepare(`
+			SELECT
+				p.id, p.galaxy_id, p.icon, p.color_primary, p.color_bg, p.color_text,
+				p.name_es, p.name_en, p.name_fr,
+				p.description_es, p.description_en, p.description_fr,
+				p.status, p.active_writings_count, p.video_url,
+				p.narrator_greeting, p.narrator_tone,
+				p.scene_image,
+				g.name_es as galaxy_name_es, g.name_en as galaxy_name_en, g.name_fr as galaxy_name_fr,
+				g.icon as galaxy_icon, g.sort_order as galaxy_sort
+			FROM portals p
+			JOIN galaxies g ON p.galaxy_id = g.id
+			WHERE p.status = 'active'
+			ORDER BY g.sort_order ASC, p.discovered_at ASC
+		`).all();
+
+		// Fetch scene configs (Mistral-generated, stored by the cron / on-demand API)
+		const { results: sceneRows } = await db.prepare(`
+			SELECT portal_id, scene_config FROM portal_scenes
+		`).all();
+		const sceneConfigs = {};
+		for (const row of sceneRows || []) {
+			try { sceneConfigs[row.portal_id] = JSON.parse(row.scene_config); } catch {}
+		}
+
+		// Featured = most active writings, fallback to first
+		const featuredPortal = (portals && portals.length > 0)
+			? [...portals].sort((a, b) => (b.active_writings_count || 0) - (a.active_writings_count || 0))[0]
+			: null;
+
+		// Group by galaxy
+		const galaxyMap = {};
+		for (const p of portals || []) {
+			if (!galaxyMap[p.galaxy_id]) {
+				galaxyMap[p.galaxy_id] = {
+					id: p.galaxy_id,
+					name_es: p.galaxy_name_es,
+					name_en: p.galaxy_name_en,
+					name_fr: p.galaxy_name_fr,
+					icon: p.galaxy_icon,
+					sort_order: p.galaxy_sort,
+					portals: []
+				};
+			}
+			galaxyMap[p.galaxy_id].portals.push(p);
+		}
+
+		return {
+			galaxies: Object.values(galaxyMap),
+			portals: portals || [],
+			count: portals?.length || 0,
+			featuredPortal,
+			sceneConfigs,
+		};
+	} catch (e) {
+		console.error('Portals load error:', e);
+		return { galaxies: [], portals: [], count: 0, featuredPortal: null, sceneConfigs: {} };
+	}
+}

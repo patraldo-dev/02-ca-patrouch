@@ -2,10 +2,12 @@
  * POST /api/portals/[id]/generate-scene
  *
  * On-demand Mistral scene generation for a single portal. Same Mistral +
- * normalization pipeline as the daily cron, but immediate so you can iterate
- * without waiting for the cron, and scoped to one portal.
+ * normalization pipeline as the daily cron, but immediate so an editor can
+ * iterate without waiting for the cron, and scoped to one portal.
  *
- * Auth: Authorization: Bearer <CRON_SECRET>   (keeps AI cost behind the secret)
+ * Auth: logged-in session with role 'admin' or 'editor' (requireRole).
+ *       This is a human action, so it uses session auth, not the CRON_SECRET
+ *       (which is reserved for the machine-to-machine daily cron).
  * AI:   platform.env.AI binding (@cf/mistralai/mistral-small-3.1-24b-instruct)
  *
  * Body (optional, JSON):
@@ -21,14 +23,25 @@
  */
 
 import { json } from '@sveltejs/kit';
+import { requireRole } from '$lib/server/require-role.js';
 import { generateSceneForPortal, matchWritingsByTriggers } from '$lib/server/scene-generator.js';
 
-export async function POST({ params, platform, request }) {
-	const auth = request.headers.get('authorization');
-	const CRON_SECRET = await platform?.env?.CRON_SECRET?.get?.() ?? null;
-
-	if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+export async function POST({ params, platform, request, locals, url }) {
+	// Human-action auth: a logged-in editor/admin. Session-based, scoped to the
+	// user, no shared secret exposed to any UI. requireRole throws on failure
+	// (302→login if unauthenticated, 403 if insufficient role).
+	try {
+		await requireRole(locals, ['admin', 'editor'], url);
+	} catch (e) {
+		// requireRole throws SvelteKit redirect/error objects; for an API endpoint
+		// we want a JSON 401/403 rather than an HTML redirect.
+		if (e?.status === 303 || e?.status === 302) {
+			return json({ error: 'Authentication required' }, { status: 401 });
+		}
+		if (e?.status === 403) {
+			return json({ error: 'Editor or admin access required' }, { status: 403 });
+		}
+		throw e;
 	}
 
 	const db = platform?.env?.DB_book;
