@@ -238,7 +238,7 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 		const label = makeTextSprite(portalName, portalColor);
 		label.position.set(m.x, 1.2, m.z);
 		label.scale.set(1.2, 0.3, 1);
-		label.material.opacity = 0;
+		label.material.opacity = 0.35; // visible by default, breathes in update loop
 		scene.add(label); track.push(label);
 
 		maskGroup.position.set(m.x, -1.5, m.z);
@@ -408,7 +408,7 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 		for (const l of labels) {
 			const idx = labels.indexOf(l);
 			const isHovered = hoveredTarget && tapTargets.includes(hoveredTarget) && tapTargets.indexOf(hoveredTarget) === idx;
-			const targetOp = isHovered ? 0.85 : 0;
+			const targetOp = isHovered ? 0.9 : 0.35 + Math.sin(tt * 1.5 + l.phase) * 0.15;
 			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt * 0.6 + l.phase) * 0.06;
 		}

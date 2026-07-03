@@ -178,7 +178,7 @@ export function buildDreamScene(world, config = {}, allConfigs = {}, onNavigate 
 		const label = makeTextSprite(portalName, portalColor);
 		label.position.set(d.x, d.y + 1.2, d.z);
 		label.scale.set(1.2, 0.3, 1);
-		label.material.opacity = 0;
+		label.material.opacity = 0.35; // visible by default, breathes in update loop
 		scene.add(label); track.push(label);
 
 		doorGroup.userData = { portalId, isGateway: true };
@@ -375,7 +375,7 @@ export function buildDreamScene(world, config = {}, allConfigs = {}, onNavigate 
 		for (const l of labels) {
 			const idx = labels.indexOf(l);
 			const isHovered = hoveredTarget && tapTargets.includes(hoveredTarget) && tapTargets.indexOf(hoveredTarget) === idx;
-			const targetOp = isHovered ? 0.85 : 0;
+			const targetOp = isHovered ? 0.9 : 0.35 + Math.sin(tt * 1.5 + l.phase) * 0.15;
 			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt * 0.5 + l.phase) * 0.1;
 		}

@@ -124,7 +124,7 @@ export function buildCosmosScene(world, config = {}, allConfigs = {}, onNavigate
 		// Label
 		const label = makeTextSprite(pname, pcolor);
 		label.position.set(p.x, p.y + p.r + 0.4, p.z); label.scale.set(1.2, 0.3, 1);
-		label.material.opacity = 0;
+		label.material.opacity = 0.35; // visible by default, breathes in update loop
 		scene.add(label); track.push(label);
 		labels.push({ sprite: label, baseY: label.position.y, phase: Math.random() * Math.PI * 2, planet: planet, baseRot: 0 });
 	}
@@ -225,7 +225,7 @@ export function buildCosmosScene(world, config = {}, allConfigs = {}, onNavigate
 		for (let li = 0; li < labels.length; li++) {
 			const l = labels[li];
 			const isHovered = hoveredTarget && tapTargets.indexOf(hoveredTarget) === li;
-			const targetOp = isHovered ? 0.85 : 0;
+			const targetOp = isHovered ? 0.9 : 0.35 + Math.sin(tt * 1.5 + l.phase) * 0.15;
 			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt * 0.5 + l.phase) * 0.1;
 			l.planet.rotation.y += delta * 0.1;

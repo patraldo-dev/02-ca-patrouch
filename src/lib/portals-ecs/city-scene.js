@@ -227,7 +227,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 		const label = makeTextSprite(portalName, portalColor);
 		label.position.set(b.x, -1.5 + b.h + 0.5, b.z);
 		label.scale.set(1.2, 0.3, 1);
-		label.material.opacity = 0;
+		label.material.opacity = 0.35; // visible by default, breathes in update loop
 		scene.add(label); track.push(label);
 
 		building.userData = { portalId, isGateway: true };
@@ -408,7 +408,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 		// Labels
 		for (const l of labels) {
 			const isHovered = hoveredTarget && tapTargets.includes(hoveredTarget) && labels.indexOf(l) === tapTargets.indexOf(hoveredTarget) % labels.length;
-			const targetOp = isHovered ? 0.85 : 0;
+			const targetOp = isHovered ? 0.9 : 0.35 + Math.sin(tt * 1.5 + l.phase) * 0.15;
 			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt * 0.8 + l.phase) * 0.08;
 			l.glow.material.opacity = l.baseOpacity * (0.5 + Math.sin(tt * 3 + l.phase) * 0.5);

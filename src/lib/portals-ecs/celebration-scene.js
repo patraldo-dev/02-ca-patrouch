@@ -192,7 +192,7 @@ export function buildCelebrationScene(world, config = {}, allConfigs = {}, onNav
 		const label = makeTextSprite(portalName, portalColor);
 		label.position.set(p.x, -1.5 + p.h + 0.8, p.z);
 		label.scale.set(1.2, 0.3, 1);
-		label.material.opacity = 0;
+		label.material.opacity = 0.35; // visible by default, breathes in update loop
 		scene.add(label); track.push(label);
 
 		pinataGroup.userData = { portalId, isGateway: true };
@@ -409,7 +409,7 @@ export function buildCelebrationScene(world, config = {}, allConfigs = {}, onNav
 		// Labels
 		for (const l of labels) {
 			const isHovered = hoveredTarget && tapTargets.includes(hoveredTarget) && tapTargets.indexOf(hoveredTarget) === labels.indexOf(l);
-			const targetOp = isHovered ? 0.85 : 0;
+			const targetOp = isHovered ? 0.9 : 0.35 + Math.sin(tt * 1.5 + l.phase) * 0.15;
 			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt * 0.8 + l.phase) * 0.08;
 			l.glow.material.opacity = l.baseOpacity + Math.sin(tt * 2 + l.phase) * 0.25;

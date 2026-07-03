@@ -193,7 +193,7 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 		const label = makeTextSprite(pname, pcolor);
 		label.position.set(c.x, -2.5 + 2.0 * c.s, c.z);
 		label.scale.set(1.2, 0.3, 1);
-		label.material.opacity = 0;
+		label.material.opacity = 0.35; // visible by default, breathes in update loop
 		scene.add(label); track.push(label);
 		labels.push({ sprite: label, baseY: label.position.y, phase: Math.random() * Math.PI * 2, glow });
 	}
@@ -380,7 +380,7 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 		for (let li = 0; li < labels.length; li++) {
 			const l = labels[li];
 			const isHovered = hoveredTarget && tapTargets.indexOf(hoveredTarget) === li;
-			const targetOp = isHovered ? 0.85 : 0;
+			const targetOp = isHovered ? 0.9 : 0.35 + Math.sin(tt * 1.5 + l.phase) * 0.15;
 			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt * 0.8 + l.phase) * 0.08;
 			l.glow.material.opacity = 0.15 + Math.sin(tt * 2 + l.phase) * 0.1;

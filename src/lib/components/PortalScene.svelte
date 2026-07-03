@@ -57,15 +57,18 @@
 				const { buildDesertScene } = await import('$lib/portals-ecs/desert-scene.js');
 				const { buildOceanScene } = await import('$lib/portals-ecs/ocean-scene.js');
 				const { buildForestScene } = await import('$lib/portals-ecs/forest-scene.js');
-				const { buildCosmosScene } = await import('$lib/portals-ecs/cosmos-scene.js');
 				const { buildCelebrationScene } = await import('$lib/portals-ecs/celebration-scene.js');
 				const { buildCityScene } = await import('$lib/portals-ecs/city-scene.js');
 				const { buildDreamScene } = await import('$lib/portals-ecs/dream-scene.js');
 				const { buildTheaterScene } = await import('$lib/portals-ecs/theater-scene.js');
+				// NOTE: buildCosmosScene is intentionally NOT registered. space-type
+				// portals fall through to world-builder.js's default path, which
+				// renders the dynamic starfield + spinning art-cube carousel (the
+				// "Fantasia" landing look). Registering cosmos-scene would preempt
+				// that with static planets and hide the cubes.
 				const ENV_TO_SCENE = {
 					ocean: buildOceanScene,
 					forest: buildForestScene,
-					space: buildCosmosScene,
 					celebration: buildCelebrationScene,
 					city: buildCityScene,
 					dream: buildDreamScene,
@@ -76,11 +79,24 @@
 					registerSceneRenderer(pid, ENV_TO_SCENE[envType] || buildDesertScene);
 				}
 
-				// Resolve start portal: explicit initialPortalId (from /portals/[id]
-				// or the random pick), else ?portal= query, else arboleda default.
-				const startPortal = initialPortalId
-					|| new URLSearchParams(window.location.search).get('portal')
-					|| 'arboleda';
+				// Resolve start portal. Prefer, in order: SSR random pick (from
+				// /portals) or explicit id (from /portals/[id]), then ?portal= query.
+				// Each must actually have a loaded config (the source of truth for
+				// what can boot). If none of those resolve, pick randomly from the
+				// loaded configs — never hardcode a single portal, so /portals is a
+				// genuine surprise every visit.
+				const configIds = Object.keys(configs);
+				const queryPortal = new URLSearchParams(window.location.search).get('portal');
+				let startPortal = null;
+				for (const candidate of [initialPortalId, queryPortal]) {
+					if (candidate && configs[candidate]) { startPortal = candidate; break; }
+				}
+				if (!startPortal && configIds.length) {
+					startPortal = configIds[Math.floor(Math.random() * configIds.length)];
+				}
+				if (!startPortal) {
+					throw new Error('No renderable portal config could be resolved');
+				}
 
 				await bootPortalEngine(containerEl, configs, startPortal);
 				if (cancelled) return;

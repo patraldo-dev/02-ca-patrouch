@@ -132,7 +132,7 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 
 		// Label
 		const label = makeTextSprite(pname, pcolor);
-		label.material.opacity = 0;
+		label.material.opacity = 0.35; // visible by default, breathes in update loop
 		label.position.set(t.x, h+0.3, t.z); label.scale.set(1.2, 0.3, 1);
 		scene.add(label); track.push(label);
 		labels.push({ sprite: label, baseY: label.position.y, phase: Math.random()*Math.PI*2, glow });
@@ -299,7 +299,7 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 		for (let li = 0; li < labels.length; li++) {
 			const l = labels[li];
 			const isHovered = hoveredTarget && tapTargets.indexOf(hoveredTarget) === li;
-			const targetOp = isHovered ? 0.85 : 0;
+			const targetOp = isHovered ? 0.9 : 0.35 + Math.sin(tt * 1.5 + l.phase) * 0.15;
 			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt*0.8+l.phase)*0.06;
 			l.glow.material.opacity = 0.15 + Math.sin(tt*2+l.phase)*0.1;
