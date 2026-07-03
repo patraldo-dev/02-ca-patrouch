@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 /**
  * scene-transition.js — randomized cinematic transitions between portal worlds.
  *

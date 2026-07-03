@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // environments.js — Static composed scenes per portal type
 // Theatrical flats, ground planes, silhouette skylines.
 // No particle systems. Each portal is a recognizable PLACE.

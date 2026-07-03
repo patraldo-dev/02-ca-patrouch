@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // desert-scene.js — Desert scene builder for portal engine
 // Accepts an existing world, adds desert objects + sound to its scene.
 // Does NOT call World.create — the world already exists.

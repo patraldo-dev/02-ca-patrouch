@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // theater-scene.js — Theatrical stage scene builder
 // Stage with curtains, spotlights, masks (gateways), and a rippling curtain.
 

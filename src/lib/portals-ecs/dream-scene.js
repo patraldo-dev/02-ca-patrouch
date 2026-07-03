@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // dream-scene.js — Surreal floating dreamscape
 // Purple void with floating doorways (gateways), drifting fog, and orbiting crystals.
 

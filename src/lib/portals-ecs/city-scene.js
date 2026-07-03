@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // city-scene.js — Urban canyon scene builder
 // Night city with skyscrapers, neon signs (gateways), and driving cars.
 

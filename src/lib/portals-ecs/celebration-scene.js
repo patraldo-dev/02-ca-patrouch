@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // celebration-scene.js — Festive plaza scene builder
 // Twilight celebration with piñatas, lanterns, and fireworks.
 

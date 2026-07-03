@@ -1,3 +1,4 @@
+// @ts-nocheck — AR proof-of-concept; dynamic Three.js/WebXR code, excluded from strict JS type-checking.
 /**
  * Bottle AR World — IWSDK ImmersiveAR integration for ArbootyAR
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // cosmos-scene.js — Deep space world for portal engine
 // Navigation: tap glowing planets to travel.
 

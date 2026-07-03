@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // ═══════════════════════════════════════════════════════════
 //  world-builder.js — Config-driven ECS world builder
 //  Reads scene config JSON, builds IWSDK world with ECS

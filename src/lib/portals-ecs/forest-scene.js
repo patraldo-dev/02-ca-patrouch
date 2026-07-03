@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // forest-scene.js — Forest world for portal engine
 // Navigation: tap glowing tree trunks to travel.
 

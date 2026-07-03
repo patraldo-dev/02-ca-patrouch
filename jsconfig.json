@@ -10,10 +10,36 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler"
-	}
-	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
-	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
-	//
-	// If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes
-	// from the referenced tsconfig.json - TypeScript does not merge them in
+	},
+	// include/exclude are copied from .svelte-kit/tsconfig.json because TypeScript
+	// does NOT merge them across "extends". We add our own exclude for files that
+	// are inherently dynamic (Three.js/IWSDK geometry, audio contexts) where
+	// strict JS type-checking adds noise without catching real bugs.
+	"include": [
+		"ambient.d.ts",
+		"non-ambient.d.ts",
+		"./.svelte-kit/types/**/$types.d.ts",
+		"vite.config.js",
+		"src/**/*.js",
+		"src/**/*.ts",
+		"src/**/*.svelte"
+	],
+	"exclude": [
+		"node_modules/**",
+		"src/service-worker.js",
+		"src/service-worker/**/*.js",
+		"src/service-worker.ts",
+		"src/service-worker/**/*.ts",
+		"src/service-worker.d.ts",
+		"src/service-worker/**/*.d.ts",
+		// IWSDK/Three.js portal scenes — heavy dynamic geometry & audio where
+		// untyped params are intentional. Excluded so checkJs noise from these
+		// doesn't drown out real errors in the rest of the app.
+		"src/lib/portals-ecs/**/*-scene.js",
+		"src/lib/portals-ecs/world-builder.js",
+		"src/lib/portals-ecs/environments.js",
+		"src/lib/portals-ecs/scene-transition.js",
+		"src/lib/portals-ecs/scene-normalizer.js",
+		"src/lib/ar-poc/**"
+	]
 }

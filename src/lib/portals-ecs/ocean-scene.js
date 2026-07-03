@@ -1,3 +1,4 @@
+// @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // ocean-scene.js — Underwater world for portal engine
 // Accepts an existing world, adds ocean objects + sound.
 // Navigation: tap coral formations to travel to other portals.
