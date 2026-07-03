@@ -1,96 +1,25 @@
 /**
  * POST /api/cron/generate-scenes
- * 
+ *
  * Called by CF Cron Worker daily. Reads published writings, groups them
  * by portal triggers, sends to Workers AI (mistral-small) to generate
  * ECS scene configs, stores in portal_scenes table.
  *
  * Auth: Authorization: Bearer <CRON_SECRET>
- * AI: platform.env.AI binding (@cf/mistralai/mistral-small-3.1-24b-instruct)
+ * AI:   platform.env.AI binding (@cf/mistralai/mistral-small-3.1-24b-instruct)
+ *
+ * The Mistral call + normalization live in $lib/server/scene-generator.js
+ * so the on-demand endpoint (/api/portals/[id]/generate-scene) shares them.
  */
 
-const SCENE_SYSTEM_PROMPT = `You are a creative scene designer for a WebXR literary portal system.
-Given excerpts from published writings, generate a JSON scene configuration that captures their collective mood, imagery, and atmosphere.
-
-Output ONLY valid JSON matching this schema (no markdown, no explanation):
-
-{
-  "environment": {
-    "type": "forest|ocean|celebration|space|city|dream|theater|memory"
-  },
-  "atmosphere": {
-    "mood": "string - one word emotional descriptor",
-    "intensity": 0.0-1.0,
-    "ambient_color": "#hex",
-    "fog_density": 0.0-0.08,
-    "light_intensity": 0.3-0.8
-  },
-  "palette": {
-    "primary": "#hex",
-    "secondary": "#hex",
-    "accent": "#hex",
-    "crystal_colors": ["#hex", "#hex", "#hex", "#hex"]
-  },
-  "narrative_states": [
-    {
-      "label": "string - name of this story phase in Spanish (e.g. 'Umbral', 'Descenso', 'Revelación')",
-      "mood": "string - emotional descriptor in Spanish",
-      "hue_shift": 0.0-1.0,
-      "intensity_mul": 0.2-2.0,
-      "fog_mul": 0.0-5.0,
-      "crystal_indices": [0, 1, ...]
-    }
-  ],
-  "decorations": {
-    "particle_count": 15-50,
-    "particle_style": "sparkle|dust|ember|bubble|snow",
-    "pillar_count": 3-8,
-    "pillar_height": 1.5-3.0,
-    "spiral_count": 1-5,
-    "spiral_speed": 0.2-0.8,
-    "halo_radius": 0.6-1.5,
-    "halo_pulse_speed": 0.3-0.8
-  },
-  "crystals": [
-    {"text": "evocative excerpt (max 150 chars)", "color_index": 0-3, "scale": 0.8-1.4}
-  ],
-  "ambient_texts": ["short phrase 1", "short phrase 2", "short phrase 3"],
-  "spatial_layout": {
-    "crystal_ring_radius": 1.5-2.5,
-    "crystal_elevations": [0.6-1.8],
-    "tab_orbit_radius": 2.0-3.0
-  }
-}
-
-Rules:
-- environment.type determines the ENTIRE visual world. Choose based on the dominant imagery in the writings:
-    forest = trees, nature, roots, greenery, pollen, life
-    ocean = water, depth, waves, blue, submersion, fluidity
-    celebration = joy, music, dance, warm colors, rhythm, community
-    space = stars, infinity, void, cosmic, isolation, vastness
-    city = urban, streets, neon, rain, concrete, window lights
-    dream = surreal, floating, purple/pink, subconscious, transformation
-    theater = spotlight, stage, narration, amber, candlelight, performance
-    memory = sepia, nostalgia, photographs, golden dust, faded, reminiscent
-  The type must reflect the FEELING of the stories, not just the portal name.
-  If the writings shift mood significantly from the portal default, choose the environment that matches the writings.
-- narrative_states: generate exactly 3 story arc phases that reflect the emotional journey of the writings. Each phase should have a unique Spanish label and mood. Hue shift 0=original color, 0.083=warm shift, 0.667=cold/complementary shift. The arc should progress: contemplative → intense → profound.
-- crystal_colors must have exactly 4 hex colors
-- crystals: extract 4-6 of the most evocative short phrases from the writings (max 6)
-- ambient_texts: 2-4 very short fragments (max 80 chars) that drift as text motes
-- Colors should reflect the emotional tone of the writings, not just the portal default
-- particle_style MUST be exactly one of: sparkle, dust, ember, bubble, snow
-- sparkle=festive, dust=contemplative, ember=warm/passionate, bubble=playful, snow=melancholic
-- All positions are relative to the user at origin; the ECS handles placement using ring_radius and elevations`;
-
-import { normalizeSceneConfig } from '$lib/portals-ecs/scene-normalizer.js';
+import { generateSceneForPortal, matchWritingsByTriggers } from '$lib/server/scene-generator.js';
 
 export async function POST({ platform, request }) {
     const auth = request.headers.get('authorization');
     const CRON_SECRET = await platform?.env?.CRON_SECRET?.get?.() ?? null;
 
     if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
-        return new Response('Unauthorized', { status: 401 });
+        return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const db = platform?.env?.DB_book;
@@ -134,92 +63,14 @@ export async function POST({ platform, request }) {
             let triggers = [];
             try { triggers = JSON.parse(portal.triggers || '[]'); } catch { triggers = []; }
 
-            // Match writings: check if content contains any trigger keywords
-            const matchedWritings = writings.filter(w => {
-                const text = ((w.title || '') + ' ' + (w.content || '')).toLowerCase();
-                return triggers.some(t => text.includes(t.toLowerCase()));
-            }).slice(0, 8); // max 8 writings per portal
+            const matched = matchWritingsByTriggers(writings, triggers, 8);
 
             // Skip portals without enough matched writings — keep existing config
-            if (matchedWritings.length < 3) continue;
-            const sourceWritings = matchedWritings;
-
-            const sourceIds = sourceWritings.map(w => w.id);
-
-            // Build excerpts (max 200 chars each, max 6)
-            const excerpts = sourceWritings.slice(0, 6).map(w => {
-                const text = (w.content || '').replace(/\s+/g, ' ').trim();
-                return {
-                    title: w.title || 'Untitled',
-                    excerpt: text.substring(0, 200),
-                    locale: w.locale
-                };
-            });
-
-            // 4. Call Workers AI
-            const userPrompt = `Portal: ${portal.name_es} (${portal.icon})
-Portal mood: ${portal.color_primary}
-Writings matched (${excerpts.length}):
-
-${JSON.stringify(excerpts, null, 2)}
-
-Generate the scene JSON for this portal based on these writings.`;
+            if (matched.length < 3) continue;
 
             try {
-                const aiResponse = await ai.run(
-                    '@cf/mistralai/mistral-small-3.1-24b-instruct',
-                    {
-                        messages: [
-                            { role: 'system', content: SCENE_SYSTEM_PROMPT },
-                            { role: 'user', content: userPrompt }
-                        ],
-                        // temperature: 0.7,
-                        // max_tokens: 1200,
-                        // response_format: { type: 'json_object' },
-                        temperature: 0.7,
-                        max_tokens: 1200,
-                    }
-                );
+                const { sceneConfig, sourceIds } = await generateSceneForPortal(ai, portal, matched);
 
-                let sceneText = aiResponse.response || aiResponse.result?.response || '';
-                // Strip markdown fences if present
-                sceneText = sceneText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-                let sceneConfig;
-                try {
-                    sceneConfig = JSON.parse(sceneText);
-                } catch (parseErr) {
-                    console.error(`Scene parse failed for ${portal.id}:`, parseErr.message);
-                    // Try to extract JSON from the response
-                    const jsonMatch = sceneText.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        try { sceneConfig = JSON.parse(jsonMatch[0]); } catch {
-                            console.error(`Scene re-parse failed for ${portal.id}`);
-                            failed++;
-                            continue;
-                        }
-                    } else {
-                        failed++;
-                        continue;
-                    }
-                }
-
-                // Normalize: validate enums, clamp numbers, cap crystals, apply quality tier
-                try {
-                    sceneConfig = normalizeSceneConfig(sceneConfig, {
-                        id: portal.id,
-                        color_primary: portal.color_primary,
-                        color_bg: portal.color_bg,
-                    });
-                } catch (normErr) {
-                    console.error(`Normalizer failed for ${portal.id}:`, normErr.message);
-                    failed++;
-                    continue;
-                }
-
-                sceneConfig.source_writings = sourceIds;
-
-                // 5. Store in D1 (upsert)
                 await db.prepare(
                     `INSERT INTO portal_scenes (portal_id, scene_config, source_writings, generated_at)
                      VALUES (?, ?, ?, datetime('now'))
@@ -234,9 +85,8 @@ Generate the scene JSON for this portal based on these writings.`;
                 ).run();
 
                 processed++;
-            } catch (aiErr) {
-                console.error(`AI call failed for ${portal.id}:`, aiErr.message);
-                console.error(`AI error stack:`, aiErr.stack);
+            } catch (err) {
+                console.error(`Scene generation failed for ${portal.id}:`, err.message);
                 failed++;
             }
         }

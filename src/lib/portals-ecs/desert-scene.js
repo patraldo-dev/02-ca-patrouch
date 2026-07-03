@@ -210,10 +210,11 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 		topGlow.position.set(c.x, -1.5 + 1.7 * c.s, c.z);
 		scene.add(topGlow); track.push(topGlow);
 
-		// Floating label (canvas texture)
+		// Hover label (hidden by default, shows on proximity)
 		const label = makeTextSprite(portalName, portalColor);
 		label.position.set(c.x, -1.5 + 2.3 * c.s, c.z);
 		label.scale.set(1.2, 0.3, 1);
+		label.material.opacity = 0; // hidden until hover
 		scene.add(label); track.push(label);
 
 		cactus.userData = { portalId, isGateway: true };
@@ -372,6 +373,26 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 	world.renderer.domElement.addEventListener('pointerdown', onPointerDown);
 	world.renderer.domElement.addEventListener('touchstart', onPointerDown);
 
+	// ═══ HOVER — show label when pointing near a gateway ═══
+	let hoveredTarget = null;
+	const hoverRaycaster = new THREE.Raycaster();
+	function onPointerMove(event) {
+		const x = (event.clientX !== undefined ? event.clientX : 0) / window.innerWidth * 2 - 1;
+		const y = -((event.clientY !== undefined ? event.clientY : 0) / window.innerHeight) * 2 + 1;
+		hoverRaycaster.setFromCamera({ x, y }, world.camera);
+		const hits = hoverRaycaster.intersectObjects(tapTargets, true);
+		let newHovered = null;
+		if (hits.length > 0) {
+			let t = hits[0].object;
+			while (t && !t.userData?.portalId) t = t.parent;
+			newHovered = t;
+		}
+		if (newHovered !== hoveredTarget) {
+			hoveredTarget = newHovered;
+		}
+	}
+	world.renderer.domElement.addEventListener('pointermove', onPointerMove);
+
 	// ═══ UPDATE LOOP (sway + chirps + pulse + label float) ═══
 	const prevUpdate = world.update.bind(world);
 	world.update = function(delta, time) {
@@ -395,8 +416,11 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 		turtle.position.y = -1.45 + Math.abs(Math.sin(turtleState.legPhase) * 0.02);
 		turtleState.legPhase += delta * 2;
 
-		// Label float
+		// Label hover fade + glow pulse
 		for (const l of labels) {
+			const isHovered = hoveredTarget && tapTargets.includes(hoveredTarget) && tapTargets.indexOf(hoveredTarget) === labels.indexOf(l);
+			const targetOp = isHovered ? 0.85 : 0;
+			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt * 0.8 + l.phase) * 0.08;
 			l.glow.material.opacity = l.baseOpacity + Math.sin(tt * 2 + l.phase) * 0.25;
 			l.glow.scale.setScalar(0.9 + Math.sin(tt * 2 + l.phase) * 0.15);
@@ -415,6 +439,7 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 			world.update = prevUpdate;
 			world.renderer.domElement.removeEventListener('pointerdown', onPointerDown);
 			world.renderer.domElement.removeEventListener('touchstart', onPointerDown);
+			world.renderer.domElement.removeEventListener('pointermove', onPointerMove);
 		},
 	};
 }

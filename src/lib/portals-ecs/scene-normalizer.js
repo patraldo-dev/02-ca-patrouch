@@ -20,6 +20,55 @@ function safeHex(color, fallback = '#c9a87c') {
     return isValidHex(color) ? color : fallback;
 }
 
+// Convert a hex to {h,s,l} (h,s,l all 0-1) for hue-relative derivation.
+function hexToHsl(hex) {
+    const c = (hex || '#000000').replace('#', '');
+    const r = parseInt(c.slice(0, 2), 16) / 255;
+    const g = parseInt(c.slice(2, 4), 16) / 255;
+    const b = parseInt(c.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h /= 6;
+    }
+    return { h, s, l };
+}
+
+function hslToHex(h, s, l) {
+    const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+    };
+    let r, g, b;
+    if (s === 0) {
+        r = g = b = l;
+    } else {
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+    }
+    const toHex = (x) => Math.round(x * 255).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Same hue & saturation as `baseHex`, new lightness.
+function withLightness(baseHex, lightness) {
+    const { h, s } = hexToHsl(baseHex);
+    return hslToHex(h, s, Math.min(1, Math.max(0, lightness)));
+}
+
 // ── Number clamping ──
 function clamp(val, min, max, fallback) {
     const n = Number(val);
@@ -142,8 +191,32 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
             primary: fallbackPrimary,
             secondary: '#4fc3f7',
             accent: '#ce93d8',
+            background: '#05030a',     // derived below; very dark by default
+            fog_color: '#0a0612',      // derived below
+            fog_density: 0.025,
+            safe_text_color: '#ffffff', // derived below
             crystal_colors: [fallbackPrimary, '#4fc3f7', '#b5ead7', '#ce93d8'],
         },
+        // Render-complete visual fields (the default render path reads these
+        // directly). Derived at the end of normalizeSceneConfig from palette +
+        // atmosphere + decorations so a generated config renders without a
+        // static/scenes skeleton. Kept here as safe fallbacks.
+        lighting: {
+            ambient: { color: '#1a1a2e', intensity: 0.6 },
+            key_light: { color: fallbackPrimary, intensity: 3.0, distance: 20, position: [2, 3, 2] },
+            rim_light: { color: '#4a6fa5', intensity: 2.0, distance: 15, position: [-3, 1, -2] },
+            under_light: { color: '#8b5cf6', intensity: 1.5, distance: 8, position: [0, -2, 1] },
+        },
+        ambient_particles: {
+            count: 30,
+            spawn_radius: 8,
+            size: 0.05,
+            opacity: 0.7,
+            color_range: { hue_start: 0.3, hue_span: 0.15, saturation: 0.7, lightness_min: 0.5, lightness_max: 0.8 },
+            drift_speed: 0.02,
+        },
+        camera: { orbit: { radius_a: 5.0, radius_b: 3.5, height: 1.0, speed: 0.06 } },
+        narrative_texts: { es: [], en: [], fr: [] },
         decorations: {
             particle_count: 30,
             particle_style: 'dust',
@@ -278,5 +351,103 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
             .slice(0, 5);
     }
 
+    // ═══ Render-complete derivation ═══
+    // The default render path (arboleda starfield + themed environments) reads
+    // palette.background / fog_color / fog_density, lighting, ambient_particles,
+    // camera.orbit, and narrative_texts — none of which Mistral reliably emits.
+    // Derive them from the normalized palette/atmosphere/decorations so a
+    // generated config renders correctly without a static/scenes skeleton.
+    deriveRenderFields(normalized, raw);
+
     return normalized;
+}
+
+// ── Particle-style → visual params (mirrors the cron prompt's mood mapping) ──
+const PARTICLE_STYLE_PARAMS = {
+    sparkle: { size: 0.06, opacity: 0.85, drift_speed: 0.03, hue_span: 0.2 },  // festive, lively
+    dust:    { size: 0.04, opacity: 0.6,  drift_speed: 0.015, hue_span: 0.1 }, // contemplative, slow
+    ember:   { size: 0.05, opacity: 0.75, drift_speed: 0.04, hue_span: 0.08 }, // warm, rising
+    bubble:  { size: 0.07, opacity: 0.7,  drift_speed: 0.02, hue_span: 0.25 }, // playful, varied
+    snow:    { size: 0.05, opacity: 0.55, drift_speed: 0.01, hue_span: 0.05 }, // melancholic, sparse
+};
+
+function deriveRenderFields(normalized, raw) {
+    const primary = normalized.palette.primary;
+    const secondary = normalized.palette.secondary;
+    const accent = normalized.palette.accent;
+    const { h: primaryHue } = hexToHsl(primary);
+
+    // ── Palette: background / fog (very dark, same hue as primary) ──
+    // Prefer Mistral-provided values if they're valid + actually dark.
+    const rawBg = raw.palette?.background ?? raw.palette?.bg;
+    const rawFog = raw.palette?.fog_color ?? raw.palette?.fogColor;
+    normalized.palette.background = (isValidHex(rawBg) && hexToHsl(rawBg).l < 0.06)
+        ? rawBg
+        : withLightness(primary, 0.03);
+    normalized.palette.fog_color = (isValidHex(rawFog) && hexToHsl(rawFog).l < 0.08)
+        ? rawFog
+        : withLightness(primary, 0.06);
+    normalized.palette.fog_density = clamp(raw.palette?.fog_density ?? raw.palette?.fogDensity ?? normalized.atmosphere.fog_density, 0.0, 0.08, 0.025);
+
+    // safe_text_color: bright variant of the primary hue for WCAG-AA on the dark bg.
+    const rawSafe = raw.palette?.safe_text_color ?? raw.palette?.safeTextColor;
+    normalized.palette.safe_text_color = isValidHex(rawSafe)
+        ? rawSafe
+        : withLightness(primary, 0.78);
+
+    // ── Lighting (derived from palette + atmosphere.light_intensity) ──
+    const li = clamp(normalized.atmosphere.light_intensity, 0.2, 0.9, 0.5);
+    normalized.lighting = {
+        ambient: { color: withLightness(primary, 0.12), intensity: clamp(0.4 + li * 0.5, 0.2, 1.0) },
+        key_light: {
+            color: primary,
+            intensity: clamp(2.0 + li * 3.0, 1.0, 6.0),  // 2.0–6.0 keyed off mood brightness
+            distance: 20,
+            position: [2, 3, 2],
+        },
+        rim_light: {
+            color: accent,
+            intensity: clamp(1.4 + li * 1.6, 0.8, 3.5),
+            distance: 15,
+            position: [-3, 1, -2],
+        },
+        under_light: {
+            color: secondary,
+            intensity: clamp(1.0 + li * 1.2, 0.5, 2.5),
+            distance: 8,
+            position: [0, -2, 1],
+        },
+    };
+
+    // ── Ambient particles (derived from decorations) ──
+    const deco = normalized.decorations;
+    const style = PARTICLE_STYLE_PARAMS[deco.particle_style] || PARTICLE_STYLE_PARAMS.dust;
+    normalized.ambient_particles = {
+        count: deco.particle_count,
+        spawn_radius: 8,
+        size: style.size,
+        opacity: style.opacity,
+        color_range: {
+            hue_start: (primaryHue - style.hue_span / 2 + 1) % 1,
+            hue_span: style.hue_span,
+            saturation: 0.7,
+            lightness_min: 0.5,
+            lightness_max: 0.8,
+        },
+        drift_speed: style.drift_speed,
+    };
+
+    // ── Camera orbit (speed from atmosphere.intensity) ──
+    const intensity = clamp(normalized.atmosphere.intensity, 0.0, 1.0, 0.5);
+    // Contemplative (0.0) → slow 0.04; energetic (1.0) → brisk 0.08.
+    const speed = clamp(0.04 + intensity * 0.04, 0.03, 0.09);
+    normalized.camera = { orbit: { radius_a: 5.0, radius_b: 3.5, height: 1.0, speed } };
+
+    // ── Narrative texts (es/en/fr) ──
+    // The renderer reads narrative_texts[lang] || narrative_texts.es. Populate
+    // all three locales from ambient_texts so single-locale output still cycles.
+    const texts = normalized.ambient_texts && normalized.ambient_texts.length
+        ? normalized.ambient_texts
+        : ['❝ Cada historia es un portal ❞', '❝ Toca para entrar ❞', '❝ Los espíritus esperan ❞'];
+    normalized.narrative_texts = { es: texts, en: texts, fr: texts };
 }

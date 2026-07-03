@@ -47,18 +47,32 @@
 
 				const { bootPortalEngine, registerSceneRenderer } = await import('$lib/portals-ecs/world-builder.js');
 
-				// Register custom scene renderers
+				// Register custom scene renderers — keyed by environment.type.
+				// Each builder is self-contained (own geometry/lighting/audio) and
+				// reads only the destination portals' palette/names for gateways.
 				const { buildDesertScene } = await import('$lib/portals-ecs/desert-scene.js');
 				const { buildOceanScene } = await import('$lib/portals-ecs/ocean-scene.js');
 				const { buildForestScene } = await import('$lib/portals-ecs/forest-scene.js');
 				const { buildCosmosScene } = await import('$lib/portals-ecs/cosmos-scene.js');
+				const { buildCelebrationScene } = await import('$lib/portals-ecs/celebration-scene.js');
+				const { buildCityScene } = await import('$lib/portals-ecs/city-scene.js');
+				const { buildDreamScene } = await import('$lib/portals-ecs/dream-scene.js');
+				const { buildTheaterScene } = await import('$lib/portals-ecs/theater-scene.js');
+				const ENV_TO_SCENE = {
+					ocean: buildOceanScene,
+					forest: buildForestScene,
+					space: buildCosmosScene,
+					celebration: buildCelebrationScene,
+					city: buildCityScene,
+					dream: buildDreamScene,
+					theater: buildTheaterScene,
+				};
 				for (const pid of Object.keys(configs)) {
 					if (pid === 'arboleda') continue;
 					const envType = configs[pid]?.environment?.type;
-					if (envType === 'ocean') registerSceneRenderer(pid, buildOceanScene);
-					else if (envType === 'forest') registerSceneRenderer(pid, buildForestScene);
-					else if (envType === 'space') registerSceneRenderer(pid, buildCosmosScene);
-					else registerSceneRenderer(pid, buildDesertScene);
+					// No memory-scene module yet — memory portals (and any
+					// unrecognized type) fall back to the desert world.
+					registerSceneRenderer(pid, ENV_TO_SCENE[envType] || buildDesertScene);
 				}
 
 				// Check for direct link: /portals?portal=urbano

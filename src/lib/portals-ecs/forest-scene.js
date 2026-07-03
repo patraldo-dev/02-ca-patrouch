@@ -131,6 +131,7 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 
 		// Label
 		const label = makeTextSprite(pname, pcolor);
+		label.material.opacity = 0;
 		label.position.set(t.x, h+0.3, t.z); label.scale.set(1.2, 0.3, 1);
 		scene.add(label); track.push(label);
 		labels.push({ sprite: label, baseY: label.position.y, phase: Math.random()*Math.PI*2, glow });
@@ -248,6 +249,19 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 	world.renderer.domElement.addEventListener('pointerdown', onPointerDown);
 	world.renderer.domElement.addEventListener('touchstart', onPointerDown);
 
+	let hoveredTarget = null;
+	const hoverRaycaster = new THREE.Raycaster();
+	function onPointerMove(event) {
+		const x = (event.clientX !== undefined ? event.clientX : 0) / window.innerWidth * 2 - 1;
+		const y = -((event.clientY !== undefined ? event.clientY : 0) / window.innerHeight) * 2 + 1;
+		hoverRaycaster.setFromCamera({ x, y }, world.camera);
+		const hits = hoverRaycaster.intersectObjects(tapTargets, true);
+		let t = null;
+		if (hits.length > 0) { t = hits[0].object; while (t && !t.userData?.portalId) t = t.parent; }
+		hoveredTarget = t;
+	}
+	world.renderer.domElement.addEventListener('pointermove', onPointerMove);
+
 	// ═══ UPDATE LOOP ═══
 	const prevUpdate = world.update.bind(world);
 	world.update = function(delta, time) {
@@ -281,7 +295,11 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 			f.mesh.position.x += Math.sin(tt*0.3+f.phase)*0.005;
 			f.mesh.material.opacity = 0.4 + Math.sin(tt*2+f.phase)*0.4;
 		}
-		for (const l of labels) {
+		for (let li = 0; li < labels.length; li++) {
+			const l = labels[li];
+			const isHovered = hoveredTarget && tapTargets.indexOf(hoveredTarget) === li;
+			const targetOp = isHovered ? 0.85 : 0;
+			l.sprite.material.opacity += (targetOp - l.sprite.material.opacity) * 0.15;
 			l.sprite.position.y = l.baseY + Math.sin(tt*0.8+l.phase)*0.06;
 			l.glow.material.opacity = 0.15 + Math.sin(tt*2+l.phase)*0.1;
 			l.glow.scale.setScalar(0.9 + Math.sin(tt*2+l.phase)*0.15);
@@ -298,6 +316,7 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 			world.update = prevUpdate;
 			world.renderer.domElement.removeEventListener('pointerdown', onPointerDown);
 			world.renderer.domElement.removeEventListener('touchstart', onPointerDown);
+			world.renderer.domElement.removeEventListener('pointermove', onPointerMove);
 		},
 	};
 }
