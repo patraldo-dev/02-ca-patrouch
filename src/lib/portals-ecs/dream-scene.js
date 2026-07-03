@@ -127,7 +127,7 @@ export function buildDreamScene(world, config = {}, allConfigs = {}, onNavigate 
 	}
 
 	// ═══ FLOATING DOORWAYS — gateway objects ═══
-	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
 	const doorPositions = [
 		{ x: -4, y: 0.5, z: -5 }, { x: 4, y: 1, z: -6 },
 		{ x: -5, y: -0.5, z: -10 }, { x: 5, y: 0, z: -10 },

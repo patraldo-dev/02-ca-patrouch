@@ -160,7 +160,7 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 		return group;
 	}
 
-	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
 	const coralSpots = [
 		{ x: -4, z: -5, s: 1.3 }, { x: 5, z: -7, s: 1.0 }, { x: -7, z: -10, s: 1.5 },
 		{ x: 8, z: -4, s: 0.8 }, { x: 0, z: -12, s: 1.2 }, { x: -2, z: -8, s: 0.9 },

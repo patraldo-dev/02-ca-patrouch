@@ -83,3 +83,21 @@ export async function loadPortalsData(db) {
 		return { galaxies: [], portals: [], count: 0, featuredPortal: null, sceneConfigs: {} };
 	}
 }
+
+/**
+ * Pick a random portal id from the loaded data. Used by /portals to land the
+ * visitor in a surprise world each visit — every world is itself a navigable
+ * menu (gateways to all other portals), so there's no dedicated index.
+ *
+ * Prefers portals that have a Mistral-generated scene config (fresh, rich
+ * content). Falls back to any active portal if none have configs yet.
+ *
+ * @param {object} data - result of loadPortalsData
+ * @returns {string|null} a portal id, or null if there are no portals
+ */
+export function pickRandomPortalId(data) {
+	const withScenes = (data.portals || []).filter((p) => data.sceneConfigs?.[p.id]);
+	const pool = withScenes.length ? withScenes : (data.portals || []);
+	if (!pool.length) return null;
+	return pool[Math.floor(Math.random() * pool.length)].id;
+}

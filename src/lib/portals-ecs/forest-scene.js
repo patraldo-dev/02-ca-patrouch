@@ -86,7 +86,7 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 	scene.add(floor); track.push(floor);
 
 	// ═══ TREES (navigation gateways) ═══
-	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
 	const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
 	const treeSpots = [
 		{ x: -4, z: -5, s: 1.3 }, { x: 4, z: -7, s: 1.0 }, { x: -7, z: -10, s: 1.5 },

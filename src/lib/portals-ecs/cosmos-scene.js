@@ -80,7 +80,7 @@ export function buildCosmosScene(world, config = {}, allConfigs = {}, onNavigate
 	}
 
 	// ═══ PLANETS (navigation gateways) ═══
-	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
 	const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
 	const planetSpots = [
 		{ x: -5, y: 1, z: -6, r: 0.8 }, { x: 5, y: 2, z: -8, r: 0.6 },

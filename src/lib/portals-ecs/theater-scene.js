@@ -168,7 +168,7 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 	scene.add(rod); track.push(rod);
 
 	// ═══ THEATER MASKS — gateway objects (comedy/tragedy masks on posts) ═══
-	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
 	const maskPositions = [
 		{ x: -3, z: 1.5 }, { x: 3, z: 1.5 },
 		{ x: -4.5, z: 0 }, { x: 4.5, z: 0 },

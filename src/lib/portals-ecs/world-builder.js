@@ -6,6 +6,7 @@ import { World, Transform } from '@iwsdk/core';
 import { createComponent, createSystem, Types } from 'elics';
 import * as THREE from 'three';
 import { buildEnvironment } from './environments.js';
+import { playTransition } from './scene-transition.js';
 
 // ── Scene Renderer Registry ──
 // Custom per-portal scene renderers (desert, ocean-floor, etc.)
@@ -143,8 +144,16 @@ const nav = {
 // ── Scene builder ──
 // Track disposable objects so we can clean up between scenes
 
-function rebuildScene(world, portalId) {
+function rebuildScene(world, portalId, isNavigation = false) {
 	const scene = world.scene;
+
+	// On inter-portal navigation, play a random cinematic transition tinted
+	// to the destination portal's color BEFORE teardown, so the swap is hidden
+	// under the overlay. Skipped on initial boot (isNavigation = false).
+	const destConfig = nav.allConfigs[portalId];
+	const transitionPromise = (isNavigation && destConfig?.palette?.primary)
+		? playTransition({ color: destConfig.palette.primary })
+		: Promise.resolve();
 
 	// Cleanup previous custom scene if any
 	if (world._customSceneCleanup) {
@@ -190,7 +199,7 @@ function rebuildScene(world, portalId) {
 	// Check for custom scene renderer
 	if (hasSceneRenderer(portalId)) {
 		const handle = SCENE_RENDERERS[portalId](world, config, nav.allConfigs, (targetId) => {
-			rebuildScene(world, targetId);
+			rebuildScene(world, targetId, true);
 		});
 		world._customSceneCleanup = handle?.cleanup || null;
 		return;
@@ -221,10 +230,10 @@ function rebuildScene(world, portalId) {
 	underLight.position.set(...lighting.under_light.position);
 	scene.add(underLight); track(underLight);
 
-	// ── Environment: main portal uses original starfield, destinations use themed scenes ──
+	// ── Environment: space portals use the starfield, others use themed scenes ──
 	let envHandle;
-	if (portalId === 'arboleda') {
-		// Original starfield for main portal
+	if (config.environment?.type === 'space') {
+		// Starfield render path — the cosmos world's signature look
 		const ap = config.ambient_particles;
 		const starGeo = new THREE.BufferGeometry();
 		const starPos = new Float32Array(ap.count * 3);
@@ -404,7 +413,7 @@ function rebuildScene(world, portalId) {
 			console.log('[portals] Navigating:', nav.currentPortalId, '→', targetId);
 
 			// Navigate after delay
-			setTimeout(() => rebuildScene(world, targetId), 1500);
+			setTimeout(() => rebuildScene(world, targetId, true), 1500);
 		}
 	}
 
@@ -458,16 +467,26 @@ function rebuildScene(world, portalId) {
 
 // ── Boot Portal Engine — accepts pre-merged configs (SSR + static fallbacks) ──
 
-export async function bootPortalEngine(container, configs) {
-	if (!configs || !configs.arboleda) {
-		throw new Error('bootPortalEngine: configs.arboleda is required');
+/**
+ * Boot the ECS portal world.
+ * @param {HTMLElement} container
+ * @param {object} configs        - map of portalId → scene config
+ * @param {string} initialPortalId - which portal to start in (required)
+ */
+export async function bootPortalEngine(container, configs, initialPortalId) {
+	if (!configs || Object.keys(configs).length === 0) {
+		throw new Error('bootPortalEngine: configs is empty');
 	}
-	return boot(container, configs.arboleda, configs);
+	const start = initialPortalId && configs[initialPortalId]
+		? initialPortalId
+		: Object.keys(configs)[0];
+	const indexConfig = configs[start] || {};
+	return boot(container, indexConfig, configs, start);
 }
 
 // ── Boot ──
 
-export async function boot(container, indexConfig, allConfigs) {
+export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	const world = await World.create(container, {
 		xr: { offer: 'none' },
 		render: { defaultLighting: false },
@@ -491,19 +510,22 @@ export async function boot(container, indexConfig, allConfigs) {
 	nav.allConfigs = allConfigs;
 	nav.history = [];
 
-	// Build initial scene (respect direct link if set)
-	const initialPortal = indexConfig._initialPortal || indexConfig.portal.id;
+	// Build initial scene
+	const initialPortal = startPortalId || indexConfig._initialPortal || indexConfig.portal?.id;
+	if (!initialPortal) {
+		throw new Error('boot: cannot determine initial portal id');
+	}
 	rebuildScene(world, initialPortal);
 
 	// Browser back/forward support
 	window.addEventListener('popstate', (event) => {
 		const pid = event.state?.portalId;
 		if (pid && nav.allConfigs[pid]) {
-			rebuildScene(world, pid);
+			rebuildScene(world, pid, true);
 		}
 	});
 
-	console.log('[portals] World booted:', indexConfig.portal.id);
+	console.log('[portals] World booted:', initialPortal);
 
 	return world;
 }

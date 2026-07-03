@@ -129,7 +129,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 	}
 
 	// ═══ SKYSCRAPERS WITH NEON SIGNS — gateway objects ═══
-	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
 	const neonColors = [0xff0066, 0x00ffaa, 0x66aaff, 0xffaa00, 0xff44ff, 0x44ffff];
 	const buildingPositions = [
 		{ x: -6, z: -6, w: 1.5, h: 8 }, { x: 6, z: -6, w: 1.8, h: 10 },

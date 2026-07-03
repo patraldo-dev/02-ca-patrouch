@@ -45,8 +45,8 @@
 					}
 				}
 
-				if (!configs.arboleda) {
-					throw new Error('No scene config found for arboleda (neither D1 nor static)');
+				if (Object.keys(configs).length === 0) {
+					throw new Error('No scene configs found (neither D1/Mistral nor static fallbacks)');
 				}
 
 				const { bootPortalEngine, registerSceneRenderer } = await import('$lib/portals-ecs/world-builder.js');
@@ -72,18 +72,17 @@
 					theater: buildTheaterScene,
 				};
 				for (const pid of Object.keys(configs)) {
-					if (pid === 'arboleda') continue;
 					const envType = configs[pid]?.environment?.type;
 					registerSceneRenderer(pid, ENV_TO_SCENE[envType] || buildDesertScene);
 				}
 
-				// Direct link: /portals/[id] or /portals?portal=<id>
-				const startPortal = initialPortalId || new URLSearchParams(window.location.search).get('portal');
-				if (startPortal && configs[startPortal]) {
-					configs.arboleda._initialPortal = startPortal;
-				}
+				// Resolve start portal: explicit initialPortalId (from /portals/[id]
+				// or the random pick), else ?portal= query, else arboleda default.
+				const startPortal = initialPortalId
+					|| new URLSearchParams(window.location.search).get('portal')
+					|| 'arboleda';
 
-				await bootPortalEngine(containerEl, configs);
+				await bootPortalEngine(containerEl, configs, startPortal);
 				if (cancelled) return;
 				booted = true;
 

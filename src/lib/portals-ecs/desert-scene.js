@@ -179,7 +179,7 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 	}
 
 	// Assign portal IDs to cacti — each cactus is a gateway
-	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
 	const cactiPositions = [
 		{ x: -3, z: -5, s: 1.2 }, { x: 4, z: -8, s: 0.9 }, { x: -6, z: -12, s: 1.5 },
 		{ x: 7, z: -6, s: 0.7 }, { x: 0, z: -15, s: 1.1 }, { x: -10, z: -8, s: 0.8 },

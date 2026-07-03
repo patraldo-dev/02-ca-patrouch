@@ -113,7 +113,7 @@ export function buildCelebrationScene(world, config = {}, allConfigs = {}, onNav
 	scene.add(tileRing); track.push(tileRing);
 
 	// ═══ PIÑATAS — gateway objects ═══
-	const portalIds = Object.keys(allConfigs).filter(id => id !== 'arboleda' && id !== (config.portal?.id));
+	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
 	const pinataColors = [0xff3366, 0xffdd00, 0x00ccff, 0xff8800, 0x88ff44, 0xcc44ff];
 	const pinataPositions = [
 		{ x: -3.5, z: -5, h: 2 }, { x: 3.5, z: -5, h: 2.2 },
