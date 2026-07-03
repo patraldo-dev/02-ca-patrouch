@@ -200,6 +200,12 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	// Check for custom scene renderer
 	if (hasSceneRenderer(portalId)) {
 		const handle = SCENE_RENDERERS[portalId](world, config, nav.allConfigs, (targetId) => {
+			// Resolve the "random world" sentinel from the worlds-navigation
+			// home gateway: pick any other portal than the current one.
+			if (targetId === '__random__') {
+				const ids = Object.keys(nav.allConfigs).filter((id) => id !== portalId);
+				targetId = ids.length ? ids[Math.floor(Math.random() * ids.length)] : portalId;
+			}
 			rebuildScene(world, targetId, true);
 		});
 		world._customSceneCleanup = handle?.cleanup || null;

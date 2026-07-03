@@ -4,6 +4,7 @@
 // Does NOT call World.create — the world already exists.
 
 import * as THREE from 'three';
+import { installNavigation } from './worlds-navigation.js';
 
 // ── Audio helpers (procedural, no files) ──
 let audioCtx = null;
@@ -355,6 +356,9 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 		console.warn('[desert] Audio setup failed:', e.message);
 	}
 
+	// ═══ WORLDS NAVIGATION — floating compass + home gateway ═══
+	const nav = installNavigation({ scene, world, allConfigs, config, track, tapTargets, onNavigate, theme: 'desert' });
+
 	// ═══ TAP HANDLER — tap a cactus to navigate ═══
 	const raycaster = new THREE.Raycaster();
 	function onPointerDown(event) {
@@ -398,6 +402,7 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 	const prevUpdate = world.update.bind(world);
 	world.update = function(delta, time) {
 		prevUpdate(delta, time);
+		nav.update(delta, time);
 		const tt = time / 1000;
 		for (const s of swayItems) { if (s.obj) s.obj.rotation.z = Math.sin(tt*s.spd + s.phase) * s.amp; }
 		if (chirpSounds.length > 0 && Math.random() < 0.005) {
@@ -432,6 +437,7 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 
 	return {
 		cleanup() {
+			nav.dispose();
 			for (const obj of track) scene.remove(obj);
 			if (windModulator) clearInterval(windModulator);
 			for (const node of audioNodes) { try { node.disconnect(); } catch {} }

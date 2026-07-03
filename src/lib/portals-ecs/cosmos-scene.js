@@ -3,6 +3,7 @@
 // Navigation: tap glowing planets to travel.
 
 import * as THREE from 'three';
+import { installNavigation } from './worlds-navigation.js';
 
 let audioCtx = null;
 function getAudioCtx() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
@@ -160,6 +161,9 @@ export function buildCosmosScene(world, config = {}, allConfigs = {}, onNavigate
 		console.log('[cosmos] Sound: space drone + EM chirps');
 	} catch (e) { console.warn('[cosmos] Audio failed:', e.message); }
 
+	// ═══ WORLDS NAVIGATION — floating compass + home gateway ═══
+	const nav = installNavigation({ scene, world, allConfigs, config, track, tapTargets, onNavigate, theme: 'cosmos' });
+
 	// ═══ TAP HANDLER ═══
 	const raycaster = new THREE.Raycaster();
 	function onPointerDown(event) {
@@ -193,6 +197,7 @@ export function buildCosmosScene(world, config = {}, allConfigs = {}, onNavigate
 	const prevUpdate = world.update.bind(world);
 	world.update = function(delta, time) {
 		prevUpdate(delta, time);
+			nav.update(delta, time);
 		const tt = time / 1000;
 		starfield.rotation.y += delta * 0.003;
 
@@ -235,6 +240,7 @@ export function buildCosmosScene(world, config = {}, allConfigs = {}, onNavigate
 	console.log('[cosmos] Scene built with', track.length, 'objects');
 	return {
 		cleanup() {
+			nav.dispose();
 			for (const obj of track) scene.remove(obj);
 			if (droneModulator) clearInterval(droneModulator);
 			for (const node of audioNodes) { try { node.disconnect(); } catch {} }

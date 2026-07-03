@@ -4,6 +4,7 @@
 // Navigation: tap coral formations to travel to other portals.
 
 import * as THREE from 'three';
+import { installNavigation } from './worlds-navigation.js';
 
 // ── Audio helpers ──
 let audioCtx = null;
@@ -310,6 +311,9 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 		console.log('[ocean] Sound: water ambient + bubbles + whale song');
 	} catch (e) { console.warn('[ocean] Audio failed:', e.message); }
 
+	// ═══ WORLDS NAVIGATION — floating compass + home gateway ═══
+	const nav = installNavigation({ scene, world, allConfigs, config, track, tapTargets, onNavigate, theme: 'ocean' });
+
 	// ═══ TAP HANDLER ═══
 	const raycaster = new THREE.Raycaster();
 	function onPointerDown(event) {
@@ -347,6 +351,7 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 	const prevUpdate = world.update.bind(world);
 	world.update = function(delta, time) {
 		prevUpdate(delta, time);
+			nav.update(delta, time);
 		const tt = time / 1000;
 
 		// Animate water ceiling shader
@@ -392,6 +397,7 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 
 	return {
 		cleanup() {
+			nav.dispose();
 			for (const obj of track) scene.remove(obj);
 			if (waterModulator) clearInterval(waterModulator);
 			for (const node of audioNodes) { try { node.disconnect(); } catch {} }

@@ -3,6 +3,7 @@
 // Night city with skyscrapers, neon signs (gateways), and driving cars.
 
 import * as THREE from 'three';
+import { installNavigation } from './worlds-navigation.js';
 
 let audioCtx = null;
 function getAudioCtx() {
@@ -347,6 +348,9 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 		console.warn('[city] Audio setup failed:', e.message);
 	}
 
+	// ═══ WORLDS NAVIGATION — floating compass + home gateway ═══
+	const nav = installNavigation({ scene, world, allConfigs, config, track, tapTargets, onNavigate, theme: 'city' });
+
 	// ═══ TAP + HOVER ═══
 	const raycaster = new THREE.Raycaster();
 	function getNDC(event) {
@@ -387,6 +391,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 	const prevUpdate = world.update.bind(world);
 	world.update = function(delta, time) {
 		prevUpdate(delta, time);
+			nav.update(delta, time);
 		const tt = time / 1000;
 
 		// Neon flicker
@@ -419,6 +424,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 
 	return {
 		cleanup() {
+			nav.dispose();
 			for (const obj of track) scene.remove(obj);
 			if (hornInterval) clearInterval(hornInterval);
 			for (const node of audioNodes) { try { node.disconnect(); } catch {} }

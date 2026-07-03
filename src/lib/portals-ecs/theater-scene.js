@@ -3,6 +3,7 @@
 // Stage with curtains, spotlights, masks (gateways), and a rippling curtain.
 
 import * as THREE from 'three';
+import { installNavigation } from './worlds-navigation.js';
 
 let audioCtx = null;
 function getAudioCtx() {
@@ -342,6 +343,9 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 		console.warn('[theater] Audio setup failed:', e.message);
 	}
 
+	// ═══ WORLDS NAVIGATION — floating compass + home gateway ═══
+	const nav = installNavigation({ scene, world, allConfigs, config, track, tapTargets, onNavigate, theme: 'theater' });
+
 	// ═══ TAP + HOVER ═══
 	const raycaster = new THREE.Raycaster();
 	function getNDC(event) {
@@ -382,6 +386,7 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 	const prevUpdate = world.update.bind(world);
 	world.update = function(delta, time) {
 		prevUpdate(delta, time);
+			nav.update(delta, time);
 		const tt = time / 1000;
 
 		// Curtain rippling (living element)
@@ -418,6 +423,7 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 
 	return {
 		cleanup() {
+			nav.dispose();
 			for (const obj of track) scene.remove(obj);
 			if (celloInterval) clearInterval(celloInterval);
 			for (const node of audioNodes) { try { node.disconnect(); } catch {} }
