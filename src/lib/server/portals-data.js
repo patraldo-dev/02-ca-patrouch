@@ -40,9 +40,13 @@ export async function loadPortalsData(db) {
 			ORDER BY g.sort_order ASC, p.discovered_at ASC
 		`).all();
 
-		// Fetch scene configs (Mistral-generated, stored by the cron / on-demand API)
+		// Fetch scene configs (Mistral-generated, stored by the cron/architect).
+		// A portal may have multiple variants; pick the most recent per portal.
 		const { results: sceneRows } = await db.prepare(`
 			SELECT portal_id, scene_config FROM portal_scenes
+			WHERE (portal_id, generated_at) IN (
+				SELECT portal_id, MAX(generated_at) FROM portal_scenes GROUP BY portal_id
+			)
 		`).all();
 		const sceneConfigs = {};
 		for (const row of sceneRows || []) {

@@ -24,7 +24,8 @@ export async function GET({ params, platform, url }) {
 	try {
 		const row = await db.prepare(
 			`SELECT portal_id, scene_config, source_writings, generated_at
-			 FROM portal_scenes WHERE portal_id = ?`
+			 FROM portal_scenes WHERE portal_id = ?
+			 ORDER BY generated_at DESC LIMIT 1`
 		).bind(id).first();
 
 		if (!row) {
