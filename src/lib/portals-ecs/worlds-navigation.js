@@ -290,6 +290,24 @@ const HOME_BUILDERS = {
 		g.userData._glow = scroll;
 		return g;
 	},
+	memory: () => {
+		// Floating lantern-slide — a glowing framed rectangle (a memory shard)
+		const g = new THREE.Group();
+		const frame = new THREE.Mesh(
+			new THREE.BoxGeometry(0.4, 0.5, 0.04),
+			new THREE.MeshBasicMaterial({ color: 0xddb066, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending }),
+		);
+		g.add(frame);
+		// Soft inner glow plane
+		const inner = new THREE.Mesh(
+			new THREE.PlaneGeometry(0.3, 0.4),
+			new THREE.MeshBasicMaterial({ color: 0xffe0a0, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending }),
+		);
+		inner.position.z = 0.03;
+		g.add(inner);
+		g.userData._glow = inner;
+		return g;
+	},
 };
 
 /**
