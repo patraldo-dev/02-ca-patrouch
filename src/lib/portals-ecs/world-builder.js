@@ -183,6 +183,7 @@ function rebuildScene(world, portalId, isNavigation = false) {
 		}
 	}
 	world._sceneObjects = [];
+	world._glowRings = []; // clear glow rings from previous scene
 
 	// Remove ECS entities (cubes, camera, narrative)
 	if (world._sceneEntities) {
@@ -291,37 +292,55 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	world._lights = { ambient: ambientLight, key: keyLight, rim: rimLight, under: underLight };
 	world._envHandle = envHandle;
 
-	// ── Portal cubes from portal_links ──
+	// ── Portal cubes from portal_links — dynamic multi-ring carousel ──
+	// Restores the 2f0029c "best version" energy: cubes distributed across
+	// concentric rings at varied elevations, each face showing a different
+	// artwork from the collection (deterministic cycling, not random), uniform
+	// BoxGeometry so artwork reads cleanly, lively float/spin, and subtle
+	// additive glow rings billboarded to camera.
 	const links = config.portal_links || [];
 	const cubeMeshes = [];
+
+	const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
+	const texLoader = new THREE.TextureLoader();
+	texLoader.crossOrigin = 'anonymous';
+
+	// The collection's artwork IDs — cycle deterministically so each cube
+	// shows a unique combination of 6 faces (matches the 2f0029c look).
+	const PORTAL_ARTWORKS = [
+		'12c79899-fb93-4885-508f-d2da0a2fbf00', 'bd4602b0-149d-42f8-e872-f697b64c7d00',
+		'5c7fb409-1aa2-45a9-8466-296077e18e00', 'f8a136eb-363e-4a24-0f54-70bb4f4bf800',
+		'5c28fef5-cff0-4ddd-b4af-100d29bad100', '62355ddb-0f6c-4251-5d8e-37a455e44000',
+		'85319dc7-ae16-48f8-9500-608ba174eb00', '26fe40df-7745-41dc-7491-97cb36a32f00',
+	];
+
+	// Two concentric rings for depth ("circles within circles").
+	const RING_RADII = [2.2, 3.4];
+	// Varied elevations — cubes float at different heights, not a flat ladder.
+	const ELEVATIONS = [0.3, 1.0, 0.6, 1.4, 0.4, 1.1, 0.8, 1.3];
 
 	links.forEach((link, i) => {
 		const tc = nav.allConfigs[link.target];
 		if (!tc) return;
 
-		const angle = (i / links.length) * Math.PI * 2;
-		const radius = 2.5;
+		// Distribute across rings: even indices inner, odd outer. Each ring
+		// gets its own angular offset so cubes don't line up radially.
+		const ringIdx = i % 2;
+		const radius = RING_RADII[ringIdx];
+		const inRingCount = Math.ceil((links.length - ringIdx) / 2);
+		const inRingIndex = Math.floor(i / 2);
+		const angleOffset = ringIdx === 0 ? 0 : Math.PI / inRingCount;
+		const angle = (inRingIndex / inRingCount) * Math.PI * 2 + angleOffset;
 		const cx = Math.cos(angle) * radius;
-		const cy = 0.2 + (i % 3) * 0.4;
+		const cy = ELEVATIONS[i % ELEVATIONS.length];
 		const cz = Math.sin(angle) * radius - 1;
 
-		// Each face shows a different artwork from the full collection
-		const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
-		const texLoader = new THREE.TextureLoader();
-		texLoader.crossOrigin = 'anonymous';
-
-		// Collect all art IDs from all configs — each face picks a random one
-		const allArtIds = Object.values(nav.allConfigs)
-			.map(c => c.portal?.art)
-			.filter(a => a && a !== '12c79899-fb93-4885-508f-d2da0a2fbf00'); // exclude placeholder
-		if (allArtIds.length === 0) allArtIds.push(tc.portal.art);
-
+		// Art cube — 6 faces, each a different artwork (deterministic cycling)
 		const cubeMats = [];
 		for (let f = 0; f < 6; f++) {
-			// Each face gets a random artwork from the collection
-			const faceArt = allArtIds[Math.floor(Math.random() * allArtIds.length)];
+			const faceArt = PORTAL_ARTWORKS[(i * 6 + f) % PORTAL_ARTWORKS.length];
 			const fMat = new THREE.MeshBasicMaterial({
-				color: new THREE.Color(tc.palette.primary), transparent: true, opacity: 0.8, side: THREE.DoubleSide,
+				color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide,
 			});
 			texLoader.load(
 				`https://imagedelivery.net/${CF_HASH}/${faceArt}/segment=foreground,width=256`,
@@ -335,19 +354,9 @@ function rebuildScene(world, portalId, isNavigation = false) {
 			cubeMats.push(fMat);
 		}
 
-		// Geometry varies by portal mood
-		const geometries = [
-			new THREE.BoxGeometry(0.6, 0.6, 0.6),
-			new THREE.OctahedronGeometry(0.45),
-			new THREE.TetrahedronGeometry(0.55),
-			new THREE.DodecahedronGeometry(0.4),
-			new THREE.IcosahedronGeometry(0.42, 0),
-			new THREE.BoxGeometry(0.5, 0.7, 0.5),
-			new THREE.ConeGeometry(0.4, 0.7, 6),
-			new THREE.OctahedronGeometry(0.5),
-		];
-		const geo = geometries[i % geometries.length];
-		const cubeMesh = new THREE.Mesh(geo, cubeMats);
+		// Uniform BoxGeometry — artwork reads cleaner than mixed polyhedra.
+		const cubeSize = 0.5 + (ringIdx === 0 ? 0.05 : 0); // inner ring slightly bigger
+		const cubeMesh = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), cubeMats);
 		cubeMesh.position.set(cx, cy, cz);
 		cubeMesh.userData.portalId = link.target;
 
@@ -356,13 +365,26 @@ function rebuildScene(world, portalId, isNavigation = false) {
 			portalId: link.target,
 			color: tc.palette.safe_text_color,
 			floatPhase: Math.random() * Math.PI * 2,
-			floatSpeed: 0.4 + Math.random() * 0.4,
+			floatSpeed: 0.5 + Math.random() * 0.5, // livelier than the old 0.4+0.4
 			baseY: cy,
 		});
 		world._sceneEntities.push(entity);
 		cubeMeshes.push(cubeMesh);
 
-		// (glow ring removed — was looking like flat circles)
+		// Subtle glow ring — thin RingGeometry, additive, billboarded to camera
+		// each frame via the update loop (stored in world._glowRings).
+		const glowColor = new THREE.Color(tc.palette.primary);
+		const glowRing = new THREE.Mesh(
+			new THREE.RingGeometry(cubeSize * 0.9, cubeSize * 1.4, 24),
+			new THREE.MeshBasicMaterial({
+				color: glowColor, transparent: true, opacity: 0.18,
+				blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+			}),
+		);
+		glowRing.position.copy(cubeMesh.position);
+		scene.add(glowRing); track(glowRing);
+		if (!world._glowRings) world._glowRings = [];
+		world._glowRings.push(glowRing);
 	});
 
 	// ── Narrative entity ──
@@ -450,6 +472,17 @@ function rebuildScene(world, portalId, isNavigation = false) {
 						showOverlay(world._narrTexts[idx]);
 						world._narrEntity.setValue(NarrativeState, 'stateIndex', (idx + 1) % world._narrTexts.length);
 						world._narrEntity.setValue(NarrativeState, 'lastAdvance', performance.now());
+					}
+				}
+			}
+
+			// Billboard glow rings toward camera + gentle pulse
+			if (world._glowRings && world._glowRings.length) {
+				const camPos = world.camera.position;
+				for (const ring of world._glowRings) {
+					ring.lookAt(camPos);
+					if (ring.material) {
+						ring.material.opacity = 0.14 + Math.sin(time / 1000 * 1.5 + ring.position.x) * 0.06;
 					}
 				}
 			}
