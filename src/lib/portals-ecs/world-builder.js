@@ -492,6 +492,9 @@ export async function bootPortalEngine(container, configs, initialPortalId) {
 // ── Boot ──
 
 export async function boot(container, indexConfig, allConfigs, startPortalId) {
+	if (!container) {
+		throw new Error('boot: container element is null — bind:this may not have resolved');
+	}
 	const world = await World.create(container, {
 		xr: { offer: 'none' },
 		render: { defaultLighting: false },
