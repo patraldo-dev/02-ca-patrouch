@@ -54,7 +54,6 @@
 				// Register custom scene renderers — keyed by environment.type.
 				// Each builder is self-contained (own geometry/lighting/audio) and
 				// reads only the destination portals' palette/names for gateways.
-				const { buildDesertScene } = await import('$lib/portals-ecs/desert-scene.js');
 				const { buildOceanScene } = await import('$lib/portals-ecs/ocean-scene.js');
 				const { buildForestScene } = await import('$lib/portals-ecs/forest-scene.js');
 				const { buildCelebrationScene } = await import('$lib/portals-ecs/celebration-scene.js');
@@ -78,7 +77,13 @@
 				};
 				for (const pid of Object.keys(configs)) {
 					const envType = configs[pid]?.environment?.type;
-					registerSceneRenderer(pid, ENV_TO_SCENE[envType] || buildDesertScene);
+					const builder = ENV_TO_SCENE[envType];
+					// Only register when we have a real custom renderer for this
+					// env type. Portals without one (e.g. space → no entry, so the
+					// art-cube carousel default path runs) must NOT be registered —
+					// otherwise hasSceneRenderer() returns true and the default
+					// path in world-builder.js never executes.
+					if (builder) registerSceneRenderer(pid, builder);
 				}
 
 				// Resolve start portal. Prefer, in order: SSR random pick (from
