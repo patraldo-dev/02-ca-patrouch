@@ -32,7 +32,7 @@ Output ONLY valid JSON matching this schema (no markdown, no explanation):
 
 {
   "environment": {
-    "type": "forest|ocean|celebration|space|city|dream|theater|memory|parallax"
+    "type": "forest|ocean|celebration|space|city|dream|theater|memory|parallax|lithograph"
   },
   "atmosphere": {
     "mood": "string - one word emotional descriptor",
@@ -91,6 +91,7 @@ Rules:
     theater = spotlight, stage, narration, amber, candlelight, performance
     memory = sepia, nostalgia, photographs, golden dust, faded, reminiscent
     parallax = layered, depth, perspective, thresholds, horizons, distances, storybook, theatrical, folded
+    lithograph = engraved, ink, crosshatch, vintage, antique, illustration, monochrome, detailed, etching, woodcut
   The type must reflect the FEELING of the stories, not just the portal name.
   If the writings shift mood significantly from the portal default, choose the environment that matches the writings.
 - WHEN environment.type is "parallax", ALSO emit a "layers" array (4-6 entries) describing the diorama composition. Each layer:

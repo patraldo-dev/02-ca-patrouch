@@ -103,7 +103,7 @@ const PARTICLE_STYLE_ALIASES = {
 };
 
 // ── Valid environment types ──
-const VALID_ENVIRONMENT_TYPES = ['forest', 'ocean', 'celebration', 'space', 'city', 'dream', 'theater', 'memory', 'parallax'];
+const VALID_ENVIRONMENT_TYPES = ['forest', 'ocean', 'celebration', 'space', 'city', 'dream', 'theater', 'memory', 'parallax', 'lithograph'];
 
 const ENVIRONMENT_TYPE_ALIASES = {
 	'tree': 'forest', 'trees': 'forest', 'woods': 'forest', 'grove': 'forest', 'jungle': 'forest',

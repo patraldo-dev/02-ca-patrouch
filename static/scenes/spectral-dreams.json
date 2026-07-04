@@ -1,8 +1,15 @@
 {
   "$schema": "portal-scene.v1",
   "environment": {
-    "type": "dream"
+    "type": "parallax"
   },
+  "layers": [
+    { "depth": 0.0, "kind": "stars", "silhouette": "flat", "density": 0.7, "height": 0.6, "position": "top", "tint_shift": 0 },
+    { "depth": 0.25, "kind": "clouds", "silhouette": "rounded", "density": 0.5, "height": 0.35, "position": "floating", "tint_shift": -0.05 },
+    { "depth": 0.5, "kind": "arch", "silhouette": "rounded", "density": 0.4, "height": 0.5, "position": "horizon", "tint_shift": 0 },
+    { "depth": 0.75, "kind": "geometry", "silhouette": "pointed", "density": 0.6, "height": 0.3, "position": "floating", "tint_shift": 0.05 },
+    { "depth": 1.0, "kind": "grasses", "silhouette": "pointed", "density": 0.85, "height": 0.2, "position": "bottom", "tint_shift": 0.08 }
+  ],
   "portal": {
     "id": "spectral-dreams",
     "names": {
