@@ -25,6 +25,7 @@
 import { generateSceneForPortal, matchWritingsByTriggers } from './scene-generator.js';
 import { normalizeSceneConfig } from '$lib/portals-ecs/scene-normalizer.js';
 import { generatePortalArt } from './generate-portal-art.js';
+import { generateNarrationForPortal } from './generate-narration.js';
 
 // ── Guardrails ──────────────────────────────────────────────
 const MAX_PORTALS = 30;          // hard ceiling; after this, only enhance
@@ -250,15 +251,26 @@ async function executeAction(action, ctx) {
 	}
 }
 
-/** #1 — regenerate an existing portal's default scene config */
+/** #1 — regenerate an existing portal's default scene config + refresh narration */
 async function enhanceScene(action, { db, ai, writings }) {
 	const portal = await fetchPortal(db, action.target);
 	if (!portal) throw new Error(`enhance_scene: portal ${action.target} not found`);
 	const matched = matchWritingsByTriggers(writings, portal.triggers || [], 8);
 	if (matched.length < 1) throw new Error(`enhance_scene: no writings match ${action.target}`);
 	const { sceneConfig, sourceIds } = await generateSceneForPortal(ai, portal, matched);
+
+	// Generate spoken narration (failure-isolated — scene still stores without it).
+	let narrationStatus = 'skipped';
+	try {
+		const narration = await generateNarrationForPortal({ db, ai, portal, writings: matched });
+		sceneConfig.narration = narration.text;
+		narrationStatus = `rendered:${narration.rendered.join(',')}`;
+	} catch (err) {
+		console.warn(`[architect] narration failed for ${portal.id}:`, err.message);
+	}
+
 	await storeScene(db, portal.id, 'default', sceneConfig, sourceIds);
-	return { action: 'enhance_scene', portal: portal.id, writings_analyzed: sourceIds.length };
+	return { action: 'enhance_scene', portal: portal.id, writings_analyzed: sourceIds.length, narration: narrationStatus };
 }
 
 /** #2 — add a named variant scene to an existing portal */
@@ -336,13 +348,29 @@ async function birthPortal(action, { db, ai, cfToken, landscape, unmatched }) {
 
 	// Generate the scene config (failure-isolated)
 	let sceneGenerated = false;
+	let sceneConfig = null;
 	try {
 		const portalRow = await fetchPortal(db, slug);
-		const { sceneConfig, sourceIds } = await generateSceneForPortal(ai, portalRow, unmatched.slice(0, 8));
-		await storeScene(db, slug, 'default', sceneConfig, sourceIds);
+		const gen = await generateSceneForPortal(ai, portalRow, unmatched.slice(0, 8));
+		sceneConfig = gen.sceneConfig;
+		await storeScene(db, slug, 'default', sceneConfig, gen.sourceIds);
 		sceneGenerated = true;
 	} catch (err) {
 		console.warn(`[architect] scene generation failed for ${slug}:`, err.message);
+	}
+
+	// Generate spoken narration (failure-isolated)
+	let narrationStatus = 'skipped';
+	try {
+		const portalRow = await fetchPortal(db, slug);
+		const narration = await generateNarrationForPortal({ db, ai, portal: portalRow, writings: unmatched.slice(0, 8) });
+		if (sceneConfig) {
+			sceneConfig.narration = narration.text;
+			await storeScene(db, slug, 'default', sceneConfig, sceneConfig.source_writings || []);
+		}
+		narrationStatus = `rendered:${narration.rendered.join(',')}`;
+	} catch (err) {
+		console.warn(`[architect] narration failed for ${slug}:`, err.message);
 	}
 
 	// Auto-link to the 3-5 nearest existing portals by trigger overlap
@@ -368,6 +396,7 @@ async function birthPortal(action, { db, ai, cfToken, landscape, unmatched }) {
 		envType,
 		art: artId ? 'generated' : 'skipped',
 		scene: sceneGenerated ? 'generated' : 'skipped',
+		narration: narrationStatus,
 		links: links.length,
 	};
 }

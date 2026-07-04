@@ -16,6 +16,7 @@
 //  structure with one call each.
 // ═══════════════════════════════════════════════════════════
 import * as THREE from 'three';
+import { installNarration } from './portal-audio.js';
 
 // Sentinel id meaning "take me somewhere random." rebuildScene treats this as
 // "pick a random world other than the current one."
@@ -432,9 +433,17 @@ export function installNavigation({ scene, world, allConfigs, config, track, tap
 	// discoverable on touch (where pointermove only fires during a drag).
 	const revealTimeout = setTimeout(() => compass.setRevealed(true), 2500);
 
+	// Spoken narration — speaker affordance + optional subtitles. Pre-rendered
+	// audio is fetched on first tap (no AI cost on playback). Disposed on scene
+	// teardown so audio never bleeds across worlds.
+	const narration = currentId
+		? installNarration({ portalId: currentId, track, lang })
+		: null;
+
 	function update(dt, time) {
 		compass.update(dt, time);
 		home.update(dt, time);
+		if (narration) narration.update(dt, time);
 	}
 
 	function dispose() {
@@ -443,6 +452,7 @@ export function installNavigation({ scene, world, allConfigs, config, track, tap
 		dom.removeEventListener('touchstart', onDown, true);
 		dom.removeEventListener('pointermove', onMove);
 		compass.dispose();
+		if (narration) narration.dispose();
 	}
 
 	return { update, dispose };

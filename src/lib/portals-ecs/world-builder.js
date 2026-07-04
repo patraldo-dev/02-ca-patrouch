@@ -8,6 +8,7 @@ import { createComponent, createSystem, Types } from 'elics';
 import * as THREE from 'three';
 import { buildEnvironment } from './environments.js';
 import { playTransition } from './scene-transition.js';
+import { installNarration } from './portal-audio.js';
 
 // ── Scene Renderer Registry ──
 // Custom per-portal scene renderers (desert, ocean-floor, etc.)
@@ -497,8 +498,16 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	// ── First narrative ──
 	setTimeout(() => showOverlay(texts[0]), 1500);
 
-	// ── Nav bar ──
-	// Nav bar removed — cubes are the navigation
+	// ── Spoken narration (speaker affordance, fetched on tap) ──
+	// `lang` is already in scope (declared earlier in rebuildScene).
+	const narration = installNarration({ portalId, track: [], lang });
+	// Dispose narration on scene teardown — piggyback on the custom-cleanup slot
+	// since the default path doesn't have its own cleanup return.
+	const prevCustomCleanup = world._customSceneCleanup;
+	world._customSceneCleanup = () => {
+		if (typeof prevCustomCleanup === 'function') prevCustomCleanup();
+		narration.dispose();
+	};
 
 	console.log('[portals] Scene built:', portalId, 'cubes:', cubeMeshes.length);
 }

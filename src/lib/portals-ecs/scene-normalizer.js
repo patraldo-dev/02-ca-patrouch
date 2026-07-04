@@ -451,4 +451,23 @@ function deriveRenderFields(normalized, raw) {
         ? normalized.ambient_texts
         : ['❝ Cada historia es un portal ❞', '❝ Toca para entrar ❞', '❝ Los espíritus esperan ❞'];
     normalized.narrative_texts = { es: texts, en: texts, fr: texts };
+
+    // ── Narration passage (longer story-like text for spoken narration) ──
+    // Optional — only present when the portal-architect generated it. The audio
+    // itself lives in portal_narrations (too large for scene_config); this field
+    // carries the TEXT for subtitles + as the TTS source if audio is missing.
+    if (raw.narration && typeof raw.narration === 'object') {
+        const cap = (s, fallback) => {
+            const v = typeof s === 'string' ? s.replace(/\s+/g, ' ').trim().slice(0, 1500) : '';
+            return v || fallback;
+        };
+        const es = cap(raw.narration.es, '');
+        normalized.narration = {
+            es,
+            en: cap(raw.narration.en, es),
+            fr: cap(raw.narration.fr, es),
+        };
+    } else {
+        normalized.narration = null;
+    }
 }
