@@ -77,11 +77,36 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 	let horn = null;
 	let hornInterval = null;
 
-	// ═══ SKY — deep night ═══
+	// ═══ PALETTE — derive the city's whole identity from this portal's primary ═══
+	// Two city portals (urbano=steel-blue, mysterious-market=bright-blue) must
+	// look distinct, so the neon palette, building tint, moon, and lighting all
+	// shift to the portal's hue rather than a fixed pink/teal skyline.
+	const ciPalette = config.palette || {};
+	const ciPrimary = new THREE.Color(ciPalette.primary || '#546e7a');
+	const { h: ciHue } = ciPrimary.getHSL({});
+	// Neon palette: 6 hues spread around the portal's primary hue, so each city
+	// has its own neon character (a mysterious market glows differently than a
+	// sterile downtown). Saturation/lightness kept high for neon punch.
+	const neonColors = [
+		new THREE.Color().setHSL(ciHue, 1.0, 0.55).getHex(),
+		new THREE.Color().setHSL((ciHue + 0.15) % 1, 1.0, 0.5).getHex(),
+		new THREE.Color().setHSL((ciHue + 0.5) % 1, 0.9, 0.55).getHex(),
+		new THREE.Color().setHSL((ciHue + 0.33) % 1, 1.0, 0.5).getHex(),
+		new THREE.Color().setHSL((ciHue + 0.66) % 1, 0.95, 0.55).getHex(),
+		new THREE.Color().setHSL((ciHue + 0.08) % 1, 1.0, 0.6).getHex(),
+	];
+	const buildingTint = new THREE.Color().setHSL(ciHue, 0.3, 0.06).getHex();
+	const moonTint = new THREE.Color().setHSL(ciHue, 0.4, 0.85).getHex();
+	const windowLit = new THREE.Color().setHSL((ciHue + 0.08) % 1, 0.7, 0.7).getHex();
+	const groundColor = new THREE.Color().setHSL(ciHue, 0.2, 0.04).getHex();
+	const skyTop = new THREE.Color().setHSL(ciHue, 0.4, 0.025);
+	const skyBottom = new THREE.Color().setHSL(ciHue, 0.5, 0.09);
+
+	// ═══ SKY — deep night, tinted to portal hue ═══
 	const skyMat = new THREE.ShaderMaterial({
 		uniforms: {
-			topColor: { value: new THREE.Color(0x050510) },
-			bottomColor: { value: new THREE.Color(0x1a1530) },
+			topColor: { value: skyTop },
+			bottomColor: { value: skyBottom },
 		},
 		vertexShader: `varying vec3 vWorldPos; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vWorldPos = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
 		fragmentShader: `uniform vec3 topColor; uniform vec3 bottomColor; varying vec3 vWorldPos; void main() { float h = normalize(vWorldPos).y; float t = clamp(h * 0.5 + 0.5, 0.0, 1.0); gl_FragColor = vec4(mix(bottomColor, topColor, t), 1.0); }`,
@@ -90,24 +115,24 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 	const sky = new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), skyMat);
 	scene.add(sky); track.push(sky);
 
-	// ═══ MOON ═══
+	// ═══ MOON — tinted to portal hue ═══
 	const moon = new THREE.Mesh(
 		new THREE.CircleGeometry(1.2, 32),
-		new THREE.MeshBasicMaterial({ color: 0xddeeff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending }),
+		new THREE.MeshBasicMaterial({ color: moonTint, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending }),
 	);
 	moon.position.set(-8, 6, -20);
 	scene.add(moon); track.push(moon);
 	const moonGlow = new THREE.Mesh(
 		new THREE.RingGeometry(1.2, 2, 32),
-		new THREE.MeshBasicMaterial({ color: 0xddeeff, transparent: true, opacity: 0.08, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }),
+		new THREE.MeshBasicMaterial({ color: moonTint, transparent: true, opacity: 0.08, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }),
 	);
 	moonGlow.position.copy(moon.position);
 	scene.add(moonGlow); track.push(moonGlow);
 
-	// ═══ GROUND — asphalt ═══
+	// ═══ GROUND — asphalt, tinted ═══
 	const ground = new THREE.Mesh(
 		new THREE.PlaneGeometry(60, 60),
-		new THREE.MeshBasicMaterial({ color: 0x0a0a12, transparent: true, opacity: 0.9 }),
+		new THREE.MeshBasicMaterial({ color: groundColor, transparent: true, opacity: 0.9 }),
 	);
 	ground.rotation.x = -Math.PI / 2; ground.position.y = -1.5;
 	scene.add(ground); track.push(ground);
@@ -115,7 +140,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 	// ═══ ROAD — lighter strip with lane markings ═══
 	const road = new THREE.Mesh(
 		new THREE.PlaneGeometry(4, 40),
-		new THREE.MeshBasicMaterial({ color: 0x15151f, transparent: true, opacity: 0.8 }),
+		new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(ciHue, 0.2, 0.07).getHex(), transparent: true, opacity: 0.8 }),
 	);
 	road.rotation.x = -Math.PI / 2; road.position.set(0, -1.49, 0);
 	scene.add(road); track.push(road);
@@ -124,7 +149,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 	for (let i = -18; i <= 18; i += 2) {
 		const dash = new THREE.Mesh(
 			new THREE.PlaneGeometry(0.08, 0.6),
-			new THREE.MeshBasicMaterial({ color: 0x444455, transparent: true, opacity: 0.3 }),
+			new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(ciHue, 0.3, 0.2).getHex(), transparent: true, opacity: 0.3 }),
 		);
 		dash.rotation.x = -Math.PI / 2; dash.position.set(0, -1.48, i);
 		scene.add(dash); track.push(dash);
@@ -132,7 +157,6 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 
 	// ═══ SKYSCRAPERS WITH NEON SIGNS — gateway objects ═══
 	const portalIds = Object.keys(allConfigs).filter(id => id !== (config.portal?.id));
-	const neonColors = [0xff0066, 0x00ffaa, 0x66aaff, 0xffaa00, 0xff44ff, 0x44ffff];
 	const buildingPositions = [
 		{ x: -6, z: -6, w: 1.5, h: 8 }, { x: 6, z: -6, w: 1.8, h: 10 },
 		{ x: -8, z: -12, w: 1.3, h: 6 }, { x: 8, z: -12, w: 1.6, h: 9 },
@@ -147,10 +171,10 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 		const portalName = portalConfig ? (portalConfig.portal?.names?.[lang] || portalConfig.portal?.names?.es || portalId) : portalId;
 		const neonColor = neonColors[i % neonColors.length];
 
-		// Building body
+		// Building body — tinted to portal hue
 		const building = new THREE.Mesh(
 			new THREE.BoxGeometry(b.w, b.h, b.w * 0.8),
-			new THREE.MeshBasicMaterial({ color: 0x0a0a18, transparent: true, opacity: 0.9 }),
+			new THREE.MeshBasicMaterial({ color: buildingTint, transparent: true, opacity: 0.9 }),
 		);
 		building.position.set(b.x, -1.5 + b.h / 2, b.z);
 		scene.add(building); track.push(building);
@@ -161,7 +185,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 		outline.position.copy(building.position);
 		scene.add(outline); track.push(outline);
 
-		// Window grid
+		// Window grid — lit windows tinted to portal hue
 		const floors = Math.floor(b.h / 0.6);
 		const cols = Math.floor(b.w / 0.35);
 		for (let fr = 0; fr < floors; fr++) {
@@ -171,7 +195,7 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 				const win = new THREE.Mesh(
 					new THREE.PlaneGeometry(0.08, 0.08),
 					new THREE.MeshBasicMaterial({
-						color: lit ? 0xffdd88 : 0x222244,
+						color: lit ? windowLit : new THREE.Color().setHSL(ciHue, 0.3, 0.15).getHex(),
 						transparent: true,
 						opacity: lit ? 0.5 : 0.1,
 						blending: lit ? THREE.AdditiveBlending : THREE.NormalBlending,
@@ -304,20 +328,17 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 		});
 	}
 
-	// ═══ LIGHTING ═══
-	const ambient = new THREE.AmbientLight(0x334466, 0.4);
+	// ═══ LIGHTING — tinted to portal hue ═══
+	const ambient = new THREE.AmbientLight(new THREE.Color().setHSL(ciHue, 0.4, 0.18).getHex(), 0.4);
 	scene.add(ambient); track.push(ambient);
-	const streetLight = new THREE.PointLight(0xffcc66, 0.5, 15);
+	const streetLight = new THREE.PointLight(windowLit, 0.5, 15);
 	streetLight.position.set(0, 1, -3);
 	scene.add(streetLight); track.push(streetLight);
-	const neonLight = new THREE.PointLight(0xff0066, 0.3, 20);
+	const neonLight = new THREE.PointLight(neonColors[0], 0.3, 20);
 	neonLight.position.set(5, 3, -8);
 	scene.add(neonLight); track.push(neonLight);
 
-	// Palette-driven night sky so two cities (urbano/mysterious-market) look distinct.
-	const ciPalette = config.palette || {};
-	const ciPrimary = new THREE.Color(ciPalette.primary || '#546e7a');
-	const { h: ciHue } = ciPrimary.getHSL({});
+	// Palette-driven fog/bg (ciHue + ciPalette already derived at top of build)
 	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(ciHue, 0.4, 0.06), ciPalette.fog_density ?? 0.03);
 	const oldBg = scene.background;
 	scene.background = new THREE.Color(ciPalette.background || new THREE.Color().setHSL(ciHue, 0.4, 0.04));
