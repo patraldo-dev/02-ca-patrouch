@@ -69,9 +69,21 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 	const track = []; const tapTargets = []; const labels = []; const swayItems = [];
 	const audioNodes = []; const fireflies = []; let birdCalls = []; let cricketSounds = []; let windModulator = null;
 
-	// ═══ SKY (canopy-filtered green twilight) ═══
+	// ═══ PALETTE — tint the whole world from this portal's identity ═══
+	// Derive a base hue from config.palette.primary so two forest portals
+	// (e.g. arboleda=green, suenos=purple) look distinct, not identical.
+	const palette = config.palette || {};
+	const primary = new THREE.Color(palette.primary || '#578947');
+	const { h: baseHue } = primary.getHSL({});
+	const canopyHue = baseHue + (Math.random() - 0.5) * 0.04; // narrow hue jitter
+	const skyTop = new THREE.Color().setHSL(baseHue, 0.45, 0.16);
+	const skyBottom = new THREE.Color().setHSL(baseHue, 0.4, 0.30);
+	const floorColor = new THREE.Color().setHSL(baseHue, 0.35, 0.10);
+	const rayColor = new THREE.Color().setHSL(baseHue, 0.7, 0.6);
+
+	// ═══ SKY (canopy-filtered twilight, tinted to portal) ═══
 	const skyMat = new THREE.ShaderMaterial({
-		uniforms: { top: { value: new THREE.Color(0x224411) }, bottom: { value: new THREE.Color(0x446622) } },
+		uniforms: { top: { value: skyTop }, bottom: { value: skyBottom } },
 		vertexShader: `varying vec3 vP; void main() { vec4 wp = modelMatrix * vec4(position,1.0); vP = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
 		fragmentShader: `uniform vec3 top; uniform vec3 bottom; varying vec3 vP; void main() { float h = normalize(vP).y; float t = clamp(h*0.5+0.5,0.0,1.0); gl_FragColor = vec4(mix(bottom,top,t),1.0); }`,
 		side: THREE.BackSide,
@@ -83,7 +95,7 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 	const fPos = floorGeo.attributes.position;
 	for (let i = 0; i < fPos.count; i++) { const x = fPos.getX(i), y = fPos.getY(i); fPos.setZ(i, Math.sin(x*0.2)*0.15 + Math.cos(y*0.15)*0.1); }
 	fPos.needsUpdate = true;
-	const floor = new THREE.Mesh(floorGeo, new THREE.MeshBasicMaterial({ color: 0x1a2810, transparent: true, opacity: 0.7 }));
+	const floor = new THREE.Mesh(floorGeo, new THREE.MeshBasicMaterial({ color: floorColor, transparent: true, opacity: 0.7 }));
 	floor.rotation.x = -Math.PI/2; floor.position.y = -1.5;
 	scene.add(floor); track.push(floor);
 
@@ -112,8 +124,8 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 		trunk.userData = { portalId: pid, isGateway: true };
 		scene.add(trunk); track.push(trunk); tapTargets.push(trunk);
 
-		// Canopy (stacked cones)
-		const cColor = new THREE.Color().setHSL(0.27+Math.random()*0.08, 0.4, 0.15+Math.random()*0.08);
+		// Canopy (stacked cones) — tinted to portal hue
+		const cColor = new THREE.Color().setHSL(canopyHue, 0.4, 0.15+Math.random()*0.08);
 		for (let c = 0; c < 3; c++) {
 			const cone = new THREE.Mesh(
 				new THREE.ConeGeometry((1.0-c*0.25)*t.s, 1.5*t.s, 6),
@@ -167,7 +179,7 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 		const a = Math.random()*Math.PI*2, r = 1+Math.random()*3;
 		const shaft = new THREE.Mesh(
 			new THREE.PlaneGeometry(0.8, 8),
-			new THREE.MeshBasicMaterial({ color: 0x88ff66, transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
+			new THREE.MeshBasicMaterial({ color: rayColor, transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
 		);
 		shaft.position.set(Math.cos(a)*r, 2.5, Math.sin(a)*r); shaft.lookAt(0, 2.5, 0);
 		scene.add(shaft); track.push(shaft);
@@ -210,14 +222,17 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 	}));
 	scene.add(smoke); track.push(smoke);
 
-	// ═══ LIGHTING ═══
-	const ambient = new THREE.AmbientLight(0x445522, 0.4); scene.add(ambient); track.push(ambient);
-	const key = new THREE.PointLight(0x88ff44, 0.6, 20); key.position.set(0, 4, 0); scene.add(key); track.push(key);
-	const fill = new THREE.PointLight(0x224411, 0.3, 15); fill.position.set(-3, 1, 3); scene.add(fill); track.push(fill);
+	// ═══ LIGHTING — tinted to portal hue ═══
+	const ambientColor = new THREE.Color().setHSL(baseHue, 0.3, 0.18);
+	const keyColor = new THREE.Color().setHSL(baseHue, 0.6, 0.45);
+	const fillColor = new THREE.Color().setHSL(baseHue, 0.35, 0.12);
+	const ambient = new THREE.AmbientLight(ambientColor, 0.4); scene.add(ambient); track.push(ambient);
+	const key = new THREE.PointLight(keyColor, 0.6, 20); key.position.set(0, 4, 0); scene.add(key); track.push(key);
+	const fill = new THREE.PointLight(fillColor, 0.3, 15); fill.position.set(-3, 1, 3); scene.add(fill); track.push(fill);
 
 	const oldFog = scene.fog; const oldBg = scene.background;
-	scene.fog = new THREE.FogExp2(0x1a2a10, 0.025);
-	scene.background = new THREE.Color(0x0a1a08);
+	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(baseHue, 0.4, 0.07), palette.fog_density ?? 0.025);
+	scene.background = new THREE.Color(palette.background || new THREE.Color().setHSL(baseHue, 0.5, 0.03));
 
 	if (world.camera) { world.camera.position.set(0, 1.5, 6); world.camera.lookAt(0, 0, -5); world.camera.rotation.z = 0; }
 

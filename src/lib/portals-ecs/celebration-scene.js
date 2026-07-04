@@ -295,9 +295,13 @@ export function buildCelebrationScene(world, config = {}, allConfigs = {}, onNav
 	fillLight.position.set(-5, 2, 5);
 	scene.add(fillLight); track.push(fillLight);
 
-	scene.fog = new THREE.FogExp2(0x663322, 0.02);
+	// Palette-driven festive sky so two celebrations look distinct.
+	const cePalette = config.palette || {};
+	const cePrimary = new THREE.Color(cePalette.primary || '#ff6b35');
+	const { h: ceHue } = cePrimary.getHSL({});
+	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(ceHue, 0.5, 0.18), cePalette.fog_density ?? 0.02);
 	const oldBg = scene.background;
-	scene.background = new THREE.Color(0x3a1a30);
+	scene.background = new THREE.Color(cePalette.background || new THREE.Color().setHSL(ceHue, 0.5, 0.12));
 
 	if (world.camera) {
 		world.camera.position.set(0, 1.5, 5);

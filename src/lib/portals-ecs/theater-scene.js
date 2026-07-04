@@ -307,9 +307,13 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 	sideLight.position.set(-4, 1, 2);
 	scene.add(sideLight); track.push(sideLight);
 
-	scene.fog = new THREE.FogExp2(0x0a0402, 0.03);
+	// Palette-driven stage haze so two theaters look distinct.
+	const thPalette = config.palette || {};
+	const thPrimary = new THREE.Color(thPalette.primary || '#c9a87c');
+	const { h: thHue } = thPrimary.getHSL({});
+	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(thHue, 0.4, 0.04), thPalette.fog_density ?? 0.03);
 	const oldBg = scene.background;
-	scene.background = new THREE.Color(0x080402);
+	scene.background = new THREE.Color(thPalette.background || new THREE.Color().setHSL(thHue, 0.4, 0.03));
 
 	if (world.camera) {
 		world.camera.position.set(0, 1.5, 6);

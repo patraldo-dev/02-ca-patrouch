@@ -314,9 +314,13 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 	neonLight.position.set(5, 3, -8);
 	scene.add(neonLight); track.push(neonLight);
 
-	scene.fog = new THREE.FogExp2(0x0a0a18, 0.03);
+	// Palette-driven night sky so two cities (urbano/mysterious-market) look distinct.
+	const ciPalette = config.palette || {};
+	const ciPrimary = new THREE.Color(ciPalette.primary || '#546e7a');
+	const { h: ciHue } = ciPrimary.getHSL({});
+	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(ciHue, 0.4, 0.06), ciPalette.fog_density ?? 0.03);
 	const oldBg = scene.background;
-	scene.background = new THREE.Color(0x080812);
+	scene.background = new THREE.Color(ciPalette.background || new THREE.Color().setHSL(ciHue, 0.4, 0.04));
 
 	if (world.camera) {
 		world.camera.position.set(0, 1.5, 5);

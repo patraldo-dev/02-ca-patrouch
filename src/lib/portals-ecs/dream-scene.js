@@ -262,9 +262,13 @@ export function buildDreamScene(world, config = {}, allConfigs = {}, onNavigate 
 	rimLight.position.set(-4, 2, 2);
 	scene.add(rimLight); track.push(rimLight);
 
-	scene.fog = new THREE.FogExp2(0x1a0838, 0.025);
+	// Palette-driven dreamscape so two dream portals look distinct.
+	const drPalette = config.palette || {};
+	const drPrimary = new THREE.Color(drPalette.primary || '#7c4dff');
+	const { h: drHue } = drPrimary.getHSL({});
+	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(drHue, 0.5, 0.12), drPalette.fog_density ?? 0.025);
 	const oldBg = scene.background;
-	scene.background = new THREE.Color(0x100428);
+	scene.background = new THREE.Color(drPalette.background || new THREE.Color().setHSL(drHue, 0.5, 0.08));
 
 	if (world.camera) {
 		world.camera.position.set(0, 1.5, 5);

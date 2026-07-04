@@ -143,8 +143,12 @@ export function buildCosmosScene(world, config = {}, allConfigs = {}, onNavigate
 	const ambient = new THREE.AmbientLight(0x3322aa, 0.3); scene.add(ambient); track.push(ambient);
 	const key = new THREE.PointLight(0x8866ff, 0.5, 30); key.position.set(0, 2, 0); scene.add(key); track.push(key);
 
+	// Palette-driven void so two space portals look distinct.
+	const cPalette = config.palette || {};
+	const cPrimary = new THREE.Color(cPalette.primary || '#5a3aff');
+	const { h: cHue } = cPrimary.getHSL({});
 	const oldFog = scene.fog; const oldBg = scene.background;
-	scene.background = new THREE.Color(0x000510);
+	scene.background = new THREE.Color(cPalette.background || new THREE.Color().setHSL(cHue, 0.6, 0.02));
 
 	if (world.camera) { world.camera.position.set(0, 0, 8); world.camera.lookAt(0, 0, -5); world.camera.rotation.z = 0; }
 

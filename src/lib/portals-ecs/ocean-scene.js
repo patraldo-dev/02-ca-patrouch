@@ -271,10 +271,14 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 	fillLight.position.set(5, -1, 5);
 	scene.add(fillLight); track.push(fillLight);
 
+	// Palette-driven water/sky so two oceans with different portals look distinct.
+	const oPalette = config.palette || {};
+	const oPrimary = new THREE.Color(oPalette.primary || '#0277bd');
+	const { h: oHue } = oPrimary.getHSL({});
 	const oldFog = scene.fog;
 	const oldBg = scene.background;
-	scene.fog = new THREE.FogExp2(0x004466, 0.03);
-	scene.background = new THREE.Color(0x003355);
+	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(oHue, 0.6, 0.16), oPalette.fog_density ?? 0.03);
+	scene.background = new THREE.Color(oPalette.background || new THREE.Color().setHSL(oHue, 0.6, 0.10));
 
 	// Camera reset
 	if (world.camera) {

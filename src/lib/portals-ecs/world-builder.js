@@ -129,7 +129,7 @@ function showPortalOverlay(name, desc, safeColor) {
 	document.body.appendChild(wrap);
 	currentOverlay = wrap;
 	requestAnimationFrame(() => { wrap.style.opacity = '1'; });
-	setTimeout(() => { wrap.style.opacity = '0'; setTimeout(() => { if (wrap === currentOverlay) currentOverlay = null; wrap.remove(); }, 800); }, 4000);
+	setTimeout(() => { wrap.style.opacity = '0'; setTimeout(() => { if (wrap === currentOverlay) currentOverlay = null; wrap.remove(); }, 400); }, 1200);
 }
 
 // ── Navigation state (module-level, survives scene swaps) ──
@@ -152,6 +152,15 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	// to the destination portal's color BEFORE teardown, so the swap is hidden
 	// under the overlay. Skipped on initial boot (isNavigation = false).
 	const destConfig = nav.allConfigs[portalId];
+	if (isNavigation && destConfig) {
+		// Flash the destination name concurrently with the transition so both
+		// navigation paths (art-cube carousel + custom scenes) get a brief
+		// "you're heading to X" cue. Auto-dismisses; doesn't block the rebuild.
+		const lang = (typeof document !== 'undefined' && document.documentElement?.lang) || 'es';
+		const name = destConfig.portal?.names?.[lang] || destConfig.portal?.names?.es || portalId;
+		const safeColor = destConfig.palette?.safe_text_color || destConfig.palette?.primary || '#e8d5b5';
+		showPortalOverlay(name, '', safeColor);
+	}
 	const transitionPromise = (isNavigation && destConfig?.palette?.primary)
 		? playTransition({ color: destConfig.palette.primary })
 		: Promise.resolve();
@@ -395,32 +404,21 @@ function rebuildScene(world, portalId, isNavigation = false) {
 		camEntity.setValue(CameraOrbit, 'boost', 1.5);
 
 		const hits = raycaster.intersectObjects(cubeMeshes);
-		console.log('[tap] hits:', hits.length, hits.length > 0 ? hits[0].object.userData.portalId : '');
 		if (hits.length > 0) {
 			const hit = hits[0].object;
 			const targetId = hit.userData.portalId;
 			const tc = nav.allConfigs[targetId];
 			if (!tc) return;
 
-			// Flash
+			// Brief cube flash so the tap feels acknowledged.
 			hit.material.forEach(m => { if (m.opacity) { m._o = m.opacity; m.opacity = 1; } });
-			setTimeout(() => hit.material.forEach(m => { if (m._o != null) m.opacity = m._o; }), 200);
-
-			const name = tc.portal.names[lang] || tc.portal.names.es;
-			const desc = tc.portal.descriptions[lang] || tc.portal.descriptions.es;
-			showPortalOverlay(name, desc, tc.palette.safe_text_color);
-
-			// Flash transition
-			const flash = document.createElement('div');
-			flash.style.cssText = 'position:fixed;inset:0;background:' + tc.palette.primary + ';opacity:0;transition:opacity 0.3s ease;pointer-events:none;z-index:9998;';
-			document.body.appendChild(flash);
-			requestAnimationFrame(() => { flash.style.opacity = '0.6'; });
-			setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 300); }, 600);
+			setTimeout(() => hit.material.forEach(m => { if (m._o != null) m.opacity = m._o; }), 180);
 
 			console.log('[portals] Navigating:', nav.currentPortalId, '→', targetId);
-
-			// Navigate after delay
-			setTimeout(() => rebuildScene(world, targetId, true), 1500);
+			// Navigate immediately — rebuildScene plays the transition overlay and
+			// shows the destination name. No manual flash/delay here; the single
+			// playTransition in rebuildScene is the whole handoff.
+			rebuildScene(world, targetId, true);
 		}
 	}
 

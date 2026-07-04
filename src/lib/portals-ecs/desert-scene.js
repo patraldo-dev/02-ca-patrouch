@@ -303,9 +303,13 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 	fillLight.position.set(5, 3, 5);
 	scene.add(fillLight); track.push(fillLight);
 
-	scene.fog = new THREE.FogExp2(0xffaa44, 0.02);
+	// Palette-driven sky/fog so two deserts with different portals look distinct.
+	const dPalette = config.palette || {};
+	const dPrimary = new THREE.Color(dPalette.primary || '#c9a87c');
+	const { h: dHue } = dPrimary.getHSL({});
+	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(dHue, 0.5, 0.33), dPalette.fog_density ?? 0.02);
 	const oldBg = scene.background;
-	scene.background = new THREE.Color(0xff9933);
+	scene.background = new THREE.Color(dPalette.background || new THREE.Color().setHSL(dHue, 0.6, 0.30));
 
 	// Reset camera to level forward-facing position
 	if (world.camera) {
