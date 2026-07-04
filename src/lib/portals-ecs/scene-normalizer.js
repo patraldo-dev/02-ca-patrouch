@@ -103,7 +103,7 @@ const PARTICLE_STYLE_ALIASES = {
 };
 
 // ── Valid environment types ──
-const VALID_ENVIRONMENT_TYPES = ['forest', 'ocean', 'celebration', 'space', 'city', 'dream', 'theater', 'memory'];
+const VALID_ENVIRONMENT_TYPES = ['forest', 'ocean', 'celebration', 'space', 'city', 'dream', 'theater', 'memory', 'parallax'];
 
 const ENVIRONMENT_TYPE_ALIASES = {
 	'tree': 'forest', 'trees': 'forest', 'woods': 'forest', 'grove': 'forest', 'jungle': 'forest',
@@ -352,6 +352,9 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
             .slice(0, 5);
     }
 
+    // ── Parallax layers (only for environment.type === 'parallax') ──
+    normalized.layers = normalizeLayers(raw.layers, normalized.environment?.type);
+
     // ═══ Render-complete derivation ═══
     // The default render path (arboleda starfield + themed environments) reads
     // palette.background / fog_color / fog_density, lighting, ambient_particles,
@@ -361,6 +364,52 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
     deriveRenderFields(normalized, raw);
 
     return normalized;
+}
+
+// ── Parallax layer kinds + silhouettes (the diorama vocabulary) ──
+const VALID_LAYER_KINDS = ['mountains', 'treeline', 'skyline', 'waves', 'clouds', 'ferns', 'grasses', 'stars', 'geometry', 'arch'];
+const VALID_LAYER_SILHOUETTES = ['jagged', 'rounded', 'pointed', 'flat', 'uneven'];
+const VALID_LAYER_POSITIONS = ['bottom', 'horizon', 'top', 'floating'];
+
+// A sensible default 5-layer composition used when Mistral omits `layers`
+// (or when env type isn't parallax but a renderer falls back to it).
+const DEFAULT_LAYERS = [
+	{ depth: 0.0, kind: 'stars',    silhouette: 'flat',    density: 0.6, height: 0.6, position: 'top',      tint_shift: 0 },
+	{ depth: 0.25, kind: 'mountains', silhouette: 'jagged', density: 0.5, height: 0.4, position: 'horizon',  tint_shift: -0.05 },
+	{ depth: 0.5, kind: 'treeline', silhouette: 'rounded', density: 0.7, height: 0.3, position: 'bottom',   tint_shift: 0 },
+	{ depth: 0.75, kind: 'ferns',   silhouette: 'pointed', density: 0.8, height: 0.25, position: 'bottom',  tint_shift: 0.05 },
+	{ depth: 1.0, kind: 'grasses',  silhouette: 'pointed', density: 0.9, height: 0.15, position: 'bottom',  tint_shift: 0.08 },
+];
+
+function normalizeLayers(rawLayers, envType) {
+	// Layers are only meaningful for parallax; other env types return null so the
+	// renderer ignores them. But always return something valid for parallax.
+	if (envType !== 'parallax') return null;
+
+	if (!Array.isArray(rawLayers) || rawLayers.length === 0) {
+		return DEFAULT_LAYERS;
+	}
+
+	const normalized = rawLayers
+		.filter((l) => l && typeof l === 'object')
+		.map((l) => {
+			const kind = VALID_LAYER_KINDS.includes(l.kind) ? l.kind : 'geometry';
+			return {
+				depth: clamp(l.depth ?? 0.5, 0, 1, 0.5),
+				kind,
+				silhouette: VALID_LAYER_SILHOUETTES.includes(l.silhouette) ? l.silhouette : 'rounded',
+				density: clamp(l.density ?? 0.6, 0.2, 1.0, 0.6),
+				height: clamp(l.height ?? 0.4, 0.1, 0.9, 0.4),
+				position: VALID_LAYER_POSITIONS.includes(l.position) ? l.position : 'bottom',
+				tint_shift: clamp(l.tint_shift ?? l.tintShift ?? 0, -0.15, 0.15, 0),
+			};
+		})
+		.slice(0, 8); // cap at 8 layers for perf
+
+	// Sort far-to-near so the renderer can stack predictably.
+	normalized.sort((a, b) => a.depth - b.depth);
+
+	return normalized.length ? normalized : DEFAULT_LAYERS;
 }
 
 // ── Particle-style → visual params (mirrors the cron prompt's mood mapping) ──

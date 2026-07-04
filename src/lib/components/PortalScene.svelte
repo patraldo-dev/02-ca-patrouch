@@ -61,6 +61,7 @@
 				const { buildDreamScene } = await import('$lib/portals-ecs/dream-scene.js');
 				const { buildTheaterScene } = await import('$lib/portals-ecs/theater-scene.js');
 				const { buildMemoryScene } = await import('$lib/portals-ecs/memory-scene.js');
+				const { buildParallaxScene } = await import('$lib/portals-ecs/parallax-scene.js');
 				// NOTE: buildCosmosScene is intentionally NOT registered. space-type
 				// portals fall through to world-builder.js's default path, which
 				// renders the dynamic starfield + spinning art-cube carousel (the
@@ -74,6 +75,7 @@
 					dream: buildDreamScene,
 					theater: buildTheaterScene,
 					memory: buildMemoryScene,
+					parallax: buildParallaxScene,
 				};
 				for (const pid of Object.keys(configs)) {
 					const envType = configs[pid]?.environment?.type;

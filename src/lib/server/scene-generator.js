@@ -32,7 +32,7 @@ Output ONLY valid JSON matching this schema (no markdown, no explanation):
 
 {
   "environment": {
-    "type": "forest|ocean|celebration|space|city|dream|theater|memory"
+    "type": "forest|ocean|celebration|space|city|dream|theater|memory|parallax"
   },
   "atmosphere": {
     "mood": "string - one word emotional descriptor",
@@ -90,8 +90,12 @@ Rules:
     dream = surreal, floating, purple/pink, subconscious, transformation
     theater = spotlight, stage, narration, amber, candlelight, performance
     memory = sepia, nostalgia, photographs, golden dust, faded, reminiscent
+    parallax = layered, depth, perspective, thresholds, horizons, distances, storybook, theatrical, folded
   The type must reflect the FEELING of the stories, not just the portal name.
   If the writings shift mood significantly from the portal default, choose the environment that matches the writings.
+- WHEN environment.type is "parallax", ALSO emit a "layers" array (4-6 entries) describing the diorama composition. Each layer:
+    { "depth": 0.0-1.0 (0=far, 1=near), "kind": "mountains|treeline|skyline|waves|clouds|ferns|grasses|stars|geometry|arch", "silhouette": "jagged|rounded|pointed|flat|uneven", "density": 0.3-0.9, "height": 0.2-0.8, "position": "bottom|horizon|top|floating", "tint_shift": -0.1 to 0.1 }
+  Compose the layers to reflect the writings' imagery — a forest cluster gets mountains+treeline+ferns, an urban cluster gets skyline+skyline+clouds. Vary depth from far (0) to near (1). Omit "layers" for non-parallax environments.
 - narrative_states: generate exactly 3 story arc phases that reflect the emotional journey of the writings. Each phase should have a unique Spanish label and mood. Hue shift 0=original color, 0.083=warm shift, 0.667=cold/complementary shift. The arc should progress: contemplative → intense → profound.
 - crystal_colors must have exactly 4 hex colors
 - crystals: extract 4-6 of the most evocative short phrases from the writings (max 6)
