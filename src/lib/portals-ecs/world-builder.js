@@ -520,13 +520,37 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	if (!initialPortal) {
 		throw new Error('boot: cannot determine initial portal id');
 	}
+	// Seed history state for the initial scene ONLY IF the current URL is a
+	// portal URL without state (e.g. a direct link to /portals/cosmos loaded
+	// from scratch). We must NOT rewrite a /portals (index) URL — that entry
+	// is the "surprise me" floor the back button should be able to reach.
+	const currentPath = window.location.pathname;
+	if (!window.history.state?.portalId && currentPath.startsWith('/portals/')) {
+		window.history.replaceState({ portalId: initialPortal }, '', currentPath);
+	}
 	rebuildScene(world, initialPortal);
 
-	// Browser back/forward support
+	// Browser back/forward support. Three cases:
+	// 1. event.state.portalId → navigate to that portal (normal inter-portal back).
+	// 2. event.state is null/falsy (back to /portals index) → drop into a fresh
+	//    random world, since /portals means "surprise me."
+	// 3. state has a portalId we don't have a config for → also pick random,
+	//    so a stale/deleted portal id never freezes the scene.
 	window.addEventListener('popstate', (event) => {
 		const pid = event.state?.portalId;
 		if (pid && nav.allConfigs[pid]) {
 			rebuildScene(world, pid, true);
+			return;
+		}
+		// Backed out to /portals (or an unknown portal id). Pick a random world
+		// other than the current one, mirroring the index's "surprise me" intent.
+		const ids = Object.keys(nav.allConfigs).filter((id) => id !== nav.currentPortalId);
+		if (ids.length) {
+			const randomId = ids[Math.floor(Math.random() * ids.length)];
+			// pushState (not just rebuildScene) so the URL reflects the new world
+			// and a subsequent back doesn't loop on the empty /portals entry.
+			window.history.pushState({ portalId: randomId }, '', `/portals/${randomId}`);
+			rebuildScene(world, randomId, true);
 		}
 	});
 
