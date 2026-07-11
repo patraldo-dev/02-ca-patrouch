@@ -77,9 +77,22 @@ export const LocomotionSystem = class extends createSystem({}) {
 		if (!hasSession) {
 			locomotion.enabled = false;
 			locomotion.userActive = false;
+			locomotion._rigPlaced = false;
 			return;
 		}
 		locomotion.enabled = true;
+
+		// On session start, place the player rig at a sensible vantage facing
+		// the scene center — so entering XR sees the content (not empty space).
+		// This runs once per session; world-builder skips rig placement in
+		// inline mode to avoid skewing the orbit camera / tap raycast.
+		if (!locomotion._rigPlaced && world.player) {
+			const rad = 3;
+			const floorY = locomotion.mode === 'walk' ? locomotion.floorY + EYE_HEIGHT : 1;
+			world.player.position.set(0, floorY, rad);
+			world.player.lookAt(0, floorY, 0);
+			locomotion._rigPlaced = true;
+		}
 
 		const left = world.input?.gamepads?.left;
 		// One-shot diagnostic: log the input state a few times after entering a

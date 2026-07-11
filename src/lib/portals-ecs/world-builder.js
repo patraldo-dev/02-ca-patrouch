@@ -442,20 +442,17 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	// First entity — log available methods
 	world._sceneEntities.push(camEntity);
 
-	// Reset the locomotion rig for the new scene: drop userActive so the idle
-	// orbit resumes, and place the player at the orbit camera's vantage point
-	// FACING the scene center — so entering XR sees the content, not empty space.
+	// Reset locomotion state for the new scene: drop userActive so the idle
+	// orbit resumes. Only reposition the player rig when an XR session is
+	// active — in inline mode the player must stay at origin (identity) so it
+	// doesn't skew the orbit camera's world transform (which would break the
+	// tap raycast). The LocomotionSystem handles rig placement on XR entry.
 	locomotion.userActive = false;
-	if (world.player) {
+	if (world.player && world.session) {
 		const rad = config.camera.orbit.radius_b || 3;
 		const hgt = config.camera.orbit.height ?? 1;
 		const floorY = locomotion.mode === 'walk' ? locomotion.floorY + 1.6 : hgt;
-		// Stand back along +Z (the orbit's starting position), at scene height.
 		world.player.position.set(0, floorY, rad);
-		// Face -Z (toward the scene center at origin). Three.js camera default is
-		// -Z forward, so rotating the rig 180° would be wrong; identity faces -Z.
-		// But to look from +Z back toward origin we need to face -Z, which is the
-		// identity quaternion — good. Confirm by lookAt origin:
 		world.player.lookAt(0, floorY, 0);
 	}
 
