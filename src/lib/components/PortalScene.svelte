@@ -19,6 +19,41 @@
 	let bootError = $state(null);
 	let selectedPortal = $state(null);
 	let xrSupport = $state({ ar: false, vr: false });
+	let worldHandle = $state(null);
+	let inXR = $state(false);
+
+	function enterXR() {
+		if (!worldHandle?.launchXR) return;
+		try {
+			// Minimal VR session: explicit sessionMode + no optional features,
+			// so the IWER emulated session doesn't reject on 'layers' etc.
+			worldHandle.launchXR({
+				sessionMode: 'immersive-vr',
+				features: {
+					anchors: false,
+					hitTest: false,
+					planeDetection: false,
+					meshDetection: false,
+					lightEstimation: false,
+					depthSensing: false,
+					layers: false,
+					unbounded: false,
+				},
+			});
+			inXR = true;
+		} catch (err) {
+			console.error('[portals] launchXR failed:', err);
+		}
+	}
+	function exitXR() {
+		if (!worldHandle?.exitXR) return;
+		try {
+			worldHandle.exitXR();
+		} catch (err) {
+			console.error('[portals] exitXR failed:', err);
+		}
+		inXR = false;
+	}
 
 	onMount(() => {
 		let cancelled = false;
@@ -61,13 +96,13 @@
 				const { buildDreamScene } = await import('$lib/portals-ecs/dream-scene.js');
 				const { buildTheaterScene } = await import('$lib/portals-ecs/theater-scene.js');
 				const { buildMemoryScene } = await import('$lib/portals-ecs/memory-scene.js');
-				const { buildParallaxScene } = await import('$lib/portals-ecs/parallax-scene.js');
-				const { buildLithographScene } = await import('$lib/portals-ecs/lithograph-scene.js');
 				// NOTE: buildCosmosScene is intentionally NOT registered. space-type
 				// portals fall through to world-builder.js's default path, which
 				// renders the dynamic starfield + spinning art-cube carousel (the
 				// "Fantasia" landing look). Registering cosmos-scene would preempt
 				// that with static planets and hide the cubes.
+				// parallax + lithograph scenes were jettisoned (failed 2.5D experiments);
+				// any config still using those types falls through to the default path.
 				const ENV_TO_SCENE = {
 					ocean: buildOceanScene,
 					forest: buildForestScene,
@@ -76,8 +111,6 @@
 					dream: buildDreamScene,
 					theater: buildTheaterScene,
 					memory: buildMemoryScene,
-					parallax: buildParallaxScene,
-					lithograph: buildLithographScene,
 				};
 				for (const pid of Object.keys(configs)) {
 					const envType = configs[pid]?.environment?.type;
@@ -109,9 +142,16 @@
 					throw new Error('No renderable portal config could be resolved');
 				}
 
-				await bootPortalEngine(containerEl, configs, startPortal);
+				worldHandle = await bootPortalEngine(containerEl, configs, startPortal);
 				if (cancelled) return;
 				booted = true;
+
+				// Track XR session lifecycle so the button can toggle Enter/Exit.
+				if (worldHandle?.visibilityState?.subscribe) {
+					worldHandle.visibilityState.subscribe((state) => {
+						inXR = state === 'visible' || state === 'visible-blurred';
+					});
+				}
 
 				window.addEventListener('portal-tapped', (e) => {
 					selectedPortal = e.detail.portalId;
@@ -166,12 +206,26 @@
 	</style>
 </svelte:head>
 
-<!-- Scene container — fullscreen -->
+<!-- Scene container — fullscreen. z-index kept below the IWER DevUI's
+     overlay (which maxes at z-index 999) so the Play Mode button stays visible. -->
 <div
 	id="portal-scene-container"
-	style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:99999 !important;background:#05030a !important;"
+	style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:1 !important;background:#05030a !important;"
 	bind:this={containerEl}
 ></div>
+
+<!-- Enter / Exit XR button (inline-first: render 2D, enter XR on opt-in).
+     On desktop (IWER) this enters the emulated session that Play Mode + WASD
+     drive; on a headset it enters true VR. -->
+{#if booted && !bootError}
+	<button
+		class="xr-toggle"
+		onclick={inXR ? exitXR : enterXR}
+		aria-label={inXR ? 'Exit immersive' : 'Enter to explore'}
+	>
+		{inXR ? '✕ Exit' : 'Enter to explore'}
+	</button>
+{/if}
 
 <!-- Boot error -->
 {#if bootError}
@@ -190,4 +244,28 @@
 
 <style>
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+	.xr-toggle {
+		position: fixed;
+		bottom: 24px;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 2;
+		padding: 12px 28px;
+		font-family: Georgia, serif;
+		font-size: 16px;
+		font-weight: 400;
+		letter-spacing: 0.5px;
+		color: #fff;
+		background: rgba(0, 0, 0, 0.7);
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 999px;
+		cursor: pointer;
+		backdrop-filter: blur(6px);
+		transition: background 0.2s ease, border-color 0.2s ease;
+	}
+	.xr-toggle:hover {
+		background: rgba(0, 0, 0, 0.85);
+		border-color: rgba(255, 255, 255, 0.5);
+	}
 </style>

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "iwsdk-dev-mcp": {
+      "command": "node",
+      "args": [
+        "/home/patrouch/sveltecloudflare/ca-patrouch/02-ca-patrouch/node_modules/@iwsdk/vite-plugin-dev/dist/mcp-server.js",
+        "--port",
+        "5173",
+        "--client-version",
+        "0.3.1"
+      ]
+    }
+  }
+}

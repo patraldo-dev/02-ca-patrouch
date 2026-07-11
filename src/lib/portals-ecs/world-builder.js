@@ -4,11 +4,12 @@
 //  Reads scene config JSON, builds IWSDK world with ECS
 // ═══════════════════════════════════════════════════════════
 import { World, Transform } from '@iwsdk/core';
-import { createComponent, createSystem, Types } from 'elics';
+import { createComponent, createSystem, Types, ComponentRegistry } from 'elics';
 import * as THREE from 'three';
 import { buildEnvironment } from './environments.js';
 import { playTransition } from './scene-transition.js';
 import { installNarration } from './portal-audio.js';
+import { LocomotionSystem, locomotion, configureLocomotion } from './locomotion-system.js';
 
 // ── Scene Renderer Registry ──
 // Custom per-portal scene renderers (desert, ocean-floor, etc.)
@@ -23,8 +24,14 @@ export function hasSceneRenderer(portalId) {
 }
 
 // ── ECS Components ──
+// HMR-safe: elics' ComponentRegistry is a module-global static Map, so on hot
+// reload `createComponent('X')` throws "already exists". Reuse the existing
+// component instance if it was registered in a previous module evaluation.
+function reuseOrCreate(id, schema) {
+	return ComponentRegistry.has(id) ? ComponentRegistry.getById(id) : createComponent(id, schema);
+}
 
-const PortalCube = createComponent('PortalCube', {
+const PortalCube = reuseOrCreate('PortalCube', {
 	portalId:    { type: Types.String, default: '' },
 	color:       { type: Types.String, default: '#c9a87c' },
 	floatPhase:  { type: Types.Float32, default: 0 },
@@ -33,7 +40,7 @@ const PortalCube = createComponent('PortalCube', {
 	isActive:    { type: Types.Boolean, default: false },
 });
 
-const CameraOrbit = createComponent('CameraOrbit', {
+const CameraOrbit = reuseOrCreate('CameraOrbit', {
 	angle:   { type: Types.Float32, default: 0 },
 	radiusA: { type: Types.Float32, default: 5 },
 	radiusB: { type: Types.Float32, default: 3.5 },
@@ -42,7 +49,7 @@ const CameraOrbit = createComponent('CameraOrbit', {
 	boost:   { type: Types.Float32, default: 0 },
 });
 
-const NarrativeState = createComponent('NarrativeState', {
+const NarrativeState = reuseOrCreate('NarrativeState', {
 	stateIndex:    { type: Types.Int32, default: 0 },
 	lastAdvance:   { type: Types.Float32, default: 0 },
 });
@@ -62,7 +69,10 @@ const FloatSystem = class extends createSystem({
 			const baseY = entity.getValue(PortalCube, 'baseY');
 			obj.rotation.x += 0.005;
 			obj.rotation.y += 0.008;
-			obj.position.y = baseY + Math.sin(time * speed + phase) * 0.15;
+			// Write Y through the ECS Transform (source of truth) — direct
+			// obj.position.y writes are overwritten by TransformSystem each frame.
+			const pos = entity.getVectorView(Transform, 'position');
+			pos[1] = baseY + Math.sin(time * speed + phase) * 0.15;
 		}
 	}
 };
@@ -71,6 +81,10 @@ const CameraOrbitSystem = class extends createSystem({
 	cam: { required: [CameraOrbit] },
 }) {
 	update(dt) {
+		// Yield to the locomotion system once the visitor takes control: either
+		// an XR session is active (desktop emulation or real headset) or the
+		// visitor has moved. Until then, keep the gentle idle orbit.
+		if (this.world.session || locomotion.userActive) return;
 		for (const entity of this.queries.cam.entities) {
 			const angle = entity.getValue(CameraOrbit, 'angle');
 			const radiusA = entity.getValue(CameraOrbit, 'radiusA');
@@ -202,6 +216,10 @@ function rebuildScene(world, portalId, isNavigation = false) {
 		return;
 	}
 
+	// Tell the locomotion system whether this scene is the floorless hub
+	// (flight mode) or a grounded world (walk mode).
+	configureLocomotion(config);
+
 	nav.currentPortalId = portalId;
 	if (nav.history[nav.history.length - 1] !== portalId) nav.history.push(portalId);
 
@@ -248,11 +266,24 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	underLight.position.set(...lighting.under_light.position);
 	scene.add(underLight); track(underLight);
 
-	// ── Environment: space portals use the starfield, others use themed scenes ──
+	// ── Environment: space portals (and any type without a dedicated scene
+	// renderer — e.g. parallax/pillar/lithograph whose renderers were
+	// jettisoned) use the starfield as the fallback. Themed types route to
+	// buildEnvironment instead. ──
 	let envHandle;
-	if (config.environment?.type === 'space') {
+	const envType = config.environment?.type;
+	const THEMED_TYPES = ['forest','ocean','celebration','city','theater','memory','dream'];
+	const useStarfield = envType === 'space' || !THEMED_TYPES.includes(envType);
+	if (useStarfield) {
 		// Starfield render path — the cosmos world's signature look
-		const ap = config.ambient_particles;
+		const ap = config.ambient_particles || {
+			count: 1200,
+			spawn_radius: 12,
+			size: 0.05,
+			opacity: 0.9,
+			drift_speed: 0.01,
+			color_range: { hue_start: 0.55, hue_span: 0.35, saturation: 0.7, lightness_min: 0.5, lightness_max: 0.85 },
+		};
 		const starGeo = new THREE.BufferGeometry();
 		const starPos = new Float32Array(ap.count * 3);
 		const starCol = new Float32Array(ap.count * 3);
@@ -358,10 +389,13 @@ function rebuildScene(world, portalId, isNavigation = false) {
 		// Uniform BoxGeometry — artwork reads cleaner than mixed polyhedra.
 		const cubeSize = 0.5 + (ringIdx === 0 ? 0.05 : 0); // inner ring slightly bigger
 		const cubeMesh = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), cubeMats);
-		cubeMesh.position.set(cx, cy, cz);
 		cubeMesh.userData.portalId = link.target;
 
 		const entity = world.createTransformEntity(cubeMesh);
+		// Set position/rotation via the ECS Transform (source of truth) — direct
+		// Three.js writes are overwritten by TransformSystem each frame.
+		const cpos = entity.getVectorView(Transform, 'position');
+		cpos[0] = cx; cpos[1] = cy; cpos[2] = cz;
 		entity.addComponent(PortalCube, {
 			portalId: link.target,
 			color: tc.palette.safe_text_color,
@@ -382,7 +416,7 @@ function rebuildScene(world, portalId, isNavigation = false) {
 				blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
 			}),
 		);
-		glowRing.position.copy(cubeMesh.position);
+		glowRing.position.set(cx, cy, cz);
 		scene.add(glowRing); track(glowRing);
 		if (!world._glowRings) world._glowRings = [];
 		world._glowRings.push(glowRing);
@@ -407,6 +441,23 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	});
 	// First entity — log available methods
 	world._sceneEntities.push(camEntity);
+
+	// Reset the locomotion rig for the new scene: drop userActive so the idle
+	// orbit resumes, and place the player at the orbit camera's vantage point
+	// FACING the scene center — so entering XR sees the content, not empty space.
+	locomotion.userActive = false;
+	if (world.player) {
+		const rad = config.camera.orbit.radius_b || 3;
+		const hgt = config.camera.orbit.height ?? 1;
+		const floorY = locomotion.mode === 'walk' ? locomotion.floorY + 1.6 : hgt;
+		// Stand back along +Z (the orbit's starting position), at scene height.
+		world.player.position.set(0, floorY, rad);
+		// Face -Z (toward the scene center at origin). Three.js camera default is
+		// -Z forward, so rotating the rig 180° would be wrong; identity faces -Z.
+		// But to look from +Z back toward origin we need to face -Z, which is the
+		// identity quaternion — good. Confirm by lookAt origin:
+		world.player.lookAt(0, floorY, 0);
+	}
 
 	// ── Tap handler ──
 	const raycaster = new THREE.Raycaster();
@@ -533,10 +584,58 @@ export async function bootPortalEngine(container, configs, initialPortalId) {
 
 // ── Boot ──
 
+/**
+ * Install IWER (Immersive Web Emulation Runtime) when there is no native WebXR
+ * device, so the portals can be explored on desktop (WASD/mouse via Play Mode).
+ *
+ * The @iwsdk/vite-plugin-dev builds a self-contained injection bundle with all
+ * the IWER+IWSDK glue (including the input bridge that wires Play Mode's WASD
+ * into the XR gamepad). That plugin's HTML injection doesn't reach SvelteKit
+ * SSR routes, so we import its virtual module DIRECTLY here — which runs the
+ * same proven bundle in-app, before World.create. Must run before IWSDK probes
+ * for session support.
+ */
+async function installIWER() {
+	// If native WebXR is genuinely available, leave it alone.
+	let nativeVR = false;
+	try {
+		if (navigator.xr) nativeVR = await navigator.xr.isSessionSupported('immersive-vr');
+	} catch {}
+	if (nativeVR) {
+		console.log('[portals] Native WebXR detected — skipping IWER emulation');
+		return;
+	}
+	try {
+		// Import the plugin's virtual module directly. This runs the pre-built
+		// injection bundle (IWER runtime + DevUI + IWSDK input bridge), configured
+		// for metaQuest3, gated to localhost activation.
+		await import('/@iwer-injection-runtime');
+		console.log('[portals] IWER injection bundle loaded (via plugin virtual module).');
+	} catch (err) {
+		console.warn('[portals] IWER virtual module import failed, falling back to manual install:', err);
+		// Fallback: manual install (no input bridge, but session + render work).
+		try {
+			const { XRDevice, metaQuest3 } = await import('iwer');
+			const { DevUI } = await import('@iwer/devui');
+			const xrDevice = new XRDevice(metaQuest3);
+			xrDevice.installRuntime({ forceInstall: true });
+			xrDevice.installDevUI(DevUI);
+			window.xrdevice = xrDevice;
+			console.log('[portals] IWER manual fallback installed (metaQuest3).');
+		} catch (err2) {
+			console.warn('[portals] IWER manual install also failed:', err2);
+		}
+	}
+}
+
 export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	if (!container) {
 		throw new Error('boot: container element is null — bind:this may not have resolved');
 	}
+	// Install the WebXR emulator before the world boots so the navigator.xr
+	// polyfill is active when IWSDK initializes.
+	await installIWER();
+
 	const world = await World.create(container, {
 		xr: { offer: 'none' },
 		render: { defaultLighting: false },
@@ -551,6 +650,10 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	// Register systems
 	world.registerSystem(FloatSystem, { priority: 0 });
 	world.registerSystem(CameraOrbitSystem, { priority: 0 });
+	// Cross-platform locomotion: drives world.player from the XR left thumbstick
+	// (WASD via IWER Play Mode on desktop). Runs before CameraOrbitSystem so the
+	// visitor's movement applies before the orbit (which yields anyway).
+	world.registerSystem(LocomotionSystem, { priority: 0 });
 
 	// Init tracking
 	world._sceneObjects = [];

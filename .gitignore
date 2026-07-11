@@ -61,7 +61,7 @@ notes4env.txt
 .tern-port
 .svelte-kit/
 package-lock.json
-.wrangler/state/
+.wrangler/
 .svelte-kit/
 backup-users-*.sql
 backup-*.sql
