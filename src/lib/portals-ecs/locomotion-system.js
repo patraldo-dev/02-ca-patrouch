@@ -94,6 +94,18 @@ export const LocomotionSystem = class extends createSystem({}) {
 			locomotion._rigPlaced = true;
 		}
 
+		// Flowerbed-style first-person: hide any controller/hand models so the
+		// visitor is just a camera moving through the world (no visible hands).
+		// The gamepads stay functional for input — only the visual models hide.
+		// Re-checked each frame because visuals connect lazily on session start.
+		const va = world.input?.visualAdapters;
+		if (va) {
+			for (const side of ['left', 'right']) {
+				const model = va[side]?.value?.visual?.model;
+				if (model && model.visible !== false) model.visible = false;
+			}
+		}
+
 		const left = world.input?.gamepads?.left;
 		// One-shot diagnostic: log the input state a few times after entering a
 		// session so we can see whether the emulated gamepad is populated.
