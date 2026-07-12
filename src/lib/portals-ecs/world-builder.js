@@ -665,6 +665,7 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	world.registerComponent(NarrativeState);
 
 	// Register systems
+	console.log('[portals] registering systems...');
 	world.registerSystem(FloatSystem, { priority: 0 });
 	world.registerSystem(CameraOrbitSystem, { priority: 0 });
 	// Cross-platform locomotion: drives world.player from the XR left thumbstick
@@ -675,7 +676,12 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	// Play Mode), click trigger (left-click) to navigate between portals.
 	world.registerSystem(InteractionSystem, { priority: 0 });
 	// Proximity-triggered revelation: approach objects → they glow + reveal text.
-	world.registerSystem(RevelationSystem, { priority: 0 });
+	try {
+		world.registerSystem(RevelationSystem, { priority: 0 });
+		console.log('[portals] RevelationSystem registered');
+	} catch (e) {
+		console.warn('[portals] RevelationSystem registration issue:', e.message);
+	}
 
 	// Init tracking
 	world._sceneObjects = [];
