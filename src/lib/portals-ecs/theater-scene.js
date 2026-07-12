@@ -438,6 +438,7 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 			world.renderer.domElement.removeEventListener('touchstart', onPointerDown);
 			world.renderer.domElement.removeEventListener('pointermove', onPointerMove);
 		},
+		tapTargets,
 	};
 }
 

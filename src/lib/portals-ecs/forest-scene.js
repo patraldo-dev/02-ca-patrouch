@@ -340,5 +340,6 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 			world.renderer.domElement.removeEventListener('touchstart', onPointerDown);
 			world.renderer.domElement.removeEventListener('pointermove', onPointerMove);
 		},
+		tapTargets,
 	};
 }

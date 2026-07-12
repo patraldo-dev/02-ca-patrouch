@@ -441,6 +441,7 @@ export function buildCelebrationScene(world, config = {}, allConfigs = {}, onNav
 			world.renderer.domElement.removeEventListener('touchstart', onPointerDown);
 			world.renderer.domElement.removeEventListener('pointermove', onPointerMove);
 		},
+		tapTargets,
 	};
 }
 

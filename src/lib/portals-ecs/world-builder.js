@@ -10,6 +10,7 @@ import { buildEnvironment } from './environments.js';
 import { playTransition } from './scene-transition.js';
 import { installNarration } from './portal-audio.js';
 import { LocomotionSystem, locomotion, configureLocomotion } from './locomotion-system.js';
+import { InteractionSystem } from './interaction-system.js';
 
 // ── Scene Renderer Registry ──
 // Custom per-portal scene renderers (desert, ocean-floor, etc.)
@@ -228,16 +229,20 @@ function rebuildScene(world, portalId, isNavigation = false) {
 
 	// Check for custom scene renderer
 	if (hasSceneRenderer(portalId)) {
-		const handle = SCENE_RENDERERS[portalId](world, config, nav.allConfigs, (targetId) => {
-			// Resolve the "random world" sentinel from the worlds-navigation
-			// home gateway: pick any other portal than the current one.
+		// Navigation callback shared by the custom scene + the XR InteractionSystem.
+		const onNavigate = (targetId) => {
 			if (targetId === '__random__') {
 				const ids = Object.keys(nav.allConfigs).filter((id) => id !== portalId);
 				targetId = ids.length ? ids[Math.floor(Math.random() * ids.length)] : portalId;
 			}
 			rebuildScene(world, targetId, true);
-		});
+		};
+		const handle = SCENE_RENDERERS[portalId](world, config, nav.allConfigs, onNavigate);
 		world._customSceneCleanup = handle?.cleanup || null;
+		// Expose for XR controller-ray selection (themed scenes push their
+		// tapTargets to handle.tapTargets if available).
+		world._interactionTargets = handle?.tapTargets || [];
+		world._onNavigate = onNavigate;
 		return;
 	}
 
@@ -497,6 +502,11 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	world.renderer.domElement.addEventListener('pointerdown', onPointerDown);
 	world.renderer.domElement.addEventListener('touchstart', onPointerDown);
 
+	// Expose the starfield's interactive targets for the XR InteractionSystem
+	// (controller-ray selection). Each target carries userData.portalId.
+	world._interactionTargets = cubeMeshes;
+	world._onNavigate = (targetId) => rebuildScene(world, targetId, true);
+
 	// ── Narrative texts for system ──
 	const texts = config.narrative_texts[lang] || config.narrative_texts.es;
 	world.globals.narrativeTexts = texts;
@@ -651,6 +661,9 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	// (WASD via IWER Play Mode on desktop). Runs before CameraOrbitSystem so the
 	// visitor's movement applies before the orbit (which yields anyway).
 	world.registerSystem(LocomotionSystem, { priority: 0 });
+	// XR controller-ray selection: aim with the right controller (mouse-look in
+	// Play Mode), click trigger (left-click) to navigate between portals.
+	world.registerSystem(InteractionSystem, { priority: 0 });
 
 	// Init tracking
 	world._sceneObjects = [];
