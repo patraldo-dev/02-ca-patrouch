@@ -159,6 +159,13 @@ export const LocomotionSystem = class extends createSystem({}) {
 		_moveDir.applyAxisAngle(_upAxis, cameraYaw);
 
 		const player = world.player;
+		// Diagnostic: log when movement is actually applied (mode + position delta).
+		if (!locomotion._lastMoveDiag || performance.now() - locomotion._lastMoveDiag > 1000) {
+			locomotion._lastMoveDiag = performance.now();
+			console.log('[locomotion] MOVING — mode:', locomotion.mode,
+				'| player.pos:', `(${player.position.x.toFixed(2)}, ${player.position.y.toFixed(2)}, ${player.position.z.toFixed(2)})`,
+				'| cam.worldPos:', `(${cam.matrixWorld.elements[12].toFixed(2)}, ${cam.matrixWorld.elements[14].toFixed(2)})`);
+		}
 		if (locomotion.mode === 'flight') {
 			// Free drift along the look direction (full horizontal; gentle
 			// vertical follow of the headset pitch so you rise/dip naturally).
