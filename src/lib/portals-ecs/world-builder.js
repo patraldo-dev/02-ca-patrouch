@@ -532,21 +532,9 @@ function rebuildScene(world, portalId, isNavigation = false) {
 				world._envHandle.update(delta, time, world._lights);
 			}
 
-			// Narrative cycling — yields when a revelation is showing so they
-			// don't stack on the same overlay.
-			if (world._narrEntity && world._narrTexts && !world._revelationActive) {
-				const narrLast = world._narrEntity.getValue(NarrativeState, 'lastAdvance');
-				// Reset the timer when a revelation was recently active so the
-				// cycler doesn't fire immediately after the revelation fades.
-				if (performance.now() - narrLast > 12000) {
-					const idx = world._narrEntity.getValue(NarrativeState, 'stateIndex');
-					if (world._narrTexts.length > 0) {
-						showOverlay(world._narrTexts[idx]);
-						world._narrEntity.setValue(NarrativeState, 'stateIndex', (idx + 1) % world._narrTexts.length);
-						world._narrEntity.setValue(NarrativeState, 'lastAdvance', performance.now());
-					}
-				}
-			}
+			// NOTE: The ambient narrative cycler was removed — narrative text now
+			// appears ONLY via proximity-triggered revelation (RevelationSystem),
+			// so discovering text feels earned rather than automatic.
 
 			// Billboard glow rings toward camera + gentle pulse
 			if (world._glowRings && world._glowRings.length) {

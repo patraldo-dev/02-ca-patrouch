@@ -2,25 +2,20 @@
 // ═══════════════════════════════════════════════════════════
 //  revelation-system.js
 //  Proximity-triggered revelation. When the visitor approaches a tagged
-//  object, it glows brighter and a fragment of text is revealed. Move away
-//  and it fades. This is what turns movement into discovery — you explore
-//  to find meaning, not just to look around.
+//  object, it glows, scales up, and a fragment of text is revealed.
 //
-//  This is the foundation for multiple modes:
-//    - Contemplative: just revelation (this system alone)
-//    - Treasure hunt: + collection (future)
-//    - Mission: + objectives (future)
-//    - Branching story: + state transitions (future, via NarrativeState)
+//  This is the ONLY way narrative text appears (the old ambient cycler was
+//  removed). You explore to discover meaning.
 //
-//  Objects opt in by carrying userData.revelation = { text, lang, glowMesh? }.
-//  world-builder attaches this to portal cubes; themed scenes can tag
-//  crystals/gateways the same way.
+//  Visual feedback scales with proximity: as you approach, the cube grows
+//  and brightens. On full reveal (within REVEAL_RADIUS), it pops and text
+//  appears. Move away and it shrinks back.
 // ═══════════════════════════════════════════════════════════
 import { createSystem } from 'elics';
 import { Vector3 } from 'three';
 
-const REVEAL_RADIUS = 4.0;    // distance at which revelation triggers
-const FADE_RADIUS = 6.0;      // distance at which it fully fades out
+const REVEAL_RADIUS = 4.0;    // distance at which revelation triggers (full)
+const FADE_RADIUS = 7.0;      // distance at which proximity glow fully fades
 const COOLDOWN_MS = 6000;     // don't re-reveal the same object too quickly
 
 const _playerPos = new Vector3();
@@ -28,14 +23,13 @@ const _playerPos = new Vector3();
 export const RevelationSystem = class extends createSystem({}) {
 	init() {
 		console.log('[revelation] system registered & initialized ✓');
-		this._lastRevealed = null;       // object last revealed
+		this._lastRevealed = null;
 		this._lastRevealTime = 0;
+		this._activeTarget = null;  // currently glowing target (for continuous feedback)
 	}
 
 	update(delta, _time) {
 		const world = this.world;
-		// Revelation works both inline (orbit camera) and in XR (player rig).
-		// Use whichever position source is available.
 		let origin;
 		if (world.session && world.player) {
 			world.player.getWorldPosition(_playerPos);
@@ -50,7 +44,7 @@ export const RevelationSystem = class extends createSystem({}) {
 		const targets = world._interactionTargets || [];
 		if (!targets.length) return;
 
-		// Find the closest revelation object within range.
+		// Find the closest revelation object.
 		let closest = null;
 		let closestDist = Infinity;
 		let targetsWithRev = 0;
@@ -71,18 +65,22 @@ export const RevelationSystem = class extends createSystem({}) {
 				'reveal<', REVEAL_RADIUS, '?', closestDist < REVEAL_RADIUS);
 		}
 
-		// If nothing in range, fade the current glow (if any) and return.
+		// No target in range → fade any active glow.
 		if (!closest || closestDist > FADE_RADIUS) {
-			this._fadeGlow();
+			this._fadeActive();
 			return;
 		}
 
-		// Within reveal radius → reveal (glow + text).
+		// Proximity feedback: scale + brighten proportional to closeness.
+		// 0 at FADE_RADIUS, 1 at REVEAL_RADIUS.
+		const proximity = Math.max(0, Math.min(1, (FADE_RADIUS - closestDist) / (FADE_RADIUS - REVEAL_RADIUS)));
+		this._updateProximityVisual(closest, proximity);
+
+		// Full reveal when within REVEAL_RADIUS.
 		if (closestDist < REVEAL_RADIUS) {
 			const now = performance.now();
-			// Cooldown: don't re-trigger the same object's text immediately.
 			if (closest === this._lastRevealed && now - this._lastRevealTime < COOLDOWN_MS) {
-				return;
+				return;  // cooldown — don't re-trigger
 			}
 			this._reveal(closest);
 			this._lastRevealed = closest;
@@ -90,53 +88,91 @@ export const RevelationSystem = class extends createSystem({}) {
 		}
 	}
 
+	_updateProximityVisual(target, proximity) {
+		// Fade out the previous target if switching.
+		if (this._activeTarget && this._activeTarget !== target) {
+			this._fadeTarget(this._activeTarget);
+		}
+		this._activeTarget = target;
+
+		// Scale: 1.0 at proximity=0, up to 1.4 at proximity=1.
+		const scale = 1.0 + proximity * 0.4;
+		target.scale.setScalar(scale);
+
+		// Brighten materials: boost opacity toward 1.0 as you approach.
+		const mats = target.material;
+		if (Array.isArray(mats)) {
+			mats.forEach(m => {
+				if (!m) return;
+				if (m._revOp == null && m.opacity != null) m._revOp = m.opacity;
+				if (m._revOp != null) m.opacity = m._revOp + (1.0 - m._revOp) * proximity;
+			});
+		}
+	}
+
 	_reveal(target) {
 		const rev = target.userData.revelation;
 		if (!rev) return;
 
-		// Suppress the ambient narrative cycler while revelation text is showing.
+		// Suppress the (now-removed) ambient cycler flag, in case it's re-added.
 		const world = this.world;
-		if (world) {
-			world._revelationActive = true;
-			// Clear after the overlay's display duration (showOverlay shows for 4s).
-			if (this._revTimer) clearTimeout(this._revTimer);
-			this._revTimer = setTimeout(() => { world._revelationActive = false; }, 4500);
+		if (world) world._revelationActive = true;
+		if (this._revTimer) clearTimeout(this._revTimer);
+		this._revTimer = setTimeout(() => { if (this.world) this.world._revelationActive = false; }, 4500);
+
+		// Dramatic pop: scale up quickly then settle. The update loop's proximity
+		// scaling handles the gradual approach; this is the "click" moment.
+		target.scale.setScalar(1.6);
+		// (The update loop will ease it back to the proximity-proportional scale
+		// on the next frame, creating a natural pop-and-settle.)
+
+		// Boost the glow ring (if this target has one in world._glowRings).
+		if (world?._glowRings) {
+			for (const ring of world._glowRings) {
+				if (ring.position.distanceTo(target.position) < 0.5 && ring.material) {
+					ring.material._revOp = ring.material.opacity;
+					ring.material.opacity = 0.6;
+					ring.scale.setScalar(1.3);
+				}
+			}
 		}
 
-		// Glow the target's materials brighter.
-		const mats = target.material;
-		if (Array.isArray(mats)) {
-			mats.forEach(m => { if (m && m.emissive) m.emissive.setScalar(0.5); });
-		} else if (mats?.emissive) {
-			mats.emissive.setScalar(0.5);
-		}
-		// For MeshBasicMaterial (no emissive), boost opacity slightly.
-		if (Array.isArray(mats)) {
-			mats.forEach(m => { if (m && !m.emissive && m.opacity != null) { m._revOp = m.opacity; m.opacity = 1; } });
-		}
-
-		// Show the revelation text via the shared overlay (imported lazily to
-		// avoid circular deps — showOverlay is module-scoped in world-builder).
+		// Show the text.
 		if (rev.text && world_showOverlay) {
 			world_showOverlay(rev.text);
 		}
-		console.log('[revelation] revealed:', rev.text?.slice(0, 60));
+		console.log('[revelation] ✨ revealed:', rev.text?.slice(0, 60));
 	}
 
-	_fadeGlow() {
-		if (!this._lastRevealed) return;
-		// Clear the revelation flag so the ambient cycler can resume.
-		const world = this.world;
-		if (world) world._revelationActive = false;
-		const target = this._lastRevealed;
+	_fadeActive() {
+		if (this._activeTarget) {
+			this._fadeTarget(this._activeTarget);
+			this._activeTarget = null;
+		}
+	}
+
+	_fadeTarget(target) {
+		// Ease scale back to 1.0 and restore material opacity.
+		target.scale.setScalar(1.0);
 		const mats = target.material;
 		if (Array.isArray(mats)) {
 			mats.forEach(m => {
-				if (m?.emissive) m.emissive.setScalar(0);
 				if (m?._revOp != null) { m.opacity = m._revOp; m._revOp = null; }
 			});
-		} else if (mats?.emissive) {
-			mats.emissive.setScalar(0);
+		}
+		// Restore glow ring.
+		const world = this.world;
+		if (world?._glowRings) {
+			for (const ring of world._glowRings) {
+				if (ring.position.distanceTo(target.position) < 0.5 && ring.material?.material?._revOp != null) {
+					// already handled above for mesh mats; rings use their own material
+				}
+				if (ring.material?._revOp != null) {
+					ring.material.opacity = ring.material._revOp;
+					ring.material._revOp = null;
+					ring.scale.setScalar(1.0);
+				}
+			}
 		}
 	}
 };
