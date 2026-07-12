@@ -11,6 +11,10 @@ import { playTransition } from './scene-transition.js';
 import { installNarration } from './portal-audio.js';
 import { LocomotionSystem, locomotion, configureLocomotion } from './locomotion-system.js';
 import { InteractionSystem } from './interaction-system.js';
+import { RevelationSystem, setShowOverlay } from './revelation-system.js';
+
+// Give the RevelationSystem access to the overlay display function.
+setShowOverlay(showOverlay);
 
 // ── Scene Renderer Registry ──
 // Custom per-portal scene renderers (desert, ocean-floor, etc.)
@@ -395,6 +399,12 @@ function rebuildScene(world, portalId, isNavigation = false) {
 		const cubeSize = 0.5 + (ringIdx === 0 ? 0.05 : 0); // inner ring slightly bigger
 		const cubeMesh = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), cubeMats);
 		cubeMesh.userData.portalId = link.target;
+		// Proximity revelation: approach this cube and a fragment of the target
+		// portal's narrative text appears (RevelationSystem reads this).
+		const revLang = document.documentElement?.lang || 'es';
+		const revTexts = tc.narrative_texts?.[revLang] || tc.narrative_texts?.es || [];
+		const revText = revTexts[i % revTexts.length] || tc.portal?.names?.[revLang] || '';
+		if (revText) cubeMesh.userData.revelation = { text: revText };
 
 		const entity = world.createTransformEntity(cubeMesh);
 		// Set position/rotation via the ECS Transform (source of truth) — direct
@@ -664,6 +674,8 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	// XR controller-ray selection: aim with the right controller (mouse-look in
 	// Play Mode), click trigger (left-click) to navigate between portals.
 	world.registerSystem(InteractionSystem, { priority: 0 });
+	// Proximity-triggered revelation: approach objects → they glow + reveal text.
+	world.registerSystem(RevelationSystem, { priority: 0 });
 
 	// Init tracking
 	world._sceneObjects = [];
