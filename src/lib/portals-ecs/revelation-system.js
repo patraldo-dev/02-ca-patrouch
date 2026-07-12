@@ -19,9 +19,9 @@
 import { createSystem } from 'elics';
 import { Vector3 } from 'three';
 
-const REVEAL_RADIUS = 1.5;    // distance at which revelation triggers
-const FADE_RADIUS = 2.5;      // distance at which it fully fades out
-const COOLDOWN_MS = 8000;     // don't re-reveal the same object too quickly
+const REVEAL_RADIUS = 3.0;    // distance at which revelation triggers
+const FADE_RADIUS = 5.0;      // distance at which it fully fades out
+const COOLDOWN_MS = 6000;     // don't re-reveal the same object too quickly
 
 const _playerPos = new Vector3();
 
@@ -53,11 +53,22 @@ export const RevelationSystem = class extends createSystem({}) {
 		// Find the closest revelation object within range.
 		let closest = null;
 		let closestDist = Infinity;
+		let targetsWithRev = 0;
 		for (const target of targets) {
 			const rev = target.userData?.revelation;
 			if (!rev?.text) continue;
+			targetsWithRev++;
 			const dist = origin.distanceTo(target.position);
 			if (dist < closestDist) { closestDist = dist; closest = target; }
+		}
+
+		// Periodic diagnostic.
+		if (!this._lastDiag || performance.now() - this._lastDiag > 2000) {
+			this._lastDiag = performance.now();
+			console.log('[revelation] targets:', targets.length,
+				'withRev:', targetsWithRev,
+				'closest:', closestDist === Infinity ? 'none' : closestDist.toFixed(2),
+				'reveal<', REVEAL_RADIUS, '?', closestDist < REVEAL_RADIUS);
 		}
 
 		// If nothing in range, fade the current glow (if any) and return.
