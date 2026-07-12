@@ -19,8 +19,8 @@
 import { createSystem } from 'elics';
 import { Vector3 } from 'three';
 
-const REVEAL_RADIUS = 3.0;    // distance at which revelation triggers
-const FADE_RADIUS = 5.0;      // distance at which it fully fades out
+const REVEAL_RADIUS = 4.0;    // distance at which revelation triggers
+const FADE_RADIUS = 6.0;      // distance at which it fully fades out
 const COOLDOWN_MS = 6000;     // don't re-reveal the same object too quickly
 
 const _playerPos = new Vector3();
