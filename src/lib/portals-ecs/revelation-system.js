@@ -94,6 +94,15 @@ export const RevelationSystem = class extends createSystem({}) {
 		const rev = target.userData.revelation;
 		if (!rev) return;
 
+		// Suppress the ambient narrative cycler while revelation text is showing.
+		const world = this.world;
+		if (world) {
+			world._revelationActive = true;
+			// Clear after the overlay's display duration (showOverlay shows for 4s).
+			if (this._revTimer) clearTimeout(this._revTimer);
+			this._revTimer = setTimeout(() => { world._revelationActive = false; }, 4500);
+		}
+
 		// Glow the target's materials brighter.
 		const mats = target.material;
 		if (Array.isArray(mats)) {
@@ -116,6 +125,9 @@ export const RevelationSystem = class extends createSystem({}) {
 
 	_fadeGlow() {
 		if (!this._lastRevealed) return;
+		// Clear the revelation flag so the ambient cycler can resume.
+		const world = this.world;
+		if (world) world._revelationActive = false;
 		const target = this._lastRevealed;
 		const mats = target.material;
 		if (Array.isArray(mats)) {

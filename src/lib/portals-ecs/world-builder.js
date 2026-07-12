@@ -532,9 +532,12 @@ function rebuildScene(world, portalId, isNavigation = false) {
 				world._envHandle.update(delta, time, world._lights);
 			}
 
-			// Narrative cycling
-			if (world._narrEntity && world._narrTexts) {
+			// Narrative cycling — yields when a revelation is showing so they
+			// don't stack on the same overlay.
+			if (world._narrEntity && world._narrTexts && !world._revelationActive) {
 				const narrLast = world._narrEntity.getValue(NarrativeState, 'lastAdvance');
+				// Reset the timer when a revelation was recently active so the
+				// cycler doesn't fire immediately after the revelation fades.
 				if (performance.now() - narrLast > 12000) {
 					const idx = world._narrEntity.getValue(NarrativeState, 'stateIndex');
 					if (world._narrTexts.length > 0) {
