@@ -72,12 +72,15 @@ export const RevelationSystem = class extends createSystem({}) {
 		}
 
 		// Proximity feedback: scale + brighten proportional to closeness.
-		// 0 at FADE_RADIUS, 1 at REVEAL_RADIUS.
+		// 0 at FADE_RADIUS, 1 at REVEAL_RADIUS. (Visual only — works in all modes.)
 		const proximity = Math.max(0, Math.min(1, (FADE_RADIUS - closestDist) / (FADE_RADIUS - REVEAL_RADIUS)));
 		this._updateProximityVisual(closest, proximity);
 
-		// Full reveal when within REVEAL_RADIUS.
-		if (closestDist < REVEAL_RADIUS) {
+		// Full reveal (text + pop) ONLY in XR mode — not during passive orbit.
+		// In inline mode the orbit camera sweeps past cubes automatically, so
+		// auto-revealing would feel like the old ambient cycler (unearned text).
+		// The visitor must actively explore (Enter + WASD) to discover text.
+		if (closestDist < REVEAL_RADIUS && world.session) {
 			const now = performance.now();
 			if (closest === this._lastRevealed && now - this._lastRevealTime < COOLDOWN_MS) {
 				return;  // cooldown — don't re-trigger
