@@ -65,13 +65,18 @@ function onKeyUp(e) {
 let _lookActive = false;
 
 function updateInlineInputFromKeys() {
-	let x = 0, y = 0;
-	if (_keys.KeyW) y -= 1;
-	if (_keys.KeyS) y += 1;
-	if (_keys.KeyA) x -= 1;
-	if (_keys.KeyD) x += 1;
-	inlineInput.x = x;
-	inlineInput.y = y;
+	// Only overwrite x/y if a keyboard key is actually pressed. Otherwise leave
+	// them alone — the virtual thumbstick (touch) may have set them, and zeroing
+	// them here every frame would erase the thumbstick input on mobile.
+	if (_keys.KeyW || _keys.KeyS || _keys.KeyA || _keys.KeyD) {
+		let x = 0, y = 0;
+		if (_keys.KeyW) y -= 1;
+		if (_keys.KeyS) y += 1;
+		if (_keys.KeyA) x -= 1;
+		if (_keys.KeyD) x += 1;
+		inlineInput.x = x;
+		inlineInput.y = y;
+	}
 }
 
 export function initInlineInput(domElement) {
