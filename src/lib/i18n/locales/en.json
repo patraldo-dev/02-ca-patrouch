@@ -1076,5 +1076,11 @@
   "booty.mesh_pedestrian": "Pedestrian",
   "booty.mesh_neighborhood": "Neighborhood",
   "booty.mesh_city": "City",
-  "booty.mesh_bay": "Bay"
+  "booty.mesh_bay": "Bay",
+  "portals.enter_vr": "Enter VR",
+  "portals.exit_vr": "✕ Exit VR",
+  "portals.enter_explore": "Enter to Explore",
+  "portals.exit_explore": "✕ Exit",
+  "portals.hint_desktop": "WASD to move · Drag to look · Click portals to navigate",
+  "portals.hint_touch": "Drag left to move · Drag right to look · Tap portals to navigate"
 }

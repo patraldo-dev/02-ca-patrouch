@@ -1076,5 +1076,11 @@
   "booty.mesh_pedestrian": "Piéton",
   "booty.mesh_neighborhood": "Quartier",
   "booty.mesh_city": "Ville",
-  "booty.mesh_bay": "Baie"
+  "booty.mesh_bay": "Baie",
+  "portals.enter_vr": "Entrer VR",
+  "portals.exit_vr": "✕ Quitter VR",
+  "portals.enter_explore": "Explorer",
+  "portals.exit_explore": "✕ Quitter",
+  "portals.hint_desktop": "WASD pour bouger · Glisser pour regarder · Clic sur les portails pour naviguer",
+  "portals.hint_touch": "Glisser à gauche pour bouger · Glisser à droite pour regarder · Toucher les portails pour naviguer"
 }

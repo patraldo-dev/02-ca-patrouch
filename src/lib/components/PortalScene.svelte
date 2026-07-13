@@ -14,6 +14,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { t } from '$lib/i18n';
+	import { inlineInput, initInlineInput, disposeInlineInput } from '$lib/portals-ecs/locomotion-system.js';
 
 	let { data, initialPortalId = null } = $props();
 
@@ -32,7 +33,12 @@
 	let stickPos = { x: 0, y: 0 };
 
 	function isTouchDevice() {
-		return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		// Distinguish real mobile devices from touch-capable desktops.
+		// maxTouchPoints > 0 is true on many laptops/Chromebooks with touchscreens.
+		// Use a combination: touch input AND a coarse pointer (no fine mouse).
+		const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		const coarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
+		return hasTouch && coarsePointer;
 	}
 
 	function enterXR() {
@@ -102,8 +108,6 @@
 	}
 	function onLookEnd() { _lookLast = null; }
 
-	let inlineInput;
-
 	onMount(() => {
 		let cancelled = false;
 		isTouch = isTouchDevice();
@@ -169,9 +173,8 @@
 				if (cancelled) return;
 				booted = true;
 
-				// Initialize inline input (keyboard on desktop, wired above for touch).
-				const { initInlineInput, inlineInput: inp } = await import('$lib/portals-ecs/locomotion-system.js');
-				inlineInput = inp;
+				// Initialize inline input (keyboard on desktop, touch handlers
+				// are wired in the Svelte template and use the static import).
 				initInlineInput(containerEl);
 
 				if (worldHandle?.visibilityState?.subscribe) {
@@ -191,7 +194,7 @@
 
 		return () => {
 			cancelled = true;
-			import('$lib/portals-ecs/locomotion-system.js').then(({ disposeInlineInput }) => disposeInlineInput());
+			disposeInlineInput();
 		};
 	});
 
@@ -249,22 +252,23 @@
 	</div>
 {/if}
 
-<!-- Enter VR button: only on devices that actually support immersive-vr.
-     Touch devices use inline controls (no split-screen VR). -->
-{#if booted && !bootError && canVR && !isTouch}
-	<button class="xr-toggle" onclick={inXR ? exitXR : enterXR} aria-label={inXR ? 'Exit VR' : 'Enter VR'}>
-		{inXR ? '✕ Exit VR' : 'Enter VR'}
+<!-- Enter VR / Enter to Explore button: show on desktop when WebXR is
+     available (real headset OR IWER on localhost). Touch devices use
+     inline controls (no split-screen VR). -->
+{#if booted && !bootError && !isTouch}
+	<button class="xr-toggle" onclick={inXR ? exitXR : enterXR} aria-label={inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}>
+		{inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}
 	</button>
 {/if}
 
 <!-- Hint text for desktop (non-touch) visitors -->
 {#if booted && !bootError && !isTouch && !inXR}
-	<div class="input-hint">WASD to move · Drag to look · Click portals to navigate</div>
+	<div class="input-hint">{$t('portals.hint_desktop')}</div>
 {/if}
 
 <!-- Hint text for touch visitors -->
 {#if booted && !bootError && isTouch && !inXR}
-	<div class="input-hint">Drag left to move · Drag right to look · Tap portals to navigate</div>
+	<div class="input-hint">{$t('portals.hint_touch')}</div>
 {/if}
 
 <!-- Boot error -->
