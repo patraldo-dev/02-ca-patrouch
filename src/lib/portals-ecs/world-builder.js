@@ -12,6 +12,7 @@ import { installNarration } from './portal-audio.js';
 import { LocomotionSystem, locomotion, configureLocomotion } from './locomotion-system.js';
 import { InteractionSystem } from './interaction-system.js';
 import { RevelationSystem, setShowOverlay } from './revelation-system.js';
+import { NetworkSystem } from './network-system.js';
 
 // Give the RevelationSystem access to the overlay display function.
 setShowOverlay(showOverlay);
@@ -226,6 +227,7 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	configureLocomotion(config);
 
 	nav.currentPortalId = portalId;
+	world._currentPortalId = portalId;  // NetworkSystem reads this to join the right room
 	if (nav.history[nav.history.length - 1] !== portalId) nav.history.push(portalId);
 
 	// Sync URL
@@ -672,6 +674,14 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 		console.log('[portals] RevelationSystem registered');
 	} catch (e) {
 		console.warn('[portals] RevelationSystem registration issue:', e.message);
+	}
+
+	// Multiplayer avatar sync: broadcasts local pose, spawns remote avatars.
+	try {
+		world.registerSystem(NetworkSystem, { priority: 0 });
+		console.log('[portals] NetworkSystem registered');
+	} catch (e) {
+		console.warn('[portals] NetworkSystem registration issue:', e.message);
 	}
 
 	// Init tracking
