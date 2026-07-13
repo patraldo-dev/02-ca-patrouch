@@ -17,7 +17,7 @@ import { locomotion } from './locomotion-system.js';
 
 const REVEAL_RADIUS = 4.0;    // distance at which revelation triggers (full)
 const FADE_RADIUS = 7.0;      // distance at which proximity glow fully fades
-const COOLDOWN_MS = 6000;     // don't re-reveal the same object too quickly
+const COOLDOWN_MS = 12000;    // global cooldown between any revelations
 
 const _playerPos = new Vector3();
 
@@ -73,8 +73,9 @@ export const RevelationSystem = class extends createSystem({}) {
 		// NOT during passive orbit (that would be unearned text).
 		if (closestDist < REVEAL_RADIUS && (world.session || locomotion.userActive)) {
 			const now = performance.now();
-			if (closest === this._lastRevealed && now - this._lastRevealTime < COOLDOWN_MS) {
-				return;  // cooldown — don't re-trigger
+			// Global cooldown — any revelation (not just same-cube) resets the timer.
+			if (now - this._lastRevealTime < COOLDOWN_MS) {
+				return;
 			}
 			this._reveal(closest);
 			this._lastRevealed = closest;
