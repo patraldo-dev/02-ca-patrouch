@@ -95,18 +95,49 @@
 	}
 
 	// ── Drag-look handlers (touch, on the canvas area) ──
+	// Distinguishes a TAP (quick touch, no movement → forward to canvas for
+	// portal navigation) from a DRAG (movement → look around).
 	let _lookLast = null;
+	let _lookStart = null;
+	let _lookMoved = false;
+	const TAP_THRESHOLD = 10; // pixels of movement before it's a drag, not a tap
+
 	function onLookStart(e) {
-		_lookLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+		const t = e.touches[0];
+		_lookStart = { x: t.clientX, y: t.clientY, time: Date.now() };
+		_lookLast = { x: t.clientX, y: t.clientY };
+		_lookMoved = false;
 	}
 	function onLookMove(e) {
 		if (!_lookLast) return;
 		const t = e.touches[0];
-		inlineInput.lookX = (t.clientX - _lookLast.x) * 0.005;
-		inlineInput.lookY = (t.clientY - _lookLast.y) * 0.005;
+		const dx = t.clientX - _lookLast.x;
+		const dy = t.clientY - _lookLast.y;
+		// If moved beyond threshold, it's a drag — apply look
+		if (Math.abs(t.clientX - _lookStart.x) > TAP_THRESHOLD || Math.abs(t.clientY - _lookStart.y) > TAP_THRESHOLD) {
+			_lookMoved = true;
+		}
+		if (_lookMoved) {
+			inlineInput.lookX = dx * 0.005;
+			inlineInput.lookY = dy * 0.005;
+		}
 		_lookLast = { x: t.clientX, y: t.clientY };
 	}
-	function onLookEnd() { _lookLast = null; }
+	function onLookEnd(e) {
+		// If it was a tap (no significant movement), forward as a click on the
+		// canvas so the themed scene's pointerdown handler can raycast + navigate.
+		if (_lookStart && !_lookMoved && Date.now() - _lookStart.time < 300) {
+			const fakeEvent = new PointerEvent('pointerdown', {
+				clientX: _lookStart.x,
+				clientY: _lookStart.y,
+				bubbles: true,
+			});
+			containerEl?.dispatchEvent(fakeEvent);
+		}
+		_lookLast = null;
+		_lookStart = null;
+		_lookMoved = false;
+	}
 
 	onMount(() => {
 		let cancelled = false;
