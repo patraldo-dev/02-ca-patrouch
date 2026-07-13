@@ -257,23 +257,27 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	const lang = document.documentElement?.lang || 'es';
 	const track = (obj) => { world._sceneObjects.push(obj); return obj; };
 
+	// Sanitize hex colors: strip 8-digit alpha channel (#RRGGBBAA → #RRGGBB).
+	// Three.js Color doesn't support alpha in hex strings.
+	const cleanHex = (h) => h && h.length === 9 ? h.slice(0, 7) : h;
+
 	// ── Atmosphere ──
-	scene.background = new THREE.Color(palette.background);
-	scene.fog = new THREE.FogExp2(palette.fog_color, palette.fog_density);
+	scene.background = new THREE.Color(cleanHex(palette.background));
+	scene.fog = new THREE.FogExp2(cleanHex(palette.fog_color), palette.fog_density);
 
 	// ── Lighting ──
-	const ambientLight = new THREE.AmbientLight(lighting.ambient.color, lighting.ambient.intensity);
+	const ambientLight = new THREE.AmbientLight(cleanHex(lighting.ambient.color), lighting.ambient.intensity);
 	scene.add(ambientLight); track(ambientLight);
 
-	const keyLight = new THREE.PointLight(lighting.key_light.color, lighting.key_light.intensity, lighting.key_light.distance);
+	const keyLight = new THREE.PointLight(cleanHex(lighting.key_light.color), lighting.key_light.intensity, lighting.key_light.distance);
 	keyLight.position.set(...lighting.key_light.position);
 	scene.add(keyLight); track(keyLight);
 
-	const rimLight = new THREE.PointLight(lighting.rim_light.color, lighting.rim_light.intensity, lighting.rim_light.distance);
+	const rimLight = new THREE.PointLight(cleanHex(lighting.rim_light.color), lighting.rim_light.intensity, lighting.rim_light.distance);
 	rimLight.position.set(...lighting.rim_light.position);
 	scene.add(rimLight); track(rimLight);
 
-	const underLight = new THREE.PointLight(lighting.under_light.color, lighting.under_light.intensity, lighting.under_light.distance);
+	const underLight = new THREE.PointLight(cleanHex(lighting.under_light.color), lighting.under_light.intensity, lighting.under_light.distance);
 	underLight.position.set(...lighting.under_light.position);
 	scene.add(underLight); track(underLight);
 
@@ -383,16 +387,19 @@ function rebuildScene(world, portalId, isNavigation = false) {
 		for (let f = 0; f < 6; f++) {
 			const faceArt = PORTAL_ARTWORKS[(i * 6 + f) % PORTAL_ARTWORKS.length];
 			const fMat = new THREE.MeshBasicMaterial({
-				color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide,
+				color: 0x1a0a2e, transparent: true, opacity: 0, side: THREE.DoubleSide,
 			});
 			texLoader.load(
 				`https://imagedelivery.net/${CF_HASH}/${faceArt}/segment=foreground,width=256`,
 				(tex) => {
 					tex.colorSpace = THREE.SRGBColorSpace;
 					fMat.map = tex;
+					fMat.color.setHex(0xffffff);
 					fMat.opacity = 0.92;
 					fMat.needsUpdate = true;
 				},
+				undefined,
+				(err) => { fMat.opacity = 0.6; }  // texture failed — show dark face
 			);
 			cubeMats.push(fMat);
 		}
