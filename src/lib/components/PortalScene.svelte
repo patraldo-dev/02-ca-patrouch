@@ -273,7 +273,10 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 	<style>
 		html, body { margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #050508 !important; }
-		:global(nav:not(.sr)), :global(header), :global(.navbar), :global(.footer) { display: none !important; }
+		/* Hide ALL site chrome when the portal scene is active */
+		:global(nav:not(.sr)), :global(header), :global(.navbar), :global(.footer),
+		:global(.search-fab), :global(.mobile-nav), :global(.mobile-menu),
+		:global(#accessibility-btn), :global(.a11y-fab), :global(.scroll-to-top) { display: none !important; }
 	</style>
 </svelte:head>
 
@@ -371,9 +374,9 @@
 	.xr-toggle:hover { background: rgba(0, 0, 0, 0.85); border-color: rgba(255, 255, 255, 0.5); }
 
 	.voice-toggle {
-		position: fixed; bottom: 24px; right: 20px;
-		z-index: 2; padding: 10px 20px;
-		font-family: Georgia, serif; font-size: 14px; letter-spacing: 0.04em;
+		position: fixed; top: 16px; right: 20px;
+		z-index: 4; padding: 8px 16px;
+		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
 		color: #fff; background: rgba(0, 0, 0, 0.6);
 		border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
 		cursor: pointer; backdrop-filter: blur(6px);
@@ -382,7 +385,7 @@
 	.voice-toggle:hover { background: rgba(0, 0, 0, 0.85); }
 
 	.input-hint {
-		position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+		position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
 		z-index: 2; color: rgba(255,255,255,0.5);
 		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
 		pointer-events: none; white-space: nowrap;
