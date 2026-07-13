@@ -27,6 +27,7 @@
 	let canVR = $state(false);
 	let voiceEnabled = $state(false);
 	let voiceMuted = $state(false);
+	let drawerOpen = $state(false);
 
 	// Inline input — loaded dynamically (client-side only) to avoid SSR crash
 	// (@iwsdk/core references `document` at module-eval time).
@@ -312,36 +313,38 @@
 	</div>
 {/if}
 
-<!-- Enter VR / Enter to Explore button: show on desktop when WebXR is
-     available (real headset OR IWER on localhost). Touch devices use
-     inline controls (no split-screen VR). -->
-{#if booted && !bootError && !isTouch}
-	<button class="xr-toggle" onclick={inXR ? exitXR : enterXR} aria-label={inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}>
-		{inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}
-	</button>
-{/if}
-
-<!-- Hint text for desktop (non-touch) visitors -->
-{#if booted && !bootError && !isTouch && !inXR}
-	<div class="input-hint">{$t('portals.hint_desktop')}</div>
-{/if}
-
-<!-- Hint text for touch visitors -->
-{#if booted && !bootError && isTouch && !inXR}
-	<div class="input-hint">{$t('portals.hint_touch')}</div>
-{/if}
-
-<!-- Voice chat controls: enable voice first, then mute/unmute toggle -->
+<!-- Slide-out drawer: tap the tab (top-right) to reveal all controls -->
 {#if booted && !bootError}
-	{#if !voiceEnabled}
-		<button class="voice-toggle" onclick={enableVoice} aria-label={$t('portals.enable_voice')}>
-			{$t('portals.enable_voice')}
-		</button>
-	{:else}
-		<button class="voice-toggle" onclick={toggleMute} aria-label={voiceMuted ? $t('portals.unmute') : $t('portals.mute')}>
-			{voiceMuted ? $t('portals.unmute') : $t('portals.mute')}
-		</button>
-	{/if}
+	<!-- Drawer tab (always visible) -->
+	<button class="drawer-tab" onclick={() => drawerOpen = !drawerOpen} aria-label="Menu">
+		{drawerOpen ? '✕' : '☰'}
+	</button>
+
+	<!-- Drawer panel -->
+	<div class="drawer-panel" class:open={drawerOpen}>
+		<!-- Enter/Exit XR (desktop only — touch uses inline controls) -->
+		{#if !isTouch}
+			<button class="drawer-btn" onclick={() => { enterXR(); drawerOpen = false; }}>
+				{inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}
+			</button>
+		{/if}
+
+		<!-- Voice controls -->
+		{#if !voiceEnabled}
+			<button class="drawer-btn" onclick={() => { enableVoice(); drawerOpen = false; }}>
+				{$t('portals.enable_voice')}
+			</button>
+		{:else}
+			<button class="drawer-btn" onclick={toggleMute}>
+				{voiceMuted ? $t('portals.unmute') : $t('portals.mute')}
+			</button>
+		{/if}
+	</div>
+{/if}
+
+<!-- Hint text (shown briefly, auto-hides) -->
+{#if booted && !bootError && !inXR && !drawerOpen}
+	<div class="input-hint">{isTouch ? $t('portals.hint_touch') : $t('portals.hint_desktop')}</div>
 {/if}
 
 <!-- Boot error -->
@@ -362,32 +365,50 @@
 <style>
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
-	.xr-toggle {
-		position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-		z-index: 2; padding: 12px 28px;
-		font-family: Georgia, serif; font-size: 16px; font-weight: 400; letter-spacing: 0.5px;
-		color: #fff; background: rgba(0, 0, 0, 0.7);
-		border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px;
+	/* ── Slide-out drawer ── */
+	.drawer-tab {
+		position: fixed; top: 16px; right: 16px;
+		z-index: 10; width: 44px; height: 44px;
+		font-size: 20px; color: #fff;
+		background: rgba(0, 0, 0, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
 		cursor: pointer; backdrop-filter: blur(6px);
-		transition: background 0.2s ease, border-color 0.2s ease;
-	}
-	.xr-toggle:hover { background: rgba(0, 0, 0, 0.85); border-color: rgba(255, 255, 255, 0.5); }
-
-	.voice-toggle {
-		position: fixed; top: 16px; right: 20px;
-		z-index: 4; padding: 8px 16px;
-		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
-		color: #fff; background: rgba(0, 0, 0, 0.6);
-		border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
-		cursor: pointer; backdrop-filter: blur(6px);
+		display: flex; align-items: center; justify-content: center;
 		transition: background 0.2s ease;
 	}
-	.voice-toggle:hover { background: rgba(0, 0, 0, 0.85); }
+	.drawer-tab:hover { background: rgba(0, 0, 0, 0.85); }
+
+	.drawer-panel {
+		position: fixed; top: 68px; right: 16px;
+		z-index: 10; min-width: 180px;
+		background: rgba(8, 6, 16, 0.92);
+		border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
+		backdrop-filter: blur(12px);
+		padding: 8px;
+		display: flex; flex-direction: column; gap: 4px;
+		opacity: 0; transform: translateY(-8px) scale(0.95);
+		pointer-events: none;
+		transition: opacity 0.2s ease, transform 0.2s ease;
+	}
+	.drawer-panel.open {
+		opacity: 1; transform: translateY(0) scale(1);
+		pointer-events: all;
+	}
+
+	.drawer-btn {
+		padding: 12px 16px;
+		font-family: Georgia, serif; font-size: 14px; letter-spacing: 0.04em;
+		color: #fff; background: transparent;
+		border: none; border-radius: 8px;
+		cursor: pointer; text-align: left;
+		transition: background 0.15s ease;
+	}
+	.drawer-btn:hover { background: rgba(255, 255, 255, 0.08); }
 
 	.input-hint {
-		position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
-		z-index: 2; color: rgba(255,255,255,0.5);
-		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
+		position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+		z-index: 2; color: rgba(255,255,255,0.4);
+		font-family: Georgia, serif; font-size: 12px; letter-spacing: 0.04em;
 		pointer-events: none; white-space: nowrap;
 	}
 
