@@ -152,6 +152,9 @@ export function buildMemoryScene(world, config = {}, allConfigs = {}, onNavigate
 		frameGroup.rotation.y = sp.r;
 		frameGroup.rotation.z = (Math.random() - 0.5) * 0.15;
 		frameGroup.userData = { portalId: pid, isGateway: true };
+		const revTexts = pcfg?.narrative_texts?.[lang] || pcfg?.narrative_texts?.es || [];
+		const revText = revTexts[i % revTexts.length] || pcfg?.portal?.names?.[lang] || '';
+		if (revText) frameGroup.userData.revelation = { text: revText };
 		for (const child of frameGroup.children) child.userData = frameGroup.userData;
 		scene.add(frameGroup); track.push(frameGroup); tapTargets.push(frameGroup);
 

@@ -244,6 +244,9 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 
 		maskGroup.position.set(m.x, -1.5, m.z);
 		maskGroup.userData = { portalId, isGateway: true };
+		const revTexts = portalConfig?.narrative_texts?.[lang] || portalConfig?.narrative_texts?.es || [];
+		const revText = revTexts[i % revTexts.length] || portalConfig?.portal?.names?.[lang] || '';
+		if (revText) maskGroup.userData.revelation = { text: revText };
 		for (const child of maskGroup.children) child.userData = maskGroup.userData;
 		scene.add(maskGroup); track.push(maskGroup);
 		tapTargets.push(maskGroup);

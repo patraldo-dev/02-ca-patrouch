@@ -7,6 +7,9 @@
 	Boots the IWSDK world, merges Mistral-generated scene configs (SSR) over
 	static fallbacks, registers per-portal custom scene renderers, and keeps
 	the world alive across in-world navigation (URL sync via history API).
+
+	Input: inline keyboard WASD + mouse-look (desktop), virtual thumbstick +
+	drag-look (touch). Optional "Enter VR" for real headsets.
 -->
 <script>
 	import { onMount } from 'svelte';
@@ -18,26 +21,29 @@
 	let booted = $state(false);
 	let bootError = $state(null);
 	let selectedPortal = $state(null);
-	let xrSupport = $state({ ar: false, vr: false });
 	let worldHandle = $state(null);
 	let inXR = $state(false);
+	let isTouch = $state(false);
+	let canVR = $state(false);
+
+	// Virtual thumbstick state (touch devices)
+	let stickActive = $state(false);
+	let stickOrigin = { x: 0, y: 0 };
+	let stickPos = { x: 0, y: 0 };
+
+	function isTouchDevice() {
+		return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+	}
 
 	function enterXR() {
 		if (!worldHandle?.launchXR) return;
 		try {
-			// Minimal VR session: explicit sessionMode + no optional features,
-			// so the IWER emulated session doesn't reject on 'layers' etc.
 			worldHandle.launchXR({
 				sessionMode: 'immersive-vr',
 				features: {
-					anchors: false,
-					hitTest: false,
-					planeDetection: false,
-					meshDetection: false,
-					lightEstimation: false,
-					depthSensing: false,
-					layers: false,
-					unbounded: false,
+					anchors: false, hitTest: false, planeDetection: false,
+					meshDetection: false, lightEstimation: false,
+					depthSensing: false, layers: false, unbounded: false,
 				},
 			});
 			inXR = true;
@@ -47,48 +53,88 @@
 	}
 	function exitXR() {
 		if (!worldHandle?.exitXR) return;
-		try {
-			worldHandle.exitXR();
-		} catch (err) {
-			console.error('[portals] exitXR failed:', err);
-		}
+		try { worldHandle.exitXR(); } catch (err) { console.error('[portals] exitXR failed:', err); }
 		inXR = false;
 	}
 
+	// ── Virtual thumbstick handlers (touch) ──
+	function onStickStart(e) {
+		e.preventDefault();
+		const t = e.touches[0];
+		stickActive = true;
+		stickOrigin = { x: t.clientX, y: t.clientY };
+		stickPos = { x: 0, y: 0 };
+	}
+	function onStickMove(e) {
+		if (!stickActive) return;
+		e.preventDefault();
+		const t = e.touches[0];
+		const dx = t.clientX - stickOrigin.x;
+		const dy = t.clientY - stickOrigin.y;
+		const maxR = 60;
+		const len = Math.sqrt(dx * dx + dy * dy);
+		const clampedLen = Math.min(len, maxR);
+		const angle = Math.atan2(dy, dx);
+		stickPos = { x: Math.cos(angle) * clampedLen, y: Math.sin(angle) * clampedLen };
+		// Write to inlineInput (normalized -1..1)
+		inlineInput.x = stickPos.x / maxR;
+		inlineInput.y = stickPos.y / maxR;
+	}
+	function onStickEnd(e) {
+		e.preventDefault();
+		stickActive = false;
+		stickPos = { x: 0, y: 0 };
+		inlineInput.x = 0;
+		inlineInput.y = 0;
+	}
+
+	// ── Drag-look handlers (touch, on the canvas area) ──
+	let _lookLast = null;
+	function onLookStart(e) {
+		_lookLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+	}
+	function onLookMove(e) {
+		if (!_lookLast) return;
+		const t = e.touches[0];
+		inlineInput.lookX = (t.clientX - _lookLast.x) * 0.005;
+		inlineInput.lookY = (t.clientY - _lookLast.y) * 0.005;
+		_lookLast = { x: t.clientX, y: t.clientY };
+	}
+	function onLookEnd() { _lookLast = null; }
+
+	let inlineInput;
+
 	onMount(() => {
 		let cancelled = false;
+		isTouch = isTouchDevice();
+
+		// Check for real WebXR support (for the "Enter VR" button)
+		if (navigator.xr?.isSessionSupported) {
+			navigator.xr.isSessionSupported('immersive-vr').then(s => { canVR = s; }).catch(() => {});
+		}
 
 		async function boot() {
 			try {
-				// Merge SSR configs (from D1/Mistral) with static fallbacks
 				const SSR_CONFIGS = data?.sceneConfigs || {};
 				const PORTAL_IDS = ['arboleda','fiesta','oceano','narrador','cosmos','urbano','suenos','nostalgias','passage-to-the-past','spectral-dreams','mysterious-market'];
 				const configs = {};
 
-				// First load static fallbacks (ensures environment.type, camera, etc.)
 				for (const id of PORTAL_IDS) {
 					try {
 						const resp = await fetch(`/scenes/${id}.json`);
 						if (resp.ok) configs[id] = await resp.json();
 					} catch {}
 				}
-
-				// Overlay SSR configs from Mistral — these win when present
 				for (const id of PORTAL_IDS) {
 					if (SSR_CONFIGS[id]) {
 						configs[id] = deepMerge(configs[id] || {}, SSR_CONFIGS[id]);
 					}
 				}
-
 				if (Object.keys(configs).length === 0) {
 					throw new Error('No scene configs found (neither D1/Mistral nor static fallbacks)');
 				}
 
 				const { bootPortalEngine, registerSceneRenderer } = await import('$lib/portals-ecs/world-builder.js');
-
-				// Register custom scene renderers — keyed by environment.type.
-				// Each builder is self-contained (own geometry/lighting/audio) and
-				// reads only the destination portals' palette/names for gateways.
 				const { buildOceanScene } = await import('$lib/portals-ecs/ocean-scene.js');
 				const { buildForestScene } = await import('$lib/portals-ecs/forest-scene.js');
 				const { buildCelebrationScene } = await import('$lib/portals-ecs/celebration-scene.js');
@@ -96,39 +142,18 @@
 				const { buildDreamScene } = await import('$lib/portals-ecs/dream-scene.js');
 				const { buildTheaterScene } = await import('$lib/portals-ecs/theater-scene.js');
 				const { buildMemoryScene } = await import('$lib/portals-ecs/memory-scene.js');
-				// NOTE: buildCosmosScene is intentionally NOT registered. space-type
-				// portals fall through to world-builder.js's default path, which
-				// renders the dynamic starfield + spinning art-cube carousel (the
-				// "Fantasia" landing look). Registering cosmos-scene would preempt
-				// that with static planets and hide the cubes.
-				// parallax + lithograph scenes were jettisoned (failed 2.5D experiments);
-				// any config still using those types falls through to the default path.
 				const ENV_TO_SCENE = {
-					ocean: buildOceanScene,
-					forest: buildForestScene,
-					celebration: buildCelebrationScene,
-					city: buildCityScene,
-					dream: buildDreamScene,
-					theater: buildTheaterScene,
+					ocean: buildOceanScene, forest: buildForestScene,
+					celebration: buildCelebrationScene, city: buildCityScene,
+					dream: buildDreamScene, theater: buildTheaterScene,
 					memory: buildMemoryScene,
 				};
 				for (const pid of Object.keys(configs)) {
 					const envType = configs[pid]?.environment?.type;
 					const builder = ENV_TO_SCENE[envType];
-					// Only register when we have a real custom renderer for this
-					// env type. Portals without one (e.g. space → no entry, so the
-					// art-cube carousel default path runs) must NOT be registered —
-					// otherwise hasSceneRenderer() returns true and the default
-					// path in world-builder.js never executes.
 					if (builder) registerSceneRenderer(pid, builder);
 				}
 
-				// Resolve start portal. Prefer, in order: SSR random pick (from
-				// /portals) or explicit id (from /portals/[id]), then ?portal= query.
-				// Each must actually have a loaded config (the source of truth for
-				// what can boot). If none of those resolve, pick randomly from the
-				// loaded configs — never hardcode a single portal, so /portals is a
-				// genuine surprise every visit.
 				const configIds = Object.keys(configs);
 				const queryPortal = new URLSearchParams(window.location.search).get('portal');
 				let startPortal = null;
@@ -138,29 +163,24 @@
 				if (!startPortal && configIds.length) {
 					startPortal = configIds[Math.floor(Math.random() * configIds.length)];
 				}
-				if (!startPortal) {
-					throw new Error('No renderable portal config could be resolved');
-				}
+				if (!startPortal) throw new Error('No renderable portal config could be resolved');
 
 				worldHandle = await bootPortalEngine(containerEl, configs, startPortal);
 				if (cancelled) return;
 				booted = true;
 
-				// Track XR session lifecycle so the button can toggle Enter/Exit.
+				// Initialize inline input (keyboard on desktop, wired above for touch).
+				const { initInlineInput, inlineInput: inp } = await import('$lib/portals-ecs/locomotion-system.js');
+				inlineInput = inp;
+				initInlineInput(containerEl);
+
 				if (worldHandle?.visibilityState?.subscribe) {
 					worldHandle.visibilityState.subscribe((state) => {
 						inXR = state === 'visible' || state === 'visible-blurred';
 					});
 				}
 
-				window.addEventListener('portal-tapped', (e) => {
-					selectedPortal = e.detail.portalId;
-				});
-
-				window.addEventListener('xr-support', (e) => {
-					xrSupport = e.detail;
-				});
-
+				window.addEventListener('portal-tapped', (e) => { selectedPortal = e.detail.portalId; });
 			} catch (err) {
 				console.error('[portals] boot failed:', err);
 				bootError = err.message || String(err);
@@ -171,6 +191,7 @@
 
 		return () => {
 			cancelled = true;
+			import('$lib/portals-ecs/locomotion-system.js').then(({ disposeInlineInput }) => disposeInlineInput());
 		};
 	});
 
@@ -185,16 +206,6 @@
 		}
 		return result;
 	}
-
-	function nameOf(portalId) {
-		if (!portalId) return '';
-		const portal = (data?.portals || []).find(p => p.id === portalId);
-		if (!portal) return portalId;
-		const lang = document?.documentElement?.lang || 'es';
-		if (lang === 'en') return portal.name_en || portal.name_es;
-		if (lang === 'fr') return portal.name_fr || portal.name_es;
-		return portal.name_es;
-	}
 </script>
 
 <svelte:head>
@@ -206,25 +217,54 @@
 	</style>
 </svelte:head>
 
-<!-- Scene container — fullscreen. z-index kept below the IWER DevUI's
-     overlay (which maxes at z-index 999) so the Play Mode button stays visible. -->
+<!-- Scene container — fullscreen -->
 <div
 	id="portal-scene-container"
 	style="position:fixed !important;top:0 !important;left:0 !important;width:100vw !important;height:100vh !important;z-index:1 !important;background:#05030a !important;"
 	bind:this={containerEl}
 ></div>
 
-<!-- Enter / Exit XR button (inline-first: render 2D, enter XR on opt-in).
-     On desktop (IWER) this enters the emulated session that Play Mode + WASD
-     drive; on a headset it enters true VR. -->
-{#if booted && !bootError}
-	<button
-		class="xr-toggle"
-		onclick={inXR ? exitXR : enterXR}
-		aria-label={inXR ? 'Exit immersive' : 'Enter to explore'}
+<!-- Drag-look zone: covers the full screen for touch look-around.
+     Doesn't interfere with the thumbstick zone (bottom-left). -->
+{#if booted && isTouch && !inXR}
+	<div
+		class="look-zone"
+		ontouchstart={onLookStart}
+		ontouchmove={onLookMove}
+		ontouchend={onLookEnd}
+	></div>
+{/if}
+
+<!-- Virtual thumbstick (touch devices only) -->
+{#if booted && isTouch && !inXR}
+	<div
+		class="thumbstick-zone"
+		ontouchstart={onStickStart}
+		ontouchmove={onStickMove}
+		ontouchend={onStickEnd}
 	>
-		{inXR ? '✕ Exit' : 'Enter to explore'}
+		<div class="thumbstick-base">
+			<div class="thumbstick-knob" style="transform: translate({stickPos.x}px, {stickPos.y}px)"></div>
+		</div>
+	</div>
+{/if}
+
+<!-- Enter VR button: only on devices that actually support immersive-vr.
+     Touch devices use inline controls (no split-screen VR). -->
+{#if booted && !bootError && canVR && !isTouch}
+	<button class="xr-toggle" onclick={inXR ? exitXR : enterXR} aria-label={inXR ? 'Exit VR' : 'Enter VR'}>
+		{inXR ? '✕ Exit VR' : 'Enter VR'}
 	</button>
+{/if}
+
+<!-- Hint text for desktop (non-touch) visitors -->
+{#if booted && !bootError && !isTouch && !inXR}
+	<div class="input-hint">WASD to move · Drag to look · Click portals to navigate</div>
+{/if}
+
+<!-- Hint text for touch visitors -->
+{#if booted && !bootError && isTouch && !inXR}
+	<div class="input-hint">Drag left to move · Drag right to look · Tap portals to navigate</div>
 {/if}
 
 <!-- Boot error -->
@@ -246,26 +286,50 @@
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
 	.xr-toggle {
-		position: fixed;
-		bottom: 24px;
-		left: 50%;
-		transform: translateX(-50%);
-		z-index: 2;
-		padding: 12px 28px;
-		font-family: Georgia, serif;
-		font-size: 16px;
-		font-weight: 400;
-		letter-spacing: 0.5px;
-		color: #fff;
-		background: rgba(0, 0, 0, 0.7);
-		border: 1px solid rgba(255, 255, 255, 0.25);
-		border-radius: 999px;
-		cursor: pointer;
-		backdrop-filter: blur(6px);
+		position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+		z-index: 2; padding: 12px 28px;
+		font-family: Georgia, serif; font-size: 16px; font-weight: 400; letter-spacing: 0.5px;
+		color: #fff; background: rgba(0, 0, 0, 0.7);
+		border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px;
+		cursor: pointer; backdrop-filter: blur(6px);
 		transition: background 0.2s ease, border-color 0.2s ease;
 	}
-	.xr-toggle:hover {
-		background: rgba(0, 0, 0, 0.85);
-		border-color: rgba(255, 255, 255, 0.5);
+	.xr-toggle:hover { background: rgba(0, 0, 0, 0.85); border-color: rgba(255, 255, 255, 0.5); }
+
+	.input-hint {
+		position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+		z-index: 2; color: rgba(255,255,255,0.5);
+		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
+		pointer-events: none; white-space: nowrap;
+	}
+
+	/* Touch look-zone: full screen, transparent, behind the thumbstick */
+	.look-zone {
+		position: fixed; inset: 0; z-index: 1;
+		touch-action: none;
+	}
+
+	/* Virtual thumbstick: bottom-left quadrant */
+	.thumbstick-zone {
+		position: fixed; bottom: 0; left: 0;
+		width: 40vw; height: 40vh; max-width: 250px; max-height: 250px;
+		z-index: 3; touch-action: none;
+		display: flex; align-items: flex-end; justify-content: flex-start;
+		padding: 30px;
+	}
+	.thumbstick-base {
+		width: 120px; height: 120px; border-radius: 50%;
+		background: rgba(255,255,255,0.08);
+		border: 1px solid rgba(255,255,255,0.15);
+		position: relative; touch-action: none;
+		backdrop-filter: blur(4px);
+	}
+	.thumbstick-knob {
+		width: 50px; height: 50px; border-radius: 50%;
+		background: rgba(255,255,255,0.25);
+		border: 1px solid rgba(255,255,255,0.3);
+		position: absolute; top: 50%; left: 50%;
+		margin: -25px 0 0 -25px;
+		transition: transform 0.05s ease-out;
 	}
 </style>

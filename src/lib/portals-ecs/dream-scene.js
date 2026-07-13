@@ -183,6 +183,9 @@ export function buildDreamScene(world, config = {}, allConfigs = {}, onNavigate 
 		scene.add(label); track.push(label);
 
 		doorGroup.userData = { portalId, isGateway: true };
+		const revTexts = portalConfig?.narrative_texts?.[lang] || portalConfig?.narrative_texts?.es || [];
+		const revText = revTexts[i % revTexts.length] || portalConfig?.portal?.names?.[lang] || '';
+		if (revText) doorGroup.userData.revelation = { text: revText };
 		for (const child of doorGroup.children) child.userData = doorGroup.userData;
 		scene.add(doorGroup); track.push(doorGroup);
 		tapTargets.push(doorGroup);

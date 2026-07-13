@@ -178,6 +178,9 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 
 		const coral = makeCoral(c.x, c.z, c.s, pcolor);
 		coral.userData = { portalId: pid, isGateway: true };
+		const revTexts = pcfg?.narrative_texts?.[lang] || pcfg?.narrative_texts?.es || [];
+		const revText = revTexts[i % revTexts.length] || pcfg?.portal?.names?.[lang] || '';
+		if (revText) coral.userData.revelation = { text: revText };
 		for (const child of coral.children) child.userData = coral.userData;
 		scene.add(coral); track.push(coral);
 		tapTargets.push(coral);

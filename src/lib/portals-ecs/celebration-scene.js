@@ -197,6 +197,9 @@ export function buildCelebrationScene(world, config = {}, allConfigs = {}, onNav
 		scene.add(label); track.push(label);
 
 		pinataGroup.userData = { portalId, isGateway: true };
+		const revTexts = portalConfig?.narrative_texts?.[lang] || portalConfig?.narrative_texts?.es || [];
+		const revText = revTexts[i % revTexts.length] || portalConfig?.portal?.names?.[lang] || '';
+		if (revText) pinataGroup.userData.revelation = { text: revText };
 		for (const child of pinataGroup.children) child.userData = pinataGroup.userData;
 		scene.add(pinataGroup); track.push(pinataGroup);
 		tapTargets.push(pinataGroup);

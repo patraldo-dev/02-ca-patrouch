@@ -256,6 +256,9 @@ export function buildCityScene(world, config = {}, allConfigs = {}, onNavigate =
 		scene.add(label); track.push(label);
 
 		building.userData = { portalId, isGateway: true };
+		const revTexts = portalConfig?.narrative_texts?.[lang] || portalConfig?.narrative_texts?.es || [];
+		const revText = revTexts[i % revTexts.length] || portalConfig?.portal?.names?.[lang] || '';
+		if (revText) building.userData.revelation = { text: revText };
 		signGroup.userData = building.userData;
 		tapTargets.push(building, signGroup);
 		labels.push({ sprite: label, baseY: label.position.y, phase: Math.random() * Math.PI * 2, glow: beacon, baseOpacity: 0.8 });

@@ -13,6 +13,7 @@
 // ═══════════════════════════════════════════════════════════
 import { createSystem } from 'elics';
 import { Vector3 } from 'three';
+import { locomotion } from './locomotion-system.js';
 
 const REVEAL_RADIUS = 4.0;    // distance at which revelation triggers (full)
 const FADE_RADIUS = 7.0;      // distance at which proximity glow fully fades
@@ -56,15 +57,6 @@ export const RevelationSystem = class extends createSystem({}) {
 			if (dist < closestDist) { closestDist = dist; closest = target; }
 		}
 
-		// Periodic diagnostic.
-		if (!this._lastDiag || performance.now() - this._lastDiag > 2000) {
-			this._lastDiag = performance.now();
-			console.log('[revelation] targets:', targets.length,
-				'withRev:', targetsWithRev,
-				'closest:', closestDist === Infinity ? 'none' : closestDist.toFixed(2),
-				'reveal<', REVEAL_RADIUS, '?', closestDist < REVEAL_RADIUS);
-		}
-
 		// No target in range → fade any active glow.
 		if (!closest || closestDist > FADE_RADIUS) {
 			this._fadeActive();
@@ -76,11 +68,10 @@ export const RevelationSystem = class extends createSystem({}) {
 		const proximity = Math.max(0, Math.min(1, (FADE_RADIUS - closestDist) / (FADE_RADIUS - REVEAL_RADIUS)));
 		this._updateProximityVisual(closest, proximity);
 
-		// Full reveal (text + pop) ONLY in XR mode — not during passive orbit.
-		// In inline mode the orbit camera sweeps past cubes automatically, so
-		// auto-revealing would feel like the old ambient cycler (unearned text).
-		// The visitor must actively explore (Enter + WASD) to discover text.
-		if (closestDist < REVEAL_RADIUS && world.session) {
+		// Full reveal (text + pop) when the visitor is actively exploring —
+		// either in an XR session OR using inline keyboard/touch input.
+		// NOT during passive orbit (that would be unearned text).
+		if (closestDist < REVEAL_RADIUS && (world.session || locomotion.userActive)) {
 			const now = performance.now();
 			if (closest === this._lastRevealed && now - this._lastRevealTime < COOLDOWN_MS) {
 				return;  // cooldown — don't re-trigger

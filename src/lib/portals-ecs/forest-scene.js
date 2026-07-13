@@ -122,6 +122,9 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 		);
 		trunk.position.set(t.x, h/2-1.5, t.z);
 		trunk.userData = { portalId: pid, isGateway: true };
+		const revTexts = pcfg?.narrative_texts?.[lang] || pcfg?.narrative_texts?.es || [];
+		const revText = revTexts[i % revTexts.length] || pcfg?.portal?.names?.[lang] || '';
+		if (revText) trunk.userData.revelation = { text: revText };
 		scene.add(trunk); track.push(trunk); tapTargets.push(trunk);
 
 		// Canopy (stacked cones) — tinted to portal hue
