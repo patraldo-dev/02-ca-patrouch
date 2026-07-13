@@ -1069,5 +1069,8 @@
   "portals.enter_explore": "Explorar",
   "portals.exit_explore": "✕ Salir",
   "portals.hint_desktop": "WASD para moverte · Arrastra para mirar · Clic en portales para navegar",
-  "portals.hint_touch": "Arrastra izquierda para moverte · Arrastra derecha para mirar · Toca portales para navegar"
+  "portals.hint_touch": "Arrastra izquierda para moverte · Arrastra derecha para mirar · Toca portales para navegar",
+  "portals.enable_voice": "🎤 Activar Voz",
+  "portals.mute": "🔇 Silenciar",
+  "portals.unmute": "🎤 Activar Mic"
 }

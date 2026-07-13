@@ -25,6 +25,8 @@
 	let inXR = $state(false);
 	let isTouch = $state(false);
 	let canVR = $state(false);
+	let voiceEnabled = $state(false);
+	let voiceMuted = $state(false);
 
 	// Inline input — loaded dynamically (client-side only) to avoid SSR crash
 	// (@iwsdk/core references `document` at module-eval time).
@@ -66,6 +68,22 @@
 		if (!worldHandle?.exitXR) return;
 		try { worldHandle.exitXR(); } catch (err) { console.error('[portals] exitXR failed:', err); }
 		inXR = false;
+	}
+
+	// ── Voice chat ──
+	async function enableVoice() {
+		const mod = await import('$lib/portals-ecs/network-system.js');
+		const stream = await mod.captureMic();
+		if (stream) {
+			mod.voice.enabled = true;
+			voiceEnabled = true;
+			// Re-trigger WebRTC calls to existing peers now that voice is on.
+			// The NetworkSystem checks voice.enabled on new peers automatically.
+		}
+	}
+	async function toggleMute() {
+		const mod = await import('$lib/portals-ecs/network-system.js');
+		voiceMuted = mod.toggleMute();
 	}
 
 	// ── Virtual thumbstick handlers (touch) ──
@@ -310,6 +328,19 @@
 	<div class="input-hint">{$t('portals.hint_touch')}</div>
 {/if}
 
+<!-- Voice chat controls: enable voice first, then mute/unmute toggle -->
+{#if booted && !bootError}
+	{#if !voiceEnabled}
+		<button class="voice-toggle" onclick={enableVoice} aria-label={$t('portals.enable_voice')}>
+			{$t('portals.enable_voice')}
+		</button>
+	{:else}
+		<button class="voice-toggle" onclick={toggleMute} aria-label={voiceMuted ? $t('portals.unmute') : $t('portals.mute')}>
+			{voiceMuted ? $t('portals.unmute') : $t('portals.mute')}
+		</button>
+	{/if}
+{/if}
+
 <!-- Boot error -->
 {#if bootError}
 	<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#050508;color:#ef4444;font-family:monospace;font-size:14px;z-index:100000;padding:2rem;text-align:center;">
@@ -338,6 +369,17 @@
 		transition: background 0.2s ease, border-color 0.2s ease;
 	}
 	.xr-toggle:hover { background: rgba(0, 0, 0, 0.85); border-color: rgba(255, 255, 255, 0.5); }
+
+	.voice-toggle {
+		position: fixed; bottom: 24px; right: 20px;
+		z-index: 2; padding: 10px 20px;
+		font-family: Georgia, serif; font-size: 14px; letter-spacing: 0.04em;
+		color: #fff; background: rgba(0, 0, 0, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
+		cursor: pointer; backdrop-filter: blur(6px);
+		transition: background 0.2s ease;
+	}
+	.voice-toggle:hover { background: rgba(0, 0, 0, 0.85); }
 
 	.input-hint {
 		position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);

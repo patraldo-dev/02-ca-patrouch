@@ -1082,5 +1082,8 @@
   "portals.enter_explore": "Explorer",
   "portals.exit_explore": "✕ Quitter",
   "portals.hint_desktop": "WASD pour bouger · Glisser pour regarder · Clic sur les portails pour naviguer",
-  "portals.hint_touch": "Glisser à gauche pour bouger · Glisser à droite pour regarder · Toucher les portails pour naviguer"
+  "portals.hint_touch": "Glisser à gauche pour bouger · Glisser à droite pour regarder · Toucher les portails pour naviguer",
+  "portals.enable_voice": "🎤 Activer Voix",
+  "portals.mute": "🔇 Couper",
+  "portals.unmute": "🎤 Activer Mic"
 }
