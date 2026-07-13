@@ -135,6 +135,18 @@ export const RevelationSystem = class extends createSystem({}) {
 		if (rev.text && world_showOverlay) {
 			world_showOverlay(rev.text);
 		}
+		// Speak the text aloud via browser TTS. Uses the page's language.
+		if (rev.text && typeof speechSynthesis !== 'undefined') {
+			try {
+				speechSynthesis.cancel(); // stop any in-progress speech
+				const utter = new SpeechSynthesisUtterance(rev.text);
+				utter.lang = document.documentElement?.lang === 'en' ? 'en-US'
+					: document.documentElement?.lang === 'fr' ? 'fr-FR' : 'es-ES';
+				utter.rate = 0.85;
+				utter.pitch = 0.95;
+				speechSynthesis.speak(utter);
+			} catch {}
+		}
 		console.log('[revelation] ✨ revealed:', rev.text?.slice(0, 60));
 	}
 
