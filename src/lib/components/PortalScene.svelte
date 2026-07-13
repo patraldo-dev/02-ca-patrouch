@@ -14,7 +14,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import { t } from '$lib/i18n';
-	import { inlineInput, initInlineInput, disposeInlineInput } from '$lib/portals-ecs/locomotion-system.js';
 
 	let { data, initialPortalId = null } = $props();
 
@@ -26,6 +25,12 @@
 	let inXR = $state(false);
 	let isTouch = $state(false);
 	let canVR = $state(false);
+
+	// Inline input — loaded dynamically (client-side only) to avoid SSR crash
+	// (@iwsdk/core references `document` at module-eval time).
+	let inlineInput = null;
+	let initInlineInput = null;
+	let disposeInlineInput = null;
 
 	// Virtual thumbstick state (touch devices)
 	let stickActive = $state(false);
@@ -72,7 +77,7 @@
 		stickPos = { x: 0, y: 0 };
 	}
 	function onStickMove(e) {
-		if (!stickActive) return;
+		if (!stickActive || !inlineInput) return;
 		e.preventDefault();
 		const t = e.touches[0];
 		const dx = t.clientX - stickOrigin.x;
@@ -82,7 +87,6 @@
 		const clampedLen = Math.min(len, maxR);
 		const angle = Math.atan2(dy, dx);
 		stickPos = { x: Math.cos(angle) * clampedLen, y: Math.sin(angle) * clampedLen };
-		// Write to inlineInput (normalized -1..1)
 		inlineInput.x = stickPos.x / maxR;
 		inlineInput.y = stickPos.y / maxR;
 	}
@@ -90,8 +94,7 @@
 		e.preventDefault();
 		stickActive = false;
 		stickPos = { x: 0, y: 0 };
-		inlineInput.x = 0;
-		inlineInput.y = 0;
+		if (inlineInput) { inlineInput.x = 0; inlineInput.y = 0; }
 	}
 
 	// ── Drag-look handlers (touch, on the canvas area) ──
@@ -109,7 +112,7 @@
 		_lookMoved = false;
 	}
 	function onLookMove(e) {
-		if (!_lookLast) return;
+		if (!_lookLast || !inlineInput) return;
 		const t = e.touches[0];
 		const dx = t.clientX - _lookLast.x;
 		const dy = t.clientY - _lookLast.y;
@@ -204,8 +207,13 @@
 				if (cancelled) return;
 				booted = true;
 
-				// Initialize inline input (keyboard on desktop, touch handlers
-				// are wired in the Svelte template and use the static import).
+				// Load locomotion inline input dynamically (client-side only —
+				// @iwsdk/core references `document` at module-eval time, which
+				// crashes SSR).
+				const locMod = await import('$lib/portals-ecs/locomotion-system.js');
+				inlineInput = locMod.inlineInput;
+				initInlineInput = locMod.initInlineInput;
+				disposeInlineInput = locMod.disposeInlineInput;
 				initInlineInput(containerEl);
 
 				if (worldHandle?.visibilityState?.subscribe) {
@@ -225,7 +233,7 @@
 
 		return () => {
 			cancelled = true;
-			disposeInlineInput();
+			if (disposeInlineInput) disposeInlineInput();
 		};
 	});
 
