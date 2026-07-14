@@ -389,6 +389,18 @@
 		{drawerOpen ? '✕' : '☰'}
 	</button>
 		<div class="drawer-panel" class:open={drawerOpen}>
+			{#if data?.user}
+				<div class="drawer-user">
+					<span class="drawer-user-icon">👤</span>
+					<span class="drawer-user-name">{data.user.display_name || data.user.username}</span>
+				</div>
+			{:else}
+				<div class="drawer-user">
+					<span class="drawer-user-icon">👻</span>
+					<span class="drawer-user-name">{$t('portals.hud_guest') || 'Anónimo'}</span>
+				</div>
+			{/if}
+
 			<div class="drawer-section-label">{$t('portals.hud_navigate')}</div>
 			<a class="drawer-btn" href="/" onclick={() => drawerOpen = false}>🏠 {$t('common.nav.home')}</a>
 			<a class="drawer-btn" href="/agora" onclick={() => drawerOpen = false}>🌳 {$t('common.nav.agora')}</a>
@@ -433,8 +445,9 @@
 			{:else}
 				{explorerCount} {explorerCount === 1 ? $t('portals.presence_explorer_one') : $t('portals.presence_explorers')}
 			{/if}
-		{#if explorerCount > 0}
-			<span class="presence-roster">{roster.slice(0, 5).join(', ')}{#if roster.length > 5}…{/if}</span>
+		{#if explorerCount > 1}
+			<!-- Roster shows OTHER explorers (excludes you — you know you're here) -->
+			<span class="presence-roster">{roster.slice(1, 6).join(', ')}{#if roster.length > 6}…{/if}</span>
 		{/if}
 		</div>
 	{/if}
@@ -546,6 +559,20 @@
 		text-transform: uppercase; color: rgba(255, 255, 255, 0.4);
 	}
 	.drawer-section-label:first-child { padding-top: 4px; }
+
+	/* Logged-in user header at top of the drawer */
+	.drawer-user {
+		display: flex; align-items: center; gap: 10px;
+		padding: 12px 16px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		margin-bottom: 4px;
+	}
+	.drawer-user-icon { font-size: 16px; opacity: 0.8; }
+	.drawer-user-name {
+		font-family: Georgia, serif; font-size: 14px;
+		color: #fff; font-weight: 600;
+		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	}
 
 	/* Language switcher row inside the drawer */
 	.drawer-lang-row { display: flex; gap: 6px; padding: 4px 12px 8px; }

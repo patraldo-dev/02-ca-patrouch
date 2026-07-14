@@ -148,6 +148,9 @@ export const NetworkSystem = class extends createSystem({}) {
 
       this._ws.onopen = () => {
         console.log('[network] connected to room:', room);
+        // You're now in the realm — emit presence so the HUD shows count=1
+        // (just you) even before any peers arrive.
+        this._emitPresence('roster');
         // Record this visit server-side (enables co-presence notifications:
         // prior visitors get pinged that someone is in a realm they know).
         // Fire-and-forget; failures are silent.
@@ -387,8 +390,12 @@ export const NetworkSystem = class extends createSystem({}) {
   // can reactively update explorer count + roster. Mirrors the existing 'portal-tapped'
   // DOM-event bridge pattern. Also mirrors state onto world._explorerCount/_roster.
   _emitPresence(type, sessionId, name, overrideCount) {
-    const names = [...this._avatars.values()].map((a) => a.name || 'explorer');
-    const count = overrideCount !== undefined ? overrideCount : names.length;
+    // _avatars holds REMOTE peers only — add 1 for the local visitor (you),
+    // so the count reflects everyone in the realm including yourself.
+    const remoteNames = [...this._avatars.values()].map((a) => a.name || 'explorer');
+    const count = overrideCount !== undefined ? overrideCount : remoteNames.length + 1;
+    // Roster includes your name first, then remote explorers.
+    const names = [this._name || 'explorer', ...remoteNames];
     if (this.world) {
       this.world._explorerCount = count;
       this.world._roster = names;

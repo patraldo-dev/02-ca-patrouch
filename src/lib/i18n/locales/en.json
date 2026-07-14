@@ -1086,6 +1086,7 @@
   "portals.hud_voice": "Voice",
   "portals.hud_exit": "Leave the realm",
   "portals.hud_realms": "Realms",
+  "portals.hud_guest": "Anonymous",
   "portals.presence_alone": "Alone in this realm",
   "portals.presence_explorer_one": "explorer",
   "portals.presence_explorers": "explorers",
