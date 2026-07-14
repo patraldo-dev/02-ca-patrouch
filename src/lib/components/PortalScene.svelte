@@ -51,6 +51,8 @@
 
 	function enterXR() {
 		if (!worldHandle?.launchXR) return;
+		// In production (no VR hardware), launchXR throws "No XR hardware found".
+		// Only set inXR=true if it actually succeeds (via the visibilityState subscriber).
 		try {
 			worldHandle.launchXR({
 				sessionMode: 'immersive-vr',
@@ -60,13 +62,14 @@
 					depthSensing: false, layers: false, unbounded: false,
 				},
 			});
-			inXR = true;
+			// inXR is set by the visibilityState subscriber (line ~210), not here —
+			// so if launchXR fails silently, the button stays "Enter to Explore".
 		} catch (err) {
 			console.error('[portals] launchXR failed:', err);
 		}
 	}
 	function exitXR() {
-		if (!worldHandle?.exitXR) return;
+		if (!worldHandle?.exitXR) { inXR = false; return; }
 		try { worldHandle.exitXR(); } catch (err) { console.error('[portals] exitXR failed:', err); }
 		inXR = false;
 	}

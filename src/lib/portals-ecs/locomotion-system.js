@@ -55,6 +55,14 @@ export function configureLocomotion(config) {
 const _keys = { KeyW: false, KeyA: false, KeyS: false, KeyD: false };
 
 function onKeyDown(e) {
+	if (e.code === 'Escape') {
+		// Reset all keys + recenter flag
+		for (const k in _keys) _keys[k] = false;
+		inlineInput.x = 0; inlineInput.y = 0;
+		inlineInput.lookX = 0; inlineInput.lookY = 0;
+		locomotion._recenter = true;  // locomotion update() checks this
+		return;
+	}
 	if (e.code in _keys) { _keys[e.code] = true; e.preventDefault(); }
 }
 function onKeyUp(e) {
@@ -82,13 +90,37 @@ function updateInlineInputFromKeys() {
 export function initInlineInput(domElement) {
 	window.addEventListener('keydown', onKeyDown);
 	window.addEventListener('keyup', onKeyUp);
-	// Mouse-drag look on desktop
-	domElement.addEventListener('mousedown', (e) => { _lookActive = true; });
-	window.addEventListener('mouseup', () => { _lookActive = false; });
+	// Mouse-drag look on desktop. Track whether the mouse actually moved
+	// during the press — if not, it's a click (let it reach the canvas for
+	// portal navigation). If it moved, it's a look-drag.
+	let mouseDownPos = null;
+	let mouseMoved = false;
+	domElement.addEventListener('mousedown', (e) => {
+		_lookActive = true;
+		mouseDownPos = { x: e.clientX, y: e.clientY };
+		mouseMoved = false;
+	});
+	window.addEventListener('mouseup', (e) => {
+		if (_lookActive && mouseDownPos && !mouseMoved) {
+			// It was a click, not a drag — forward to canvas as pointerdown
+			// so the themed scene / starfield tap handler can raycast + navigate.
+			domElement.dispatchEvent(new PointerEvent('click', {
+				clientX: mouseDownPos.x, clientY: mouseDownPos.y, bubbles: true,
+			}));
+		}
+		_lookActive = false;
+		mouseDownPos = null;
+		mouseMoved = false;
+	});
 	domElement.addEventListener('mousemove', (e) => {
 		if (_lookActive && e.buttons > 0) {
-			inlineInput.lookX = e.movementX * LOOK_SENSITIVITY;
-			inlineInput.lookY = e.movementY * LOOK_SENSITIVITY;
+			if (mouseDownPos && (Math.abs(e.clientX - mouseDownPos.x) > 5 || Math.abs(e.clientY - mouseDownPos.y) > 5)) {
+				mouseMoved = true;
+			}
+			if (mouseMoved) {
+				inlineInput.lookX = e.movementX * LOOK_SENSITIVITY;
+				inlineInput.lookY = e.movementY * LOOK_SENSITIVITY;
+			}
 		}
 	});
 }
@@ -109,6 +141,19 @@ export const LocomotionSystem = class extends createSystem({}) {
 
 		// ── Inline mode (no XR session): keyboard/touch input ──
 		if (!hasSession) {
+			// Esc: recenter the camera to the scene origin.
+			if (locomotion._recenter) {
+				locomotion._recenter = false;
+				const cam = world.camera;
+				if (cam) {
+					cam.position.set(0, 2, 5);
+					_inlineYaw = 0;
+					_inlinePitch = 0;
+					cam.lookAt(0, 0, 0);
+				}
+				locomotion.userActive = false;
+				return;
+			}
 			updateInlineInputFromKeys();
 			const hasMoveInput = Math.abs(inlineInput.x) > 0.01 || Math.abs(inlineInput.y) > 0.01;
 			const hasLookInput = Math.abs(inlineInput.lookX) > 0.0001 || Math.abs(inlineInput.lookY) > 0.0001;
