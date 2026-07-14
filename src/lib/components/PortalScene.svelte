@@ -248,6 +248,9 @@
 				});
 				if (cancelled) return;
 				booted = true;
+				// Flag <html> so the chrome-hiding :global() CSS rules activate.
+				// (Added AFTER boot succeeds so a failed boot never hides the site.)
+				document.documentElement.classList.add('portal-active');
 
 				// Load locomotion inline input dynamically (client-side only —
 				// @iwsdk/core references `document` at module-eval time, which
@@ -284,6 +287,9 @@
 		return () => {
 			cancelled = true;
 			if (disposeInlineInput) disposeInlineInput();
+			// Remove the portal-active flag so the site-chrome-hiding :global()
+			// rules stop applying once we leave the portal scene.
+			document.documentElement.classList.remove('portal-active');
 		};
 	});
 
@@ -420,13 +426,16 @@
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
 	/* ── Hide ALL site chrome when portal scene is active ── */
-	/* Must be in the component <style> (not <svelte:head>) for :global() to work. */
-	:global(html), :global(body) { margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #050508 !important; }
-	:global(nav:not(.sr)), :global(header), :global(.navbar), :global(.footer),
-	:global(.search-fab), :global(.search-overlay), :global(.mobile-nav), :global(.mobile-menu),
-	:global(.hamburger), :global(.profile-switcher) { display: none !important; }
+	/* Scoped under html.portal-active so these rules ONLY apply when the portal
+	   is actually mounted — NOT when SvelteKit merely prefetches this CSS on
+	   hover of the /portals nav link (which would otherwise hide the header and
+	   clip the body on the page the user is still on). */
+	:global(html.portal-active), :global(html.portal-active body) { margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #050508 !important; }
+	:global(html.portal-active) :global(nav:not(.sr)), :global(html.portal-active) :global(header), :global(html.portal-active) :global(.navbar), :global(html.portal-active) :global(.footer),
+	:global(html.portal-active) :global(.search-fab), :global(html.portal-active) :global(.search-overlay), :global(html.portal-active) :global(.mobile-nav), :global(html.portal-active) :global(.mobile-menu),
+	:global(html.portal-active) :global(.hamburger), :global(html.portal-active) :global(.profile-switcher) { display: none !important; }
 	/* portal-audio.js narration controls (appended to body with z-index:99999) */
-	:global(#portal-audio-speaker), :global(#portal-audio-cc), :global(#portal-audio-subtitle) { display: none !important; }
+	:global(html.portal-active) :global(#portal-audio-speaker), :global(html.portal-active) :global(#portal-audio-cc), :global(html.portal-active) :global(#portal-audio-subtitle) { display: none !important; }
 
 	/* ── Slide-out drawer ── z-index above portal-audio (99999) */
 	.drawer-tab {
