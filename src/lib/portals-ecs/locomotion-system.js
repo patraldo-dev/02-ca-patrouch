@@ -53,6 +53,7 @@ export function configureLocomotion(config) {
 
 // ── Inline input listeners (keyboard) ──
 const _keys = { KeyW: false, KeyA: false, KeyS: false, KeyD: false };
+let _thumbstickActive = false;  // set by PortalScene thumbstick handlers
 
 function onKeyDown(e) {
 	if (e.code === 'Escape') {
@@ -73,19 +74,21 @@ function onKeyUp(e) {
 let _lookActive = false;
 
 function updateInlineInputFromKeys() {
-	// Only overwrite x/y if a keyboard key is actually pressed. Otherwise leave
-	// them alone — the virtual thumbstick (touch) may have set them, and zeroing
-	// them here every frame would erase the thumbstick input on mobile.
-	if (_keys.KeyW || _keys.KeyS || _keys.KeyA || _keys.KeyD) {
-		let x = 0, y = 0;
-		if (_keys.KeyW) y -= 1;
-		if (_keys.KeyS) y += 1;
-		if (_keys.KeyA) x -= 1;
-		if (_keys.KeyD) x += 1;
-		inlineInput.x = x;
-		inlineInput.y = y;
-	}
+	// If the thumbstick is active (touch), don't overwrite — let it own x/y.
+	if (_thumbstickActive) return;
+	// Otherwise always write (including zeros when no keys pressed) so movement
+	// stops when keys are released.
+	let x = 0, y = 0;
+	if (_keys.KeyW) y -= 1;
+	if (_keys.KeyS) y += 1;
+	if (_keys.KeyA) x -= 1;
+	if (_keys.KeyD) x += 1;
+	inlineInput.x = x;
+	inlineInput.y = y;
 }
+
+// Called by PortalScene when the thumbstick starts/stops dragging.
+export function setThumbstickActive(active) { _thumbstickActive = active; }
 
 export function initInlineInput(domElement) {
 	window.addEventListener('keydown', onKeyDown);

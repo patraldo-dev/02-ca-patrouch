@@ -95,6 +95,7 @@
 		e.preventDefault();
 		const t = e.touches[0];
 		stickActive = true;
+		import('$lib/portals-ecs/locomotion-system.js').then(({ setThumbstickActive }) => setThumbstickActive(true));
 		stickOrigin = { x: t.clientX, y: t.clientY };
 		stickPos = { x: 0, y: 0 };
 	}
@@ -117,6 +118,7 @@
 		stickActive = false;
 		stickPos = { x: 0, y: 0 };
 		if (inlineInput) { inlineInput.x = 0; inlineInput.y = 0; }
+		import('$lib/portals-ecs/locomotion-system.js').then(({ setThumbstickActive }) => setThumbstickActive(false));
 	}
 
 	// ── Drag-look handlers (touch, on the canvas area) ──
@@ -309,24 +311,24 @@
 	</div>
 {/if}
 
-<!-- Slide-out drawer: tap the tab (top-right) to reveal all controls -->
-{#if booted && !bootError}
-	<!-- Drawer tab (always visible) -->
+<!-- Voice control — a single button, no drawer needed when VR isn't available -->
+{#if booted && !bootError && !canVR}
+	<!-- No VR support: just show the voice toggle directly -->
+	<button class="voice-btn" onclick={() => { if (!voiceEnabled) enableVoice(); else toggleMute(); }}
+		aria-label={voiceEnabled ? (voiceMuted ? $t('portals.unmute') : $t('portals.mute')) : $t('portals.enable_voice')}>
+		{#if !voiceEnabled}{$t('portals.enable_voice')}{:else}{voiceMuted ? $t('portals.unmute') : $t('portals.mute')}{/if}
+	</button>
+{:else if booted && !bootError}
+	<!-- VR support available: use the drawer (Enter VR + Voice) -->
 	<button class="drawer-tab" onclick={() => drawerOpen = !drawerOpen} aria-label="Menu">
 		{drawerOpen ? '✕' : '☰'}
 	</button>
-
-	<!-- Drawer panel -->
 	<div class="drawer-panel" class:open={drawerOpen}>
-		<!-- Enter/Exit XR: only show if the device actually supports immersive-vr.
-		     On most desktops it doesn't — inline WASD handles exploration. -->
 		{#if canVR && !isTouch}
 			<button class="drawer-btn" onclick={() => { inXR ? exitXR() : enterXR(); drawerOpen = false; }}>
 				{inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}
 			</button>
 		{/if}
-
-		<!-- Voice controls -->
 		{#if !voiceEnabled}
 			<button class="drawer-btn" onclick={() => { enableVoice(); drawerOpen = false; }}>
 				{$t('portals.enable_voice')}
@@ -383,6 +385,17 @@
 		transition: background 0.2s ease;
 	}
 	.drawer-tab:hover { background: rgba(0, 0, 0, 0.85); }
+
+	.voice-btn {
+		position: fixed; top: 16px; right: 16px;
+		z-index: 100001; padding: 8px 16px;
+		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
+		color: #fff; background: rgba(0, 0, 0, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
+		cursor: pointer; backdrop-filter: blur(6px);
+		transition: background 0.2s ease;
+	}
+	.voice-btn:hover { background: rgba(0, 0, 0, 0.85); }
 
 	.drawer-panel {
 		position: fixed; top: 68px; right: 16px;
