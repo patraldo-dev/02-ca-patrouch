@@ -1087,6 +1087,7 @@
   "portals.hud_exit": "Leave the realm",
   "portals.hud_realms": "Realms",
   "portals.presence_alone": "Alone in this realm",
+  "portals.presence_explorer_one": "explorer",
   "portals.presence_explorers": "explorers",
   "portals.hint_desktop": "WASD to move · Drag to look · Click portals to navigate",
   "portals.hint_touch": "Drag left to move · Drag right to look · Tap portals to navigate",

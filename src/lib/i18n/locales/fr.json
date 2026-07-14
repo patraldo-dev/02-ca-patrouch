@@ -1087,6 +1087,7 @@
   "portals.hud_exit": "Quitter le royaume",
   "portals.hud_realms": "Royaumes",
   "portals.presence_alone": "Seul dans ce royaume",
+  "portals.presence_explorer_one": "explorateur",
   "portals.presence_explorers": "explorateurs",
   "portals.hint_desktop": "WASD pour bouger · Glisser pour regarder · Clic sur les portails pour naviguer",
   "portals.hint_touch": "Glisser à gauche pour bouger · Glisser à droite pour regarder · Toucher les portails pour naviguer",

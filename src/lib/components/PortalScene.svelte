@@ -426,13 +426,13 @@
 <!-- Co-presence HUD — bottom-left pill showing live explorer count + roster.
      Fed by 'portal-presence' events from NetworkSystem. -->
 {#if booted && !bootError}
-	<div class="presence-pill">
-		<span class="presence-dot" class:live={explorerCount > 0}></span>
-		{#if explorerCount === 0}
-			{$t('portals.presence_alone') || 'Solo en este reino'}
-		{:else}
-			{explorerCount} {$t('portals.presence_explorers') || 'explorers'}
-		{/if}
+		<div class="presence-pill">
+			<span class="presence-dot" class:live={explorerCount > 0}></span>
+			{#if explorerCount === 0}
+				{$t('portals.presence_alone')}
+			{:else}
+				{explorerCount} {explorerCount === 1 ? $t('portals.presence_explorer_one') : $t('portals.presence_explorers')}
+			{/if}
 		{#if explorerCount > 0}
 			<span class="presence-roster">{roster.slice(0, 5).join(', ')}{#if roster.length > 5}…{/if}</span>
 		{/if}
