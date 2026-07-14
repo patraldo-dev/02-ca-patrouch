@@ -85,13 +85,17 @@ export const NetworkSystem = class extends createSystem({}) {
   init() {
     console.log('[network] system registered & initialized ✓');
     this._userId = crypto.randomUUID();
+    // Read the visitor's display name from the world (set by bootPortalEngine).
+    // Falls back to 'visitor' for anonymous/guest sessions.
+    this._name = this.world?._visitorName || 'visitor';
     this._room = null;
     this._ws = null;
-    this._avatars = new Map();       // sessionId → { mesh, targetX, targetY, targetZ, targetYaw }
+    this._avatars = new Map();       // sessionId → { mesh, name, targetX, targetY, targetZ, targetYaw }
     this._peers = new Map();         // sessionId → { pc (RTCPeerConnection), audioEl }
     this._lastSend = 0;
     this._lastPos = { x: 0, y: 0, z: 0 };
     this._makingOffer = new Set();   // sessionIds we've initiated an offer to (avoid glare)
+    this._emitPresence('roster', null, null, 0);  // initial state: 0 explorers
   }
 
   update(delta, _time) {
@@ -139,11 +143,21 @@ export const NetworkSystem = class extends createSystem({}) {
 
   _connect(room) {
     try {
-      const url = `${WS_URL}?room=${encodeURIComponent(room)}&user=${this._userId}&name=visitor`;
+      const url = `${WS_URL}?room=${encodeURIComponent(room)}&user=${this._userId}&name=${encodeURIComponent(this._name)}`;
       this._ws = new WebSocket(url);
 
       this._ws.onopen = () => {
         console.log('[network] connected to room:', room);
+        // Record this visit server-side (enables co-presence notifications:
+        // prior visitors get pinged that someone is in a realm they know).
+        // Fire-and-forget; failures are silent.
+        try {
+          fetch(`/api/portals/${encodeURIComponent(room)}/visit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ displayName: this._name }),
+          }).catch(() => {});
+        } catch {}
       };
 
       this._ws.onmessage = (e) => {
@@ -183,6 +197,9 @@ export const NetworkSystem = class extends createSystem({}) {
     }
     this._avatars.clear();
 
+    // Reset HUD presence state after leaving a room.
+    this._emitPresence('roster', null, null, 0);
+
     if (this._ws) {
       try { this._ws.close(); } catch {}
       this._ws = null;
@@ -196,14 +213,16 @@ export const NetworkSystem = class extends createSystem({}) {
     switch (msg.type) {
       case 'roster':
         for (const peer of (msg.peers || [])) {
-          this._spawnAvatar(peer.sessionId, peer.x, peer.y, peer.z, peer.yaw);
+          this._spawnAvatar(peer.sessionId, peer.x, peer.y, peer.z, peer.yaw, peer.displayName || peer.name || 'explorer');
           // Initiate WebRTC offer to existing peers (we're the newcomer)
           this._initiateCall(peer.sessionId);
         }
+        this._emitPresence('roster');
         break;
 
       case 'peer_joined':
-        this._spawnAvatar(msg.sessionId, msg.x, msg.y, msg.z, msg.yaw);
+        this._spawnAvatar(msg.sessionId, msg.x, msg.y, msg.z, msg.yaw, msg.displayName || msg.name || 'explorer');
+        this._emitPresence('join', msg.sessionId, msg.displayName || msg.name || 'explorer');
         // The NEW peer initiates calls to us (via roster). We don't initiate
         // to avoid glare — the newcomer gets the full roster and offers.
         break;
@@ -220,6 +239,7 @@ export const NetworkSystem = class extends createSystem({}) {
 
       case 'peer_left':
         const existing = this._avatars.get(msg.sessionId);
+        const leftName = existing?.name;
         if (existing) {
           world.scene.remove(existing.mesh);
           this._avatars.delete(msg.sessionId);
@@ -230,6 +250,7 @@ export const NetworkSystem = class extends createSystem({}) {
           if (peer.audioEl) peer.audioEl.remove();
           this._peers.delete(msg.sessionId);
         }
+        this._emitPresence('leave', msg.sessionId, leftName || 'explorer');
         break;
 
       // ── WebRTC signaling ──
@@ -350,7 +371,7 @@ export const NetworkSystem = class extends createSystem({}) {
     console.log('[network] remote audio connected for', sessionId.slice(0, 8));
   }
 
-  _spawnAvatar(sessionId, x, y, z, yaw) {
+  _spawnAvatar(sessionId, x, y, z, yaw, name) {
     if (this._avatars.has(sessionId)) return;
     const world = this.world;
     if (!world?.scene) return;
@@ -358,8 +379,23 @@ export const NetworkSystem = class extends createSystem({}) {
     mesh.position.set(x, y, z);
     mesh.rotation.y = yaw || 0;
     world.scene.add(mesh);
-    this._avatars.set(sessionId, { mesh, targetX: x, targetY: y, targetZ: z, targetYaw: yaw || 0 });
-    console.log('[network] peer spawned:', sessionId);
+    this._avatars.set(sessionId, { mesh, name: name || 'explorer', targetX: x, targetY: y, targetZ: z, targetYaw: yaw || 0 });
+    console.log('[network] peer spawned:', sessionId, name || '(anon)');
+  }
+
+  // Emit a 'portal-presence' event on window so the Svelte HUD (PortalScene.svelte)
+  // can reactively update explorer count + roster. Mirrors the existing 'portal-tapped'
+  // DOM-event bridge pattern. Also mirrors state onto world._explorerCount/_roster.
+  _emitPresence(type, sessionId, name, overrideCount) {
+    const names = [...this._avatars.values()].map((a) => a.name || 'explorer');
+    const count = overrideCount !== undefined ? overrideCount : names.length;
+    if (this.world) {
+      this.world._explorerCount = count;
+      this.world._roster = names;
+    }
+    try {
+      window.dispatchEvent(new CustomEvent('portal-presence', { detail: { type, sessionId, name, count, roster: names } }));
+    } catch {}
   }
 
   destroy() {

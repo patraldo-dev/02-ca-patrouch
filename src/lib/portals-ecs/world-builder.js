@@ -588,7 +588,7 @@ function rebuildScene(world, portalId, isNavigation = false) {
  * @param {object} configs        - map of portalId → scene config
  * @param {string} initialPortalId - which portal to start in (required)
  */
-export async function bootPortalEngine(container, configs, initialPortalId) {
+export async function bootPortalEngine(container, configs, initialPortalId, options = {}) {
 	if (!configs || Object.keys(configs).length === 0) {
 		throw new Error('bootPortalEngine: configs is empty');
 	}
@@ -596,8 +596,15 @@ export async function bootPortalEngine(container, configs, initialPortalId) {
 		? initialPortalId
 		: Object.keys(configs)[0];
 	const indexConfig = configs[start] || {};
+	// Stash the visitor's display name on the boot options so boot() can set it
+	// on the world before NetworkSystem registers (it reads world._visitorName
+	// to identify this visitor by name in co-presence instead of "visitor").
+	bootOptions = options;
 	return boot(container, indexConfig, configs, start);
 }
+
+// Module-level holder for per-boot options (set by bootPortalEngine, read by boot).
+let bootOptions = {};
 
 // ── Boot ──
 
@@ -684,6 +691,10 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	}
 
 	// Multiplayer avatar sync: broadcasts local pose, spawns remote avatars.
+	// Set the visitor's name on the world BEFORE the system registers —
+	// NetworkSystem.init reads world._visitorName to identify this visitor
+	// (falls back to "visitor" for anonymous/guest sessions).
+	world._visitorName = bootOptions.visitorName || null;
 	try {
 		world.registerSystem(NetworkSystem, { priority: 0 });
 		console.log('[portals] NetworkSystem registered');

@@ -150,8 +150,10 @@ export async function POST({ request, platform }) {
             VALUES (?, ?, ?, ?, 6, datetime('now', '+6 hours'), '{}', 'both')
         `).bind(id, title, narrative, dispatchType).run();
 
-        // Send notifications
-        await sendPortalNotifications(db, title, narrative);
+        // Send notifications — include the active portal ids in meta so the bell
+        // can deep-link ("→ Enter portal") instead of just showing text.
+        const portalIds = (activePortals || []).slice(0, 3).map((p) => p.id);
+        await sendPortalNotifications(db, title, narrative, portalIds);
 
         return json({ success: true, id, dispatch: dispatchType, newWritings: newWritingsCount });
     } catch (e) {
@@ -160,7 +162,7 @@ export async function POST({ request, platform }) {
     }
 }
 
-async function sendPortalNotifications(db, title, body) {
+async function sendPortalNotifications(db, title, body, portalIds = []) {
     try {
         const { results: users } = await db.prepare(`
             SELECT id FROM users WHERE id IN (
@@ -168,10 +170,13 @@ async function sendPortalNotifications(db, title, body) {
             )
         `).all();
 
+        // meta carries the referenced portal ids so the notification bell can
+        // render a deep link ("→ Enter portal"). Omitted when no portals apply.
+        const meta = portalIds.length ? JSON.stringify({ portal_ids: portalIds }) : null;
         for (const u of (users || [])) {
             await db.prepare(
-                'INSERT INTO notifications (user_id, type, title, body) VALUES (?, ?, ?, ?)'
-            ).bind(u.id, 'portal', title, body).run();
+                'INSERT INTO notifications (user_id, type, title, body, meta) VALUES (?, ?, ?, ?, ?)'
+            ).bind(u.id, 'portal', title, body, meta).run();
         }
     } catch (e) {
         console.error('[portal dispatch] notify failed:', e.message);

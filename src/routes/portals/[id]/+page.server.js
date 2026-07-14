@@ -12,7 +12,7 @@ const STATIC_SCENE_IDS = new Set([
 	'suenos', 'urbano',
 ]);
 
-export async function load({ params, platform }) {
+export async function load({ params, platform, locals }) {
 	const data = await loadPortalsData(platform?.env?.DB_book);
 	const { id } = params;
 
@@ -28,5 +28,7 @@ export async function load({ params, platform }) {
 		throw error(404, `Unknown portal: ${id}`);
 	}
 
-	return { ...data, initialPortalId: id };
+	// user/display_name threaded for co-presence (NetworkSystem identifies the
+	// visitor by name instead of the anonymous "visitor" literal).
+	return { ...data, initialPortalId: id, user: locals.user || null };
 }

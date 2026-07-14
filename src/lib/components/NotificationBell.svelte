@@ -7,6 +7,8 @@
     let unreadCount = $state(0);
     let loading = $state(false);
     let interval = null;
+    let inFlight = false;          // guards against overlapping polls
+    let failureStreak = 0;          // drives exponential backoff on network blips
 
     // Simple i18n — no get() to avoid SSR crash
     const i18n = {
@@ -14,19 +16,22 @@
             title: 'Notifications',
             mark_all_read: 'Mark all read',
             no_notifications: 'No new notifications',
-            empty: 'All caught up!'
+            empty: 'All caught up!',
+            enter_portal: '→ Enter portal'
         },
         es: {
             title: 'Notificaciones',
             mark_all_read: 'Marcar todo leído',
             no_notifications: 'Sin notificaciones',
-            empty: '¡Todo al día!'
+            empty: '¡Todo al día!',
+            enter_portal: '→ Entrar al portal'
         },
         fr: {
             title: 'Notifications',
             mark_all_read: 'Tout marquer comme lu',
             no_notifications: 'Pas de notifications',
-            empty: 'Tout est lu !'
+            empty: 'Tout est lu !',
+            enter_portal: '→ Entrer dans le portail'
         }
     };
 
@@ -50,16 +55,39 @@
         return `${Math.floor(diff / 86400)}d ago`;
     }
 
+    // Parse a notification's meta JSON (stored as TEXT) into an object, or null.
+    function parseMeta(n) {
+        if (!n?.meta) return null;
+        try { return typeof n.meta === 'string' ? JSON.parse(n.meta) : n.meta; }
+        catch { return null; }
+    }
+
+    // If the notification references a portal (via meta.portal_id or the first of
+    // meta.portal_ids), return a deep-link href into that realm.
+    function portalLink(n) {
+        const meta = parseMeta(n);
+        if (!meta) return null;
+        const pid = meta.portal_id || meta.portal_ids?.[0];
+        return pid ? `/portals/${pid}` : null;
+    }
+
     async function fetchNotifications() {
-        if (!browser) return;
+        if (!browser || inFlight) return;
+        inFlight = true;
         try {
             const res = await fetch('/api/notifications?unread=true');
             if (res.ok) {
                 const data = await res.json();
                 notifications = data.notifications || [];
                 unreadCount = data.unreadCount || 0;
+                failureStreak = 0;  // success — reset backoff
             }
-        } catch {}
+        } catch {
+            // Network blip (e.g. intermittent DNS). Silent — back off next poll.
+            failureStreak = Math.min(failureStreak + 1, 5);
+        } finally {
+            inFlight = false;
+        }
     }
 
     async function markRead(id) {
@@ -100,11 +128,20 @@
     onMount(() => {
         if (!browser) return;
         fetchNotifications();
-        interval = setInterval(fetchNotifications, 60000);
+        // Adaptive polling: 60s normally, but back off exponentially (up to ~16m)
+        // during repeated network failures so a flaky connection doesn't spam.
+        function scheduleNext() {
+            const delay = failureStreak > 0 ? 60000 * Math.pow(2, failureStreak) : 60000;
+            interval = setTimeout(async () => {
+                await fetchNotifications();
+                scheduleNext();
+            }, Math.min(delay, 60000 * 16));
+        }
+        scheduleNext();
         document.addEventListener('click', handleClickOutside);
 
         return () => {
-            if (interval) clearInterval(interval);
+            if (interval) clearTimeout(interval);
             document.removeEventListener('click', handleClickOutside);
         };
     });
@@ -136,6 +173,9 @@
                         <button class="notification-item" onclick={() => markRead(n.id)}>
                             <div class="notification-title">{n.title}</div>
                             <div class="notification-body">{n.body || ''}</div>
+                            {#if portalLink(n)}
+                                <a class="notification-link" href={portalLink(n)} onclick={(e) => e.stopPropagation()}>{t('enter_portal')}</a>
+                            {/if}
                             <div class="notification-time">{timeAgo(n.created_at)}</div>
                         </button>
                     {/each}
@@ -274,6 +314,20 @@
         color: var(--text-dim);
         line-height: 1.4;
         margin-bottom: 0.2rem;
+    }
+
+    .notification-link {
+        display: inline-block;
+        margin-top: 0.3rem;
+        margin-bottom: 0.2rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--accent);
+        text-decoration: none;
+    }
+
+    .notification-link:hover {
+        text-decoration: underline;
     }
 
     .notification-time {

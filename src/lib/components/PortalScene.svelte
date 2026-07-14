@@ -13,9 +13,20 @@
 -->
 <script>
 	import { onMount } from 'svelte';
-	import { t } from '$lib/i18n';
+	import { t, locale, setLocale } from '$lib/i18n';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data, initialPortalId = null } = $props();
+
+	// Switch language in-realm (persists to server, no navigation) — mirrors the
+	// LanguageSwitcherDesktop flow so narration can re-render in the new locale.
+	async function switchLanguage(lang) {
+		try {
+			await fetch('/api/locale', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locale: lang }) });
+		} catch {}
+		setLocale(lang);
+		try { await invalidateAll(); } catch {}
+	}
 
 	let containerEl = $state(null);
 	let booted = $state(false);
@@ -28,6 +39,11 @@
 	let voiceEnabled = $state(false);
 	let voiceMuted = $state(false);
 	let drawerOpen = $state(false);
+
+	// Co-presence — updated reactively from NetworkSystem via the 'portal-presence'
+	// window event (the existing ECS→Svelte bridge pattern, like 'portal-tapped').
+	let explorerCount = $state(0);
+	let roster = $state([]);
 
 	// Inline input — loaded dynamically (client-side only) to avoid SSR crash
 	// (@iwsdk/core references `document` at module-eval time).
@@ -227,7 +243,9 @@
 				}
 				if (!startPortal) throw new Error('No renderable portal config could be resolved');
 
-				worldHandle = await bootPortalEngine(containerEl, configs, startPortal);
+				worldHandle = await bootPortalEngine(containerEl, configs, startPortal, {
+					visitorName: data?.user?.display_name || data?.user?.username || null,
+				});
 				if (cancelled) return;
 				booted = true;
 
@@ -247,6 +265,14 @@
 				}
 
 				window.addEventListener('portal-tapped', (e) => { selectedPortal = e.detail.portalId; });
+
+				// Co-presence bridge — NetworkSystem dispatches 'portal-presence'
+				// events (roster/join/leave) carrying the live explorer count and
+				// names; update the HUD state reactively.
+				window.addEventListener('portal-presence', (e) => {
+					explorerCount = e.detail.count ?? 0;
+					roster = e.detail.roster ?? [];
+				});
 			} catch (err) {
 				console.error('[portals] boot failed:', err);
 				bootError = err.message || String(err);
@@ -311,32 +337,61 @@
 	</div>
 {/if}
 
-<!-- Voice control — a single button, no drawer needed when VR isn't available -->
-{#if booted && !bootError && !canVR}
-	<!-- No VR support: just show the voice toggle directly -->
-	<button class="voice-btn" onclick={() => { if (!voiceEnabled) enableVoice(); else toggleMute(); }}
-		aria-label={voiceEnabled ? (voiceMuted ? $t('portals.unmute') : $t('portals.mute')) : $t('portals.enable_voice')}>
-		{#if !voiceEnabled}{$t('portals.enable_voice')}{:else}{voiceMuted ? $t('portals.unmute') : $t('portals.mute')}{/if}
-	</button>
-{:else if booted && !bootError}
-	<!-- VR support available: use the drawer (Enter VR + Voice) -->
+<!-- In-world menu HUD — the ☰ drawer is visible on ALL platforms (desktop,
+     touch, VR) so route/language/profile access isn't lost inside the realm.
+     The portal is its own world; the menu lives inside that world, not the
+     flat site nav (which is hidden via :global() below). -->
+{#if booted && !bootError}
 	<button class="drawer-tab" onclick={() => drawerOpen = !drawerOpen} aria-label="Menu">
 		{drawerOpen ? '✕' : '☰'}
 	</button>
-	<div class="drawer-panel" class:open={drawerOpen}>
-		{#if canVR && !isTouch}
-			<button class="drawer-btn" onclick={() => { inXR ? exitXR() : enterXR(); drawerOpen = false; }}>
-				{inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}
-			</button>
-		{/if}
-		{#if !voiceEnabled}
-			<button class="drawer-btn" onclick={() => { enableVoice(); drawerOpen = false; }}>
-				{$t('portals.enable_voice')}
-			</button>
+		<div class="drawer-panel" class:open={drawerOpen}>
+			<div class="drawer-section-label">{$t('portals.hud_navigate')}</div>
+			<a class="drawer-btn" href="/" onclick={() => drawerOpen = false}>🏠 {$t('common.nav.home')}</a>
+			<a class="drawer-btn" href="/agora" onclick={() => drawerOpen = false}>🌳 {$t('common.nav.agora')}</a>
+			<a class="drawer-btn" href="/write" onclick={() => drawerOpen = false}>📜 {$t('common.nav.write')}</a>
+
+			<div class="drawer-section-label">{$t('portals.hud_language')}</div>
+			<div class="drawer-lang-row">
+				<button class="drawer-lang-btn" class:active={$locale === 'es'} onclick={() => switchLanguage('es')}>ES</button>
+				<button class="drawer-lang-btn" class:active={$locale === 'en'} onclick={() => switchLanguage('en')}>EN</button>
+				<button class="drawer-lang-btn" class:active={$locale === 'fr'} onclick={() => switchLanguage('fr')}>FR</button>
+			</div>
+
+			{#if canVR && !isTouch}
+				<div class="drawer-section-label">XR</div>
+				<button class="drawer-btn" onclick={() => { inXR ? exitXR() : enterXR(); drawerOpen = false; }}>
+					{inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}
+				</button>
+			{/if}
+
+			<div class="drawer-section-label">{$t('portals.hud_voice')}</div>
+			{#if !voiceEnabled}
+				<button class="drawer-btn" onclick={() => { enableVoice(); }}>
+					{$t('portals.enable_voice')}
+				</button>
+			{:else}
+				<button class="drawer-btn" onclick={toggleMute}>
+					{voiceMuted ? $t('portals.unmute') : $t('portals.mute')}
+				</button>
+			{/if}
+
+			<a class="drawer-btn drawer-exit" href="/" onclick={() => drawerOpen = false}>🚪 {$t('portals.hud_exit')}</a>
+		</div>
+{/if}
+
+<!-- Co-presence HUD — bottom-left pill showing live explorer count + roster.
+     Fed by 'portal-presence' events from NetworkSystem. -->
+{#if booted && !bootError}
+	<div class="presence-pill">
+		<span class="presence-dot" class:live={explorerCount > 0}></span>
+		{#if explorerCount === 0}
+			{$t('portals.presence_alone') || 'Solo en este reino'}
 		{:else}
-			<button class="drawer-btn" onclick={toggleMute}>
-				{voiceMuted ? $t('portals.unmute') : $t('portals.mute')}
-			</button>
+			{explorerCount} {$t('portals.presence_explorers') || 'explorers'}
+		{/if}
+		{#if explorerCount > 0}
+			<span class="presence-roster">{roster.slice(0, 5).join(', ')}{#if roster.length > 5}…{/if}</span>
 		{/if}
 	</div>
 {/if}
@@ -386,20 +441,9 @@
 	}
 	.drawer-tab:hover { background: rgba(0, 0, 0, 0.85); }
 
-	.voice-btn {
-		position: fixed; top: 16px; right: 16px;
-		z-index: 100001; padding: 8px 16px;
-		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
-		color: #fff; background: rgba(0, 0, 0, 0.6);
-		border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
-		cursor: pointer; backdrop-filter: blur(6px);
-		transition: background 0.2s ease;
-	}
-	.voice-btn:hover { background: rgba(0, 0, 0, 0.85); }
-
 	.drawer-panel {
 		position: fixed; top: 68px; right: 16px;
-		z-index: 100001; min-width: 180px;
+		z-index: 100001; min-width: 220px; max-height: 80vh; overflow-y: auto;
 		background: rgba(8, 6, 16, 0.92);
 		border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
 		backdrop-filter: blur(12px);
@@ -423,6 +467,64 @@
 		transition: background 0.15s ease;
 	}
 	.drawer-btn:hover { background: rgba(255, 255, 255, 0.08); }
+	.drawer-btn:active { transform: scale(0.98); }
+
+	/* Drawer section labels (Navigate / Language / Voice) */
+	.drawer-section-label {
+		padding: 10px 16px 4px;
+		font-family: Georgia, serif; font-size: 10px; letter-spacing: 0.12em;
+		text-transform: uppercase; color: rgba(255, 255, 255, 0.4);
+	}
+	.drawer-section-label:first-child { padding-top: 4px; }
+
+	/* Language switcher row inside the drawer */
+	.drawer-lang-row { display: flex; gap: 6px; padding: 4px 12px 8px; }
+	.drawer-lang-btn {
+		flex: 1; padding: 8px;
+		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.08em;
+		color: rgba(255, 255, 255, 0.6); background: transparent;
+		border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px;
+		cursor: pointer; transition: all 0.15s ease;
+	}
+	.drawer-lang-btn:hover { background: rgba(255, 255, 255, 0.06); }
+	.drawer-lang-btn.active {
+		color: #fff; background: rgba(255, 255, 255, 0.12);
+		border-color: rgba(255, 255, 255, 0.4);
+	}
+
+	/* "Exit the realm" — visually distinct (emphasized exit) */
+	.drawer-exit { margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; }
+
+	/* Co-presence pill — top-left (drawer tab is top-right). Shows live explorer
+	   count + names fed by NetworkSystem via 'portal-presence' events. */
+	.presence-pill {
+		position: fixed; top: 16px; left: 16px;
+		z-index: 100001; max-width: 70vw;
+		display: flex; align-items: center; gap: 8px;
+		padding: 8px 14px;
+		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
+		color: rgba(255, 255, 255, 0.8);
+		background: rgba(0, 0, 0, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 999px;
+		backdrop-filter: blur(6px); pointer-events: none;
+	}
+	.presence-dot {
+		width: 8px; height: 8px; border-radius: 50%;
+		background: rgba(255, 255, 255, 0.25); flex-shrink: 0;
+	}
+	.presence-dot.live {
+		background: #4ade80;
+		box-shadow: 0 0 8px #4ade80;
+		animation: presence-pulse 2s ease-in-out infinite;
+	}
+	@keyframes presence-pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.5; }
+	}
+	.presence-roster {
+		font-size: 11px; color: rgba(255, 255, 255, 0.5);
+		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	}
 
 	.input-hint {
 		position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
