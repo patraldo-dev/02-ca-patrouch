@@ -28,6 +28,26 @@
 		try { await invalidateAll(); } catch {}
 	}
 
+	// Realm name in the current locale.
+	function realmName(p) {
+		const lang = $locale || 'es';
+		return p?.name_en && lang === 'en' ? p.name_en
+			: p?.name_fr && lang === 'fr' ? p.name_fr
+			: p?.name_es || p?.name_en || p?.id;
+	}
+
+	// Navigate to another realm in-world. Mirrors world-builder's own navigation:
+	// pushState with the portalId, then dispatch popstate so the popstate listener
+	// (world-builder.js) calls rebuildScene for the new portal.
+	function navigateToRealm(portalId) {
+		currentRealm = portalId;
+		realmMenuOpen = false;
+		try {
+			window.history.pushState({ portalId }, '', `/portals/${portalId}`);
+			window.dispatchEvent(new PopStateEvent('popstate', { state: { portalId } }));
+		} catch {}
+	}
+
 	let containerEl = $state(null);
 	let booted = $state(false);
 	let bootError = $state(null);
@@ -39,6 +59,11 @@
 	let voiceEnabled = $state(false);
 	let voiceMuted = $state(false);
 	let drawerOpen = $state(false);
+
+	// Floating realm menu — list of all realms with colored bullets, click to navigate.
+	let realmMenuOpen = $state(false);
+	// Track which realm we're currently in (for active highlight in the menu).
+	let currentRealm = $state(null);
 
 	// Co-presence — updated reactively from NetworkSystem via the 'portal-presence'
 	// window event (the existing ECS→Svelte bridge pattern, like 'portal-tapped').
@@ -267,7 +292,19 @@
 					});
 				}
 
-				window.addEventListener('portal-tapped', (e) => { selectedPortal = e.detail.portalId; });
+				window.addEventListener('portal-tapped', (e) => {
+					selectedPortal = e.detail.portalId;
+					currentRealm = e.detail.portalId;
+				});
+
+				// Track in-world navigation (back/forward, realm-menu clicks) so the
+				// realm menu's active highlight follows the current realm.
+				window.addEventListener('popstate', (e) => {
+					const pid = e.state?.portalId;
+					if (pid) currentRealm = pid;
+				});
+
+				currentRealm = startPortal;
 
 				// Co-presence bridge — NetworkSystem dispatches 'portal-presence'
 				// events (roster/join/leave) carrying the live explorer count and
@@ -398,6 +435,30 @@
 		{/if}
 		{#if explorerCount > 0}
 			<span class="presence-roster">{roster.slice(0, 5).join(', ')}{#if roster.length > 5}…{/if}</span>
+		{/if}
+		</div>
+	{/if}
+
+<!-- Floating realm menu — colored-bullet list of all realms. Collapsible so it
+     doesn't clutter the scene; click a realm to navigate there in-world. -->
+{#if booted && !bootError}
+	<div class="realm-menu">
+		<button class="realm-menu-toggle" onclick={() => realmMenuOpen = !realmMenuOpen} aria-label="Realms">
+			{$t('portals.hud_realms') || 'Reinos'}
+			<span class="realm-menu-chevron">{realmMenuOpen ? '▾' : '▸'}</span>
+		</button>
+		{#if realmMenuOpen}
+			<ul class="realm-list">
+				{#each data?.portals || [] as portal (portal.id)}
+					<li>
+						<button class="realm-item" class:active={portal.id === currentRealm} onclick={() => navigateToRealm(portal.id)}>
+							<span class="realm-bullet" style="background: {portal.color_primary || '#c9a87c'}"></span>
+							<span class="realm-icon">{portal.icon || '🔮'}</span>
+							<span class="realm-name">{realmName(portal)}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
 		{/if}
 	</div>
 {/if}
@@ -534,6 +595,53 @@
 		font-size: 11px; color: rgba(255, 255, 255, 0.5);
 		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 	}
+
+	/* Floating realm menu — bottom-left, above the presence pill. Collapsible. */
+	.realm-menu {
+		position: fixed; bottom: 56px; left: 16px;
+		z-index: 100001; max-width: 70vw; max-height: 60vh;
+		display: flex; flex-direction: column;
+	}
+	.realm-menu-toggle {
+		align-self: flex-start;
+		padding: 6px 12px;
+		font-family: Georgia, serif; font-size: 12px; letter-spacing: 0.06em;
+		color: rgba(255, 255, 255, 0.7);
+		background: rgba(0, 0, 0, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 999px;
+		backdrop-filter: blur(6px); cursor: pointer;
+		transition: background 0.2s ease;
+	}
+	.realm-menu-toggle:hover { background: rgba(0, 0, 0, 0.85); }
+	.realm-menu-chevron { margin-left: 4px; font-size: 10px; }
+
+	.realm-list {
+		list-style: none; margin: 6px 0 0; padding: 6px;
+		background: rgba(8, 6, 16, 0.92);
+		border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
+		backdrop-filter: blur(12px);
+		overflow-y: auto;
+		display: flex; flex-direction: column; gap: 1px;
+	}
+	.realm-item {
+		display: flex; align-items: center; gap: 8px;
+		width: 100%; padding: 7px 10px;
+		font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.02em;
+		color: rgba(255, 255, 255, 0.75);
+		background: transparent; border: none; border-radius: 6px;
+		cursor: pointer; text-align: left;
+		transition: background 0.15s ease;
+	}
+	.realm-item:hover { background: rgba(255, 255, 255, 0.08); }
+	.realm-item.active {
+		color: #fff; background: rgba(255, 255, 255, 0.06);
+	}
+	.realm-bullet {
+		width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+		box-shadow: 0 0 6px currentColor;
+	}
+	.realm-icon { font-size: 14px; flex-shrink: 0; }
+	.realm-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 	.input-hint {
 		position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);

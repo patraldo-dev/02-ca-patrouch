@@ -1085,6 +1085,7 @@
   "portals.hud_language": "Language",
   "portals.hud_voice": "Voice",
   "portals.hud_exit": "Leave the realm",
+  "portals.hud_realms": "Realms",
   "portals.presence_alone": "Alone in this realm",
   "portals.presence_explorers": "explorers",
   "portals.hint_desktop": "WASD to move · Drag to look · Click portals to navigate",
