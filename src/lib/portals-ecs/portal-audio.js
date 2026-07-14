@@ -35,6 +35,7 @@ export function installNarration({ portalId, track, lang = 'es' }) {
 
 	// ── Build the speaker button (corner icon, minimal, non-diegetic v1) ──
 	const btn = document.createElement('div');
+	btn.id = 'portal-audio-speaker';
 	btn.style.cssText = [
 		'position:fixed', 'bottom:20px', 'right:20px', 'z-index:99999',
 		'width:48px', 'height:48px', 'border-radius:50%',
@@ -55,6 +56,7 @@ export function installNarration({ portalId, track, lang = 'es' }) {
 
 	// ── Subtitle toggle (small, below the speaker) ──
 	const subBtn = document.createElement('div');
+	subBtn.id = 'portal-audio-cc';
 	subBtn.style.cssText = [
 		'position:fixed', 'bottom:76px', 'right:20px', 'z-index:99999',
 		'padding:4px 10px', 'border-radius:14px',
@@ -144,6 +146,7 @@ export function installNarration({ portalId, track, lang = 'es' }) {
 		if (!subtitleText) return;
 		hideSubtitles();
 		subtitlePanel = document.createElement('div');
+		subtitlePanel.id = 'portal-audio-subtitle';
 		subtitlePanel.style.cssText = [
 			'position:fixed', 'bottom:110px', 'right:20px', 'z-index:99998',
 			'max-width:340px', 'max-height:40vh', 'overflow-y:auto',

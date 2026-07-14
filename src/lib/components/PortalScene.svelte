@@ -276,8 +276,12 @@
 		html, body { margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #050508 !important; }
 		/* Hide ALL site chrome when the portal scene is active */
 		:global(nav:not(.sr)), :global(header), :global(.navbar), :global(.footer),
-		:global(.search-fab), :global(.mobile-nav), :global(.mobile-menu),
-		:global(#accessibility-btn), :global(.a11y-fab), :global(.scroll-to-top) { display: none !important; }
+		:global(.search-fab), :global(.search-overlay), :global(.mobile-nav), :global(.mobile-menu),
+		:global(#accessibility-btn), :global(.a11y-fab), :global(.scroll-to-top),
+		:global(.hamburger), :global(.profile-switcher) { display: none !important; }
+		/* Hide portal-audio.js DOM elements (🔊 speaker, CC, subtitle controls
+		   appended to body with inline styles). They overlap the drawer UI. */
+		:global(#portal-audio-speaker), :global(#portal-audio-cc), :global(#portal-audio-subtitle) { display: none !important; }
 	</style>
 </svelte:head>
 
