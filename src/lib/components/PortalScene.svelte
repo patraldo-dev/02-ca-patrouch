@@ -318,9 +318,10 @@
 
 	<!-- Drawer panel -->
 	<div class="drawer-panel" class:open={drawerOpen}>
-		<!-- Enter/Exit XR (desktop only — touch uses inline controls) -->
-		{#if !isTouch}
-			<button class="drawer-btn" onclick={() => { enterXR(); drawerOpen = false; }}>
+		<!-- Enter/Exit XR: only show if the device actually supports immersive-vr.
+		     On most desktops it doesn't — inline WASD handles exploration. -->
+		{#if canVR && !isTouch}
+			<button class="drawer-btn" onclick={() => { inXR ? exitXR() : enterXR(); drawerOpen = false; }}>
 				{inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}
 			</button>
 		{/if}
