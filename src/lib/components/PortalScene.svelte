@@ -272,17 +272,6 @@
 <svelte:head>
 	<title>{$t('games.title')}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<style>
-		html, body { margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #050508 !important; }
-		/* Hide ALL site chrome when the portal scene is active */
-		:global(nav:not(.sr)), :global(header), :global(.navbar), :global(.footer),
-		:global(.search-fab), :global(.search-overlay), :global(.mobile-nav), :global(.mobile-menu),
-		:global(#accessibility-btn), :global(.a11y-fab), :global(.scroll-to-top),
-		:global(.hamburger), :global(.profile-switcher) { display: none !important; }
-		/* Hide portal-audio.js DOM elements (🔊 speaker, CC, subtitle controls
-		   appended to body with inline styles). They overlap the drawer UI. */
-		:global(#portal-audio-speaker), :global(#portal-audio-cc), :global(#portal-audio-subtitle) { display: none !important; }
-	</style>
 </svelte:head>
 
 <!-- Scene container — fullscreen -->
@@ -369,10 +358,19 @@
 <style>
 	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
-	/* ── Slide-out drawer ── */
+	/* ── Hide ALL site chrome when portal scene is active ── */
+	/* Must be in the component <style> (not <svelte:head>) for :global() to work. */
+	:global(html), :global(body) { margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #050508 !important; }
+	:global(nav:not(.sr)), :global(header), :global(.navbar), :global(.footer),
+	:global(.search-fab), :global(.search-overlay), :global(.mobile-nav), :global(.mobile-menu),
+	:global(.hamburger), :global(.profile-switcher) { display: none !important; }
+	/* portal-audio.js narration controls (appended to body with z-index:99999) */
+	:global(#portal-audio-speaker), :global(#portal-audio-cc), :global(#portal-audio-subtitle) { display: none !important; }
+
+	/* ── Slide-out drawer ── z-index above portal-audio (99999) */
 	.drawer-tab {
 		position: fixed; top: 16px; right: 16px;
-		z-index: 10; width: 44px; height: 44px;
+		z-index: 100001; width: 44px; height: 44px;
 		font-size: 20px; color: #fff;
 		background: rgba(0, 0, 0, 0.6);
 		border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
@@ -384,7 +382,7 @@
 
 	.drawer-panel {
 		position: fixed; top: 68px; right: 16px;
-		z-index: 10; min-width: 180px;
+		z-index: 100001; min-width: 180px;
 		background: rgba(8, 6, 16, 0.92);
 		border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
 		backdrop-filter: blur(12px);
