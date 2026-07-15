@@ -479,9 +479,29 @@
 	</div>
 {/if}
 
-<!-- Realm navigation is handled by the 3D "✦ Mundos" compass (worlds-navigation.js),
-     a billboarded panel floating in-scene with colored-bullet realm rows. No DOM
-     duplicate needed. -->
+<!-- Floating realm menu (DOM) — reliable navigation to all realms. Always visible,
+     works in every scene type (the 3D compass only appears in themed scenes). -->
+{#if booted && !bootError}
+	<div class="realm-menu">
+		<button class="realm-menu-toggle" onclick={() => realmMenuOpen = !realmMenuOpen} aria-label="Realms">
+			{$t('portals.hud_realms')}
+			<span class="realm-menu-chevron">{realmMenuOpen ? '▾' : '▸'}</span>
+		</button>
+		{#if realmMenuOpen}
+			<ul class="realm-list">
+				{#each data?.portals || [] as portal (portal.id)}
+					<li>
+						<button class="realm-item" class:active={portal.id === currentRealm} onclick={() => navigateToRealm(portal.id)}>
+							<span class="realm-bullet" style="background: {portal.color_primary || '#c9a87c'}"></span>
+							<span class="realm-icon">{portal.icon || '🔮'}</span>
+							<span class="realm-name">{realmName(portal)}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</div>
+{/if}
 
 <!-- Hint text (shown briefly, auto-hides) -->
 {#if booted && !bootError && !inXR && !drawerOpen}

@@ -60,35 +60,45 @@ function buildMural(config, scene, track) {
 	}
 	const imageUrl = `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/cover`;
 
-	// Large plane, placed far back, slightly elevated — acts as a "window" or
-	// "painting on the wall" of the realm. Subtly tinted to blend with the palette.
 	const palette = config.palette || {};
-	const tint = new THREE.Color(palette.primary || '#c9a87c');
-	const muralMat = new THREE.MeshBasicMaterial({
-		map: new THREE.TextureLoader().load(imageUrl, (tex) => {
-			tex.colorSpace = THREE.SRGBColorSpace;
-		}),
-		transparent: true,
-		opacity: 0.35,
-		depthWrite: false,
-		blending: THREE.AdditiveBlending,
-	});
-	// Tint the material so the mural harmonises with the scene palette
-	muralMat.color.copy(tint).multiplyScalar(0.6);
 
-	const mural = new THREE.Mesh(new THREE.PlaneGeometry(12, 8), muralMat);
-	mural.position.set(0, 1, -15);  // far back, centered
+	// Load the texture with CORS enabled (Cloudflare Images serves with CORS headers).
+	const texLoader = new THREE.TextureLoader();
+	texLoader.crossOrigin = 'anonymous';
+	const texture = texLoader.load(
+		imageUrl,
+		(tex) => { tex.colorSpace = THREE.SRGBColorSpace; },
+		undefined,
+		(err) => { console.warn('[mural] texture load failed:', imageUrl, err); },
+	);
+
+	// Large plane placed far back — visible as an art backdrop, NOT additive
+	// (additive on dark bg made it nearly invisible). Use normal blending with
+	// moderate opacity so the artwork is actually readable.
+	const muralMat = new THREE.MeshBasicMaterial({
+		map: texture,
+		transparent: true,
+		opacity: 0.6,
+		depthWrite: false,
+		side: THREE.DoubleSide,
+	});
+
+	const mural = new THREE.Mesh(new THREE.PlaneGeometry(14, 9), muralMat);
+	mural.position.set(0, 1.5, -14);  // far back, centered, visible
 	scene.add(mural);
 	track.push(mural);
 
-	// A second, offset mural for depth (parallax feel)
+	// A second, offset mural for depth (parallax feel) — side panel
 	const mural2 = new THREE.Mesh(
 		new THREE.PlaneGeometry(8, 5),
 		new THREE.MeshBasicMaterial({
 			map: muralMat.map,
 			transparent: true,
-			opacity: 0.15,
+			opacity: 0.25,
 			depthWrite: false,
+			side: THREE.DoubleSide,
+		}),
+	);
 			blending: THREE.AdditiveBlending,
 		}),
 	);
