@@ -11,7 +11,7 @@
 //  audio flows browser-to-browser, never through the worker.
 // ═══════════════════════════════════════════════════════════
 import { createSystem } from 'elics';
-import { Vector3, Mesh, MeshBasicMaterial, SphereGeometry, Group } from 'three';
+import { Vector3, Mesh, MeshBasicMaterial, SphereGeometry, Group, Sprite, SpriteMaterial, CanvasTexture, TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { locomotion } from './locomotion-system.js';
 
@@ -22,6 +22,57 @@ const LERP_SPEED = 0.12;
 const _localPos = new Vector3();
 const _tmpPos = new Vector3();
 const _sphereGeo = new SphereGeometry(0.12, 12, 10);
+
+// Photo-textured face: avatar images are loaded + circular-cropped, cached per
+// URL so all peers sharing the same avatar use one texture.
+const _texLoader = new TextureLoader();
+_texLoader.crossOrigin = 'anonymous';
+const _faceTexCache = new Map();  // url → CanvasTexture
+
+function makeCircularTexture(image) {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  const iw = image.width || size, ih = image.height || size;
+  const scale = Math.max(size / iw, size / ih);
+  const dw = iw * scale, dh = ih * scale;
+  ctx.drawImage(image, (size - dw) / 2, (size - dh) / 2, dw, dh);
+  ctx.restore();
+  const tex = new CanvasTexture(canvas);
+  tex.colorSpace = 'srgb';
+  return tex;
+}
+
+// Load a circular avatar texture (cached). Calls onReady(texture) or onFail().
+function loadFaceTexture(url, onReady, onFail) {
+  if (_faceTexCache.has(url)) { onReady(_faceTexCache.get(url)); return; }
+  _faceTexCache.set(url, null);  // mark loading
+  _texLoader.load(url, (tex) => {
+    const circular = makeCircularTexture(tex.image);
+    _faceTexCache.set(url, circular);
+    onReady(circular);
+  }, undefined, () => { _faceTexCache.delete(url); onFail?.(); });
+}
+
+// Attach a circular photo sprite at the "head" of an avatar group (floats
+// above the spirit form, giving it a face/identity). No-op if already applied.
+function applyFaceSprite(avatarGroup, avatarUrl) {
+  if (!avatarUrl || avatarGroup.userData._faceApplied === avatarUrl) return;
+  avatarGroup.userData._faceApplied = avatarUrl;
+  loadFaceTexture(avatarUrl, (tex) => {
+    const sprite = new Sprite(new SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    sprite.scale.set(0.22, 0.22, 0.22);
+    sprite.position.y = 0.42;  // above the spirit form's "head"
+    avatarGroup.add(sprite);
+    avatarGroup.userData._faceSprite = sprite;
+  });
+}
 
 // The shared 3D spirit model — loaded once, cloned per remote peer. Falls back
 // to the colored sphere (above) if the GLB fails to load. Served from R2 via
@@ -205,17 +256,19 @@ export const NetworkSystem = class extends createSystem({}) {
 
   _connect(room) {
     try {
-      // NOTE: the avatar URL is intentionally NOT sent over the WebSocket.
-      // Remote peers render the shared 3D spirit GLB (not per-user photo
-      // sprites), so the avatar URL isn't needed for rendering. Sending it
-      // caused WS connection failures — the Cloudflare Images URL is long and
-      // contains chars (+, /) that bloat/ corrupt the WS upgrade URL.
+      // The avatar URL is NOT in the connect query (it broke the WS upgrade on
+      // long URLs). Instead it's sent as a 'profile' message after connecting,
+      // which the Durable Object relays to peers.
       const params = new URLSearchParams({ room, user: this._userId, name: this._name });
       const url = `${WS_URL}?${params.toString()}`;
       this._ws = new WebSocket(url);
 
       this._ws.onopen = () => {
         console.log('[network] connected to room:', room);
+        // Announce our avatar URL so peers can render our photo face.
+        if (this._avatar) {
+          this._ws.send(JSON.stringify({ type: 'profile', avatar: this._avatar }));
+        }
         // You're now in the realm — emit presence so the HUD shows count=1
         // (just you) even before any peers arrive.
         this._emitPresence('roster');
@@ -305,6 +358,15 @@ export const NetworkSystem = class extends createSystem({}) {
           avatar.targetY = msg.y;
           avatar.targetZ = msg.z;
           avatar.targetYaw = msg.yaw;
+        }
+        break;
+
+      case 'peer_profile':
+        // A peer announced its avatar URL. Attach the photo face to its spirit.
+        const profAvatar = this._avatars.get(msg.sessionId);
+        if (profAvatar?.mesh && msg.avatar) {
+          profAvatar.avatar = msg.avatar;
+          applyFaceSprite(profAvatar.mesh, msg.avatar);
         }
         break;
 
@@ -454,6 +516,9 @@ export const NetworkSystem = class extends createSystem({}) {
     // Everyone gets the same spirit form (a stylistic choice; per-user GLB
     // avatars would require a generation pipeline — future iteration).
     loadSpiritAvatar(group, head);
+    // If this peer already has an avatar URL (from roster/profile), apply the
+    // photo face. Otherwise it arrives later via a 'peer_profile' message.
+    if (avatarUrl) applyFaceSprite(group, avatarUrl);
     this._avatars.set(sessionId, { mesh: group, name: name || 'explorer', avatar: avatarUrl, targetX: x, targetY: y, targetZ: z, targetYaw: yaw || 0 });
     console.log('[network] peer spawned:', sessionId, name || '(anon)');
   }
