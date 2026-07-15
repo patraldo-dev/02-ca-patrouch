@@ -48,7 +48,7 @@ export function buildEnvironment(config, scene, track) {
 // A large billboarded plane placed deep in the scene (behind the action),
 // textured with AI-generated or curated artwork. Makes the realm feel like
 // stepping inside a painting rather than staring at a dark void.
-function buildMural(config, scene, track) {
+export function buildMural(config, scene, track) {
 	// Determine the image source: portal's Flux art, or a curated Antoine piece
 	// chosen deterministically by portal id (so each realm always gets the same art).
 	let imageId = config.scene_image;
@@ -119,7 +119,7 @@ const PARTICLE_STYLES = {
 	snow:    { hue: 0.62, sat: 0.05, light: 0.85, gravity: 0.3, drift: 0.25, twinkle: false, size: 0.045 },
 };
 
-function buildParticles(config, scene, track) {
+export function buildParticles(config, scene, track) {
 	const deco = config.decorations || {};
 	const count = deco.particle_count || 0;
 	if (!count) return null;

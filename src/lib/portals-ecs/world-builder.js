@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { buildEnvironment } from './environments.js';
+import { buildEnvironment, buildMural, buildParticles } from './environments.js';
 import { playTransition } from './scene-transition.js';
 import { installNarration } from './portal-audio.js';
 import { LocomotionSystem, locomotion, configureLocomotion } from './locomotion-system.js';
@@ -396,7 +396,27 @@ function rebuildScene(world, portalId, isNavigation = false) {
 
 	// Store lights for environment animation
 	world._lights = { ambient: ambientLight, key: keyLight, rim: rimLight, under: underLight };
-	world._envHandle = envHandle;
+		world._envHandle = envHandle;
+
+	// ── Art mural + ambient particles: apply to ALL scenes (both starfield
+	// and themed), so every realm has the visual enrichment. buildEnvironment
+	// already adds these for themed scenes; for the starfield path we add them
+	// here so cosmos/materialized realms also get murals + particles. ──
+	if (useStarfield) {
+		// Murals + particles only for starfield (themed already has them via buildEnvironment)
+		const muralTrack = [];
+		buildMural(config, scene, muralTrack);
+		for (const m of muralTrack) track(m);
+
+		const particleHandle = buildParticles(config, scene, track);
+		if (particleHandle) {
+			const prevUpdate = envHandle.update;
+			envHandle.update = (dt, time) => {
+				prevUpdate?.(dt, time);
+				particleHandle.update(dt, time);
+			};
+		}
+	}
 
 	// ── Portal cubes from portal_links — dynamic multi-ring carousel ──
 	// Restores the 2f0029c "best version" energy: cubes distributed across
