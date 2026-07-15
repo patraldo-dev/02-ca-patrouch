@@ -751,15 +751,22 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	);
 	composer.addPass(bloomPass);
 	// Intercept the renderer's render call. IWSDK calls renderer.render(scene, camera)
-	// internally each frame; we redirect to the composer (which renders the scene
-	// then applies bloom). During XR, skip (use raw render).
+	// internally each frame; we redirect to the composer. CRITICAL: composer.render()
+	// internally calls renderer.render() for its RenderPass — without a re-entry guard
+	// this creates infinite recursion (Maximum call stack size exceeded).
 	const origRender = renderer.render.bind(renderer);
+	let inComposer = false;  // re-entry guard
 	renderer.render = function(scene, camera) {
 		if (world.session) {
 			origRender(scene, camera);  // XR: raw render
-		} else {
+		} else if (!inComposer) {
+			inComposer = true;
 			renderPass.camera = camera;  // keep camera in sync
 			composer.render();
+			inComposer = false;
+		} else {
+			// Called from inside the composer (RenderPass) — use the real render
+			origRender(scene, camera);
 		}
 	};
 	// Resize the composer when the viewport changes.
