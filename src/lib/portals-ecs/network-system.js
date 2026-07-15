@@ -205,8 +205,12 @@ export const NetworkSystem = class extends createSystem({}) {
 
   _connect(room) {
     try {
+      // NOTE: the avatar URL is intentionally NOT sent over the WebSocket.
+      // Remote peers render the shared 3D spirit GLB (not per-user photo
+      // sprites), so the avatar URL isn't needed for rendering. Sending it
+      // caused WS connection failures — the Cloudflare Images URL is long and
+      // contains chars (+, /) that bloat/ corrupt the WS upgrade URL.
       const params = new URLSearchParams({ room, user: this._userId, name: this._name });
-      if (this._avatar) params.set('avatar', this._avatar);
       const url = `${WS_URL}?${params.toString()}`;
       this._ws = new WebSocket(url);
 
