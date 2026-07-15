@@ -634,11 +634,12 @@
 		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 	}
 
-	/* Floating realm menu — bottom-left, above the presence pill. Collapsible. */
+	/* Floating realm menu — bottom-right (bottom-left is the thumbstick on touch).
+	   Collapsible so it doesn't clutter the scene. */
 	.realm-menu {
-		position: fixed; bottom: 56px; left: 16px;
+		position: fixed; bottom: 16px; right: 16px;
 		z-index: 100001; max-width: 70vw; max-height: 60vh;
-		display: flex; flex-direction: column;
+		display: flex; flex-direction: column; align-items: flex-end;
 	}
 	.realm-menu-toggle {
 		align-self: flex-start;
