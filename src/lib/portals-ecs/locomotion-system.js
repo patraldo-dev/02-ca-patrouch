@@ -43,12 +43,54 @@ export const locomotion = {
 	floorY: DEFAULT_FLOOR_Y,
 	userActive: false,
 	enabled: false,
+	// Fly-to-target: when set, the update loop eases the camera toward this
+	// position (with an optional lookAt target), then clears it. Used by
+	// "fly to peer" and "recenter" (mobile). Set via flyTo(); cleared when
+	// the camera arrives or on any manual input.
+	_flyTarget: null,      // { x, y, z, lookAt?: {x,y,z} }
 };
 
 export function configureLocomotion(config) {
 	const envType = config?.environment?.type;
 	locomotion.mode = envType === 'space' ? 'flight' : 'walk';
 	locomotion.floorY = config?.camera?.floor_y ?? DEFAULT_FLOOR_Y;
+}
+
+// Fly the camera toward a target position (with optional lookAt). Used by
+// "fly to peer" (tap a name in the presence roster) and recenter. The update
+// loop eases the camera until it arrives, then clears the target. Any manual
+// input (key/thumbstick) cancels the fly.
+export function flyTo(x, y, z, lookAt) {
+	locomotion._flyTarget = { x, y, z, lookAt: lookAt || null };
+	locomotion.userActive = true;  // keep the orbit yielded during the fly
+}
+
+// Recenter to scene origin (same as Esc, but callable from UI for mobile).
+export function recenter() {
+	locomotion._recenter = true;
+}
+
+// Internal: process the fly target each frame. Returns true if it consumed
+// the frame (caller should skip normal input handling).
+function processFlyTarget(cam, delta) {
+	if (!locomotion._flyTarget || !cam) return false;
+	const t = locomotion._flyTarget;
+	const FLY_SPEED = 3.5;  // units per second ease rate
+	const ARRIVAL = 0.15;   // distance at which the fly completes
+
+	cam.position.x += (t.x - cam.position.x) * Math.min(1, FLY_SPEED * delta);
+	cam.position.y += (t.y - cam.position.y) * Math.min(1, FLY_SPEED * delta);
+	cam.position.z += (t.z - cam.position.z) * Math.min(1, FLY_SPEED * delta);
+
+	if (t.lookAt) {
+		cam.lookAt(t.lookAt.x, t.lookAt.y, t.lookAt.z);
+	}
+
+	const dist = Math.hypot(t.x - cam.position.x, t.y - cam.position.y, t.z - cam.position.z);
+	if (dist < ARRIVAL) {
+		locomotion._flyTarget = null;  // arrived
+	}
+	return true;
 }
 
 // ── Inline input listeners (keyboard) ──
@@ -154,8 +196,14 @@ export const LocomotionSystem = class extends createSystem({}) {
 					_inlinePitch = 0;
 					cam.lookAt(0, 0, 0);
 				}
+				locomotion._flyTarget = null;  // cancel any in-progress fly
 				locomotion.userActive = false;
 				return;
+			}
+			// Fly-to-target (peer or recenter-via-UI). Takes priority over input.
+			if (locomotion._flyTarget) {
+				const cam = world.camera;
+				if (processFlyTarget(cam, delta)) return;
 			}
 			updateInlineInputFromKeys();
 			const hasMoveInput = Math.abs(inlineInput.x) > 0.01 || Math.abs(inlineInput.y) > 0.01;
@@ -192,8 +240,10 @@ export const LocomotionSystem = class extends createSystem({}) {
 				inlineInput.lookY = 0;
 			}
 
-			// Movement: build direction from input, rotate by camera yaw
+			// Movement: build direction from input, rotate by camera yaw.
+			// Any manual input cancels an in-progress fly-to.
 			if (hasMoveInput) {
+				locomotion._flyTarget = null;
 				_moveDir.set(inlineInput.x, 0, inlineInput.y);
 				_moveDir.applyAxisAngle(_upAxis, _inlineYaw);
 
@@ -238,8 +288,23 @@ export const LocomotionSystem = class extends createSystem({}) {
 			// Thumbstick centered — stop moving, but keep userActive true so the
 			// orbit doesn't snap the camera back to its idle path. Control is only
 			// relinquished on explicit recenter (Esc), not on releasing the stick.
+			// Fly-to-target continues even with thumbstick centered (it's a
+			// programmatic camera move, not thumbstick input).
+			if (locomotion._flyTarget && world.player) {
+				const player = world.player;
+				const t = locomotion._flyTarget;
+				const FLY_SPEED = 3.5;
+				const ARRIVAL = 0.15;
+				player.position.x += (t.x - player.position.x) * Math.min(1, FLY_SPEED * delta);
+				player.position.z += (t.z - player.position.z) * Math.min(1, FLY_SPEED * delta);
+				if (t.lookAt) player.lookAt(t.lookAt.x, t.lookAt.y, t.lookAt.z);
+				if (Math.hypot(t.x - player.position.x, t.z - player.position.z) < ARRIVAL) {
+					locomotion._flyTarget = null;
+				}
+			}
 			return;
 		}
+		locomotion._flyTarget = null;  // thumbstick input cancels fly
 		locomotion.userActive = true;
 
 		const axes = left.getAxesValues?.(THUMBSTICK) ?? { x: 0, y: 0 };

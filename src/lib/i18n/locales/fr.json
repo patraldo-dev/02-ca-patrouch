@@ -1086,6 +1086,7 @@
   "portals.hud_voice": "Voix",
   "portals.hud_exit": "Quitter le royaume",
   "portals.hud_realms": "Royaumes",
+  "portals.hud_recenter": "Recentrer",
   "portals.hud_guest": "Anonyme",
   "portals.presence_other_one_is": "1 autre explorateur est ici",
   "portals.presence_other_are": "autres explorateurs sont ici",

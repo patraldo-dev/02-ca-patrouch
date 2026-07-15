@@ -49,6 +49,22 @@
 		} catch {}
 	}
 
+	// Fly the camera to a remote peer's position (approach from a few meters back).
+	async function flyToPeer(peer) {
+		const mod = await import('$lib/portals-ecs/locomotion-system.js');
+		// Approach from behind/above so you see them, not inside them.
+		const approachDist = 2.5;
+		const approachY = 0.5;
+		mod.flyTo(peer.x, peer.y + approachY, peer.z + approachDist, { x: peer.x, y: peer.y, z: peer.z });
+	}
+
+	// Recenter the scene (same as Esc — works on mobile where there's no Esc key).
+	async function recenterScene() {
+		const mod = await import('$lib/portals-ecs/locomotion-system.js');
+		mod.recenter();
+		drawerOpen = false;
+	}
+
 	let containerEl = $state(null);
 	let booted = $state(false);
 	let bootError = $state(null);
@@ -70,6 +86,7 @@
 	// window event (the existing ECS→Svelte bridge pattern, like 'portal-tapped').
 	let explorerCount = $state(0);
 	let roster = $state([]);
+	let peers = $state([]);  // [{name, x, y, z}] — for fly-to-peer
 
 	// Inline input — loaded dynamically (client-side only) to avoid SSR crash
 	// (@iwsdk/core references `document` at module-eval time).
@@ -310,6 +327,7 @@
 				window.addEventListener('portal-presence', (e) => {
 					explorerCount = e.detail.count ?? 0;
 					roster = e.detail.roster ?? [];
+					peers = e.detail.peers ?? [];
 				});
 			} catch (err) {
 				console.error('[portals] boot failed:', err);
@@ -435,6 +453,8 @@
 				</button>
 			{/if}
 
+			<button class="drawer-btn" onclick={recenterScene}>🎯 {$t('portals.hud_recenter') || 'Recenter'}</button>
+
 			<a class="drawer-btn drawer-exit" href="/" onclick={() => drawerOpen = false}>🚪 {$t('portals.hud_exit')}</a>
 		</div>
 {/if}
@@ -450,8 +470,12 @@
 		{:else}
 			{explorerCount - 1} {$t('portals.presence_other_are')}
 		{/if}
-		<!-- Roster shows OTHER explorers (excludes you) -->
-		<span class="presence-roster">{roster.slice(1, 6).join(', ')}{#if roster.length > 6}…{/if}</span>
+		<!-- Roster: tap a name to fly to that explorer -->
+		<span class="presence-roster">
+			{#each peers.slice(0, 5) as peer, i}
+				<button class="roster-name" onclick={() => flyToPeer(peer)}>{peer.name}</button>{#if i < Math.min(peers.length, 5) - 1}, {/if}
+			{/each}
+		</span>
 	</div>
 {/if}
 
@@ -632,8 +656,15 @@
 	}
 	.presence-roster {
 		font-size: 11px; color: rgba(255, 255, 255, 0.5);
-		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+		display: flex; flex-wrap: wrap; gap: 2px; align-items: center;
 	}
+	.roster-name {
+		background: none; border: none; cursor: pointer;
+		font-family: Georgia, serif; font-size: 11px;
+		color: rgba(212, 185, 143, 0.8);  /* gold */
+		padding: 0; text-decoration: underline; text-underline-offset: 2px;
+	}
+	.roster-name:hover { color: #d4b98f; }
 
 	/* Floating realm menu — bottom-right (bottom-left is the thumbstick on touch).
 	   Collapsible so it doesn't clutter the scene. */

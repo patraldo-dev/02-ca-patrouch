@@ -595,12 +595,18 @@ export const NetworkSystem = class extends createSystem({}) {
     const count = overrideCount !== undefined ? overrideCount : remoteNames.length + 1;
     // Roster includes your name first, then remote explorers.
     const names = [this._name || 'explorer', ...remoteNames];
+    // Peer positions (for fly-to-peer): array of {name, x, y, z}.
+    const peers = [...this._avatars.values()].map((a) => ({
+      name: a.name || 'explorer',
+      x: a.targetX, y: a.targetY, z: a.targetZ,
+    }));
     if (this.world) {
       this.world._explorerCount = count;
       this.world._roster = names;
+      this.world._peers = peers;
     }
     try {
-      window.dispatchEvent(new CustomEvent('portal-presence', { detail: { type, sessionId, name, count, roster: names } }));
+      window.dispatchEvent(new CustomEvent('portal-presence', { detail: { type, sessionId, name, count, roster: names, peers } }));
     } catch {}
   }
 
