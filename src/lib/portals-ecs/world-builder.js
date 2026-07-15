@@ -25,6 +25,33 @@ const SCENE_RENDERERS = {};
 export function registerSceneRenderer(portalId, buildFn) {
 	SCENE_RENDERERS[portalId] = buildFn;
 }
+
+// Factory: creates a self-contained tap-at-screen-coordinates function bound to
+// a world. Raycasts into world._interactionTargets (set by each scene builder)
+// and calls world._onNavigate with the hit's portalId. Used by touch devices
+// where the look-zone overlay intercepts touches before the canvas.
+function makeTapAt(world) {
+	const raycaster = new THREE.Raycaster();
+	const pointer = new THREE.Vector2();
+	return (clientX, clientY) => {
+		pointer.x = (clientX / window.innerWidth) * 2 - 1;
+		pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+		raycaster.setFromCamera(pointer, world.camera);
+		const targets = world._interactionTargets || [];
+		if (!targets.length) return false;
+		const hits = raycaster.intersectObjects(targets, true);
+		if (hits.length > 0) {
+			let obj = hits[0].object;
+			while (obj && !obj.userData?.portalId) obj = obj.parent;
+			if (obj?.userData?.portalId) {
+				world._onNavigate?.(obj.userData.portalId);
+				return true;
+			}
+		}
+		return false;
+	};
+}
+
 export function hasSceneRenderer(portalId) {
 	return !!SCENE_RENDERERS[portalId];
 }
@@ -249,6 +276,11 @@ function rebuildScene(world, portalId, isNavigation = false) {
 		// tapTargets to handle.tapTargets if available).
 		world._interactionTargets = handle?.tapTargets || [];
 		world._onNavigate = onNavigate;
+		// Programmatic tap-at-coordinates for touch devices (the look-zone overlay
+		// intercepts touches before the canvas; PortalScene forwards taps here).
+		// Self-contained so it works for themed scenes too (the default starfield
+		// path defines its own below).
+		world._tapAt = makeTapAt(world);
 		return;
 	}
 
@@ -531,26 +563,8 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	world._interactionTargets = cubeMeshes;
 	world._onNavigate = (targetId) => rebuildScene(world, targetId, true);
 
-	// Expose a programmatic tap-at-coordinates function so touch devices (where
-	// the look-zone overlay intercepts touches before the canvas) can forward
-	// taps for navigation. Raycasts into the current interaction targets.
-	world._tapAt = (clientX, clientY) => {
-		pointer.x = (clientX / window.innerWidth) * 2 - 1;
-		pointer.y = -(clientY / window.innerHeight) * 2 + 1;
-		raycaster.setFromCamera(pointer, world.camera);
-		const targets = world._interactionTargets || cubeMeshes;
-		const hits = raycaster.intersectObjects(targets, true);
-		if (hits.length > 0) {
-			let obj = hits[0].object;
-			// Walk up to find the portalId (groups store it on the parent)
-			while (obj && !obj.userData?.portalId) obj = obj.parent;
-			if (obj?.userData?.portalId) {
-				world._onNavigate(obj.userData.portalId);
-				return true;
-			}
-		}
-		return false;
-	};
+	// Programmatic tap-at-coordinates for touch devices (see makeTapAt).
+	world._tapAt = makeTapAt(world);
 
 	// ── Narrative texts for system ──
 	const texts = config.narrative_texts[lang] || config.narrative_texts.es;
