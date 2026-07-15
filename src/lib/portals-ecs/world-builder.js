@@ -6,6 +6,9 @@
 import { World, Transform } from '@iwsdk/core';
 import { createComponent, createSystem, Types, ComponentRegistry } from 'elics';
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { buildEnvironment } from './environments.js';
 import { playTransition } from './scene-transition.js';
 import { installNarration } from './portal-audio.js';
@@ -728,6 +731,40 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 		xr: { offer: 'none' },
 		render: { defaultLighting: false },
 		features: { locomotion: false, grabbing: false, physics: false },
+	});
+
+	// ── Post-processing: bloom for luminosity ──
+	// Wraps the renderer so IWSDK's internal render call goes through an
+	// EffectComposer with an UnrealBloomPass. This makes crystals, glow rings,
+	// particles, and murals feel luminous rather than flat. The override is
+	// skipped during XR sessions (the composer doesn't work well in immersive
+	// mode — the headset needs the raw render).
+	const renderer = world.renderer;
+	const composer = new EffectComposer(renderer);
+	const renderPass = new RenderPass(world.scene, world.camera);
+	composer.addPass(renderPass);
+	const bloomPass = new UnrealBloomPass(
+		new THREE.Vector2(container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight),
+		0.6,  // strength — subtle, not blown out
+		0.4,  // radius
+		0.85, // threshold — only bright areas bloom
+	);
+	composer.addPass(bloomPass);
+	// Intercept the renderer's render call. IWSDK calls renderer.render(scene, camera)
+	// internally each frame; we redirect to the composer (which renders the scene
+	// then applies bloom). During XR, skip (use raw render).
+	const origRender = renderer.render.bind(renderer);
+	renderer.render = function(scene, camera) {
+		if (world.session) {
+			origRender(scene, camera);  // XR: raw render
+		} else {
+			renderPass.camera = camera;  // keep camera in sync
+			composer.render();
+		}
+	};
+	// Resize the composer when the viewport changes.
+	window.addEventListener('resize', () => {
+		composer.setSize(window.innerWidth, window.innerHeight);
 	});
 
 	// Register components
