@@ -116,21 +116,21 @@ export function buildWorldsCompass({ scene, world, portals, onNavigate, lang = '
 	}
 	redraw();
 
-	// Billboard + follow camera, fade in/out
+	// Billboard + follow camera. Always visible (no fade-out) so the realm
+	// menu is a stable, reliable part of the scene — not an ethereal hint.
 	const cam = world.camera;
 	function update(dt, time) {
 		// Position: float at upper-left of view, fixed distance
 		const dist = 3.2;
 		const offset = new THREE.Vector3(-1.1, 0.7, 0).multiplyScalar(dist);
 		const target = cam.position.clone().add(offset.applyQuaternion(cam.quaternion));
-		mesh.position.lerp(target, 0.08);
+		mesh.position.lerp(target, 0.12);
 		// Billboard: face the camera
 		mesh.lookAt(cam.position);
-		// Gentle bob
-		mesh.position.y += Math.sin(time / 1000 * 0.8) * 0.04;
-		// Reveal fade-in (slow, ethereal)
-		const targetOp = revealed ? 0.88 : 0;
-		material.opacity += (targetOp - material.opacity) * 0.06;
+		// Very subtle bob (barely perceptible — stays readable)
+		mesh.position.y += Math.sin(time / 1000 * 0.5) * 0.015;
+		// Always visible — no fade-out
+		material.opacity += (0.88 - material.opacity) * 0.1;
 	}
 
 	// Tap resolution: given a raycast hit on the plane, which row?

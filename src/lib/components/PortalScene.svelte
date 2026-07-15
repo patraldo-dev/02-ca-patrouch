@@ -722,12 +722,11 @@
 		pointer-events: none; white-space: nowrap;
 	}
 
-	/* Touch look-zone: covers most of the screen for drag-look, but leaves the
-	   top-right corner free so the ☰ drawer button (z-index 100001) is always
-	   tappable on mobile. The button is above in z-index anyway, but excluding
-	   the corner avoids any touch-action interference. */
+	/* Touch look-zone: full screen, transparent, behind the thumbstick.
+	   The ☰ button (z-index 100001) sits above this (z-index 1) and receives
+	   taps directly — no need to cut the look-zone short. */
 	.look-zone {
-		position: fixed; top: 0; left: 0; right: 60px; bottom: 0; z-index: 1;
+		position: fixed; inset: 0; z-index: 1;
 		touch-action: none;
 	}
 
