@@ -15,6 +15,7 @@
 	import { onMount } from 'svelte';
 	import { t, locale, setLocale } from '$lib/i18n';
 	import { invalidateAll } from '$app/navigation';
+	import { avatarVariant } from '$lib/utils.js';
 
 	let { data, initialPortalId = null } = $props();
 
@@ -391,12 +392,18 @@
 		<div class="drawer-panel" class:open={drawerOpen}>
 			{#if data?.user}
 				<div class="drawer-user">
-					<span class="drawer-user-icon">👤</span>
+					<span class="drawer-avatar">
+						{#if avatarVariant(data.user.avatar_url, 'avatar48')}
+							<img src={avatarVariant(data.user.avatar_url, 'avatar48')} alt="" />
+						{:else}
+							{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}
+						{/if}
+					</span>
 					<span class="drawer-user-name">{data.user.display_name || data.user.username}</span>
 				</div>
 			{:else}
 				<div class="drawer-user">
-					<span class="drawer-user-icon">👻</span>
+					<span class="drawer-avatar anon">?</span>
 					<span class="drawer-user-name">{$t('portals.hud_guest') || 'Anónimo'}</span>
 				</div>
 			{/if}
@@ -435,22 +442,21 @@
 		</div>
 {/if}
 
-<!-- Co-presence HUD — bottom-left pill showing live explorer count + roster.
-     Fed by 'portal-presence' events from NetworkSystem. -->
-{#if booted && !bootError}
-		<div class="presence-pill">
-			<span class="presence-dot" class:live={explorerCount > 0}></span>
-			{#if explorerCount === 0}
-				{$t('portals.presence_alone')}
-			{:else}
-				{explorerCount} {explorerCount === 1 ? $t('portals.presence_explorer_one') : $t('portals.presence_explorers')}
-			{/if}
-		{#if explorerCount > 1}
-			<!-- Roster shows OTHER explorers (excludes you — you know you're here) -->
-			<span class="presence-roster">{roster.slice(1, 6).join(', ')}{#if roster.length > 6}…{/if}</span>
+<!-- Co-presence HUD — only shown when OTHER explorers are present (you know
+     you're here; no need to say "alone" — just show nothing in that case).
+     "1 other explorer is / N other explorers are" with proper agreement. -->
+{#if booted && !bootError && explorerCount > 1}
+	<div class="presence-pill">
+		<span class="presence-dot live"></span>
+		{#if explorerCount === 2}
+			{$t('portals.presence_other_one_is')}
+		{:else}
+			{explorerCount - 1} {$t('portals.presence_other_are')}
 		{/if}
-		</div>
-	{/if}
+		<!-- Roster shows OTHER explorers (excludes you) -->
+		<span class="presence-roster">{roster.slice(1, 6).join(', ')}{#if roster.length > 6}…{/if}</span>
+	</div>
+{/if}
 
 <!-- Floating realm menu — colored-bullet list of all realms. Collapsible so it
      doesn't clutter the scene; click a realm to navigate there in-world. -->
@@ -567,7 +573,16 @@
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 		margin-bottom: 4px;
 	}
-	.drawer-user-icon { font-size: 16px; opacity: 0.8; }
+	.drawer-avatar {
+		width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+		display: flex; align-items: center; justify-content: center;
+		overflow: hidden;
+		border: 1.5px solid #d4b98f;  /* editorial gold ring */
+		font-family: Georgia, serif; font-size: 14px; font-weight: 600;
+		color: #d4b98f; background: rgba(212, 185, 143, 0.1);
+	}
+	.drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+	.drawer-avatar.anon { opacity: 0.5; }
 	.drawer-user-name {
 		font-family: Georgia, serif; font-size: 14px;
 		color: #fff; font-weight: 600;
