@@ -11,7 +11,7 @@
 //  audio flows browser-to-browser, never through the worker.
 // ═══════════════════════════════════════════════════════════
 import { createSystem } from 'elics';
-import { Vector3, Mesh, MeshBasicMaterial, SphereGeometry, Group } from 'three';
+import { Vector3, Mesh, MeshBasicMaterial, SphereGeometry, Group, Sprite, SpriteMaterial, CanvasTexture, TextureLoader } from 'three';
 import { locomotion } from './locomotion-system.js';
 
 const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/portal-ws/ws';
@@ -21,6 +21,9 @@ const LERP_SPEED = 0.12;
 const _localPos = new Vector3();
 const _tmpPos = new Vector3();
 const _sphereGeo = new SphereGeometry(0.12, 12, 10);
+const _texLoader = new TextureLoader();
+_texLoader.crossOrigin = 'anonymous';  // Cloudflare Images serves with CORS headers
+const _avatarTexCache = new Map();  // url → CanvasTexture (circular crop), shared across peers
 
 // WebRTC config — Google's free STUN servers. No TURN (acceptable for v1).
 const RTC_CONFIG = {
@@ -39,12 +42,76 @@ function colorFromId(id) {
   return c;
 }
 
-function createAvatarMesh(sessionId) {
+// Create a circular-cropped avatar texture from a loaded image texture.
+// Draws the image into a canvas with a clipped circle so the sprite looks
+// like a rounded profile photo, not a square image.
+function makeCircularTexture(image) {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  // Cover-fit the image into the circle
+  const iw = image.width || size, ih = image.height || size;
+  const scale = Math.max(size / iw, size / ih);
+  const dw = iw * scale, dh = ih * scale;
+  ctx.drawImage(image, (size - dw) / 2, (size - dh) / 2, dw, dh);
+  ctx.restore();
+  const tex = new CanvasTexture(canvas);
+  tex.colorSpace = 'srgb';
+  return tex;
+}
+
+// Create an avatar Group. If avatarUrl is provided, starts as a fallback colored
+// sphere and asynchronously swaps to a circular avatar sprite once the image
+// loads. Falls back permanently to the sphere if the image fails.
+function createAvatarMesh(sessionId, avatarUrl) {
   const group = new Group();
+
+  // Fallback: colored sphere (shown immediately + retained if avatar fails)
   const head = new Mesh(_sphereGeo, colorFromId(sessionId));
-  head.position.y = 0;
   group.add(head);
-  return group;
+
+  // Optional name label below
+  return { group, head, avatarUrl };
+}
+
+// Asynchronously load an avatar image and replace the sphere with a sprite.
+function loadAvatarSprite(avatarGroup, head, avatarUrl) {
+  if (!avatarUrl || _avatarTexCache.has(avatarUrl)) {
+    applyAvatarTexture(avatarGroup, head, _avatarTexCache.get(avatarUrl), avatarUrl);
+    return;
+  }
+  // Mark as loading to avoid duplicate fetches
+  _avatarTexCache.set(avatarUrl, null);
+  _texLoader.load(
+    avatarUrl,
+    (tex) => {
+      const circular = makeCircularTexture(tex.image);
+      _avatarTexCache.set(avatarUrl, circular);
+      applyAvatarTexture(avatarGroup, head, circular, avatarUrl);
+    },
+    undefined,
+    () => { _avatarTexCache.delete(avatarUrl); }  // load failed — keep sphere
+  );
+}
+
+// Swap the sphere for a circular avatar sprite (or revert if texture is null).
+function applyAvatarTexture(avatarGroup, head, canvasTex, avatarUrl) {
+  if (!canvasTex) return;  // still loading or failed
+  // Avoid double-applying
+  if (head.userData._avatarApplied === avatarUrl) return;
+  head.userData._avatarApplied = avatarUrl;
+  const sprite = new Sprite(new SpriteMaterial({ map: canvasTex, transparent: true }));
+  sprite.scale.set(0.35, 0.35, 0.35);
+  sprite.position.y = 0.05;
+  avatarGroup.add(sprite);
+  // Hide the fallback sphere now that the avatar sprite is showing
+  head.visible = false;
 }
 
 // Module-level voice state (toggled from PortalScene UI).
@@ -85,12 +152,13 @@ export const NetworkSystem = class extends createSystem({}) {
   init() {
     console.log('[network] system registered & initialized ✓');
     this._userId = crypto.randomUUID();
-    // Read the visitor's display name from the world (set by bootPortalEngine).
-    // Falls back to 'visitor' for anonymous/guest sessions.
+    // Read the visitor's display name + avatar from the world (set by
+    // bootPortalEngine). Falls back to 'visitor'/null for guest sessions.
     this._name = this.world?._visitorName || 'visitor';
+    this._avatar = this.world?._visitorAvatar || null;
     this._room = null;
     this._ws = null;
-    this._avatars = new Map();       // sessionId → { mesh, name, targetX, targetY, targetZ, targetYaw }
+    this._avatars = new Map();       // sessionId → { group, head, name, avatar, targetX/Y/Z/Yaw }
     this._peers = new Map();         // sessionId → { pc (RTCPeerConnection), audioEl }
     this._lastSend = 0;
     this._lastPos = { x: 0, y: 0, z: 0 };
@@ -143,7 +211,9 @@ export const NetworkSystem = class extends createSystem({}) {
 
   _connect(room) {
     try {
-      const url = `${WS_URL}?room=${encodeURIComponent(room)}&user=${this._userId}&name=${encodeURIComponent(this._name)}`;
+      const params = new URLSearchParams({ room, user: this._userId, name: this._name });
+      if (this._avatar) params.set('avatar', this._avatar);
+      const url = `${WS_URL}?${params.toString()}`;
       this._ws = new WebSocket(url);
 
       this._ws.onopen = () => {
@@ -216,7 +286,7 @@ export const NetworkSystem = class extends createSystem({}) {
     switch (msg.type) {
       case 'roster':
         for (const peer of (msg.peers || [])) {
-          this._spawnAvatar(peer.sessionId, peer.x, peer.y, peer.z, peer.yaw, peer.displayName || peer.name || 'explorer');
+          this._spawnAvatar(peer.sessionId, peer.x, peer.y, peer.z, peer.yaw, peer.displayName || peer.name || 'explorer', peer.avatar || null);
           // Initiate WebRTC offer to existing peers (we're the newcomer)
           this._initiateCall(peer.sessionId);
         }
@@ -224,7 +294,7 @@ export const NetworkSystem = class extends createSystem({}) {
         break;
 
       case 'peer_joined':
-        this._spawnAvatar(msg.sessionId, msg.x, msg.y, msg.z, msg.yaw, msg.displayName || msg.name || 'explorer');
+        this._spawnAvatar(msg.sessionId, msg.x, msg.y, msg.z, msg.yaw, msg.displayName || msg.name || 'explorer', msg.avatar || null);
         this._emitPresence('join', msg.sessionId, msg.displayName || msg.name || 'explorer');
         // The NEW peer initiates calls to us (via roster). We don't initiate
         // to avoid glare — the newcomer gets the full roster and offers.
@@ -374,16 +444,19 @@ export const NetworkSystem = class extends createSystem({}) {
     console.log('[network] remote audio connected for', sessionId.slice(0, 8));
   }
 
-  _spawnAvatar(sessionId, x, y, z, yaw, name) {
+  _spawnAvatar(sessionId, x, y, z, yaw, name, avatarUrl) {
     if (this._avatars.has(sessionId)) return;
     const world = this.world;
     if (!world?.scene) return;
-    const mesh = createAvatarMesh(sessionId);
-    mesh.position.set(x, y, z);
-    mesh.rotation.y = yaw || 0;
-    world.scene.add(mesh);
-    this._avatars.set(sessionId, { mesh, name: name || 'explorer', targetX: x, targetY: y, targetZ: z, targetYaw: yaw || 0 });
-    console.log('[network] peer spawned:', sessionId, name || '(anon)');
+    const { group, head } = createAvatarMesh(sessionId, avatarUrl);
+    group.position.set(x, y, z);
+    group.rotation.y = yaw || 0;
+    world.scene.add(group);
+    // If this peer has an avatar URL, async-load the circular sprite to replace
+    // the fallback sphere. Stays as colored sphere if no avatar / load fails.
+    if (avatarUrl) loadAvatarSprite(group, head, avatarUrl);
+    this._avatars.set(sessionId, { mesh: group, name: name || 'explorer', avatar: avatarUrl, targetX: x, targetY: y, targetZ: z, targetYaw: yaw || 0 });
+    console.log('[network] peer spawned:', sessionId, name || '(anon)', avatarUrl ? '(avatar)' : '(no avatar)');
   }
 
   // Emit a 'portal-presence' event on window so the Svelte HUD (PortalScene.svelte)

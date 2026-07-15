@@ -717,10 +717,11 @@ export async function boot(container, indexConfig, allConfigs, startPortalId) {
 	}
 
 	// Multiplayer avatar sync: broadcasts local pose, spawns remote avatars.
-	// Set the visitor's name on the world BEFORE the system registers —
-	// NetworkSystem.init reads world._visitorName to identify this visitor
-	// (falls back to "visitor" for anonymous/guest sessions).
+	// Set the visitor's name + avatar on the world BEFORE the system registers —
+	// NetworkSystem.init reads these to identify this visitor (falls back to
+	// "visitor"/null for anonymous/guest sessions).
 	world._visitorName = bootOptions.visitorName || null;
+	world._visitorAvatar = bootOptions.visitorAvatar || null;
 	try {
 		world.registerSystem(NetworkSystem, { priority: 0 });
 		console.log('[portals] NetworkSystem registered');

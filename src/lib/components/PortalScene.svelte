@@ -267,6 +267,7 @@
 
 				worldHandle = await bootPortalEngine(containerEl, configs, startPortal, {
 					visitorName: data?.user?.display_name || data?.user?.username || null,
+					visitorAvatar: avatarVariant(data?.user?.avatar_url, 'avatar200') || null,
 				});
 				if (cancelled) return;
 				booted = true;
