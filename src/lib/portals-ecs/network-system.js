@@ -11,7 +11,7 @@
 //  audio flows browser-to-browser, never through the worker.
 // ═══════════════════════════════════════════════════════════
 import { createSystem } from 'elics';
-import { Vector3, Mesh, MeshBasicMaterial, SphereGeometry, Group, Sprite, SpriteMaterial, CanvasTexture, TextureLoader } from 'three';
+import { Vector3, Box3, Mesh, MeshBasicMaterial, SphereGeometry, Group, Sprite, SpriteMaterial, CanvasTexture, TextureLoader, AnimationMixer } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { locomotion } from './locomotion-system.js';
 
@@ -78,8 +78,11 @@ function applyFaceSprite(avatarGroup, avatarUrl) {
 // to the colored sphere (above) if the GLB fails to load. Served from R2 via
 // /api/assets/models/spirit.glb (CORS + immutable cache).
 let _spiritTemplate = null;
+let _spiritAnimations = null;
 let _spiritLoading = false;
 const _spiritWaiters = [];  // callbacks queued while the GLB loads
+// Per-peer animation mixers (updated in the system loop, disposed on despawn).
+const _spiritMixers = [];
 function getSpiritTemplate() {
   return _spiritTemplate;
 }
@@ -93,7 +96,8 @@ function ensureSpiritLoaded(onReady) {
     '/api/assets/models/spirit.glb',
     (gltf) => {
       _spiritTemplate = gltf.scene;
-      console.log('[network] spirit GLB loaded ✓');
+      _spiritAnimations = gltf.animations || [];
+      console.log('[network] spirit GLB loaded ✓', _spiritAnimations.length, 'animations');
       // Notify all waiters (peers that spawned while loading)
       const w = _spiritWaiters.splice(0);
       w.forEach((cb) => cb(_spiritTemplate));
@@ -140,12 +144,45 @@ function applySpiritModel(avatarGroup, sphereHead) {
   const template = getSpiritTemplate();
   if (!template) return;  // not loaded yet
   const spirit = template.clone(true);  // deep clone — each peer gets its own
-  // The spirit model is authored large; scale down to avatar size (~0.3, per
-  // the original world.js.bak crystal sizing). Slightly random per-peer so
-  // co-located spirits don't overlap identically.
+  // Scale down to avatar size (~0.3, per the original world.js.bak sizing).
   const s = 0.25 + Math.random() * 0.1;
   spirit.scale.setScalar(s);
   spirit.visible = true;
+
+  // Recentre: the GLB's origin is off-centre, causing the "floating up and
+  // to the right" offset. Compute the bounding box and shift so the model's
+  // centre sits at the avatar group's origin.
+  const box = new Box3().setFromObject(spirit);
+  const center = box.getCenter(new Vector3());
+  spirit.position.sub(center);
+
+  // Material setup for visibility — without this the spirit renders dark.
+  // Matches the proven mexicanbold SpiritViewer: transparent, no depth write,
+  // double-sided so it's visible from any angle.
+  spirit.traverse((child) => {
+    if (child.isMesh && child.material) {
+      child.material.transparent = true;
+      child.material.opacity = 0.8;
+      child.material.depthWrite = false;
+      child.material.side = 2;  // THREE.DoubleSide
+      // Start with the gold tone; the update loop cycles it through the rainbow.
+      child.material.color.setHSL(0.1, 0.7, 0.55);
+    }
+  });
+  // Tag for the rainbow-cycling loop (random starting hue per peer).
+  spirit.userData._rainbowOffset = Math.random();
+
+  // Play the GLB's built-in animations (float/breathe/rotate/morph) so the
+  // spirit is alive, not static. Each clone gets its own mixer.
+  if (_spiritAnimations && _spiritAnimations.length) {
+    const mixer = new AnimationMixer(spirit);
+    for (const clip of _spiritAnimations) {
+      mixer.clipAction(clip).play();
+    }
+    spirit.userData._mixer = mixer;
+    _spiritMixers.push(mixer);
+  }
+
   avatarGroup.add(spirit);
   sphereHead.visible = false;  // hide the fallback sphere
 }
@@ -252,6 +289,23 @@ export const NetworkSystem = class extends createSystem({}) {
       avatar.mesh.position.lerp(_tmpPos, LERP_SPEED);
       avatar.mesh.rotation.y += (avatar.targetYaw - avatar.mesh.rotation.y) * LERP_SPEED;
     }
+
+    // Tick animation mixers (float/breathe/rotate/morph) + cycle rainbow colors.
+    const t = _time / 1000;
+    for (const mixer of _spiritMixers) {
+      mixer.update(delta);
+    }
+    for (const avatar of this._avatars.values()) {
+      const spirit = avatar.mesh?.children?.find((c) => c.userData?._rainbowOffset !== undefined);
+      if (spirit) {
+        const hue = (t * 0.08 + spirit.userData._rainbowOffset) % 1;
+        spirit.traverse((child) => {
+          if (child.isMesh && child.material?.color) {
+            child.material.color.setHSL(hue, 0.85, 0.55);
+          }
+        });
+      }
+    }
   }
 
   _connect(room) {
@@ -314,12 +368,13 @@ export const NetworkSystem = class extends createSystem({}) {
     this._peers.clear();
     this._makingOffer.clear();
 
-    // Remove all remote avatars
+    // Remove all remote avatars + stop their animation mixers
     const world = this.world;
     for (const [sid, avatar] of this._avatars) {
       if (world?.scene) world.scene.remove(avatar.mesh);
     }
     this._avatars.clear();
+    _spiritMixers.length = 0;  // drop all mixers (room change = new scene)
 
     // Reset HUD presence state after leaving a room.
     this._emitPresence('roster', null, null, 0);
@@ -374,6 +429,13 @@ export const NetworkSystem = class extends createSystem({}) {
         const existing = this._avatars.get(msg.sessionId);
         const leftName = existing?.name;
         if (existing) {
+          // Stop + remove this peer's animation mixer
+          const spirit = existing.mesh?.children?.find((c) => c.userData?._mixer);
+          if (spirit?.userData?._mixer) {
+            const idx = _spiritMixers.indexOf(spirit.userData._mixer);
+            if (idx >= 0) _spiritMixers.splice(idx, 1);
+            spirit.userData._mixer.stopAllActions();
+          }
           world.scene.remove(existing.mesh);
           this._avatars.delete(msg.sessionId);
         }
