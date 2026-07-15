@@ -99,9 +99,6 @@ function buildMural(config, scene, track) {
 			side: THREE.DoubleSide,
 		}),
 	);
-			blending: THREE.AdditiveBlending,
-		}),
-	);
 	mural2.position.set(5, 0.5, -12);
 	mural2.rotation.y = -0.15;
 	scene.add(mural2);
