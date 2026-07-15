@@ -1,7 +1,8 @@
 // @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict JS type-checking (see jsconfig.json).
 // environments.js — Static composed scenes per portal type
-// Theatrical flats, ground planes, silhouette skylines.
-// No particle systems. Each portal is a recognizable PLACE.
+// Theatrical flats, ground planes, silhouette skylines, ambient particles.
+// Object counts + particle behaviour are driven by config.decorations (the
+// fields Mistral generates). Each portal is a recognizable PLACE.
 import * as THREE from 'three';
 
 export function buildEnvironment(config, scene, track) {
@@ -11,7 +12,93 @@ export function buildEnvironment(config, scene, track) {
 		space: buildCosmos, city: buildCity, dream: buildDream,
 		theater: buildTheater, memory: buildMemory,
 	};
-	return (builders[type] || buildCosmos)(config, scene, track);
+	const handle = (builders[type] || buildCosmos)(config, scene, track);
+
+	// Ambient particles — driven by config.decorations.particle_count + style.
+	// Each style has distinct colour, movement, and blend behaviour so a realm
+	// distilled from festive writings sparkles differently than one from grief.
+	const particles = buildParticles(config, scene, track);
+	if (particles) {
+		// Merge the particle update into the environment's update loop.
+		const prevUpdate = handle.update;
+		handle.update = (delta, time) => {
+			prevUpdate?.(delta, time);
+			particles.update(delta, time);
+		};
+	}
+	return handle;
+}
+
+// ── Particle system ──
+// particle_style drives colour + behaviour:
+//   sparkle = festive gold/white, twinkle (opacity flicker)
+//   dust    = contemplative warm grey, slow drift
+//   ember   = warm red/orange, rising
+//   bubble  = playful cyan/blue, rising + wobble
+//   snow    = melancholic white, falling
+const PARTICLE_STYLES = {
+	sparkle: { hue: 0.13, sat: 0.6, light: 0.7, gravity: 0, drift: 0.3, twinkle: true, size: 0.05 },
+	dust:    { hue: 0.10, sat: 0.15, light: 0.5, gravity: 0, drift: 0.15, twinkle: false, size: 0.03 },
+	ember:   { hue: 0.05, sat: 0.9, light: 0.5, gravity: -0.4, drift: 0.2, twinkle: true, size: 0.04 },
+	bubble:  { hue: 0.55, sat: 0.5, light: 0.6, gravity: -0.2, drift: 0.3, twinkle: false, size: 0.06 },
+	snow:    { hue: 0.62, sat: 0.05, light: 0.85, gravity: 0.3, drift: 0.25, twinkle: false, size: 0.045 },
+};
+
+function buildParticles(config, scene, track) {
+	const deco = config.decorations || {};
+	const count = deco.particle_count || 0;
+	if (!count) return null;
+	const styleName = deco.particle_style || 'dust';
+	const style = PARTICLE_STYLES[styleName] || PARTICLE_STYLES.dust;
+
+	const geo = new THREE.BufferGeometry();
+	const positions = new Float32Array(count * 3);
+	const velocities = new Float32Array(count * 3);
+	const baseY = new Float32Array(count);
+	for (let i = 0; i < count; i++) {
+		positions[i * 3] = (Math.random() - 0.5) * 18;
+		positions[i * 3 + 1] = Math.random() * 6 - 1.5;
+		positions[i * 3 + 2] = (Math.random() - 0.5) * 18;
+		velocities[i * 3] = (Math.random() - 0.5) * style.drift;
+		velocities[i * 3 + 1] = (Math.random() - 0.5) * style.drift + style.gravity * 0.5;
+		velocities[i * 3 + 2] = (Math.random() - 0.5) * style.drift;
+		baseY[i] = positions[i * 3 + 1];
+	}
+	geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+	const mat = new THREE.PointsMaterial({
+		color: new THREE.Color().setHSL(style.hue, style.sat, style.light),
+		size: style.size,
+		transparent: true,
+		opacity: 0.6,
+		blending: THREE.AdditiveBlending,
+		depthWrite: false,
+		sizeAttenuation: true,
+	});
+	const points = new THREE.Points(geo, mat);
+	scene.add(points);
+	track.push(points);
+
+	return {
+		update(delta, time) {
+			const pos = geo.attributes.position.array;
+			const t = time / 1000;
+			for (let i = 0; i < count; i++) {
+				pos[i * 3] += velocities[i * 3] * delta;
+				pos[i * 3 + 1] += velocities[i * 3 + 1] * delta;
+				pos[i * 3 + 2] += velocities[i * 3 + 2] * delta;
+				// Wrap around so particles never leave the volume
+				if (pos[i * 3 + 1] > 5) pos[i * 3 + 1] = -1.5;
+				if (pos[i * 3 + 1] < -2) pos[i * 3 + 1] = 5;
+				if (Math.abs(pos[i * 3]) > 9) pos[i * 3] *= -0.99;
+				if (Math.abs(pos[i * 3 + 2]) > 9) pos[i * 3 + 2] *= -0.99;
+			}
+			geo.attributes.position.needsUpdate = true;
+			// Twinkle: flicker opacity for sparkle/ember styles
+			if (style.twinkle) {
+				mat.opacity = 0.35 + Math.sin(t * 3) * 0.25;
+			}
+		},
+	};
 }
 
 // Helper: large backdrop plane
@@ -39,6 +126,7 @@ function ground(scene, track, color) {
 // ═══ OCEAN ═══
 function buildOcean(config, scene, track) {
 	const p = config.palette;
+	const deco = config.decorations || {};
 	backdrop(scene, track, 0x004488, 40, 18, -14);
 	ground(scene, track, 0x1a4050);
 
@@ -51,6 +139,29 @@ function buildOcean(config, scene, track) {
 		shaft.position.set(-3 + i*2, 1.5, -8);
 		shaft.rotation.y = (Math.random()-0.5)*0.3;
 		scene.add(shaft); track(shaft);
+	}
+
+	// Sunken columns — driven by pillar_count + pillar_height (decorations).
+	// Ancient drowned architecture rising from the ocean floor.
+	const pillarCount = deco.pillar_count || 0;
+	const pillarH = deco.pillar_height || 2.0;
+	for (let i = 0; i < pillarCount; i++) {
+		const a = (i / Math.max(pillarCount, 1)) * Math.PI * 2 + 0.3;
+		const r = 5 + Math.random() * 3;
+		const col = new THREE.Mesh(
+			new THREE.CylinderGeometry(0.3, 0.35, pillarH + Math.random() * 0.8, 8),
+			new THREE.MeshBasicMaterial({ color: 0x4a5560, transparent: true, opacity: 0.55 }),
+		);
+		col.position.set(Math.cos(a) * r, -1.5 + pillarH / 2, Math.sin(a) * r);
+		col.rotation.z = (Math.random() - 0.5) * 0.08;
+		scene.add(col); track(col);
+		// Capital (top ring) tinted with portal primary
+		const cap = new THREE.Mesh(
+			new THREE.CylinderGeometry(0.4, 0.35, 0.25, 8),
+			new THREE.MeshBasicMaterial({ color: new THREE.Color(p.primary || 0x4fc3f7), transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending }),
+		);
+		cap.position.set(col.position.x, col.position.y + pillarH / 2, col.position.z);
+		scene.add(cap); track(cap);
 	}
 
 	// Coral mounds
@@ -115,15 +226,18 @@ function buildOcean(config, scene, track) {
 // ═══ FOREST ═══
 function buildForest(config, scene, track) {
 	const p = config.palette;
+	const deco = config.decorations || {};
 	backdrop(scene, track, 0x1a3a18, 40, 18, -14);
 	ground(scene, track, 0x1a2810);
 
-	// Tree silhouettes — trunk + cone canopy
-	for (let i = 0; i < 10; i++) {
-		const a = (i/10)*Math.PI*2 + Math.random()*0.15;
+	// Tree silhouettes — count driven by pillar_count (default 10), height by pillar_height.
+	const treeCount = Math.max(deco.pillar_count || 0, 10);
+	const treeH = (deco.pillar_height || 2.0) * 2;
+	for (let i = 0; i < treeCount; i++) {
+		const a = (i/treeCount)*Math.PI*2 + Math.random()*0.15;
 		const r = 3 + Math.random()*5;
 		const tx = Math.cos(a)*r, tz = Math.sin(a)*r;
-		const h = 4 + Math.random()*4;
+		const h = treeH + Math.random()*4;
 
 		// Trunk
 		const trunk = new THREE.Mesh(
