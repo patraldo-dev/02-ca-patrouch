@@ -162,7 +162,11 @@ export const LocomotionSystem = class extends createSystem({}) {
 			const hasLookInput = Math.abs(inlineInput.lookX) > 0.0001 || Math.abs(inlineInput.lookY) > 0.0001;
 
 			if (!hasMoveInput && !hasLookInput) {
-				locomotion.userActive = false;
+				// No input this frame — stop moving, but DON'T clear userActive.
+				// Clearing it would hand control back to CameraOrbitSystem, which
+				// snaps the camera back to the orbit path (the "snap to start" bug).
+				// Once the visitor has moved, they keep control until an explicit
+				// recenter (Esc); the orbit yields permanently for this scene.
 				locomotion.enabled = false;
 				// Consume look deltas so they don't accumulate
 				inlineInput.lookX = 0;
@@ -231,7 +235,9 @@ export const LocomotionSystem = class extends createSystem({}) {
 
 		const value = left.get2DInputValue(THUMBSTICK) ?? 0;
 		if (value < DEAD_ZONE) {
-			locomotion.userActive = false;
+			// Thumbstick centered — stop moving, but keep userActive true so the
+			// orbit doesn't snap the camera back to its idle path. Control is only
+			// relinquished on explicit recenter (Esc), not on releasing the stick.
 			return;
 		}
 		locomotion.userActive = true;
