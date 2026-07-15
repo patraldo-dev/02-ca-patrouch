@@ -5,6 +5,18 @@
 // fields Mistral generates). Each portal is a recognizable PLACE.
 import * as THREE from 'three';
 
+const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
+
+// Antoine Patraldo's curated artwork pool (same as art-prompt.js).
+// Used as fallback murals when a portal has no Flux-generated scene_image.
+const ANTOINE_ARTWORK = [
+	{ id: 'f8a136eb-363e-4a24-0f54-70bb4f4bf800', title: 'Mujer' },
+	{ id: '26fe40df-7745-41dc-7491-97cb36a32f00', title: 'Blue Alien King' },
+	{ id: '75b29e1a-2d22-4ef7-af19-2f7e3828bd00', title: 'Green Alien King' },
+	{ id: '65dfe0b8-5b3f-4501-a3ee-c99d301a1800', title: 'Yellow Alien King' },
+	{ id: 'd4969f09-777d-46a4-f167-db56837e5300', title: 'Brown Alien King' },
+];
+
 export function buildEnvironment(config, scene, track) {
 	const type = config.environment?.type || 'space';
 	const builders = {
@@ -14,12 +26,15 @@ export function buildEnvironment(config, scene, track) {
 	};
 	const handle = (builders[type] || buildCosmos)(config, scene, track);
 
+	// Art mural — a large billboarded plane textured with either the portal's
+	// Flux-generated scene_image or a curated Antoine Patraldo artwork. Turns
+	// the flat colored backdrops into actual art, so the realm feels like
+	// stepping inside a painting rather than a void with primitives.
+	buildMural(config, scene, track);
+
 	// Ambient particles — driven by config.decorations.particle_count + style.
-	// Each style has distinct colour, movement, and blend behaviour so a realm
-	// distilled from festive writings sparkles differently than one from grief.
 	const particles = buildParticles(config, scene, track);
 	if (particles) {
-		// Merge the particle update into the environment's update loop.
 		const prevUpdate = handle.update;
 		handle.update = (delta, time) => {
 			prevUpdate?.(delta, time);
@@ -29,6 +44,59 @@ export function buildEnvironment(config, scene, track) {
 	return handle;
 }
 
+// ── Art mural ──
+// A large billboarded plane placed deep in the scene (behind the action),
+// textured with AI-generated or curated artwork. Makes the realm feel like
+// stepping inside a painting rather than staring at a dark void.
+function buildMural(config, scene, track) {
+	// Determine the image source: portal's Flux art, or a curated Antoine piece
+	// chosen deterministically by portal id (so each realm always gets the same art).
+	let imageId = config.scene_image;
+	if (!imageId) {
+		const idStr = config.portal_id || 'default';
+		let hash = 0;
+		for (let i = 0; i < idStr.length; i++) hash = ((hash << 5) - hash + idStr.charCodeAt(i)) | 0;
+		imageId = ANTOINE_ARTWORK[Math.abs(hash) % ANTOINE_ARTWORK.length].id;
+	}
+	const imageUrl = `https://imagedelivery.net/${CF_IMAGES_HASH}/${imageId}/cover`;
+
+	// Large plane, placed far back, slightly elevated — acts as a "window" or
+	// "painting on the wall" of the realm. Subtly tinted to blend with the palette.
+	const palette = config.palette || {};
+	const tint = new THREE.Color(palette.primary || '#c9a87c');
+	const muralMat = new THREE.MeshBasicMaterial({
+		map: new THREE.TextureLoader().load(imageUrl, (tex) => {
+			tex.colorSpace = THREE.SRGBColorSpace;
+		}),
+		transparent: true,
+		opacity: 0.35,
+		depthWrite: false,
+		blending: THREE.AdditiveBlending,
+	});
+	// Tint the material so the mural harmonises with the scene palette
+	muralMat.color.copy(tint).multiplyScalar(0.6);
+
+	const mural = new THREE.Mesh(new THREE.PlaneGeometry(12, 8), muralMat);
+	mural.position.set(0, 1, -15);  // far back, centered
+	scene.add(mural);
+	track.push(mural);
+
+	// A second, offset mural for depth (parallax feel)
+	const mural2 = new THREE.Mesh(
+		new THREE.PlaneGeometry(8, 5),
+		new THREE.MeshBasicMaterial({
+			map: muralMat.map,
+			transparent: true,
+			opacity: 0.15,
+			depthWrite: false,
+			blending: THREE.AdditiveBlending,
+		}),
+	);
+	mural2.position.set(5, 0.5, -12);
+	mural2.rotation.y = -0.15;
+	scene.add(mural2);
+	track.push(mural2);
+}
 // ── Particle system ──
 // particle_style drives colour + behaviour:
 //   sparkle = festive gold/white, twinkle (opacity flicker)

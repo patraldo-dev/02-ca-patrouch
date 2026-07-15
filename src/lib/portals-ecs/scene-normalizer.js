@@ -172,6 +172,7 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
         portal_id: portalDefaults.id || null,
         source_writings: [],
         generated_at: new Date().toISOString(),
+        scene_image: portalDefaults.scene_image || null,  // CF Images ID for mural
         quality: 'medium',
         environment: {
             type: null, // will be set from raw if valid

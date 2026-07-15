@@ -52,6 +52,13 @@ export async function loadPortalsData(db) {
 		for (const row of sceneRows || []) {
 			try { sceneConfigs[row.portal_id] = JSON.parse(row.scene_config); } catch {}
 		}
+		// Merge scene_image from the portal row into each scene config so the
+		// environment builders can use it as a mural texture.
+		for (const p of portals || []) {
+			if (p.scene_image && sceneConfigs[p.id]) {
+				sceneConfigs[p.id].scene_image = p.scene_image;
+			}
+		}
 
 		// Featured = most active writings, fallback to first
 		const featuredPortal = (portals && portals.length > 0)
