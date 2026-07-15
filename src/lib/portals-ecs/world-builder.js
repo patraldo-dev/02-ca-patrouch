@@ -26,6 +26,21 @@ export function registerSceneRenderer(portalId, buildFn) {
 	SCENE_RENDERERS[portalId] = buildFn;
 }
 
+/**
+ * Inject a runtime-generated scene config into the running world and rebuild
+ * the scene immediately. Used by "write → materialize": the user's text is
+ * distilled into a scene config via Mistral, and this swaps it into the live
+ * world without a page reload.
+ *
+ * @param {object} world      - the IWSDK world (from bootPortalEngine)
+ * @param {string} portalId   - unique id for the materialized realm
+ * @param {object} config     - normalized scene config (from normalizeSceneConfig)
+ */
+export function injectSceneConfig(world, portalId, config) {
+	nav.allConfigs[portalId] = config;
+	rebuildScene(world, portalId, true);
+}
+
 // Factory: creates a self-contained tap-at-screen-coordinates function bound to
 // a world. Raycasts into world._interactionTargets (set by each scene builder)
 // and calls world._onNavigate with the hit's portalId. Used by touch devices
