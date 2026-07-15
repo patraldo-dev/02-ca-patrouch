@@ -138,10 +138,13 @@ export function buildForestScene(world, config = {}, allConfigs = {}, onNavigate
 			scene.add(cone); track.push(cone);
 		}
 
-		// Glow at trunk base
+		// Glow at trunk base — tinted with the crystal color matching this tree's
+		// revelation excerpt, falling back to the portal primary.
+		const crystalIdx = pcfg?.crystals?.[i % Math.max(pcfg?.crystals?.length || 1, 1)]?.color_index;
+		const glowColor = (crystalIdx != null && pcfg?.palette?.crystal_colors?.[crystalIdx]) ? new THREE.Color(pcfg.palette.crystal_colors[crystalIdx]) : pcolor;
 		const glow = new THREE.Mesh(
 			new THREE.RingGeometry(0.4*t.s, 0.6*t.s, 20),
-			new THREE.MeshBasicMaterial({ color: pcolor, transparent: true, opacity: 0.2, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }),
+			new THREE.MeshBasicMaterial({ color: glowColor, transparent: true, opacity: 0.2, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }),
 		);
 		glow.rotation.x = -Math.PI/2; glow.position.set(t.x, -1.48, t.z);
 		scene.add(glow); track.push(glow);

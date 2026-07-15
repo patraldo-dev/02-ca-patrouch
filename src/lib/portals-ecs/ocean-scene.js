@@ -185,10 +185,13 @@ export function buildOceanScene(world, config = {}, allConfigs = {}, onNavigate 
 		scene.add(coral); track.push(coral);
 		tapTargets.push(coral);
 
-		// Glow at base
+		// Glow at base — tinted with the crystal color matching this coral's
+		// revelation excerpt, falling back to the portal primary.
+		const crystalIdx = pcfg?.crystals?.[i % Math.max(pcfg?.crystals?.length || 1, 1)]?.color_index;
+		const glowColor = (crystalIdx != null && pcfg?.palette?.crystal_colors?.[crystalIdx]) ? new THREE.Color(pcfg.palette.crystal_colors[crystalIdx]) : pcolor;
 		const glow = new THREE.Mesh(
 			new THREE.RingGeometry(0.5 * c.s, 0.8 * c.s, 24),
-			new THREE.MeshBasicMaterial({ color: pcolor, transparent: true, opacity: 0.2, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }),
+			new THREE.MeshBasicMaterial({ color: glowColor, transparent: true, opacity: 0.2, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }),
 		);
 		glow.rotation.x = -Math.PI / 2; glow.position.set(c.x, -2.48, c.z);
 		scene.add(glow); track.push(glow);

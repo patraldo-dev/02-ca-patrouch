@@ -432,7 +432,12 @@ function rebuildScene(world, portalId, isNavigation = false) {
 
 		// Subtle glow ring — thin RingGeometry, additive, billboarded to camera
 		// each frame via the update loop (stored in world._glowRings).
-		const glowColor = new THREE.Color(tc.palette.primary);
+		// Tint each cube's ring with its corresponding crystal color so the
+		// glow matches the distilled excerpt it reveals.
+		const crystalIdx = tc.crystals?.[i % Math.max(tc.crystals.length, 1)]?.color_index;
+		const crystalColors = tc.palette?.crystal_colors;
+		const ringHex = (crystalIdx != null && crystalColors?.[crystalIdx]) || tc.palette.primary;
+		const glowColor = new THREE.Color(ringHex);
 		const glowRing = new THREE.Mesh(
 			new THREE.RingGeometry(cubeSize * 0.9, cubeSize * 1.4, 24),
 			new THREE.MeshBasicMaterial({

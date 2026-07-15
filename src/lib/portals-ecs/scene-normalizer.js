@@ -494,10 +494,16 @@ function deriveRenderFields(normalized, raw) {
     normalized.camera = { orbit: { radius_a: 5.0, radius_b: 3.5, height: 1.0, speed } };
 
     // ── Narrative texts (es/en/fr) ──
-    // The renderer reads narrative_texts[lang] || narrative_texts.es. Populate
-    // all three locales from ambient_texts so single-locale output still cycles.
-    const texts = normalized.ambient_texts && normalized.ambient_texts.length
-        ? normalized.ambient_texts
+    // The renderer reads narrative_texts[lang] || narrative_texts.es to populate
+    // proximity revelations (RevelationSystem). Pull from crystals first — these
+    // are the evocative excerpts Mistral distilled from the actual writings — so
+    // that exploring objects uncovers real writing-derived content. Fall back to
+    // ambient_texts, then static defaults.
+    const crystalTexts = (normalized.crystals || []).map(c => c.text).filter(Boolean);
+    const ambient = normalized.ambient_texts && normalized.ambient_texts.length
+        ? normalized.ambient_texts : [];
+    const texts = crystalTexts.length ? crystalTexts
+        : ambient.length ? ambient
         : ['❝ Cada historia es un portal ❞', '❝ Toca para entrar ❞', '❝ Los espíritus esperan ❞'];
     normalized.narrative_texts = { es: texts, en: texts, fr: texts };
 
