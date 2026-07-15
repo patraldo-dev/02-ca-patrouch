@@ -11,7 +11,8 @@
 //  audio flows browser-to-browser, never through the worker.
 // ═══════════════════════════════════════════════════════════
 import { createSystem } from 'elics';
-import { Vector3, Mesh, MeshBasicMaterial, SphereGeometry, Group, Sprite, SpriteMaterial, CanvasTexture, TextureLoader } from 'three';
+import { Vector3, Mesh, MeshBasicMaterial, SphereGeometry, Group } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { locomotion } from './locomotion-system.js';
 
 const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/portal-ws/ws';
@@ -21,9 +22,39 @@ const LERP_SPEED = 0.12;
 const _localPos = new Vector3();
 const _tmpPos = new Vector3();
 const _sphereGeo = new SphereGeometry(0.12, 12, 10);
-const _texLoader = new TextureLoader();
-_texLoader.crossOrigin = 'anonymous';  // Cloudflare Images serves with CORS headers
-const _avatarTexCache = new Map();  // url → CanvasTexture (circular crop), shared across peers
+
+// The shared 3D spirit model — loaded once, cloned per remote peer. Falls back
+// to the colored sphere (above) if the GLB fails to load. Served from R2 via
+// /api/assets/models/spirit.glb (CORS + immutable cache).
+let _spiritTemplate = null;
+let _spiritLoading = false;
+const _spiritWaiters = [];  // callbacks queued while the GLB loads
+function getSpiritTemplate() {
+  return _spiritTemplate;
+}
+function ensureSpiritLoaded(onReady) {
+  if (_spiritTemplate) { onReady(_spiritTemplate); return; }
+  _spiritWaiters.push(onReady);
+  if (_spiritLoading) return;
+  _spiritLoading = true;
+  const loader = new GLTFLoader();
+  loader.load(
+    '/api/assets/models/spirit.glb',
+    (gltf) => {
+      _spiritTemplate = gltf.scene;
+      console.log('[network] spirit GLB loaded ✓');
+      // Notify all waiters (peers that spawned while loading)
+      const w = _spiritWaiters.splice(0);
+      w.forEach((cb) => cb(_spiritTemplate));
+    },
+    undefined,
+    (err) => {
+      console.warn('[network] spirit GLB failed:', err?.message || err);
+      _spiritLoading = false;  // allow a retry on next peer
+      _spiritWaiters.splice(0);  // drain — they keep their fallback spheres
+    },
+  );
+}
 
 // WebRTC config — Google's free STUN servers. No TURN (acceptable for v1).
 const RTC_CONFIG = {
@@ -42,76 +73,39 @@ function colorFromId(id) {
   return c;
 }
 
-// Create a circular-cropped avatar texture from a loaded image texture.
-// Draws the image into a canvas with a clipped circle so the sprite looks
-// like a rounded profile photo, not a square image.
-function makeCircularTexture(image) {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = size; canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  ctx.closePath();
-  ctx.clip();
-  // Cover-fit the image into the circle
-  const iw = image.width || size, ih = image.height || size;
-  const scale = Math.max(size / iw, size / ih);
-  const dw = iw * scale, dh = ih * scale;
-  ctx.drawImage(image, (size - dw) / 2, (size - dh) / 2, dw, dh);
-  ctx.restore();
-  const tex = new CanvasTexture(canvas);
-  tex.colorSpace = 'srgb';
-  return tex;
-}
-
-// Create an avatar Group. If avatarUrl is provided, starts as a fallback colored
-// sphere and asynchronously swaps to a circular avatar sprite once the image
-// loads. Falls back permanently to the sphere if the image fails.
-function createAvatarMesh(sessionId, avatarUrl) {
+// Create an avatar Group for a remote peer. Starts as a fallback colored
+// sphere (shown immediately), then swaps to the 3D spirit model once the
+// shared GLB loads. The sphere is removed once the spirit is in place.
+function createAvatarMesh(sessionId) {
   const group = new Group();
-
-  // Fallback: colored sphere (shown immediately + retained if avatar fails)
   const head = new Mesh(_sphereGeo, colorFromId(sessionId));
   group.add(head);
-
-  // Optional name label below
-  return { group, head, avatarUrl };
+  return { group, head };
 }
 
-// Asynchronously load an avatar image and replace the sphere with a sprite.
-function loadAvatarSprite(avatarGroup, head, avatarUrl) {
-  if (!avatarUrl || _avatarTexCache.has(avatarUrl)) {
-    applyAvatarTexture(avatarGroup, head, _avatarTexCache.get(avatarUrl), avatarUrl);
-    return;
+// Swap the fallback sphere for a clone of the 3D spirit model. Called once the
+// GLB template is available (via ensureSpiritLoaded).
+function applySpiritModel(avatarGroup, sphereHead) {
+  const template = getSpiritTemplate();
+  if (!template) return;  // not loaded yet
+  const spirit = template.clone(true);  // deep clone — each peer gets its own
+  // The spirit model is authored large; scale down to avatar size (~0.3, per
+  // the original world.js.bak crystal sizing). Slightly random per-peer so
+  // co-located spirits don't overlap identically.
+  const s = 0.25 + Math.random() * 0.1;
+  spirit.scale.setScalar(s);
+  spirit.visible = true;
+  avatarGroup.add(spirit);
+  sphereHead.visible = false;  // hide the fallback sphere
+}
+
+// Kick off the GLB load (if not already) and swap this peer's avatar when ready.
+function loadSpiritAvatar(avatarGroup, sphereHead) {
+  if (getSpiritTemplate()) {
+    applySpiritModel(avatarGroup, sphereHead);
+  } else {
+    ensureSpiritLoaded(() => applySpiritModel(avatarGroup, sphereHead));
   }
-  // Mark as loading to avoid duplicate fetches
-  _avatarTexCache.set(avatarUrl, null);
-  _texLoader.load(
-    avatarUrl,
-    (tex) => {
-      const circular = makeCircularTexture(tex.image);
-      _avatarTexCache.set(avatarUrl, circular);
-      applyAvatarTexture(avatarGroup, head, circular, avatarUrl);
-    },
-    undefined,
-    () => { _avatarTexCache.delete(avatarUrl); }  // load failed — keep sphere
-  );
-}
-
-// Swap the sphere for a circular avatar sprite (or revert if texture is null).
-function applyAvatarTexture(avatarGroup, head, canvasTex, avatarUrl) {
-  if (!canvasTex) return;  // still loading or failed
-  // Avoid double-applying
-  if (head.userData._avatarApplied === avatarUrl) return;
-  head.userData._avatarApplied = avatarUrl;
-  const sprite = new Sprite(new SpriteMaterial({ map: canvasTex, transparent: true }));
-  sprite.scale.set(0.35, 0.35, 0.35);
-  sprite.position.y = 0.05;
-  avatarGroup.add(sprite);
-  // Hide the fallback sphere now that the avatar sprite is showing
-  head.visible = false;
 }
 
 // Module-level voice state (toggled from PortalScene UI).
@@ -448,15 +442,16 @@ export const NetworkSystem = class extends createSystem({}) {
     if (this._avatars.has(sessionId)) return;
     const world = this.world;
     if (!world?.scene) return;
-    const { group, head } = createAvatarMesh(sessionId, avatarUrl);
+    const { group, head } = createAvatarMesh(sessionId);
     group.position.set(x, y, z);
     group.rotation.y = yaw || 0;
     world.scene.add(group);
-    // If this peer has an avatar URL, async-load the circular sprite to replace
-    // the fallback sphere. Stays as colored sphere if no avatar / load fails.
-    if (avatarUrl) loadAvatarSprite(group, head, avatarUrl);
+    // Swap the fallback sphere for the shared 3D spirit model once loaded.
+    // Everyone gets the same spirit form (a stylistic choice; per-user GLB
+    // avatars would require a generation pipeline — future iteration).
+    loadSpiritAvatar(group, head);
     this._avatars.set(sessionId, { mesh: group, name: name || 'explorer', avatar: avatarUrl, targetX: x, targetY: y, targetZ: z, targetYaw: yaw || 0 });
-    console.log('[network] peer spawned:', sessionId, name || '(anon)', avatarUrl ? '(avatar)' : '(no avatar)');
+    console.log('[network] peer spawned:', sessionId, name || '(anon)');
   }
 
   // Emit a 'portal-presence' event on window so the Svelte HUD (PortalScene.svelte)
