@@ -193,15 +193,11 @@
 		_lookLast = { x: t.clientX, y: t.clientY };
 	}
 	function onLookEnd(e) {
-		// If it was a tap (no significant movement), forward as a click on the
-		// canvas so the themed scene's pointerdown handler can raycast + navigate.
+		// If it was a tap (no significant movement, quick), raycast into the scene
+		// for navigation. Uses world._tapAt() which works on touch devices where
+		// the look-zone overlay intercepts touches before the canvas.
 		if (_lookStart && !_lookMoved && Date.now() - _lookStart.time < 300) {
-			const fakeEvent = new PointerEvent('pointerdown', {
-				clientX: _lookStart.x,
-				clientY: _lookStart.y,
-				bubbles: true,
-			});
-			containerEl?.dispatchEvent(fakeEvent);
+			worldHandle?._tapAt?.(_lookStart.x, _lookStart.y);
 		}
 		_lookLast = null;
 		_lookStart = null;

@@ -531,6 +531,27 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	world._interactionTargets = cubeMeshes;
 	world._onNavigate = (targetId) => rebuildScene(world, targetId, true);
 
+	// Expose a programmatic tap-at-coordinates function so touch devices (where
+	// the look-zone overlay intercepts touches before the canvas) can forward
+	// taps for navigation. Raycasts into the current interaction targets.
+	world._tapAt = (clientX, clientY) => {
+		pointer.x = (clientX / window.innerWidth) * 2 - 1;
+		pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+		raycaster.setFromCamera(pointer, world.camera);
+		const targets = world._interactionTargets || cubeMeshes;
+		const hits = raycaster.intersectObjects(targets, true);
+		if (hits.length > 0) {
+			let obj = hits[0].object;
+			// Walk up to find the portalId (groups store it on the parent)
+			while (obj && !obj.userData?.portalId) obj = obj.parent;
+			if (obj?.userData?.portalId) {
+				world._onNavigate(obj.userData.portalId);
+				return true;
+			}
+		}
+		return false;
+	};
+
 	// ── Narrative texts for system ──
 	const texts = config.narrative_texts[lang] || config.narrative_texts.es;
 	world.globals.narrativeTexts = texts;
