@@ -408,9 +408,13 @@ export function installNavigation({ scene, world, allConfigs, config, track, tap
 		return null;
 	}
 
-	// Intercept pointer events at the canvas level (capture phase) so the compass
-	// gets first dibs. If the tap lands on the compass, navigate; otherwise let
-	// the scene's own handler run.
+	// Expose the compass's UV→portalId resolver so _tapAt (mobile look-zone tap
+	// forwarding) can resolve compass taps without a DOM pointer event.
+	world._compassResolve = compass.resolveTap;
+
+	// Intercept pointer/touch events at the canvas level (capture phase) so the
+	// compass gets first dibs. If the tap lands on the compass, navigate;
+	// otherwise let the scene's own handler run (or the look-zone handle it).
 	const dom = world.renderer.domElement;
 	function onDown(e) {
 		const portalId = resolveCompassHit(e);
@@ -420,18 +424,14 @@ export function installNavigation({ scene, world, allConfigs, config, track, tap
 		}
 	}
 	function onMove(e) {
+		// Hover highlight for desktop (visual feedback only — compass is always visible)
 		const portalId = resolveCompassHit(e);
 		const idx = portalId ? portals.findIndex((p) => p.id === portalId) : -1;
 		compass.setHover(idx);
-		compass.setRevealed(true); // hover anywhere reveals it
 	}
 	dom.addEventListener('pointerdown', onDown, true);
 	dom.addEventListener('touchstart', onDown, true);
 	dom.addEventListener('pointermove', onMove);
-
-	// Auto-reveal the compass after a short delay even without hover, so it's
-	// discoverable on touch (where pointermove only fires during a drag).
-	const revealTimeout = setTimeout(() => compass.setRevealed(true), 2500);
 
 	// Spoken narration — speaker affordance + optional subtitles. Pre-rendered
 	// audio is fetched on first tap (no AI cost on playback). Disposed on scene
@@ -447,7 +447,6 @@ export function installNavigation({ scene, world, allConfigs, config, track, tap
 	}
 
 	function dispose() {
-		clearTimeout(revealTimeout);
 		dom.removeEventListener('pointerdown', onDown, true);
 		dom.removeEventListener('touchstart', onDown, true);
 		dom.removeEventListener('pointermove', onMove);

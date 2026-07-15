@@ -41,6 +41,15 @@ function makeTapAt(world) {
 		if (!targets.length) return false;
 		const hits = raycaster.intersectObjects(targets, true);
 		if (hits.length > 0) {
+			// Check for the worlds compass first (it resolves UV → row → portalId)
+			if (world._compassResolve && hits[0].object.userData?.isCompass) {
+				const portalId = world._compassResolve(hits[0]);
+				if (portalId) {
+					world._onNavigate?.(portalId);
+					return true;
+				}
+			}
+			// Normal gateway: walk up to find userData.portalId
 			let obj = hits[0].object;
 			while (obj && !obj.userData?.portalId) obj = obj.parent;
 			if (obj?.userData?.portalId) {
