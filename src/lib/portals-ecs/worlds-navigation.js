@@ -94,10 +94,9 @@ export function buildWorldsCompass({ scene, world, portals, onNavigate, lang = '
 	canvas.texture = texture; // stashed for redraw
 
 	const material = new THREE.MeshBasicMaterial({
-		map: texture, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide,
+		map: texture, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide,
 	});
 	const mesh = new THREE.Mesh(new THREE.PlaneGeometry(PANEL_W / 100, PANEL_H / 100), material);
-	mesh.position.set(0, 0, -3); // placed in front of camera; billboarded each frame
 	mesh.renderOrder = 999;
 	scene.add(mesh);
 
@@ -116,21 +115,25 @@ export function buildWorldsCompass({ scene, world, portals, onNavigate, lang = '
 	}
 	redraw();
 
-	// Billboard + follow camera. Always visible (no fade-out) so the realm
-	// menu is a stable, reliable part of the scene — not an ethereal hint.
+	// Billboard + follow camera. Snap to position on first frame (no lerp lag
+	// = no "flash across screen" on load), then tight tracking so it stays put.
 	const cam = world.camera;
+	let firstFrame = true;
 	function update(dt, time) {
 		// Position: float at upper-left of view, fixed distance
 		const dist = 3.2;
 		const offset = new THREE.Vector3(-1.1, 0.7, 0).multiplyScalar(dist);
 		const target = cam.position.clone().add(offset.applyQuaternion(cam.quaternion));
-		mesh.position.lerp(target, 0.12);
+		if (firstFrame) {
+			mesh.position.copy(target);  // snap — no sweep on load
+			firstFrame = false;
+		} else {
+			mesh.position.lerp(target, 0.5);  // tight tracking — stays in view
+		}
 		// Billboard: face the camera
 		mesh.lookAt(cam.position);
 		// Very subtle bob (barely perceptible — stays readable)
 		mesh.position.y += Math.sin(time / 1000 * 0.5) * 0.015;
-		// Always visible — no fade-out
-		material.opacity += (0.88 - material.opacity) * 0.1;
 	}
 
 	// Tap resolution: given a raycast hit on the plane, which row?
