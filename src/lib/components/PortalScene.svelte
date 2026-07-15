@@ -546,6 +546,7 @@
 		background: rgba(0, 0, 0, 0.6);
 		border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
 		cursor: pointer; backdrop-filter: blur(6px);
+		pointer-events: auto;
 		display: flex; align-items: center; justify-content: center;
 		transition: background 0.2s ease;
 	}
@@ -721,9 +722,12 @@
 		pointer-events: none; white-space: nowrap;
 	}
 
-	/* Touch look-zone: full screen, transparent, behind the thumbstick */
+	/* Touch look-zone: covers most of the screen for drag-look, but leaves the
+	   top-right corner free so the ☰ drawer button (z-index 100001) is always
+	   tappable on mobile. The button is above in z-index anyway, but excluding
+	   the corner avoids any touch-action interference. */
 	.look-zone {
-		position: fixed; inset: 0; z-index: 1;
+		position: fixed; top: 0; left: 0; right: 60px; bottom: 0; z-index: 1;
 		touch-action: none;
 	}
 
