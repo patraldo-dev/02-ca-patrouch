@@ -36,11 +36,16 @@ export function buildEnvironment(config, scene, track) {
 
 	const particles = buildParticles(config, scene, trackArr);
 	for (const obj of trackArr.splice(0)) trackFn(obj);
+
+	// Scene elements: content-specific objects from the writing (dogs, lamps, etc.)
+	const elements = buildSceneElements(config, scene, trackArr);
+	for (const obj of trackArr.splice(0)) trackFn(obj);
 	if (particles) {
 		const prevUpdate = handle.update;
 		handle.update = (delta, time) => {
 			prevUpdate?.(delta, time);
 			particles.update(delta, time);
+			elements.update(delta, time);
 		};
 	}
 	return handle;
@@ -689,4 +694,128 @@ function buildMemory(config, scene, track) {
 	}
 
 	return { update() {} };
+}
+
+// ═══ SCENE ELEMENTS — content-specific objects from the writing ═══
+// Each element is a procedural silhouette suggesting the written object:
+// quadruped (dog/wolf/horse), figure (person), vehicle (car/boat), etc.
+// Positioned by depth hint, tinted with the palette. These make the realm
+// LOOK LIKE what was written, not just the generic environment type.
+
+export function buildSceneElements(config, scene, track) {
+	const elements = config.scene_elements || [];
+	if (!elements.length) return { update() {} };
+
+	const palette = config.palette || {};
+	const crystalColors = palette.crystal_colors || ['#c9a87c', '#4fc3f7', '#b5ead7', '#ce93d8'];
+	const animated = [];
+
+	for (let ei = 0; ei < elements.length; ei++) {
+		const el = elements[ei];
+		const color = new THREE.Color(crystalColors[ei % crystalColors.length] || palette.primary || '#c9a87c');
+		const depthMap = { foreground: { z: 1.5, y: -0.8 }, midground: { z: -2, y: -0.5 }, background: { z: -8, y: 0 } };
+		const dp = depthMap[el.position] || depthMap.midground;
+		const s = el.scale || 1.0;
+
+		for (let c = 0; c < el.count; c++) {
+			const spread = el.count > 1 ? (c - (el.count - 1) / 2) * (2.5 / el.count + 1) : 0;
+			const x = spread + (Math.random() - 0.5) * 0.5;
+			const z = dp.z + (Math.random() - 0.5) * 1.5;
+
+			const group = buildElementMesh(el.kind, s, color);
+			group.position.set(x, dp.y, z);
+			group.rotation.y = Math.random() * Math.PI * 2;
+			scene.add(group);
+			track.push(group);
+
+			if (el.kind === 'quadruped' || el.kind === 'figure') {
+				animated.push({ mesh: group, phase: Math.random() * Math.PI * 2, kind: el.kind });
+			}
+		}
+	}
+
+	return {
+		update(dt, time) {
+			for (const a of animated) {
+				const t = time / 1000;
+				if (a.kind === 'quadruped') {
+					a.mesh.position.y += Math.sin(t * 2 + a.phase) * 0.002;
+				} else if (a.kind === 'figure') {
+					a.mesh.rotation.y += dt * 0.1;
+				}
+			}
+		},
+	};
+}
+
+function buildElementMesh(kind, scale, color) {
+	const g = new THREE.Group();
+	const mat = (c, opacity = 0.7) => new THREE.MeshBasicMaterial({
+		color: c, transparent: true, opacity, depthWrite: false,
+	});
+
+	switch (kind) {
+		case 'quadruped': {
+			const body = new THREE.Mesh(new THREE.BoxGeometry(0.5 * scale, 0.25 * scale, 0.2 * scale), mat(color));
+			body.position.y = 0.25 * scale; g.add(body);
+			const head = new THREE.Mesh(new THREE.SphereGeometry(0.12 * scale, 8, 6), mat(color, 0.75));
+			head.position.set(0.3 * scale, 0.32 * scale, 0); g.add(head);
+			for (const [lx, lz] of [[0.15, 0.06], [0.15, -0.06], [-0.15, 0.06], [-0.15, -0.06]]) {
+				const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * scale, 0.03 * scale, 0.25 * scale, 4), mat(color));
+				leg.position.set(lx * scale, 0.12 * scale, lz * scale); g.add(leg);
+			}
+			break;
+		}
+		case 'figure': {
+			const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * scale, 0.15 * scale, 0.7 * scale, 6), mat(color));
+			torso.position.y = 0.35 * scale; g.add(torso);
+			const head = new THREE.Mesh(new THREE.SphereGeometry(0.1 * scale, 8, 6), mat(color));
+			head.position.y = 0.75 * scale; g.add(head);
+			break;
+		}
+		case 'vehicle': {
+			const body = new THREE.Mesh(new THREE.BoxGeometry(0.6 * scale, 0.2 * scale, 0.3 * scale), mat(color));
+			body.position.y = 0.2 * scale; g.add(body);
+			for (const [lx, lz] of [[0.2, 0.12], [0.2, -0.12], [-0.2, 0.12], [-0.2, -0.12]]) {
+				const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * scale, 0.06 * scale, 0.04 * scale, 6), mat(color, 0.5));
+				wheel.rotation.x = Math.PI / 2; wheel.position.set(lx * scale, 0.06 * scale, lz * scale); g.add(wheel);
+			}
+			break;
+		}
+		case 'structure': {
+			const h = 1.5 * scale;
+			const b = new THREE.Mesh(new THREE.BoxGeometry(0.4 * scale, h, 0.4 * scale), mat(color, 0.5));
+			b.position.y = h / 2 - 0.5; g.add(b);
+			break;
+		}
+		case 'plant': {
+			const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.06 * scale, 0.5 * scale, 5), mat(color, 0.6));
+			trunk.position.y = 0.25 * scale; g.add(trunk);
+			const canopy = new THREE.Mesh(new THREE.ConeGeometry(0.2 * scale, 0.4 * scale, 6), mat(color));
+			canopy.position.y = 0.6 * scale; g.add(canopy);
+			break;
+		}
+		case 'water': {
+			const wmat = new THREE.MeshBasicMaterial({
+				color: 0x2a6a8a, transparent: true, opacity: 0.4,
+				blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+			});
+			const w = new THREE.Mesh(new THREE.PlaneGeometry(2 * scale, 1.5 * scale), wmat);
+			w.rotation.x = -Math.PI / 2; w.position.y = -0.3; g.add(w);
+			break;
+		}
+		case 'light_source': {
+			const glow = new THREE.Mesh(
+				new THREE.SphereGeometry(0.1 * scale, 8, 8),
+				new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }),
+			);
+			glow.position.y = 0.5 * scale; g.add(glow);
+			break;
+		}
+		default: {
+			const obj = new THREE.Mesh(new THREE.DodecahedronGeometry(0.15 * scale), mat(color));
+			obj.position.y = 0.15 * scale; g.add(obj);
+		}
+	}
+	return g;
 }

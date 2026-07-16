@@ -37,7 +37,6 @@
 	async function materialize() {
 		if (text.trim().length < 20) {
 			error = $locale === 'en' ? 'Write at least 20 characters'
-			error = $locale === 'en' ? 'Write at least 20 characters'
 				: $locale === 'fr' ? 'Écrivez au moins 20 caractères'
 				: 'Escribe al menos 20 caracteres';
 			return;

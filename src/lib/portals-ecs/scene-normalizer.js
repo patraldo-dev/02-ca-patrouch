@@ -356,6 +356,11 @@ export function normalizeSceneConfig(raw, portalDefaults = {}) {
     // ── Parallax layers (only for environment.type === 'parallax') ──
     normalized.layers = normalizeLayers(raw.layers, normalized.environment?.type);
 
+    // ── Scene elements (content-specific objects from the writing) ──
+    // NOT gated on environment type — applies to all scenes so the realm
+    // reflects what was written (dogs, lamps, rivers, etc.).
+    normalized.scene_elements = normalizeSceneElements(raw.scene_elements ?? raw.sceneElements);
+
     // ═══ Render-complete derivation ═══
     // The default render path (arboleda starfield + themed environments) reads
     // palette.background / fog_color / fog_density, lighting, ambient_particles,
@@ -411,6 +416,26 @@ function normalizeLayers(rawLayers, envType) {
 	normalized.sort((a, b) => a.depth - b.depth);
 
 	return normalized.length ? normalized : DEFAULT_LAYERS;
+}
+
+// ── Scene elements (content-specific objects extracted from the writing) ──
+const VALID_ELEMENT_KINDS = ['quadruped', 'figure', 'vehicle', 'structure', 'plant', 'water', 'light_source', 'object'];
+const VALID_POSITIONS = ['foreground', 'midground', 'background'];
+
+function normalizeSceneElements(rawElements) {
+	if (!Array.isArray(rawElements) || rawElements.length === 0) {
+		return [];  // empty is valid — not all writings have distinctive objects
+	}
+	return rawElements
+		.filter((e) => e && typeof e === 'object')
+		.map((e) => ({
+			kind: VALID_ELEMENT_KINDS.includes(e.kind) ? e.kind : 'object',
+			label: typeof e.label === 'string' ? e.label.slice(0, 40) : e.kind || 'object',
+			count: Math.round(clamp(e.count ?? 1, 1, 6, 1)),
+			scale: clamp(e.scale ?? 1.0, 0.3, 3.0, 1.0),
+			position: VALID_POSITIONS.includes(e.position) ? e.position : 'midground',
+		}))
+		.slice(0, 8);  // cap for perf
 }
 
 // ── Particle-style → visual params (mirrors the cron prompt's mood mapping) ──

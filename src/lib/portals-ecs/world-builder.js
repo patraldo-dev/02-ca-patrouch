@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { buildEnvironment, buildMural, buildParticles } from './environments.js';
+import { buildEnvironment, buildMural, buildParticles, buildSceneElements } from './environments.js';
 import { playTransition } from './scene-transition.js';
 import { installNarration } from './portal-audio.js';
 import { LocomotionSystem, locomotion, configureLocomotion } from './locomotion-system.js';
@@ -403,21 +403,22 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	// already adds these for themed scenes; for the starfield path we add them
 	// here so cosmos/materialized realms also get murals + particles. ──
 	if (useStarfield) {
-		// Murals + particles for starfield (themed already has them via buildEnvironment).
-		// buildMural/buildParticles expect track to be an array with .push(); world-builder's
-		// track is a function, so use a local array then register each object via track().
+		// Murals + particles + scene elements for starfield (themed already has
+		// them via buildEnvironment). These functions expect track to be an array
+		// with .push(); world-builder's track is a function, so use a local array
+		// then register each object via track().
 		const envTrack = [];
 		buildMural(config, scene, envTrack);
 		const particleHandle = buildParticles(config, scene, envTrack);
+		const elementsHandle = buildSceneElements(config, scene, envTrack);
 		for (const obj of envTrack) track(obj);
 
-		if (particleHandle) {
-			const prevUpdate = envHandle.update;
-			envHandle.update = (dt, time) => {
-				prevUpdate?.(dt, time);
-				particleHandle.update(dt, time);
-			};
-		}
+		const prevUpdate = envHandle.update;
+		envHandle.update = (dt, time) => {
+			prevUpdate?.(dt, time);
+			particleHandle?.update(dt, time);
+			elementsHandle?.update(dt, time);
+		};
 	}
 
 	// ── Portal cubes from portal_links — dynamic multi-ring carousel ──

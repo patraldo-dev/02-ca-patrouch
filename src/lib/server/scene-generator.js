@@ -77,7 +77,14 @@ Output ONLY valid JSON matching this schema (no markdown, no explanation):
     "crystal_ring_radius": 1.5-2.5,
     "crystal_elevations": [0.6-1.8],
     "tab_orbit_radius": 2.0-3.0
-  }
+  },
+  "scene_elements": [
+    {"kind": "quadruped|figure|vehicle|structure|plant|water|light_source|object",
+     "label": "string - what this IS (e.g. 'dog', 'lamp post', 'river', 'crowd')",
+     "count": 1,
+     "scale": 1.0,
+     "position": "foreground|midground|background"}
+  ]
 }
 
 Rules:
@@ -106,6 +113,17 @@ Rules:
 - atmosphere.light_intensity drives the derived scene lighting (higher = brighter)
 - particle_style MUST be exactly one of: sparkle, dust, ember, bubble, snow
 - sparkle=festive, dust=contemplative, ember=warm/passionate, bubble=playful, snow=melancholic
+- scene_elements: extract 2-5 of the most VISUALLY DISTINCTIVE objects from the writings.
+    These become 3D silhouettes placed in the scene, so the realm LOOKS LIKE what was written.
+    kind MUST be one of: quadruped (dog/wolf/horse/cat), figure (person/crowd/ghost), vehicle (car/boat/bike),
+    structure (building/bridge/tower/wall), plant (tree/flower/bush), water (river/lake/pool),
+    light_source (lamp/fire/sun/moon/candle), object (anything else)
+    label = the specific thing (e.g. "dog", not "animal"). count = how many. scale = relative size.
+    position = where in the scene depth (foreground=close, midground=middle, background=far).
+    Example: for "three dogs at dusk on a city street" →
+    [{kind:"quadruped",label:"dog",count:3,scale:1.2,position:"foreground"},
+     {kind:"light_source",label:"dusk lamp",count:2,scale:0.8,position:"midground"},
+     {kind:"structure",label:"street",count:1,scale:2.0,position:"background"}]
 - All positions are relative to the user at origin; the ECS handles placement using ring_radius and elevations`;
 
 /**
@@ -133,7 +151,7 @@ async function callMistral(ai, userPrompt) {
 			{ role: 'user', content: userPrompt }
 		],
 		temperature: 0.7,
-		max_tokens: 1200,
+		max_tokens: 1800,
 	});
 
 	let sceneText = aiResponse.response || aiResponse.result?.response || '';
