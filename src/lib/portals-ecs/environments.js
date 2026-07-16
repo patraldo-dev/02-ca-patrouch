@@ -19,6 +19,10 @@ const ANTOINE_ARTWORK = [
 
 export function buildEnvironment(config, scene, track) {
 	const type = config.environment?.type || 'space';
+	// track may be a function (world-builder convention) or an array. Normalize
+	// to an array for buildMural/buildParticles which use .push().
+	const trackArr = Array.isArray(track) ? track : [];
+	const trackFn = typeof track === 'function' ? track : (o) => trackArr.push(o);
 	const builders = {
 		ocean: buildOcean, forest: buildForest, celebration: buildCelebration,
 		space: buildCosmos, city: buildCity, dream: buildDream,
@@ -26,14 +30,12 @@ export function buildEnvironment(config, scene, track) {
 	};
 	const handle = (builders[type] || buildCosmos)(config, scene, track);
 
-	// Art mural — a large billboarded plane textured with either the portal's
-	// Flux-generated scene_image or a curated Antoine Patraldo artwork. Turns
-	// the flat colored backdrops into actual art, so the realm feels like
-	// stepping inside a painting rather than a void with primitives.
-	buildMural(config, scene, track);
+	// Art mural + particles use the array form, then register via trackFn
+	buildMural(config, scene, trackArr);
+	for (const obj of trackArr.splice(0)) trackFn(obj);
 
-	// Ambient particles — driven by config.decorations.particle_count + style.
-	const particles = buildParticles(config, scene, track);
+	const particles = buildParticles(config, scene, trackArr);
+	for (const obj of trackArr.splice(0)) trackFn(obj);
 	if (particles) {
 		const prevUpdate = handle.update;
 		handle.update = (delta, time) => {

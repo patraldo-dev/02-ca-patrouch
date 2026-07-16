@@ -403,12 +403,14 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	// already adds these for themed scenes; for the starfield path we add them
 	// here so cosmos/materialized realms also get murals + particles. ──
 	if (useStarfield) {
-		// Murals + particles only for starfield (themed already has them via buildEnvironment)
-		const muralTrack = [];
-		buildMural(config, scene, muralTrack);
-		for (const m of muralTrack) track(m);
+		// Murals + particles for starfield (themed already has them via buildEnvironment).
+		// buildMural/buildParticles expect track to be an array with .push(); world-builder's
+		// track is a function, so use a local array then register each object via track().
+		const envTrack = [];
+		buildMural(config, scene, envTrack);
+		const particleHandle = buildParticles(config, scene, envTrack);
+		for (const obj of envTrack) track(obj);
 
-		const particleHandle = buildParticles(config, scene, track);
 		if (particleHandle) {
 			const prevUpdate = envHandle.update;
 			envHandle.update = (dt, time) => {
