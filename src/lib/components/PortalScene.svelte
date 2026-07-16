@@ -17,7 +17,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { avatarVariant } from '$lib/utils.js';
 
-	let { data, initialPortalId = null } = $props();
+	let { data, initialPortalId = null, onRewrite = null } = $props();
 
 	// Switch language in-realm (persists to server, no navigation) — mirrors the
 	// LanguageSwitcherDesktop flow so narration can re-render in the new locale.
@@ -460,7 +460,11 @@
 				</button>
 			{/if}
 
-			<button class="drawer-btn" onclick={recenterScene}>🎯 {$t('portals.hud_recenter') || 'Recenter'}</button>
+			<button class="drawer-btn" onclick={recenterScene}>🎯 {$t('portals.hud_recenter')}</button>
+
+			{#if onRewrite}
+				<button class="drawer-btn" onclick={() => { drawerOpen = false; onRewrite(); }}>✍️ {$t('portals.hud_rewrite') || 'Rewrite'}</button>
+			{/if}
 
 			<a class="drawer-btn drawer-exit" href="/" onclick={() => drawerOpen = false}>🚪 {$t('portals.hud_exit')}</a>
 		</div>

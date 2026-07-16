@@ -12,7 +12,8 @@
 
 	// Phases: 'write' → 'loading' → 'summary' → 'scene'
 	let phase = $state('write');
-	let text = $state('');
+	// Restore text from sessionStorage (survives scene entry + rewrite)
+	let text = $state(typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('portal_write_text') || '' : '');
 	let error = $state('');
 	let materializedConfig = $state(null);
 	let materializedId = $state(null);
@@ -36,11 +37,14 @@
 	async function materialize() {
 		if (text.trim().length < 20) {
 			error = $locale === 'en' ? 'Write at least 20 characters'
+			error = $locale === 'en' ? 'Write at least 20 characters'
 				: $locale === 'fr' ? 'Écrivez au moins 20 caractères'
 				: 'Escribe al menos 20 caracteres';
 			return;
 		}
 		error = '';
+		// Persist the text so it survives scene entry and can be restored on rewrite
+		try { sessionStorage.setItem('portal_write_text', text.trim()); } catch {}
 		phase = 'loading';
 		try {
 			const res = await fetch('/api/materialize', {
@@ -67,6 +71,14 @@
 		phase = 'scene';
 	}
 
+	// Called from PortalScene's ☰ drawer — exit the scene back to the write form
+	// with the text restored, so the visitor can refine and re-materialize.
+	function rewriteFromScene() {
+		phase = 'write';
+		materializedConfig = null;
+		materializedId = null;
+	}
+
 	function skipToRealms() {
 		phase = 'scene';
 		materializedConfig = null;
@@ -90,7 +102,7 @@
 </script>
 
 {#if phase === 'scene'}
-	<PortalScene data={sceneData} initialPortalId={materializedId} />
+	<PortalScene data={sceneData} initialPortalId={materializedId} onRewrite={rewriteFromScene} />
 {:else}
 	<div class="write-intro">
 		<div class="write-card">
