@@ -247,6 +247,13 @@
 						configs[id] = deepMerge(configs[id] || {}, SSR_CONFIGS[id]);
 					}
 				}
+				// Also load any SSR configs NOT in the static list (e.g. a materialized
+				// realm from the write-first intro). These are injected by +page.svelte.
+				for (const id of Object.keys(SSR_CONFIGS)) {
+					if (!configs[id]) {
+						configs[id] = SSR_CONFIGS[id];
+					}
+				}
 				if (Object.keys(configs).length === 0) {
 					throw new Error('No scene configs found (neither D1/Mistral nor static fallbacks)');
 				}
