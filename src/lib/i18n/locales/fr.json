@@ -1111,5 +1111,17 @@
   "portals.hint_touch": "Glisser à gauche pour bouger · Glisser à droite pour regarder · Toucher les portails pour naviguer",
   "portals.enable_voice": "🎤 Activer Voix",
   "portals.mute": "🔇 Couper",
-  "portals.unmute": "🎤 Activer Mic"
+  "portals.unmute": "🎤 Activer Mic",
+  "portals.save_realm": "Enregistrer le royaume",
+  "portals.realm_saved": "Royaume enregistré",
+  "portals.saving": "Enregistrement…",
+  "portals.copy_url": "Copier le lien",
+  "portals.my_realms": "Mes royaumes",
+  "portals.my_realms_subtitle": "Les mondes que vous avez matérialisés à partir de vos mots",
+  "portals.save_login_hint": "Connectez-vous pour enregistrer",
+  "portals.create_new": "Créer un nouveau royaume",
+  "portals.no_realms": "Vous n'avez pas encore enregistré de royaume.",
+  "portals.write_to_create": "Écrivez pour en créer un",
+  "portals.enter": "Entrer",
+  "portals.confirm_delete": "Supprimer ce royaume ?"
 }

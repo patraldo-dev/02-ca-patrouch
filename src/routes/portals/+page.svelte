@@ -17,6 +17,8 @@
 	let error = $state('');
 	let materializedConfig = $state(null);
 	let materializedId = $state(null);
+	let saveState = $state('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+	let savedRealmUrl = $state(null);
 
 	const ENV_LABELS = {
 		ocean: { es: 'Un mundo submarino', en: 'An underwater world', fr: 'Un monde sous-marin' },
@@ -68,6 +70,49 @@
 
 	function enterRealm() {
 		phase = 'scene';
+	}
+
+	// Save the materialized realm to the user's library (private by default).
+	// Requires auth — redirects to login if not logged in.
+	async function saveRealm() {
+		if (!data.user) {
+			// Stash the config so we can save after login
+			try {
+				sessionStorage.setItem('pending_realm_save', JSON.stringify({
+					text: text.trim(),
+					sceneConfig: materializedConfig
+				}));
+			} catch {}
+			window.location.href = `/login?redirect=${encodeURIComponent('/portals')}`;
+			return;
+		}
+		saveState = 'saving';
+		try {
+			const res = await fetch('/api/realms/save', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					text: text.trim(),
+					sceneConfig: materializedConfig,
+					visibility: 'private'
+				})
+			});
+			const result = await res.json();
+			if (res.ok) {
+				saveState = 'saved';
+				savedRealmUrl = result.url;
+			} else {
+				saveState = 'error';
+			}
+		} catch {
+			saveState = 'error';
+		}
+	}
+
+	function copyShareUrl() {
+		if (savedRealmUrl) {
+			navigator.clipboard?.writeText(window.location.origin + savedRealmUrl);
+		}
 	}
 
 	// Called from PortalScene's ☰ drawer — exit the scene back to the write form
@@ -167,6 +212,34 @@
 					<button class="rewrite-btn" onclick={rewrite}>
 						{$t('portals.rewrite') || 'Escribir de nuevo'}
 					</button>
+				</div>
+
+				<!-- Save to library -->
+				<div class="save-section">
+					{#if saveState === 'saved'}
+						<p class="save-success">
+							✓ {$t('portals.realm_saved') || 'Reino guardado'}
+							{#if savedRealmUrl}
+								<button class="copy-url-btn" onclick={copyShareUrl}>
+									{$t('portals.copy_url') || 'Copiar enlace'}
+								</button>
+								<a href="/portals/my-realms" class="my-realms-link">
+									{$t('portals.my_realms') || 'Mis reinos'}
+								</a>
+							{/if}
+						</p>
+					{:else}
+						<button class="save-btn" onclick={saveRealm} disabled={saveState === 'saving'}>
+							{#if saveState === 'saving'}
+								{$t('portals.saving') || 'Guardando…'}
+							{:else}
+								🔖 {$t('portals.save_realm') || 'Guardar reino'}
+							{/if}
+						</button>
+						{#if !data.user}
+							<p class="save-hint">{$t('portals.save_login_hint') || 'Inicia sesión para guardar'}</p>
+						{/if}
+					{/if}
 				</div>
 			{:else}
 				<div class="write-header">
@@ -338,6 +411,30 @@
 		padding: 0.5rem; text-decoration: underline; text-underline-offset: 3px;
 	}
 	.rewrite-btn:hover { color: rgba(255, 255, 255, 0.7); }
+
+	/* Save section */
+	.save-section { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.1); }
+	.save-btn {
+		background: transparent; color: rgba(255,255,255,0.8);
+		border: 1px solid rgba(255,255,255,0.25); border-radius: 12px;
+		font-family: Georgia, serif; font-size: 0.9rem; cursor: pointer;
+		padding: 0.6rem 1.2rem; transition: all 0.2s; width: 100%;
+	}
+	.save-btn:hover:not(:disabled) { border-color: rgba(201,168,124,0.6); color: #c9a87c; }
+	.save-btn:disabled { opacity: 0.6; cursor: default; }
+	.save-hint { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 0.5rem; text-align: center; }
+	.save-success {
+		color: #8fbc8f; font-size: 0.9rem; font-family: Georgia, serif;
+		display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;
+		justify-content: center;
+	}
+	.copy-url-btn {
+		background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+		color: rgba(255,255,255,0.7); border-radius: 8px; padding: 0.3rem 0.7rem;
+		font-size: 0.8rem; cursor: pointer;
+	}
+	.copy-url-btn:hover { background: rgba(255,255,255,0.15); }
+	.my-realms-link { color: #c9a87c; font-size: 0.85rem; text-decoration: underline; }
 
 	@media (max-width: 600px) {
 		.write-card { padding: 1.5rem; }

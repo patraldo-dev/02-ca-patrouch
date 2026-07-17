@@ -1098,5 +1098,17 @@
   "portals.hint_touch": "Arrastra izquierda para moverte · Arrastra derecha para mirar · Toca portales para navegar",
   "portals.enable_voice": "🎤 Activar Voz",
   "portals.mute": "🔇 Silenciar",
-  "portals.unmute": "🎤 Activar Mic"
+  "portals.unmute": "🎤 Activar Mic",
+  "portals.save_realm": "Guardar reino",
+  "portals.realm_saved": "Reino guardado",
+  "portals.saving": "Guardando…",
+  "portals.copy_url": "Copiar enlace",
+  "portals.my_realms": "Mis reinos",
+  "portals.my_realms_subtitle": "Los mundos que has materializado a partir de tus palabras",
+  "portals.save_login_hint": "Inicia sesión para guardar",
+  "portals.create_new": "Crear un nuevo reino",
+  "portals.no_realms": "Aún no has guardado ningún reino.",
+  "portals.write_to_create": "Escribe para crear uno",
+  "portals.enter": "Entrar",
+  "portals.confirm_delete": "¿Eliminar este reino?"
 }

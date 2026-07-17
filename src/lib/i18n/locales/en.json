@@ -1111,5 +1111,17 @@
   "portals.hint_touch": "Drag left to move · Drag right to look · Tap portals to navigate",
   "portals.enable_voice": "🎤 Enable Voice",
   "portals.mute": "🔇 Mute",
-  "portals.unmute": "🎤 Unmute"
+  "portals.unmute": "🎤 Unmute",
+  "portals.save_realm": "Save realm",
+  "portals.realm_saved": "Realm saved",
+  "portals.saving": "Saving…",
+  "portals.copy_url": "Copy link",
+  "portals.my_realms": "My realms",
+  "portals.my_realms_subtitle": "The worlds you've materialized from your words",
+  "portals.save_login_hint": "Log in to save",
+  "portals.create_new": "Create a new realm",
+  "portals.no_realms": "You haven't saved any realms yet.",
+  "portals.write_to_create": "Write to create one",
+  "portals.enter": "Enter",
+  "portals.confirm_delete": "Delete this realm?"
 }
