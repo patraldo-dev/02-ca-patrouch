@@ -117,6 +117,8 @@ export function buildEnvironment(config, scene, track) {
 			elements.update(delta, time);
 		};
 	}
+	// Expose grabbable meshes for the grab system
+	handle.grabbables = elements.grabbables || [];
 	return handle;
 }
 
@@ -773,11 +775,12 @@ function buildMemory(config, scene, track) {
 
 export function buildSceneElements(config, scene, track) {
 	const elements = config.scene_elements || [];
-	if (!elements.length) return { update() {} };
+	if (!elements.length) return { update() {}, grabbables: [] };
 
 	const palette = config.palette || {};
 	const crystalColors = palette.crystal_colors || ['#c9a87c', '#4fc3f7', '#b5ead7', '#ce93d8'];
 	const animated = [];
+	const grabbables = [];  // meshes tagged userData.grabbable, for the grab system
 
 	for (let ei = 0; ei < elements.length; ei++) {
 		const el = elements[ei];
@@ -797,8 +800,15 @@ export function buildSceneElements(config, scene, track) {
 			const group = buildElementMesh(el.kind, s, color);
 			group.position.set(x, dp.y, z);
 			group.rotation.y = Math.random() * Math.PI * 2;
+			// Tag for grab system: these are physical objects you can reach
+			// toward and manipulate. Scene elements (figures, quadrupeds,
+			// structures, etc.) become grabbable 3D objects.
+			group.userData.grabbable = true;
+			group.userData.label = el.label || el.kind;
+			group.userData.kind = el.kind;
 			scene.add(group);
 			track.push(group);
+			grabbables.push(group);
 
 			if (el.kind === 'figure') {
 				// Swap the primitive for the real GLB model once loaded.
@@ -835,6 +845,7 @@ export function buildSceneElements(config, scene, track) {
 				}
 			}
 		},
+		grabbables,
 	};
 }
 

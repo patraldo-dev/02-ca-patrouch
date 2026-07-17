@@ -13,6 +13,7 @@ import { buildEnvironment, buildMural, buildParticles, buildSceneElements } from
 import { playTransition } from './scene-transition.js';
 import { installNarration } from './portal-audio.js';
 import { LocomotionSystem, locomotion, configureLocomotion } from './locomotion-system.js';
+import { GrabSystem } from './grab-system.js';
 import { InteractionSystem } from './interaction-system.js';
 import { RevelationSystem, setShowOverlay } from './revelation-system.js';
 import { NetworkSystem } from './network-system.js';
@@ -446,6 +447,18 @@ function rebuildScene(world, portalId, isNavigation = false) {
 			locomotion.groundedPlayer.register(child);
 		});
 	}
+
+	// ── Grab system: makes scene elements (figures, quadrupeds, structures)
+	// physically interactable — point + trigger/click to pick up, move, drop. ──
+	if (locomotion.grab) locomotion.grab.dispose();
+	locomotion.grab = new GrabSystem(scene);
+	// Collect grabbables from both paths (themed via envHandle, starfield via elementsHandle)
+	const grabbables = [];
+	if (envHandle?.grabbables) grabbables.push(...envHandle.grabbables);
+	if (useStarfield && typeof elementsHandle !== 'undefined' && elementsHandle?.grabbables) {
+		grabbables.push(...elementsHandle.grabbables);
+	}
+	locomotion.grab.setGrabbables(grabbables);
 
 	// ── Art mural + ambient particles: apply to ALL scenes (both starfield
 	// and themed), so every realm has the visual enrichment. buildEnvironment

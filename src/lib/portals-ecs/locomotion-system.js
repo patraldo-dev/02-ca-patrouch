@@ -13,7 +13,7 @@
 //  CameraOrbitSystem to yield (it checks that flag).
 // ═══════════════════════════════════════════════════════════
 import { createSystem } from 'elics';
-import { Vector3, Euler } from 'three';
+import { Vector3, Euler, Quaternion } from 'three';
 import { InputComponent } from '@iwsdk/core';
 import { GroundedPlayer, isGroundedRealm } from './grounded-player.js';
 import { TeleportSystem } from './teleport-system.js';
@@ -42,6 +42,10 @@ const TELEPORT_BACKWARD_MIN = (5 * Math.PI) / 6; // 150-180° = backward zone
 const _moveDir = new Vector3();
 const _upAxis = new Vector3(0, 1, 0);
 const _euler = new Euler(0, 0, 0, 'YXZ');
+const _grabOrigin = new Vector3();
+const _grabQuat = new Quaternion();
+const _grabDir = new Vector3();
+const _forward3 = new Vector3(0, 0, -1);
 
 // ── Inline input state (populated by keyboard/touch listeners) ──
 // { x: -1..1 (strafe), y: -1..1 (forward), lookX: delta, lookY: delta }
@@ -61,6 +65,7 @@ export const locomotion = {
 	groundedPlayer: null,   // GroundedPlayer instance (set for grounded realms)
 	teleport: null,         // TeleportSystem instance (set for grounded realms)
 	vignette: null,         // ComfortVignette instance (set for grounded realms)
+	grab: null,             // GrabSystem instance (set for all scenes with elements)
 	// Fly-to-target: when set, the update loop eases the camera toward this
 	// position (with an optional lookAt target), then clears it. Used by
 	// "fly to peer" and "recenter" (mobile). Set via flyTo(); cleared when
@@ -159,6 +164,10 @@ function onKeyUp(e) {
 // Mouse/touch look state
 let _lookActive = false;
 
+// Mouse position in NDC (-1..1) + button state, for the grab system
+let _mouseNDC = null;  // { x, y } or null
+let _mouseDown = false;
+
 function updateInlineInputFromKeys() {
 	// If the thumbstick is active (touch), don't overwrite — let it own x/y.
 	if (_thumbstickActive) return;
@@ -186,6 +195,7 @@ export function initInlineInput(domElement) {
 	let mouseMoved = false;
 	domElement.addEventListener('mousedown', (e) => {
 		_lookActive = true;
+		_mouseDown = true;
 		mouseDownPos = { x: e.clientX, y: e.clientY };
 		mouseMoved = false;
 	});
@@ -198,8 +208,16 @@ export function initInlineInput(domElement) {
 			}));
 		}
 		_lookActive = false;
+		_mouseDown = false;
 		mouseDownPos = null;
 		mouseMoved = false;
+	});
+	// Track mouse position in NDC for the grab system
+	window.addEventListener('mousemove', (e) => {
+		_mouseNDC = {
+			x: (e.clientX / window.innerWidth) * 2 - 1,
+			y: -(e.clientY / window.innerHeight) * 2 + 1,
+		};
 	});
 	domElement.addEventListener('mousemove', (e) => {
 		if (_lookActive && e.buttons > 0) {
@@ -379,6 +397,15 @@ export const LocomotionSystem = class extends createSystem({}) {
 				const speed = Math.min(1, Math.hypot(inlineInput.x, inlineInput.y));
 				locomotion.vignette.update(speed);
 			}
+
+			// ── Grab system (desktop): mouse position + click to grab ──
+			if (locomotion.grab && _mouseNDC) {
+				locomotion.grab.update({
+					camera: cam,
+					pointerNDC: _mouseNDC,
+					mouseHeld: _mouseDown,
+				});
+			}
 			return;
 		}
 
@@ -550,6 +577,23 @@ export const LocomotionSystem = class extends createSystem({}) {
 			// Normalize: our DEAD_ZONE is 0.1, max useful is ~1.0
 			const speed = Math.max(0, Math.min(1, (leftMag - DEAD_ZONE) / (1 - DEAD_ZONE)));
 			locomotion.vignette.update(speed);
+		}
+
+		// ── Grab system (XR): right controller ray + trigger to grab ──
+		if (locomotion.grab && world.input?.gamepads?.right) {
+			const rightGp = world.input.gamepads.right;
+			const triggerHeld = rightGp.getButtonPressed(InputComponent.Trigger);
+			const raySpace = world.player?.raySpaces?.right;
+			if (raySpace) {
+				raySpace.getWorldPosition(_grabOrigin);
+				raySpace.getWorldQuaternion(_grabQuat);
+				_grabDir.copy(_forward3).applyQuaternion(_grabQuat);
+				locomotion.grab.update({
+					controllerOrigin: _grabOrigin,
+					controllerDir: _grabDir,
+					triggerHeld,
+				});
+			}
 		}
 	}
 };
