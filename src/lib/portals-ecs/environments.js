@@ -4,8 +4,77 @@
 // Object counts + particle behaviour are driven by config.decorations (the
 // fields Mistral generates). Each portal is a recognizable PLACE.
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
+
+// ── Figure GLB cache (HombreAmarillo) ──
+// Loaded once on first use, cloned per instance. Static mesh (no
+// morph targets/animation), 1.4MB, served from R2 with immutable cache.
+// Falls back to the cylinder+sphere primitive if the load fails.
+let _figureTemplate = null;
+let _figureLoading = false;
+const _figureWaiters = [];
+const FIGURE_GLB_URL = '/api/assets/models/hombre-amarillo.glb';
+
+function loadFigureTemplate() {
+	if (_figureTemplate || _figureLoading) return;
+	_figureLoading = true;
+	const loader = new GLTFLoader();
+	loader.load(
+		FIGURE_GLB_URL,
+		(gltf) => {
+			_figureTemplate = gltf.scene;
+			// Configure materials for the portal aesthetic: semi-transparent,
+			//unlit-friendly, double-sided so silhouettes read from any angle.
+			_figureTemplate.traverse((child) => {
+				if (child.isMesh && child.material) {
+					child.material.transparent = true;
+					child.material.opacity = 0.85;
+					child.material.depthWrite = false;
+					child.material.side = THREE.DoubleSide;
+				}
+			});
+			const waiters = _figureWaiters.splice(0);
+			waiters.forEach((cb) => cb(_figureTemplate));
+		},
+		undefined,
+		(err) => {
+			console.warn('[environments] figure GLB load failed, using primitive fallback:', err?.message || err);
+			_figureLoading = false; // allow retry
+		}
+	);
+}
+
+/**
+ * Request a cloned figure mesh. Calls onReady with a THREE.Group
+ * (the GLB clone, recentered + scaled). If the template isn't loaded
+ * yet, queues the callback. The caller should add a placeholder to
+ * the scene immediately and swap when onReady fires.
+ */
+function requestFigureClone(onReady) {
+	if (_figureTemplate) { onReady(cloneFigure()); return; }
+	_figureWaiters.push(() => onReady(cloneFigure()));
+	loadFigureTemplate();
+}
+
+function cloneFigure() {
+	const clone = _figureTemplate.clone(true);
+	// Recenter on origin (feet at y=0) using bounding box.
+	const box = new THREE.Box3().setFromObject(clone);
+	const size = new THREE.Vector3();
+	box.getSize(size);
+	const center = new THREE.Vector3();
+	box.getCenter(center);
+	clone.position.x -= center.x;
+	clone.position.z -= center.z;
+	clone.position.y -= box.min.y;
+	// Normalize to ~1.2 units tall, matching the primitive figure height.
+	const targetHeight = 1.2;
+	const scale = targetHeight / size.y;
+	clone.scale.setScalar(scale);
+	return clone;
+}
 
 // Antoine Patraldo's curated artwork pool (same as art-prompt.js).
 // Used as fallback murals when a portal has no Flux-generated scene_image.
@@ -722,11 +791,32 @@ export function buildSceneElements(config, scene, track) {
 			const x = spread + (Math.random() - 0.5) * 0.5;
 			const z = dp.z + (Math.random() - 0.5) * 1.5;
 
+			// Build the procedural mesh first (always synchronous, acts as
+			// both fallback and placeholder). For 'figure' elements, we then
+			// async-swap in the HombreAmarillo GLB when it's loaded.
 			const group = buildElementMesh(el.kind, s, color);
 			group.position.set(x, dp.y, z);
 			group.rotation.y = Math.random() * Math.PI * 2;
 			scene.add(group);
 			track.push(group);
+
+			if (el.kind === 'figure') {
+				// Swap the primitive for the real GLB model once loaded.
+				// Preserves the position/rotation already set on the placeholder.
+				requestFigureClone((figureMesh) => {
+					figureMesh.position.copy(group.position);
+					figureMesh.rotation.copy(group.rotation);
+					figureMesh.scale.multiplyScalar(s);
+					// Replace in scene and track
+					scene.remove(group);
+					scene.add(figureMesh);
+					const idx = track.indexOf(group);
+					if (idx >= 0) track[idx] = figureMesh;
+					// Update the animated reference so the update loop animates the GLB
+					const animRef = animated.find((a) => a.mesh === group);
+					if (animRef) animRef.mesh = figureMesh;
+				});
+			}
 
 			if (el.kind === 'quadruped' || el.kind === 'figure') {
 				animated.push({ mesh: group, phase: Math.random() * Math.PI * 2, kind: el.kind });
