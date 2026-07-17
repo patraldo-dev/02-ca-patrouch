@@ -484,12 +484,10 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	}
 
 	// ── Portal cubes from portal_links — dynamic multi-ring carousel ──
-	// Restores the 2f0029c "best version" energy: cubes distributed across
-	// concentric rings at varied elevations, each face showing a different
-	// artwork from the collection (deterministic cycling, not random), uniform
-	// BoxGeometry so artwork reads cleanly, lively float/spin, and subtle
-	// additive glow rings billboarded to camera.
-	const links = config.portal_links || [];
+	// Only in the cosmos/starfield hub. Themed realms (forest, city, etc.)
+	// use the 3D compass for navigation instead — the artwork cubes would
+	// clash with the grounded environment.
+	const links = useStarfield ? (config.portal_links || []) : [];
 	const cubeMeshes = [];
 
 	const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
