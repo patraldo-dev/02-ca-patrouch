@@ -26,6 +26,17 @@ const EYE_HEIGHT = 1.6;
 const DEFAULT_FLOOR_Y = -1.5;
 const LOOK_SENSITIVITY = 0.003;
 
+// ── Right-stick locomotion zones (Flowerbed model) ──
+// The right thumbstick is shared between snap turn (sides) and
+// teleport (forward/back). Angles measured from forward (0°).
+const SNAP_TURN_MIN = Math.PI / 6;     // 30°
+const SNAP_TURN_MAX = (5 * Math.PI) / 6; // 150°
+const SNAP_TURN_MAG = 0.8;             // min magnitude to trigger
+const SNAP_ANGLE = Math.PI / 4;        // 45° per snap
+const TELEPORT_MAG = 0.8;              // min magnitude to engage teleport
+const TELEPORT_FORWARD_MAX = Math.PI / 6;  // 0-30° = forward teleport zone
+const TELEPORT_BACKWARD_MIN = (5 * Math.PI) / 6; // 150-180° = backward zone
+
 // Preallocated temporaries (no per-frame alloc).
 const _moveDir = new Vector3();
 const _upAxis = new Vector3(0, 1, 0);
@@ -400,8 +411,18 @@ export const LocomotionSystem = class extends createSystem({}) {
 					locomotion._flyTarget = null;
 				}
 			}
-			return;
-		}
+			// Grounded: apply gravity even when left stick is idle
+			if (locomotion.grounded && locomotion.groundedPlayer && world.player) {
+				const player = world.player;
+				const footPos = new Vector3(player.position.x, player.position.y - EYE_HEIGHT, player.position.z);
+				locomotion.groundedPlayer.step(footPos, new Vector3(0, 0, 0), delta);
+				player.position.x = footPos.x;
+				player.position.y = footPos.y + EYE_HEIGHT;
+				player.position.z = footPos.z;
+			}
+			// Fall through to right-stick handling (don't return yet)
+			// ... right stick teleport/snap-turn handled below
+		} else {
 		locomotion._flyTarget = null;  // thumbstick input cancels fly
 		locomotion.userActive = true;
 
@@ -433,6 +454,71 @@ export const LocomotionSystem = class extends createSystem({}) {
 				player.position.x += _moveDir.x;
 				player.position.z += _moveDir.z;
 				player.position.y = locomotion.floorY + EYE_HEIGHT;
+			}
+		}
+		}
+
+		// ── Right thumbstick: snap turn + teleport (XR, grounded realms only) ──
+		const right = world.input?.gamepads?.right;
+		if (right && locomotion.grounded) {
+			const rValue = right.get2DInputValue(THUMBSTICK) ?? 0;
+			const rAxes = right.getAxesValues?.(THUMBSTICK) ?? { x: 0, y: 0 };
+
+			if (rValue >= SNAP_TURN_MAG) {
+				// Stick angle: 0 = forward, ±π = back (y inverted on controllers)
+				const angle = Math.atan2(rAxes.x, -rAxes.y);
+				const absAngle = Math.abs(angle);
+
+				if (absAngle < TELEPORT_FORWARD_MAX || absAngle > TELEPORT_BACKWARD_MIN) {
+					// ── TELEPORT ZONE (forward/back) — aim the ray ──
+					if (locomotion.teleport) {
+						const cam = world.camera;
+						const player = world.player;
+						const aimDir = new Vector3();
+						cam.getWorldDirection(aimDir);
+						aimDir.y = 0.3;
+						aimDir.normalize();
+						const footPos = new Vector3(player.position.x, player.position.y - EYE_HEIGHT, player.position.z);
+						locomotion.teleport.update({
+							camera: cam, isAiming: true, aimDirection: aimDir,
+							shouldTeleport: false, playerPos: footPos,
+						});
+						locomotion._xrTeleportEngaged = true;
+					}
+				} else if (absAngle >= SNAP_TURN_MIN && absAngle <= SNAP_TURN_MAX) {
+					// ── SNAP TURN ZONE — edge-triggered 45° rotation ──
+					if (!locomotion._xrSnapState) {
+						world.player.rotateY((angle > 0 ? -1 : 1) * SNAP_ANGLE);
+						locomotion._xrSnapState = true;
+					}
+				}
+			} else {
+				// Stick released below threshold
+				if (locomotion._xrTeleportEngaged && locomotion.teleport) {
+					const cam = world.camera;
+					const player = world.player;
+					const footPos = new Vector3(player.position.x, player.position.y - EYE_HEIGHT, player.position.z);
+					const teleported = locomotion.teleport.update({
+						camera: cam, isAiming: false, aimDirection: null,
+						shouldTeleport: true, playerPos: footPos,
+					});
+					if (teleported) {
+						player.position.x = footPos.x;
+						player.position.y = footPos.y + EYE_HEIGHT;
+						player.position.z = footPos.z;
+						locomotion.groundedPlayer.velocity.set(0, 0, 0);
+					}
+				}
+				locomotion._xrTeleportEngaged = false;
+				locomotion._xrSnapState = false;
+
+				// Hide teleport visuals when stick is centered
+				if (locomotion.teleport) {
+					locomotion.teleport.update({
+						camera: world.camera, isAiming: false, aimDirection: null,
+						shouldTeleport: false, playerPos: null,
+					});
+				}
 			}
 		}
 	}
