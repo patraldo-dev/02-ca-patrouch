@@ -425,12 +425,15 @@ export const LocomotionSystem = class extends createSystem({}) {
 			locomotion._rigPlaced = true;
 		}
 
-		// Flowerbed-style first-person: hide controller models.
+		// Show controller models — like Flowerbed, visible hands/controllers
+		// make the experience feel immersive rather than observational.
+		// (Previously these were hidden, which made it feel like a detached
+		// camera. Restored so the player sees their virtual hands.)
 		const va = world.input?.visualAdapters;
 		if (va) {
 			for (const side of ['left', 'right']) {
 				const model = va[side]?.value?.visual?.model;
-				if (model && model.visible !== false) model.visible = false;
+				if (model) model.visible = true;
 			}
 		}
 
