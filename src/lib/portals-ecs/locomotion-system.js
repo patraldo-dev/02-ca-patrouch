@@ -16,6 +16,7 @@ import { createSystem } from 'elics';
 import { Vector3, Euler } from 'three';
 import { InputComponent } from '@iwsdk/core';
 import { GroundedPlayer, isGroundedRealm } from './grounded-player.js';
+import { TeleportSystem } from './teleport-system.js';
 
 const THUMBSTICK = InputComponent.Thumbstick; // 'xr-standard-thumbstick'
 const WALK_SPEED = 1.8;
@@ -46,6 +47,7 @@ export const locomotion = {
 	userActive: false,
 	enabled: false,
 	groundedPlayer: null,   // GroundedPlayer instance (set for grounded realms)
+	teleport: null,         // TeleportSystem instance (set for grounded realms)
 	// Fly-to-target: when set, the update loop eases the camera toward this
 	// position (with an optional lookAt target), then clears it. Used by
 	// "fly to peer" and "recenter" (mobile). Set via flyTo(); cleared when
@@ -53,7 +55,7 @@ export const locomotion = {
 	_flyTarget: null,      // { x, y, z, lookAt?: {x,y,z} }
 };
 
-export function configureLocomotion(config) {
+export function configureLocomotion(config, scene) {
 	const envType = config?.environment?.type;
 	const grounded = isGroundedRealm(envType);
 	locomotion.grounded = grounded;
@@ -61,6 +63,18 @@ export function configureLocomotion(config) {
 	locomotion.floorY = config?.camera?.floor_y ?? DEFAULT_FLOOR_Y;
 	// Create the grounded physics player for grounded realms
 	locomotion.groundedPlayer = grounded ? new GroundedPlayer() : null;
+	// Teleport system: create for grounded realms with a scene
+	if (grounded && scene) {
+		// Clean up previous teleport system if it exists
+		if (locomotion.teleport) {
+			locomotion.teleport.dispose();
+		}
+		locomotion.teleport = new TeleportSystem(scene);
+		locomotion.teleport.setGroundedPlayer(locomotion.groundedPlayer);
+	} else if (locomotion.teleport) {
+		locomotion.teleport.dispose();
+		locomotion.teleport = null;
+	}
 }
 
 // Fly the camera toward a target position (with optional lookAt). Used by
@@ -222,6 +236,30 @@ export const LocomotionSystem = class extends createSystem({}) {
 				// snaps the camera back to the orbit path (the "snap to start" bug).
 				// Once the visitor has moved, they keep control until an explicit
 				// recenter (Esc); the orbit yields permanently for this scene.
+
+				// In grounded mode, still apply gravity (player might be airborne).
+				// Also update teleport visuals if aiming.
+				if (locomotion.grounded && locomotion.groundedPlayer) {
+					const cam = world.camera;
+					if (cam) {
+						const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
+						locomotion.groundedPlayer.step(footPos, new Vector3(0, 0, 0), delta);
+						cam.position.y = footPos.y + EYE_HEIGHT;
+					}
+				}
+				// Teleport: if key held while idle, still show the ray
+				if (locomotion.teleport && locomotion.teleport._keyHeld) {
+					const cam = world.camera;
+					const aimDir = new Vector3();
+					cam.getWorldDirection(aimDir);
+					aimDir.y = 0.3;
+					aimDir.normalize();
+					const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
+					locomotion.teleport.update({
+						camera: cam, isAiming: true, aimDirection: aimDir,
+						shouldTeleport: false, playerPos: footPos,
+					});
+				}
 				locomotion.enabled = false;
 				// Consume look deltas so they don't accumulate
 				inlineInput.lookX = 0;
@@ -245,6 +283,38 @@ export const LocomotionSystem = class extends createSystem({}) {
 				// Consume the look delta
 				inlineInput.lookX = 0;
 				inlineInput.lookY = 0;
+			}
+
+			// ── Teleport (desktop): hold Space + look to aim, release to teleport ──
+			if (locomotion.teleport) {
+				const wasHeld = locomotion.teleport._keyHeld;
+				// Aim direction: camera forward, flattened to horizontal + slight up
+				const aimDir = new Vector3();
+				cam.getWorldDirection(aimDir);
+				aimDir.y = Math.abs(aimDir.y) > 0.7 ? 0.5 * Math.sign(aimDir.y) : 0.3; // give upward arc
+				aimDir.normalize();
+
+				// Determine the foot position (for teleport target)
+				const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
+
+				locomotion.teleport.update({
+					camera: cam,
+					isAiming: wasHeld,
+					aimDirection: aimDir,
+					shouldTeleport: !wasHeld && locomotion.teleport._wasHeld, // released this frame
+					playerPos: footPos,
+				});
+				locomotion.teleport._wasHeld = wasHeld;
+
+				// If a teleport happened, update the camera position to match
+				footPos.y += EYE_HEIGHT;
+				cam.position.copy(footPos);
+
+				// If aiming teleport, skip normal movement (let them aim)
+				if (wasHeld) {
+					locomotion.userActive = true;
+					return;
+				}
 			}
 
 			// Movement: build direction from input, rotate by camera yaw.

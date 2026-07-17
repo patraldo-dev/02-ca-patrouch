@@ -277,8 +277,9 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	}
 
 	// Tell the locomotion system whether this scene is the floorless hub
-	// (flight mode) or a grounded world (walk mode).
-	configureLocomotion(config);
+	// (flight mode) or a grounded world (walk mode). Also passes the scene
+	// so the TeleportSystem can add its ray + ring visuals.
+	configureLocomotion(config, scene);
 
 	nav.currentPortalId = portalId;
 	world._currentPortalId = portalId;  // NetworkSystem reads this to join the right room
@@ -399,20 +400,50 @@ function rebuildScene(world, portalId, isNavigation = false) {
 		world._envHandle = envHandle;
 
 	// ── Register collision geometry for grounded realms ──
-	// After the environment is built, scan the scene for walkable surfaces
-	// (ground planes) and register them with the GroundedPlayer so the
-	// physics step can keep the player on the floor. Free-flight realms
-	// (space/dream/cosmos) skip this — locomotion.groundedPlayer is null.
+	// After the environment is built, scan the scene for:
+	//   1. Ground planes (walkable surfaces — floor you stand on)
+	//   2. Obstacles (solid objects you can't walk through — trees, columns,
+	//      structures, scene elements)
+	// Both feed the GroundedPlayer's BVH so the physics step keeps the
+	// player on the floor AND pushes them out of solid geometry.
+	// Free-flight realms (space/dream/cosmos) skip this entirely.
 	if (locomotion.groundedPlayer) {
 		scene.traverse((child) => {
-			if (child.isMesh && child.geometry) {
-				// Ground planes: rotated flat (rotation.x ≈ -π/2), at or near floorY
-				const isFlat = Math.abs(child.rotation.x + Math.PI / 2) < 0.1;
-				const isNearFloor = Math.abs(child.position.y - locomotion.floorY) < 0.5;
-				if (isFlat && isNearFloor) {
-					locomotion.groundedPlayer.register(child);
-				}
+			if (!child.isMesh || !child.geometry) return;
+
+			// Skip particle systems (Points, not Mesh — but double-check)
+			if (child.isPoints || child.isLine) return;
+
+			// Skip transparent decorative overlays (murals, backdrops, water
+			// planes, light shafts — visual-only, not solid)
+			const mat = child.material;
+			if (mat && mat.transparent && mat.opacity < 0.5) return;
+			if (mat && mat.blending === THREE.AdditiveBlending) return;
+
+			// Ground planes: rotated flat, near floorY → walkable surface
+			const isFlat = Math.abs(child.rotation.x + Math.PI / 2) < 0.1;
+			const isNearFloor = Math.abs(child.position.y - locomotion.floorY) < 0.5;
+			if (isFlat && isNearFloor) {
+				locomotion.groundedPlayer.register(child);
+				return;
 			}
+
+			// Obstacles: solid meshes that sit on or near the ground (not
+			// overhead decorations). Heuristic: the mesh's bounding box
+			// bottom is within ~2m of the floor and its height is between
+			// 0.3m and 4m (tall enough to block, short enough to not be
+			// a ceiling/skybox).
+			child.updateMatrixWorld(true);
+			const box = new THREE.Box3().setFromObject(child);
+			if (box.min.y > locomotion.floorY + 2) return; // too high overhead
+			const height = box.max.y - box.min.y;
+			if (height < 0.2 || height > 6) return; // too thin or too tall
+			// Skip very large flat surfaces (backdrops, already caught above)
+			const size = new THREE.Vector3();
+			box.getSize(size);
+			if (size.y < 0.15 && (size.x > 10 || size.z > 10)) return;
+
+			locomotion.groundedPlayer.register(child);
 		});
 	}
 
