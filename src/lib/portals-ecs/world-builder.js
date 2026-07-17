@@ -278,8 +278,8 @@ function rebuildScene(world, portalId, isNavigation = false) {
 
 	// Tell the locomotion system whether this scene is the floorless hub
 	// (flight mode) or a grounded world (walk mode). Also passes the scene
-	// so the TeleportSystem can add its ray + ring visuals.
-	configureLocomotion(config, scene);
+	// + camera so the TeleportSystem + ComfortVignette can attach visuals.
+	configureLocomotion(config, scene, world.camera);
 
 	nav.currentPortalId = portalId;
 	world._currentPortalId = portalId;  // NetworkSystem reads this to join the right room

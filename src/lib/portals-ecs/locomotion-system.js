@@ -17,6 +17,7 @@ import { Vector3, Euler } from 'three';
 import { InputComponent } from '@iwsdk/core';
 import { GroundedPlayer, isGroundedRealm } from './grounded-player.js';
 import { TeleportSystem } from './teleport-system.js';
+import { ComfortVignette } from './comfort-vignette.js';
 
 const THUMBSTICK = InputComponent.Thumbstick; // 'xr-standard-thumbstick'
 const WALK_SPEED = 1.8;
@@ -59,6 +60,7 @@ export const locomotion = {
 	enabled: false,
 	groundedPlayer: null,   // GroundedPlayer instance (set for grounded realms)
 	teleport: null,         // TeleportSystem instance (set for grounded realms)
+	vignette: null,         // ComfortVignette instance (set for grounded realms)
 	// Fly-to-target: when set, the update loop eases the camera toward this
 	// position (with an optional lookAt target), then clears it. Used by
 	// "fly to peer" and "recenter" (mobile). Set via flyTo(); cleared when
@@ -66,7 +68,7 @@ export const locomotion = {
 	_flyTarget: null,      // { x, y, z, lookAt?: {x,y,z} }
 };
 
-export function configureLocomotion(config, scene) {
+export function configureLocomotion(config, scene, camera) {
 	const envType = config?.environment?.type;
 	const grounded = isGroundedRealm(envType);
 	locomotion.grounded = grounded;
@@ -85,6 +87,16 @@ export function configureLocomotion(config, scene) {
 	} else if (locomotion.teleport) {
 		locomotion.teleport.dispose();
 		locomotion.teleport = null;
+	}
+	// Comfort vignette: create for grounded realms (reduces motion sickness)
+	if (grounded && camera) {
+		if (locomotion.vignette) {
+			locomotion.vignette.dispose();
+		}
+		locomotion.vignette = new ComfortVignette(camera);
+	} else if (locomotion.vignette) {
+		locomotion.vignette.dispose();
+		locomotion.vignette = null;
 	}
 }
 
@@ -361,6 +373,12 @@ export const LocomotionSystem = class extends createSystem({}) {
 				locomotion.groundedPlayer.step(footPos, new Vector3(0, 0, 0), delta);
 				cam.position.y = footPos.y + EYE_HEIGHT;
 			}
+
+			// ── Comfort vignette (desktop): modulate by WASD magnitude ──
+			if (locomotion.vignette) {
+				const speed = Math.min(1, Math.hypot(inlineInput.x, inlineInput.y));
+				locomotion.vignette.update(speed);
+			}
 			return;
 		}
 
@@ -490,6 +508,8 @@ export const LocomotionSystem = class extends createSystem({}) {
 					if (!locomotion._xrSnapState) {
 						world.player.rotateY((angle > 0 ? -1 : 1) * SNAP_ANGLE);
 						locomotion._xrSnapState = true;
+						// Pulse the comfort vignette on snap turn
+						if (locomotion.vignette) locomotion.vignette.pulse();
 					}
 				}
 			} else {
@@ -507,6 +527,8 @@ export const LocomotionSystem = class extends createSystem({}) {
 						player.position.y = footPos.y + EYE_HEIGHT;
 						player.position.z = footPos.z;
 						locomotion.groundedPlayer.velocity.set(0, 0, 0);
+						// Pulse the comfort vignette on teleport
+						if (locomotion.vignette) locomotion.vignette.pulse(0.8);
 					}
 				}
 				locomotion._xrTeleportEngaged = false;
@@ -520,6 +542,14 @@ export const LocomotionSystem = class extends createSystem({}) {
 					});
 				}
 			}
+		}
+
+		// ── Comfort vignette (XR): modulate by left-stick magnitude ──
+		if (locomotion.vignette) {
+			const leftMag = left ? (left.get2DInputValue(THUMBSTICK) ?? 0) : 0;
+			// Normalize: our DEAD_ZONE is 0.1, max useful is ~1.0
+			const speed = Math.max(0, Math.min(1, (leftMag - DEAD_ZONE) / (1 - DEAD_ZONE)));
+			locomotion.vignette.update(speed);
 		}
 	}
 };
