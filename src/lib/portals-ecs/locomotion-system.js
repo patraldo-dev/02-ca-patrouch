@@ -392,10 +392,10 @@ export const LocomotionSystem = class extends createSystem({}) {
 				cam.position.y = footPos.y + EYE_HEIGHT;
 			}
 
-			// ── Comfort vignette (desktop): modulate by WASD magnitude ──
+			// ── Comfort vignette: XR only. On desktop the 3D tube occludes the
+			// whole view, so we disable it entirely for inline mode. ──
 			if (locomotion.vignette) {
-				const speed = Math.min(1, Math.hypot(inlineInput.x, inlineInput.y));
-				locomotion.vignette.update(speed);
+				locomotion.vignette.setEnabled(false);
 			}
 
 			// ── Grab system (desktop): mouse position + click to grab ──
@@ -576,6 +576,7 @@ export const LocomotionSystem = class extends createSystem({}) {
 
 		// ── Comfort vignette (XR): modulate by left-stick magnitude ──
 		if (locomotion.vignette) {
+			locomotion.vignette.setEnabled(true); // ensure on for XR
 			const leftMag = left ? (left.get2DInputValue(THUMBSTICK) ?? 0) : 0;
 			// Normalize: our DEAD_ZONE is 0.1, max useful is ~1.0
 			const speed = Math.max(0, Math.min(1, (leftMag - DEAD_ZONE) / (1 - DEAD_ZONE)));
