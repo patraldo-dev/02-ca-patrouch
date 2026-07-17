@@ -398,6 +398,24 @@ function rebuildScene(world, portalId, isNavigation = false) {
 	world._lights = { ambient: ambientLight, key: keyLight, rim: rimLight, under: underLight };
 		world._envHandle = envHandle;
 
+	// ── Register collision geometry for grounded realms ──
+	// After the environment is built, scan the scene for walkable surfaces
+	// (ground planes) and register them with the GroundedPlayer so the
+	// physics step can keep the player on the floor. Free-flight realms
+	// (space/dream/cosmos) skip this — locomotion.groundedPlayer is null.
+	if (locomotion.groundedPlayer) {
+		scene.traverse((child) => {
+			if (child.isMesh && child.geometry) {
+				// Ground planes: rotated flat (rotation.x ≈ -π/2), at or near floorY
+				const isFlat = Math.abs(child.rotation.x + Math.PI / 2) < 0.1;
+				const isNearFloor = Math.abs(child.position.y - locomotion.floorY) < 0.5;
+				if (isFlat && isNearFloor) {
+					locomotion.groundedPlayer.register(child);
+				}
+			}
+		});
+	}
+
 	// ── Art mural + ambient particles: apply to ALL scenes (both starfield
 	// and themed), so every realm has the visual enrichment. buildEnvironment
 	// already adds these for themed scenes; for the starfield path we add them

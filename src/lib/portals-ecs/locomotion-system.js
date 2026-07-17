@@ -15,6 +15,7 @@
 import { createSystem } from 'elics';
 import { Vector3, Euler } from 'three';
 import { InputComponent } from '@iwsdk/core';
+import { GroundedPlayer, isGroundedRealm } from './grounded-player.js';
 
 const THUMBSTICK = InputComponent.Thumbstick; // 'xr-standard-thumbstick'
 const WALK_SPEED = 1.8;
@@ -39,10 +40,12 @@ let _inlinePitch = 0;
 
 // Module-level locomotion state. The orbit system reads `userActive`.
 export const locomotion = {
-	mode: 'walk',
+	mode: 'walk',           // 'walk' (grounded) or 'flight' (free-fly)
+	grounded: false,        // true = use GroundedPlayer physics
 	floorY: DEFAULT_FLOOR_Y,
 	userActive: false,
 	enabled: false,
+	groundedPlayer: null,   // GroundedPlayer instance (set for grounded realms)
 	// Fly-to-target: when set, the update loop eases the camera toward this
 	// position (with an optional lookAt target), then clears it. Used by
 	// "fly to peer" and "recenter" (mobile). Set via flyTo(); cleared when
@@ -52,8 +55,12 @@ export const locomotion = {
 
 export function configureLocomotion(config) {
 	const envType = config?.environment?.type;
-	locomotion.mode = envType === 'space' ? 'flight' : 'walk';
+	const grounded = isGroundedRealm(envType);
+	locomotion.grounded = grounded;
+	locomotion.mode = grounded ? 'walk' : 'flight';
 	locomotion.floorY = config?.camera?.floor_y ?? DEFAULT_FLOOR_Y;
+	// Create the grounded physics player for grounded realms
+	locomotion.groundedPlayer = grounded ? new GroundedPlayer() : null;
 }
 
 // Fly the camera toward a target position (with optional lookAt). Used by
@@ -251,10 +258,27 @@ export const LocomotionSystem = class extends createSystem({}) {
 					cam.position.addScaledVector(_moveDir, FLIGHT_SPEED * delta);
 				} else {
 					_moveDir.y = 0;
-					cam.position.x += _moveDir.x * WALK_SPEED * delta;
-					cam.position.z += _moveDir.z * WALK_SPEED * delta;
-					cam.position.y = locomotion.floorY + EYE_HEIGHT;
+					_moveDir.multiplyScalar(WALK_SPEED * delta);
+
+					if (locomotion.grounded && locomotion.groundedPlayer) {
+						// Grounded physics: gravity + collision resolution
+						const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
+						locomotion.groundedPlayer.step(footPos, _moveDir, delta);
+						cam.position.x = footPos.x;
+						cam.position.y = footPos.y + EYE_HEIGHT;
+						cam.position.z = footPos.z;
+					} else {
+						// Legacy hard-floor pin (fallback if no grounded player)
+						cam.position.x += _moveDir.x;
+						cam.position.z += _moveDir.z;
+						cam.position.y = locomotion.floorY + EYE_HEIGHT;
+					}
 				}
+			} else if (locomotion.grounded && locomotion.groundedPlayer && !locomotion._flyTarget) {
+				// No horizontal input but still in a grounded realm — apply gravity
+				const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
+				locomotion.groundedPlayer.step(footPos, new Vector3(0, 0, 0), delta);
+				cam.position.y = footPos.y + EYE_HEIGHT;
 			}
 			return;
 		}
@@ -265,7 +289,11 @@ export const LocomotionSystem = class extends createSystem({}) {
 		// On session start, place the player rig facing the scene center.
 		if (!locomotion._rigPlaced && world.player) {
 			const rad = 3;
-			const floorY = locomotion.mode === 'walk' ? locomotion.floorY + EYE_HEIGHT : 1;
+			// For grounded realms, start slightly above floor and let gravity settle.
+			// For flight realms, start at a viewing height.
+			const floorY = locomotion.mode === 'walk'
+				? locomotion.floorY + EYE_HEIGHT + 0.5
+				: 1;
 			world.player.position.set(0, floorY, rad);
 			world.player.lookAt(0, floorY, 0);
 			locomotion._rigPlaced = true;
@@ -321,9 +349,21 @@ export const LocomotionSystem = class extends createSystem({}) {
 			player.position.addScaledVector(_moveDir, FLIGHT_SPEED * delta);
 		} else {
 			_moveDir.y = 0;
-			player.position.x += _moveDir.x * WALK_SPEED * delta;
-			player.position.z += _moveDir.z * WALK_SPEED * delta;
-			player.position.y = locomotion.floorY + EYE_HEIGHT;
+			_moveDir.multiplyScalar(WALK_SPEED * delta);
+
+			if (locomotion.grounded && locomotion.groundedPlayer) {
+				// Grounded physics: convert player rig position to foot,
+				// step through collision, write back.
+				const footPos = new Vector3(player.position.x, player.position.y - EYE_HEIGHT, player.position.z);
+				locomotion.groundedPlayer.step(footPos, _moveDir, delta);
+				player.position.x = footPos.x;
+				player.position.y = footPos.y + EYE_HEIGHT;
+				player.position.z = footPos.z;
+			} else {
+				player.position.x += _moveDir.x;
+				player.position.z += _moveDir.z;
+				player.position.y = locomotion.floorY + EYE_HEIGHT;
+			}
 		}
 	}
 };
