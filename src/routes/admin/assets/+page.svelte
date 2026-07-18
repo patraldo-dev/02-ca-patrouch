@@ -1,4 +1,6 @@
 <script>
+    import GlbPreview from '$lib/components/GlbPreview.svelte';
+
     let { data } = $props();
 
     let models = $state(data.models || []);
@@ -7,6 +9,7 @@
     let message = $state('');
     let uploading = $state(false);
     let uploadProgress = $state('');
+    let previewModel = $state(null); // model being previewed in the modal
 
     // ── Categorized options for the dropdowns ──
     const KIND_GROUPS = {
@@ -355,8 +358,43 @@
                 <button class="btn-save" onclick={saveModel} disabled={uploading}>
                     {uploading ? 'Uploading...' : 'Save Model'}
                 </button>
+    </div>
+</div>
+
+<!-- 3D Preview Modal -->
+{#if previewModel}
+    <div
+        class="preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="3D model preview"
+        onclick={() => (previewModel = null)}
+        onkeydown={(e) => e.key === 'Escape' && (previewModel = null)}
+        tabindex="0"
+    >
+        <div class="preview-modal-content" onclick={(e) => e.stopPropagation()} role="presentation">
+            <button
+                class="preview-close"
+                onclick={() => (previewModel = null)}
+                aria-label="Close preview"
+            >✕</button>
+            <div class="preview-modal-header">
+                <h3>{previewModel.label}</h3>
+                <p class="preview-meta">{previewModel.kind} · {previewModel.artist || '—'} · {previewModel.pack}</p>
+            </div>
+            <div class="preview-canvas-wrapper">
+                <GlbPreview url={previewUrl(previewModel.file_path)} height={350} />
+            </div>
+            <div class="preview-details">
+                <div class="detail-row"><span>ID:</span><code>{previewModel.id}</code></div>
+                <div class="detail-row"><span>Path:</span><code>{previewModel.file_path}</code></div>
+                <div class="detail-row"><span>Collider:</span><code>{previewModel.collider_type} [{previewModel.collider_size}]</code></div>
+                <div class="detail-row"><span>Scale:</span><code>{previewModel.scale}</code></div>
+                <div class="detail-row"><span>Match:</span><code>{previewModel.match_labels.join(', ')}</code></div>
             </div>
         </div>
+    </div>
+{/if}
     {/if}
 
     {#if models.length === 0}
@@ -388,9 +426,10 @@
                         <td>{m.tier}</td>
                         <td>{m.status}</td>
                         <td class="actions">
+                            <button title="Preview 3D" onclick={() => previewModel = m}>👁</button>
                             <button title="Edit" onclick={() => editModel(m)}>✎</button>
                             <button title="Retire" onclick={() => retireModel(m.id)}>🗑</button>
-                            <a href={previewUrl(m.file_path)} target="_blank" title="View file" rel="noopener">🔗</a>
+                            <a href={previewUrl(m.file_path)} target="_blank" title="Download" rel="noopener">🔗</a>
                         </td>
                     </tr>
                 {/each}
@@ -481,5 +520,84 @@
     @media (max-width: 700px) {
         .form-grid { grid-template-columns: 1fr; }
         table { font-size: 0.75rem; }
+    }
+
+    /* Preview Modal */
+    .preview-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    .preview-modal-content {
+        background: var(--surface, #1a1a22);
+        border: 1px solid var(--border, #3a3a45);
+        border-radius: 16px;
+        padding: 1.5rem;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+    }
+    .preview-close {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: var(--surface-raised, #25252f);
+        border: 1px solid var(--border, #3a3a45);
+        color: var(--text-dim, #b8b8c5);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+    .preview-close:hover {
+        border-color: var(--accent, #d4b98f);
+        color: var(--accent, #d4b98f);
+    }
+    .preview-modal-header h3 {
+        margin: 0 0 0.25rem;
+        font-size: 1.3rem;
+        color: var(--text, #f0f0f5);
+    }
+    .preview-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted, #8e8e9a);
+        margin: 0 0 1rem;
+    }
+    .preview-canvas-wrapper {
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    .preview-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+    }
+    .detail-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: baseline;
+    }
+    .detail-row span {
+        color: var(--text-muted, #8e8e9a);
+        min-width: 70px;
+    }
+    .detail-row code {
+        font-family: monospace;
+        font-size: 0.78rem;
+        color: var(--text-dim, #b8b8c5);
     }
 </style>
