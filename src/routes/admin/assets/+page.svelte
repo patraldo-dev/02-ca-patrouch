@@ -98,6 +98,7 @@
             const formData = new FormData();
             formData.append('file', file);
             formData.append('kind', form.kind);
+            formData.append('pack', form.pack || 'core');
 
             const res = await fetch('/api/assets/upload', {
                 method: 'POST',

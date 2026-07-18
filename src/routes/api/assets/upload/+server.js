@@ -31,6 +31,7 @@ export async function POST({ request, locals, platform, url }) {
     const formData = await request.formData();
     const file = formData.get('file');
     const kind = formData.get('kind') || 'object';
+    const pack = formData.get('pack') || 'core';
     const customName = formData.get('filename');
 
     if (!file || !(file instanceof File)) {
@@ -43,11 +44,13 @@ export async function POST({ request, locals, platform, url }) {
         return json({ error: 'File must be a .glb file' }, { status: 400 });
     }
 
-    // Build the R2 key
-    const safeKind = kind.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    // Build the R2 key: models/{pack}/{filename}
+    // Pack-based namespacing prevents collisions between core, artist packs,
+    // and future member libraries. The D1 file_path stores this full key.
+    const safePack = pack.toLowerCase().replace(/[^a-z0-9-]/g, '-');
     const fileName = customName || originalName;
     const safeName = fileName.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
-    const r2Key = `models/scene-elements/${safeName}`;
+    const r2Key = `models/${safePack}/${safeName}`;
 
     try {
         const arrayBuffer = await file.arrayBuffer();
