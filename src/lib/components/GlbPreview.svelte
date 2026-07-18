@@ -1,8 +1,6 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import * as THREE from 'three';
-    import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+    import { browser } from '$app/environment';
 
     let { url, height = 200 } = $props();
 
@@ -15,10 +13,21 @@
     let status = $state('loading'); // 'loading' | 'ready' | 'error'
     let errorMessage = $state('');
 
-    onMount(() => {
+    onMount(async () => {
+        // Dynamic imports — Three.js + OrbitControls reference `document`
+        // at module-eval time, which crashes SSR. Only import in the browser.
+        const THREE = await import('three');
+        const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+        const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+        // Store on module-level refs for use in initScene/loadModel
+        _THREE = THREE;
+        _GLTFLoader = GLTFLoader;
+        _OrbitControls = OrbitControls;
         initScene();
         loadModel();
     });
+
+    let _THREE, _GLTFLoader, _OrbitControls;
 
     onDestroy(() => {
         if (animationId) cancelAnimationFrame(animationId);
@@ -27,6 +36,7 @@
     });
 
     function initScene() {
+        const THREE = _THREE;
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x1a1a22);
 
@@ -38,7 +48,6 @@
         renderer.setSize(height * 1.5, height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        // Simple lighting
         const ambient = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambient);
         const key = new THREE.DirectionalLight(0xffffff, 1.0);
@@ -48,13 +57,11 @@
         rim.position.set(-3, 2, -2);
         scene.add(rim);
 
-        // Grid floor for spatial reference
         const grid = new THREE.GridHelper(4, 8, 0x333344, 0x222233);
         grid.position.y = -0.8;
         scene.add(grid);
 
-        // Orbit controls so you can rotate the model with mouse/touch
-        controls = new OrbitControls(camera, canvas);
+        controls = new _OrbitControls(camera, canvas);
         controls.enableDamping = true;
         controls.dampingFactor = 0.1;
         controls.autoRotate = true;
@@ -71,20 +78,19 @@
         renderer.render(scene, camera);
     }
 
-    async function loadModel() {
+    function loadModel() {
+        const THREE = _THREE;
         if (!url) {
             status = 'error';
             errorMessage = 'No file path';
             return;
         }
 
-        const loader = new GLTFLoader();
+        const loader = new _GLTFLoader();
         loader.load(
             url,
             (gltf) => {
                 const model = gltf.scene;
-
-                // Center + scale to fit the view
                 const box = new THREE.Box3().setFromObject(model);
                 const size = new THREE.Vector3();
                 box.getSize(size);
@@ -95,7 +101,6 @@
                 const fitScale = maxDim > 0 ? 1.5 / maxDim : 1;
                 model.scale.setScalar(fitScale);
 
-                // Recenter after scaling
                 const box2 = new THREE.Box3().setFromObject(model);
                 const center2 = new THREE.Vector3();
                 box2.getCenter(center2);
@@ -114,22 +119,30 @@
     }
 </script>
 
-<div class="glb-preview" style="--preview-height: {height}px;">
-    <canvas bind:this={canvas}></canvas>
-    {#if status === 'loading'}
+{#if browser}
+    <div class="glb-preview" style="--preview-height: {height}px;">
+        <canvas bind:this={canvas}></canvas>
+        {#if status === 'loading'}
+            <div class="preview-overlay">
+                <div class="spinner"></div>
+                <p>Loading 3D model...</p>
+            </div>
+        {:else if status === 'error'}
+            <div class="preview-overlay error">
+                <p>⚠️ {errorMessage}</p>
+            </div>
+        {/if}
+        {#if status === 'ready'}
+            <div class="preview-hint">🖱️ drag to rotate</div>
+        {/if}
+    </div>
+{:else}
+    <div class="glb-preview" style="height: {height}px;">
         <div class="preview-overlay">
-            <div class="spinner"></div>
-            <p>Loading 3D model...</p>
+            <p>Loading viewer...</p>
         </div>
-    {:else if status === 'error'}
-        <div class="preview-overlay error">
-            <p>⚠️ {errorMessage}</p>
-        </div>
-    {/if}
-    {#if status === 'ready'}
-        <div class="preview-hint">🖱️ drag to rotate</div>
-    {/if}
-</div>
+    </div>
+{/if}
 
 <style>
     .glb-preview {
