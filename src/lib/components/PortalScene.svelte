@@ -73,6 +73,7 @@
 	let inXR = $state(false);
 	let isTouch = $state(false);
 	let canVR = $state(false);
+	let xrMode = 'immersive-vr'; // or 'immersive-ar' if phone supports AR
 	let voiceEnabled = $state(false);
 	let voiceMuted = $state(false);
 	let drawerOpen = $state(false);
@@ -110,19 +111,16 @@
 
 	function enterXR() {
 		if (!worldHandle?.launchXR) return;
-		// In production (no VR hardware), launchXR throws "No XR hardware found".
-		// Only set inXR=true if it actually succeeds (via the visibilityState subscriber).
+		// Use the detected XR mode (immersive-ar on phones, immersive-vr on headsets)
 		try {
 			worldHandle.launchXR({
-				sessionMode: 'immersive-vr',
+				sessionMode: xrMode,
 				features: {
 					anchors: false, hitTest: false, planeDetection: false,
 					meshDetection: false, lightEstimation: false,
 					depthSensing: false, layers: false, unbounded: false,
 				},
 			});
-			// inXR is set by the visibilityState subscriber (line ~210), not here —
-			// so if launchXR fails silently, the button stays "Enter to Explore".
 		} catch (err) {
 			console.error('[portals] launchXR failed:', err);
 		}
@@ -225,9 +223,20 @@
 		let cancelled = false;
 		isTouch = isTouchDevice();
 
-		// Check for real WebXR support (for the "Enter VR" button)
+		// Check for WebXR support (for the "Enter to Explore" button).
+		// Check BOTH immersive-vr AND immersive-ar — phones support AR,
+		// headsets support VR. Show the button if either is available.
 		if (navigator.xr?.isSessionSupported) {
-			navigator.xr.isSessionSupported('immersive-vr').then(s => { canVR = s; }).catch(() => {});
+			Promise.allSettled([
+				navigator.xr.isSessionSupported('immersive-vr'),
+				navigator.xr.isSessionSupported('immersive-ar'),
+			]).then(([vr, ar]) => {
+				canVR = (vr.status === 'fulfilled' && vr.value === true)
+				     || (ar.status === 'fulfilled' && ar.value === true);
+				if (ar.status === 'fulfilled' && ar.value === true) {
+					xrMode = 'immersive-ar';
+				}
+			}).catch(() => {});
 		}
 
 		async function boot() {
@@ -442,7 +451,7 @@
 				<button class="drawer-lang-btn" class:active={$locale === 'fr'} onclick={() => switchLanguage('fr')}>FR</button>
 			</div>
 
-			{#if canVR && !isTouch}
+			{#if canVR}
 				<div class="drawer-section-label">XR</div>
 				<button class="drawer-btn" onclick={() => { inXR ? exitXR() : enterXR(); drawerOpen = false; }}>
 					{inXR ? $t('portals.exit_explore') : $t('portals.enter_explore')}
