@@ -358,8 +358,9 @@
                 <button class="btn-save" onclick={saveModel} disabled={uploading}>
                     {uploading ? 'Uploading...' : 'Save Model'}
                 </button>
-    </div>
-</div>
+            </div>
+        </div>
+    {/if}
 
     {#if models.length === 0}
         <div class="empty">No models in the library yet. Click "Add Model" to create the first one.</div>
