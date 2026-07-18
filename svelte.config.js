@@ -8,7 +8,11 @@ const config = {
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: adapter({
 			platformProxy: {
-				enabled: true
+				enabled: true,
+				// Proxy ALL bindings to production during local dev.
+				// This makes D1, AI, R2, Vectorize, and auth work locally
+				// by reading from / writing to the real remote resources.
+				remote: true
 			},
 			routes: {
 				include: ['/api/auth/(.*)', '/api/auth']

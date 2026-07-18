@@ -7,8 +7,19 @@
 <script>
 	import PortalScene from '$lib/components/PortalScene.svelte';
 	import { t, locale } from '$lib/i18n';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	// The write-intro page is a full-screen immersive surface — hide site
+	// chrome (nav, footer) the same way PortalScene does. Removed on unmount
+	// so the rest of the site renders normally when navigating away.
+	onMount(() => {
+		document.documentElement.classList.add('portal-active');
+		return () => {
+			document.documentElement.classList.remove('portal-active');
+		};
+	});
 
 	// Phases: 'write' → 'loading' → 'summary' → 'scene'
 	let phase = $state('write');
