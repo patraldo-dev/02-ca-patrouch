@@ -277,10 +277,10 @@
                     </span>
                     <input list="pack-suggestions" bind:value={form.pack} placeholder="core" />
                     <datalist id="pack-suggestions">
-                        {#each existingPacks as p}<option value={p}>{/each}
-                        <option value="core">
-                        <option value="antoine">
-                        <option value="guest-artist">
+                        {#each existingPacks as p}<option value={p}></option>{/each}
+                        <option value="core"></option>
+                        <option value="antoine"></option>
+                        <option value="guest-artist"></option>
                     </datalist>
                 </label>
 
@@ -291,7 +291,7 @@
                     </span>
                     <input list="artist-suggestions" bind:value={form.artist} placeholder="Antoine Patraldo" />
                     <datalist id="artist-suggestions">
-                        {#each existingArtists as a}<option value={a}>{/each}
+                        {#each existingArtists as a}<option value={a}></option>{/each}
                     </datalist>
                 </label>
 
