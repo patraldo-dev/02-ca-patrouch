@@ -361,42 +361,6 @@
     </div>
 </div>
 
-<!-- 3D Preview Modal -->
-{#if previewModel}
-    <div
-        class="preview-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="3D model preview"
-        onclick={() => (previewModel = null)}
-        onkeydown={(e) => e.key === 'Escape' && (previewModel = null)}
-        tabindex="0"
-    >
-        <div class="preview-modal-content" onclick={(e) => e.stopPropagation()} role="presentation">
-            <button
-                class="preview-close"
-                onclick={() => (previewModel = null)}
-                aria-label="Close preview"
-            >✕</button>
-            <div class="preview-modal-header">
-                <h3>{previewModel.label}</h3>
-                <p class="preview-meta">{previewModel.kind} · {previewModel.artist || '—'} · {previewModel.pack}</p>
-            </div>
-            <div class="preview-canvas-wrapper">
-                <GlbPreview url={previewUrl(previewModel.file_path)} height={350} />
-            </div>
-            <div class="preview-details">
-                <div class="detail-row"><span>ID:</span><code>{previewModel.id}</code></div>
-                <div class="detail-row"><span>Path:</span><code>{previewModel.file_path}</code></div>
-                <div class="detail-row"><span>Collider:</span><code>{previewModel.collider_type} [{previewModel.collider_size}]</code></div>
-                <div class="detail-row"><span>Scale:</span><code>{previewModel.scale}</code></div>
-                <div class="detail-row"><span>Match:</span><code>{previewModel.match_labels.join(', ')}</code></div>
-            </div>
-        </div>
-    </div>
-{/if}
-    {/if}
-
     {#if models.length === 0}
         <div class="empty">No models in the library yet. Click "Add Model" to create the first one.</div>
     {:else}
@@ -437,6 +401,41 @@
         </table>
     {/if}
 </div>
+
+<!-- 3D Preview Modal — outside the main container so it overlays regardless of form/table state -->
+{#if previewModel}
+    <div
+        class="preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="3D model preview"
+        onclick={() => (previewModel = null)}
+        onkeydown={(e) => e.key === 'Escape' && (previewModel = null)}
+        tabindex="0"
+    >
+        <div class="preview-modal-content" onclick={(e) => e.stopPropagation()} role="presentation">
+            <button
+                class="preview-close"
+                onclick={() => (previewModel = null)}
+                aria-label="Close preview"
+            >✕</button>
+            <div class="preview-modal-header">
+                <h3>{previewModel.label}</h3>
+                <p class="preview-meta">{previewModel.kind} · {previewModel.artist || '—'} · {previewModel.pack}</p>
+            </div>
+            <div class="preview-canvas-wrapper">
+                <GlbPreview url={previewUrl(previewModel.file_path)} height={350} />
+            </div>
+            <div class="preview-details">
+                <div class="detail-row"><span>ID:</span><code>{previewModel.id}</code></div>
+                <div class="detail-row"><span>Path:</span><code>{previewModel.file_path}</code></div>
+                <div class="detail-row"><span>Collider:</span><code>{previewModel.collider_type} [{previewModel.collider_size}]</code></div>
+                <div class="detail-row"><span>Scale:</span><code>{previewModel.scale}</code></div>
+                <div class="detail-row"><span>Match:</span><code>{previewModel.match_labels.join(', ')}</code></div>
+            </div>
+        </div>
+    </div>
+{/if}
 
 <style>
     .admin-assets { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
