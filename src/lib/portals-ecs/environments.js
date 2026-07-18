@@ -8,26 +8,75 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 
-// ── Figure GLB cache (HombreAmarillo) ──
-// Loaded once on first use, cloned per instance. Static mesh (no
-// morph targets/animation), 1.4MB, served from R2 with immutable cache.
-// Falls back to the cylinder+sphere primitive if the load fails.
-let _figureTemplate = null;
-let _figureLoading = false;
-const _figureWaiters = [];
-const FIGURE_GLB_URL = '/api/assets/models/hombre-amarillo.glb';
+// ── Asset Library GLB cache ──
+// Queries the D1 asset_library table via /api/assets/library to find
+// real 3D models matching what Mistral generated. Loaded once per
+// kind+label, cloned per instance. Falls back to procedural primitives
+// if no model is found or the load fails.
+const _glbCache = new Map();      // key: "kind:label" → { template, meta }
+const _glbLoading = new Map();    // key: "kind:label" → callback[]
+const _glbQueried = new Set();    // keys already queried from the API
+const _gltfLoader = new GLTFLoader();
 
-function loadFigureTemplate() {
-	if (_figureTemplate || _figureLoading) return;
-	_figureLoading = true;
-	const loader = new GLTFLoader();
-	loader.load(
-		FIGURE_GLB_URL,
+/**
+ * Query the asset library for models matching a kind + label.
+ * Returns the first match's metadata, or null.
+ * Cached after first query.
+ */
+async function queryLibrary(kind, label) {
+	const key = `${kind}:${label}`;
+	if (_glbQueried.has(key)) {
+		const cached = _glbCache.get(key);
+		return cached ? cached.meta : null;
+	}
+	_glbQueried.add(key);
+
+	try {
+		const params = new URLSearchParams({ kind });
+		if (label) params.set('label', label);
+		const res = await fetch(`/api/assets/library?${params}`);
+		const data = await res.json();
+		if (data.models && data.models.length > 0) {
+			return data.models[0]; // first random match
+		}
+	} catch (e) {
+		console.warn(`[asset-library] query failed for ${key}:`, e?.message);
+	}
+	return null;
+}
+
+/**
+ * Request a cloned GLB mesh for a scene element. Queries the library,
+ * loads the GLB if found, clones it recentered + scaled.
+ * Calls onReady(mesh, meta) or onFallback() if no model found.
+ */
+async function requestElementGLB(kind, label, onReady, onFallback) {
+	const meta = await queryLibrary(kind, label);
+	if (!meta) { onFallback(); return; }
+
+	const url = meta.url;
+
+	// Already cached?
+	const cacheKey = `${kind}:${label}`;
+	if (_glbCache.has(cacheKey)) {
+		onReady(cloneTemplate(_glbCache.get(cacheKey).template, meta), meta);
+		return;
+	}
+
+	// Loading already in progress?
+	if (_glbLoading.has(cacheKey)) {
+		_glbLoading.get(cacheKey).push((tpl) => onReady(cloneTemplate(tpl, meta), meta));
+		return;
+	}
+
+	// New load
+	_glbLoading.set(cacheKey, []);
+	_gltfLoader.load(
+		url,
 		(gltf) => {
-			_figureTemplate = gltf.scene;
-			// Configure materials for the portal aesthetic: semi-transparent,
-			//unlit-friendly, double-sided so silhouettes read from any angle.
-			_figureTemplate.traverse((child) => {
+			const template = gltf.scene;
+			// Configure materials for the portal aesthetic
+			template.traverse((child) => {
 				if (child.isMesh && child.material) {
 					child.material.transparent = true;
 					child.material.opacity = 0.85;
@@ -35,32 +84,22 @@ function loadFigureTemplate() {
 					child.material.side = THREE.DoubleSide;
 				}
 			});
-			const waiters = _figureWaiters.splice(0);
-			waiters.forEach((cb) => cb(_figureTemplate));
+			_glbCache.set(cacheKey, { template, meta });
+			_glbLoading.delete(cacheKey);
+			onReady(cloneTemplate(template, meta), meta);
 		},
 		undefined,
 		(err) => {
-			console.warn('[environments] figure GLB load failed, using primitive fallback:', err?.message || err);
-			_figureLoading = false; // allow retry
+			console.warn(`[asset-library] GLB load failed for ${cacheKey}:`, err?.message);
+			_glbLoading.delete(cacheKey);
+			onFallback();
 		}
 	);
 }
 
-/**
- * Request a cloned figure mesh. Calls onReady with a THREE.Group
- * (the GLB clone, recentered + scaled). If the template isn't loaded
- * yet, queues the callback. The caller should add a placeholder to
- * the scene immediately and swap when onReady fires.
- */
-function requestFigureClone(onReady) {
-	if (_figureTemplate) { onReady(cloneFigure()); return; }
-	_figureWaiters.push(() => onReady(cloneFigure()));
-	loadFigureTemplate();
-}
-
-function cloneFigure() {
-	const clone = _figureTemplate.clone(true);
-	// Recenter on origin (feet at y=0) using bounding box.
+function cloneTemplate(template, meta) {
+	const clone = template.clone(true);
+	// Recenter on origin (feet at y=0) using bounding box
 	const box = new THREE.Box3().setFromObject(clone);
 	const size = new THREE.Vector3();
 	box.getSize(size);
@@ -69,10 +108,11 @@ function cloneFigure() {
 	clone.position.x -= center.x;
 	clone.position.z -= center.z;
 	clone.position.y -= box.min.y;
-	// Normalize to ~1.2 units tall, matching the primitive figure height.
-	const targetHeight = 1.2;
-	const scale = targetHeight / size.y;
-	clone.scale.setScalar(scale);
+	// Normalize height to ~1.2 units, then apply manifest scale
+	if (size.y > 0) {
+		const baseScale = 1.2 / size.y;
+		clone.scale.setScalar(baseScale * (meta.scale || 1.0));
+	}
 	return clone;
 }
 
@@ -810,23 +850,33 @@ export function buildSceneElements(config, scene, track) {
 			track.push(group);
 			grabbables.push(group);
 
-			if (el.kind === 'figure') {
-				// Swap the primitive for the real GLB model once loaded.
-				// Preserves the position/rotation already set on the placeholder.
-				requestFigureClone((figureMesh) => {
-					figureMesh.position.copy(group.position);
-					figureMesh.rotation.copy(group.rotation);
-					figureMesh.scale.multiplyScalar(s);
-					// Replace in scene and track
+			// ── Library lookup: try to replace the primitive with a real GLB
+			// model from the asset library. Queries D1 for a matching model
+			// (by kind + label), loads it from R2, and swaps it in. Falls
+			// back to the primitive if no model is found or load fails.
+			// This works for ALL element kinds — figures, quadrupeds, plants,
+			// structures, etc. ──
+			requestElementGLB(
+				el.kind,
+				el.label,
+				(glbMesh) => {
+					// Success: swap the primitive for the real model
+					glbMesh.position.copy(group.position);
+					glbMesh.rotation.copy(group.rotation);
+					glbMesh.scale.multiplyScalar(s);
 					scene.remove(group);
-					scene.add(figureMesh);
+					scene.add(glbMesh);
 					const idx = track.indexOf(group);
-					if (idx >= 0) track[idx] = figureMesh;
-					// Update the animated reference so the update loop animates the GLB
+					if (idx >= 0) track[idx] = glbMesh;
+					const gIdx = grabbables.indexOf(group);
+					if (gIdx >= 0) grabbables[gIdx] = glbMesh;
 					const animRef = animated.find((a) => a.mesh === group);
-					if (animRef) animRef.mesh = figureMesh;
-				});
-			}
+					if (animRef) animRef.mesh = glbMesh;
+				},
+				() => {
+					// No model found — keep the primitive (it's already in the scene)
+				}
+			);
 
 			if (el.kind === 'quadruped' || el.kind === 'figure') {
 				animated.push({ mesh: group, phase: Math.random() * Math.PI * 2, kind: el.kind });
