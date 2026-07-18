@@ -42,6 +42,15 @@
             </div>
         </section>
 
+        <!-- GLB Assets -->
+        <section class="admin-card">
+            <h2>GLB Asset Library</h2>
+            <p class="card-desc">Manage 3D models for portal scene elements. Models are matched to writing by kind + label and loaded from R2.</p>
+            <div class="admin-actions">
+                <a href="/admin/assets" class="btn-primary">Manage Assets</a>
+            </div>
+        </section>
+
     </div>
 
     <div class="admin-footer">

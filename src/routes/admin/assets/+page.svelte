@@ -197,6 +197,7 @@
                     <th>ID</th>
                     <th>Kind</th>
                     <th>Label</th>
+                    <th>Artist</th>
                     <th>File</th>
                     <th>Pack</th>
                     <th>Tier</th>
@@ -210,6 +211,7 @@
                         <td class="mono">{m.id}</td>
                         <td><span class="badge kind-{m.kind}">{m.kind}</span></td>
                         <td>{m.label}</td>
+                        <td>{m.artist || '—'}</td>
                         <td class="mono small">{m.file_path}</td>
                         <td>{m.pack}</td>
                         <td>{m.tier}</td>
