@@ -12,7 +12,7 @@
 //  - Three.js for mesh/material creation only
 // ═══════════════════════════════════════════════════════════
 import * as THREE from 'three';
-import { World } from 'iwer';
+import { World } from '@iwsdk/core';
 import { createComponent, createSystem, Types, ComponentRegistry } from 'elics';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
