@@ -7,6 +7,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
+	import { page } from '$app/stores';
 
 	let container;
 	let counter = $state(0);
@@ -14,14 +15,25 @@
 	let booted = $state(false);
 	let errorMsg = $state('');
 	let cleanup = null;
+	let score = $state({ you: 0, opponent: 0, opponentName: 'Waiting...' });
+
+	// Room ID from URL query param, or generate one
+	let roomId = $derived($page.url.searchParams.get('room') || 'demo');
+	let shareUrl = $derived(typeof window !== 'undefined' ? `${window.location.origin}/portals/grab-demo?room=${roomId}` : '');
 
 	onMount(async () => {
 		if (!browser || !container) return;
 		try {
 			const { bootGrabDemo } = await import('$lib/portals-ecs/grab-demo-world.js');
-			cleanup = await bootGrabDemo(container, (count) => {
-				counter = count;
-			});
+			cleanup = await bootGrabDemo(
+				container,
+				(count) => { counter = count; },
+				{
+					roomId,
+					playerName: 'Player-' + Math.random().toString(36).slice(2, 5),
+					onScoreUpdate: (s) => { score = s; },
+				}
+			);
 			booted = true;
 		} catch (e) {
 			console.error('[grab-demo] boot failed:', e);
@@ -32,6 +44,10 @@
 	onDestroy(() => {
 		if (cleanup) cleanup.destroy();
 	});
+
+	function copyShareLink() {
+		navigator.clipboard?.writeText(shareUrl);
+	}
 </script>
 
 <svelte:head>
@@ -43,18 +59,38 @@
 
 	{#if booted}
 		<div class="hud">
-			<div class="counter" class:complete={counter === total}>
-				<span class="count">{counter}</span>
-				<span class="total">/ {total}</span>
+			<div class="scoreboard">
+				<div class="score-card you" class:winning={score.you > score.opponent} class:losing={score.you < score.opponent}>
+					<span class="score-label">You</span>
+					<span class="score-value">{score.you}</span>
+				</div>
+				<div class="vs">vs</div>
+				<div class="score-card opponent" class:winning={score.opponent > score.you} class:losing={score.opponent < score.you}>
+					<span class="score-label">{score.opponentName}</span>
+					<span class="score-value">{score.opponent}</span>
+				</div>
 			</div>
-			{#if counter === total}
-				<div class="complete-msg">🎉 All collected!</div>
+			<div class="remaining">Remaining: {total - score.you - score.opponent}</div>
+			{#if score.you + score.opponent >= total}
+				<div class="complete-msg">
+					{#if score.you > score.opponent}
+						🎉 You win!
+					{:else if score.opponent > score.you}
+						😅 {score.opponentName} wins!
+					{:else}
+						🤝 Tie!
+					{/if}
+				</div>
 			{/if}
 		</div>
 
+		<div class="share-bar">
+			<button class="share-btn" onclick={copyShareLink}>📋 Copy link to invite opponent</button>
+			<span class="room-id">Room: {roomId}</span>
+		</div>
+
 		<div class="instructions">
-			<p><strong>WASD</strong> to move · <strong>Mouse drag</strong> to look · <strong>Click</strong> an object to collect</p>
-			<p class="models-loaded">3 models × 10 = 30 ECS collectible entities · IWSDK World + elics</p>
+			<p><strong>WASD</strong> move · <strong>Mouse drag</strong> look · <strong>Click</strong> collect</p>
 		</div>
 	{:else if errorMsg}
 		<div class="hud">
@@ -88,48 +124,89 @@
 		text-align: center;
 		pointer-events: none;
 	}
-	.counter {
-		background: rgba(10, 10, 20, 0.8);
+	.scoreboard {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		background: rgba(10, 10, 20, 0.85);
 		backdrop-filter: blur(12px);
-		border: 1px solid rgba(201, 168, 124, 0.3);
+		border: 1px solid rgba(201, 168, 124, 0.2);
 		border-radius: 16px;
-		padding: 0.6rem 1.5rem;
-		display: inline-flex;
-		align-items: baseline;
-		gap: 0.3rem;
+		padding: 0.75rem 1.5rem;
 	}
-	.counter.complete {
-		border-color: #8fbc8f;
+	.score-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		min-width: 80px;
 	}
-	.count {
+	.score-card.winning .score-value { color: #8fbc8f; }
+	.score-card.losing .score-value { opacity: 0.5; }
+	.score-label {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: rgba(255, 255, 255, 0.5);
+		max-width: 100px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.score-value {
 		font-size: 1.8rem;
 		font-weight: 800;
 		color: #c9a87c;
 	}
-	.counter.complete .count {
-		color: #8fbc8f;
+	.score-card.you .score-label { color: #c9a87c; }
+	.score-card.opponent .score-label { color: #4fc3f7; }
+	.score-card.opponent .score-value { color: #4fc3f7; }
+	.vs {
+		font-size: 0.8rem;
+		color: rgba(255, 255, 255, 0.3);
 	}
-	.total {
-		font-size: 1rem;
+	.remaining {
+		margin-top: 0.4rem;
+		font-size: 0.8rem;
 		color: rgba(255, 255, 255, 0.5);
 	}
 	.complete-msg {
 		margin-top: 0.5rem;
-		font-size: 1.2rem;
+		font-size: 1.3rem;
+		font-weight: 700;
 		animation: pulse 1s ease-in-out infinite alternate;
 	}
-	.error-msg {
-		background: rgba(100, 20, 20, 0.8);
-		border-radius: 12px;
-		padding: 0.75rem 1.5rem;
-		color: #ff8888;
-		font-size: 0.9rem;
+	.share-bar {
+		position: fixed;
+		top: 1.5rem;
+		right: 1.5rem;
+		z-index: 10;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.3rem;
+	}
+	.share-btn {
+		background: rgba(201, 168, 124, 0.2);
+		border: 1px solid rgba(201, 168, 124, 0.4);
+		color: #c9a87c;
+		border-radius: 8px;
+		padding: 0.5rem 1rem;
+		font-size: 0.8rem;
+		cursor: pointer;
+		backdrop-filter: blur(8px);
+	}
+	.share-btn:hover {
+		background: rgba(201, 168, 124, 0.3);
+	}
+	.room-id {
+		font-size: 0.7rem;
+		color: rgba(255, 255, 255, 0.3);
+		font-family: monospace;
 	}
 	@keyframes pulse {
 		from { opacity: 0.7; }
 		to { opacity: 1; }
 	}
-
 	.instructions {
 		position: fixed;
 		bottom: 1.5rem;
@@ -148,9 +225,5 @@
 		margin: 0;
 		font-size: 0.8rem;
 		color: rgba(255, 255, 255, 0.6);
-	}
-	.models-loaded {
-		font-size: 0.7rem !important;
-		opacity: 0.6;
 	}
 </style>

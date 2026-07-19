@@ -19,6 +19,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const BG_IMAGE_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
+const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/portal-ws/ws';
 
 const MODELS = [
 	{ url: '/api/assets/models/spirit.glb', count: 10, label: 'Spirit' },
@@ -32,8 +33,10 @@ function reuseOrCreate(id, schema) {
 }
 
 const Collectible = reuseOrCreate('Collectible', {
+	entityId:    { type: Types.Int32, default: 0 },  // deterministic ID for multiplayer sync
 	collected:   { type: Types.Boolean, default: false },
 	collectTime: { type: Types.Float32, default: 0 },
+	collectBy:   { type: Types.String, default: '' },  // who collected it ('you' / 'opponent')
 	spinSpeed:   { type: Types.Float32, default: 0.5 },
 	bobPhase:    { type: Types.Float32, default: 0 },
 	baseY:       { type: Types.Float32, default: 0.6 },
@@ -168,12 +171,17 @@ const CollectionSystem = class extends createSystem({}) {
 			}
 			if (obj) {
 				const entity = this.collectibles.find((e) => e.object3D === obj);
-				if (entity && !entity.getValue(Collectible, 'collected')) {
-					entity.setValue(Collectible, 'collected', true);
-					entity.setValue(Collectible, 'collectTime', performance.now());
-					this.collectedCount++;
-					if (this._onCollect) this._onCollect(this.collectedCount);
+			if (entity && !entity.getValue(Collectible, 'collected')) {
+				entity.setValue(Collectible, 'collected', true);
+				entity.setValue(Collectible, 'collectTime', performance.now());
+				entity.setValue(Collectible, 'collectBy', 'you');
+				this.collectedCount++;
+				if (this._onCollect) this._onCollect(this.collectedCount);
+				// Broadcast to opponent
+				if (this._onCollectRemote) {
+					this._onCollectRemote(entity.getValue(Collectible, 'entityId'));
 				}
+			}
 			}
 		}
 	}
@@ -198,9 +206,40 @@ const CollectionSystem = class extends createSystem({}) {
 	}
 };
 
+// ── Helper: create a text label as a THREE.Sprite ──
+function createTextSprite(text, color = '#ffffff') {
+	const canvas = document.createElement('canvas');
+	canvas.width = 256;
+	canvas.height = 64;
+	const ctx = canvas.getContext('2d');
+	ctx.font = 'bold 24px sans-serif';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	ctx.fillStyle = color;
+	ctx.fillText(text, 128, 32);
+	const texture = new THREE.CanvasTexture(canvas);
+	texture.colorSpace = THREE.SRGBColorSpace;
+	const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+	const sprite = new THREE.Sprite(material);
+	sprite.scale.set(1.5, 0.4, 1);
+	return sprite;
+}
+
 // ── Boot function ──
-export async function bootGrabDemo(container, onCollect) {
+export async function bootGrabDemo(container, onCollect, options = {}) {
 	if (!container) throw new Error('bootGrabDemo: container is null');
+
+	const roomId = options.roomId || 'demo';
+	const playerName = options.playerName || ('Player-' + Math.random().toString(36).slice(2, 6));
+	const onScoreUpdate = options.onScoreUpdate || (() => {});
+
+	// Multiplayer state
+	const myId = crypto.randomUUID();
+	let opponentId = null;
+	let opponentName = 'Waiting...';
+	let myScore = 0;
+	let opponentScore = 0;
+	const entityById = new Map(); // entityId → ECS entity
 
 	// ── Three.js scene (setup only — ECS owns the logic) ──
 	const scene = new THREE.Scene();
@@ -303,7 +342,8 @@ export async function bootGrabDemo(container, onCollect) {
 	// since it needs DOM event handling). We'll call its update in the loop.
 	// But we register it so the AnimationSystem queries include Collectible.
 
-	// ── Spawn 30 collectible entities ──
+	// ── Spawn 30 collectible entities with deterministic IDs (0-29) ──
+	let entityIdCounter = 0;
 	for (let mi = 0; mi < templates.length; mi++) {
 		const template = templates[mi];
 		for (let i = 0; i < MODELS[mi].count; i++) {
@@ -319,32 +359,155 @@ export async function bootGrabDemo(container, onCollect) {
 			const group = new THREE.Group();
 			group.add(clone);
 
-			// Random position in a ring
-			const angle = Math.random() * Math.PI * 2;
-			const radius = 3 + Math.random() * 10;
+			// Deterministic position based on entityId (both clients agree)
+			const eid = entityIdCounter++;
+			const angle = (eid / 30) * Math.PI * 2 + (mi * 0.3);
+			const radius = 4 + (eid % 3) * 3;
 			group.position.set(
 				Math.cos(angle) * radius,
 				0.6,
 				Math.sin(angle) * radius
 			);
-			group.rotation.y = Math.random() * Math.PI * 2;
+			group.rotation.y = eid * 0.4;
 
 			scene.add(group);
 
 			// Create ECS entity linked to this mesh
 			const entity = world.createTransformEntity(group);
 			entity.addComponent(Collectible, {
+				entityId: eid,
 				collected: false,
 				collectTime: 0,
-				spinSpeed: 0.3 + Math.random() * 0.5,
-				bobPhase: Math.random() * Math.PI * 2,
+				spinSpeed: 0.3 + (eid % 5) * 0.1,
+				bobPhase: eid * 0.7,
 				baseY: 0.6,
 				modelIndex: mi,
 			});
 
+			entityById.set(eid, entity);
 			collectionSys.registerCollectible(entity);
 		}
 	}
+
+	// ── Opponent avatar (colored sphere that follows their position) ──
+	const opponentAvatar = new THREE.Mesh(
+		new THREE.SphereGeometry(0.3, 16, 12),
+		new THREE.MeshBasicMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.7 })
+	);
+	opponentAvatar.visible = false;
+	scene.add(opponentAvatar);
+	const opponentLabel = createTextSprite('Waiting...', '#4fc3f7');
+	opponentLabel.visible = false;
+	scene.add(opponentLabel);
+
+	// ── Multiplayer: WebSocket connection ──
+	function connectWS() {
+		const params = new URLSearchParams({
+			user: myId,
+			name: playerName,
+			room: roomId,
+		});
+		const ws = new WebSocket(`${WS_URL}?${params.toString()}`);
+
+		ws.onopen = () => {
+			console.log('[grab-demo] WS connected to room', roomId);
+			// Announce presence
+			ws.send(JSON.stringify({ type: 'join', playerId: myId, name: playerName, room: roomId }));
+		};
+
+		ws.onmessage = (event) => {
+			try {
+				const msg = JSON.parse(event.data);
+				handleWSMessage(msg);
+			} catch (e) { /* ignore malformed */ }
+		};
+
+		ws.onclose = () => {
+			console.log('[grab-demo] WS disconnected, reconnecting in 2s...');
+			setTimeout(connectWS, 2000);
+		};
+
+		ws.onerror = () => { ws.close(); };
+		_ws = ws;
+	}
+
+	function handleWSMessage(msg) {
+		// The PortalRoom broadcasts poses + custom messages. We handle:
+		// - join/leave: track opponent
+		// - collect: remote entity collected
+		// - pose: move opponent avatar
+		if (msg.type === 'join' && msg.playerId !== myId) {
+			opponentId = msg.playerId;
+			opponentName = msg.name || 'Opponent';
+			opponentAvatar.visible = true;
+			opponentLabel.visible = true;
+			updateOpponentLabel();
+			// Send our presence back (the room may not relay to existing members)
+			if (_ws?.readyState === WebSocket.OPEN) {
+				_ws.send(JSON.stringify({ type: 'join', playerId: myId, name: playerName }));
+			}
+			// Sync current state: send our score
+			if (_ws?.readyState === WebSocket.OPEN) {
+				_ws.send(JSON.stringify({ type: 'score', playerId: myId, score: myScore }));
+			}
+		} else if (msg.type === 'pose' && msg.playerId === opponentId) {
+			// Move opponent avatar
+			opponentAvatar.position.set(msg.x, msg.y, msg.z);
+			opponentLabel.position.set(msg.x, msg.y + 0.8, msg.z);
+		} else if (msg.type === 'collect' && msg.playerId !== myId) {
+			// Opponent collected an entity — mark it locally
+			const entity = entityById.get(msg.entityId);
+			if (entity && !entity.getValue(Collectible, 'collected')) {
+				entity.setValue(Collectible, 'collected', true);
+				entity.setValue(Collectible, 'collectTime', performance.now());
+				entity.setValue(Collectible, 'collectBy', 'opponent');
+			}
+			opponentScore = msg.score || (opponentScore + 1);
+			updateScore();
+		} else if (msg.type === 'score' && msg.playerId !== myId) {
+			opponentScore = msg.score || 0;
+			updateScore();
+		} else if (msg.type === 'leave' && msg.playerId === opponentId) {
+			opponentAvatar.visible = false;
+			opponentLabel.visible = false;
+			opponentId = null;
+			opponentName = 'Waiting...';
+			updateOpponentLabel();
+		}
+	}
+
+	function updateScore() {
+		onScoreUpdate({ you: myScore, opponent: opponentScore, opponentName });
+	}
+
+	function updateOpponentLabel() {
+		// Recreate the label sprite with new text
+		const pos = opponentLabel.position.clone();
+		scene.remove(opponentLabel);
+		opponentLabel.material.dispose();
+		opponentLabel = createTextSprite(opponentName, '#4fc3f7');
+		opponentLabel.visible = !!opponentId;
+		opponentLabel.position.copy(pos);
+		scene.add(opponentLabel);
+	}
+
+	// Wire collection broadcast
+	collectionSys._onCollectRemote = (entityId) => {
+		myScore++;
+		updateScore();
+		if (_ws?.readyState === WebSocket.OPEN) {
+			_ws.send(JSON.stringify({
+				type: 'collect',
+				playerId: myId,
+				entityId,
+				score: myScore,
+			}));
+		}
+	};
+
+	let _ws = null;
+	let lastPoseSent = 0;
+	connectWS();
 
 	// ── WASD movement (inline, simple) ──
 	const keys = {};
@@ -394,6 +557,20 @@ export async function bootGrabDemo(container, onCollect) {
 		// Run collection system update (handles collected animations)
 		collectionSys.update(dt);
 
+		// Broadcast our pose to opponent (throttled to 10/s)
+		const now = performance.now();
+		if (_ws?.readyState === WebSocket.OPEN && now - lastPoseSent > 100) {
+			lastPoseSent = now;
+			_ws.send(JSON.stringify({
+				type: 'pose',
+				playerId: myId,
+				name: playerName,
+				x: camera.position.x,
+				y: camera.position.y,
+				z: camera.position.z,
+			}));
+		}
+
 		renderer.render(scene, camera);
 	}
 	animate();
@@ -406,6 +583,7 @@ export async function bootGrabDemo(container, onCollect) {
 			window.removeEventListener('keyup', onKeyUp);
 			window.removeEventListener('resize', onResize);
 			if (collectionSys._cleanupInput) collectionSys._cleanupInput();
+			if (_ws) { _ws.close(); _ws = null; }
 			controls.dispose();
 			renderer.dispose();
 			if (container.contains(renderer.domElement)) {
