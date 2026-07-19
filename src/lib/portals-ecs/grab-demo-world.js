@@ -459,7 +459,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	);
 	opponentAvatar.visible = false;
 	scene.add(opponentAvatar);
-	const opponentLabel = createTextSprite('Waiting...', '#4fc3f7');
+	const opponentLabel = createTextSprite(THREE, 'Waiting...', '#4fc3f7');
 	opponentLabel.visible = false;
 	scene.add(opponentLabel);
 
