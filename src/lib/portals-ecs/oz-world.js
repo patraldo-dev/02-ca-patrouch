@@ -228,36 +228,41 @@ export async function bootOzWorld(container, options = {}) {
 	}
 	scene.add(roadGroup);
 
-	// ── Load GLB munchkins ──
+	// ── Load GLB munchkins from the asset library (game_name = 'oz') ──
 	const loader = new GLTFLoader();
-	const munchkinTemplates = await Promise.all([
-		new Promise((resolve) => {
-			loader.load('/api/assets/models/hombre-amarillo.glb', (gltf) => {
-				gltf.scene.traverse((child) => {
-					if (child.isMesh && child.material) {
-						child.material.transparent = true;
-						child.material.opacity = 0.9;
-						child.material.depthWrite = true;
-						child.material.side = THREE.DoubleSide;
-					}
+	let munchkinModels = [];
+	try {
+		const res = await fetch(`/api/assets/library?game=oz`);
+		const data = await res.json();
+		munchkinModels = data.models || [];
+	} catch (e) {
+		console.warn('[oz] fetchGameModels failed, using fallback');
+	}
+	// Fallback if no models tagged for oz
+	if (munchkinModels.length === 0) {
+		munchkinModels = [
+			{ url: '/api/assets/models/hombre-amarillo.glb' },
+			{ url: '/api/assets/models/antoine/mujer-musa.glb' },
+		];
+	}
+
+	const munchkinTemplates = await Promise.all(
+		munchkinModels.map((m) =>
+			new Promise((resolve) => {
+				loader.load(m.url, (gltf) => {
+					gltf.scene.traverse((child) => {
+						if (child.isMesh && child.material) {
+							child.material.transparent = true;
+							child.material.opacity = 0.9;
+							child.material.depthWrite = true;
+							child.material.side = THREE.DoubleSide;
+						}
+					});
+					resolve(gltf.scene);
 				});
-				resolve(gltf.scene);
-			});
-		}),
-		new Promise((resolve) => {
-			loader.load('/api/assets/models/antoine/mujer-musa.glb', (gltf) => {
-				gltf.scene.traverse((child) => {
-					if (child.isMesh && child.material) {
-						child.material.transparent = true;
-						child.material.opacity = 0.9;
-						child.material.depthWrite = true;
-						child.material.side = THREE.DoubleSide;
-					}
-				});
-				resolve(gltf.scene);
-			});
-		}),
-	]);
+			})
+		)
+	);
 
 	world.registerComponent(Munchkin);
 	world.registerComponent(Flower);

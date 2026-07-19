@@ -24,25 +24,28 @@ export async function GET({ url, platform, locals }) {
     const kind = url.searchParams.get('kind');
     const label = url.searchParams.get('label');
     const pack = url.searchParams.get('pack');
+    const gameName = url.searchParams.get('game');
     // Premium tier only if the user has a member/admin role
     const includePremium = locals.user?.role === 'admin' || locals.user?.role === 'member';
-
-    if (!kind) {
-        return json({ error: 'kind parameter is required' }, { status: 400 });
-    }
 
     try {
         let query = `SELECT id, kind, label, match_labels, file_path, pack, artist, tier, scale, collider_type, collider_size, game_name, game_behavior, game_points
                       FROM asset_library
-                      WHERE kind = ? AND status = 'active'`;
-        const binds = [kind];
+                      WHERE status = 'active'`;
+        const binds = [];
+
+        // kind is now optional — a game world may fetch ALL kinds
+        if (kind) {
+            query += ` AND kind = ?`;
+            binds.push(kind);
+        }
 
         // Tier gate: free users only see free models
         if (!includePremium) {
             query += ` AND tier = 'free'`;
         }
 
-        // Label matching: check both the primary label and the match_labels JSON array
+        // Label matching
         if (label) {
             query += ` AND (label = ? OR match_labels LIKE ?)`;
             binds.push(label, `%"${label}"%`);
@@ -51,6 +54,13 @@ export async function GET({ url, platform, locals }) {
         if (pack) {
             query += ` AND pack = ?`;
             binds.push(pack);
+        }
+
+        // Game name filter: matches if game_name contains the requested game
+        // (supports comma-separated, e.g. game_name = "oz, grab-demo")
+        if (gameName) {
+            query += ` AND game_name LIKE ?`;
+            binds.push(`%${gameName}%`);
         }
 
         query += ` ORDER BY RANDOM()`;

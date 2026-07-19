@@ -20,11 +20,32 @@ const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const BG_IMAGE_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
 const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/portal-ws/ws';
 
-const MODELS = [
-	{ url: '/api/assets/models/spirit.glb', count: 10, label: 'Spirit' },
-	{ url: '/api/assets/models/hombre-amarillo.glb', count: 10, label: 'Hombre Amarillo' },
-	{ url: '/api/assets/models/antoine/mujer-musa.glb', count: 10, label: 'Mujer Musa' },
+// Fetch models tagged for this game from the asset library API.
+// Falls back to hardcoded defaults if the API fails.
+const FALLBACK_MODELS = [
+	{ url: '/api/assets/models/spirit.glb', count: 10, label: 'Spirit', game_behavior: 'passive', game_points: 1 },
+	{ url: '/api/assets/models/hombre-amarillo.glb', count: 10, label: 'Hombre', game_behavior: 'evade', game_points: 3 },
+	{ url: '/api/assets/models/antoine/mujer-musa.glb', count: 10, label: 'Mujer Musa', game_behavior: 'attack', game_points: 5 },
 ];
+
+async function fetchGameModels(gameName) {
+	try {
+		const res = await fetch(`/api/assets/library?game=${gameName}`);
+		const data = await res.json();
+		if (data.models && data.models.length > 0) {
+			return data.models.map((m) => ({
+				url: m.url,
+				count: 10,  // 10 of each
+				label: m.label,
+				game_behavior: m.game_behavior || 'passive',
+				game_points: m.game_points || 1,
+			}));
+		}
+	} catch (e) {
+		console.warn('[grab-demo] fetchGameModels failed, using fallback:', e?.message);
+	}
+	return FALLBACK_MODELS;
+}
 
 // ── ECS Components ──
 function reuseOrCreate(id, schema) {
@@ -309,10 +330,13 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	ground.rotation.x = -Math.PI / 2;
 	scene.add(ground);
 
-	// ── Load GLB templates ──
+	// ── Fetch models tagged for this game from the asset library ──
+	const gameModels = await fetchGameModels('grab-demo');
+
+	// ── Load GLB templates from the fetched model list ──
 	const loader = new GLTFLoader();
 	const templates = await Promise.all(
-		MODELS.map((m) =>
+		gameModels.map((m) =>
 			new Promise((resolve) => {
 				loader.load(m.url, (gltf) => {
 					gltf.scene.traverse((child) => {
@@ -377,22 +401,25 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	window.addEventListener('pointerup', onPointerUp);
 	window.addEventListener('pointermove', onPointerMove);
 
-	// ── Spawn 30 collectible entities with deterministic IDs (0-29) ──
-	// Each model type gets a different behavior:
-	//   Spirit (mi=0):     passive, 1 point — easy, stays still
-	//   Hombre (mi=1):     evade, 3 points — runs away when you approach
-	//   Mujer Musa (mi=2): attack, 5 points — chases you, -2 if it touches you
-	const BEHAVIORS = [
-		{ behavior: 'passive', points: 1, glow: 0x88ff88 },  // green
-		{ behavior: 'evade',   points: 3, glow: 0xffcc44 },  // yellow
-		{ behavior: 'attack',  points: 5, glow: 0xff4444 },  // red
-	];
+	// ── Spawn collectibles from the fetched models ──
+	// Behavior + points come from the asset library (game_behavior, game_points)
+	const BEHAVIOR_GLOWS = {
+		passive: 0x88ff88,
+		evade:   0xffcc44,
+		attack:  0xff4444,
+		hide:    0x88ccff,
+		follow:  0xcc88ff,
+	};
 
 	let entityIdCounter = 0;
+	const totalModels = gameModels.length;
 	for (let mi = 0; mi < templates.length; mi++) {
 		const template = templates[mi];
-		const cfg = BEHAVIORS[mi] || BEHAVIORS[0];
-		for (let i = 0; i < MODELS[mi].count; i++) {
+		const cfg = gameModels[mi];
+		const behavior = cfg.game_behavior || 'passive';
+		const points = cfg.game_points || 1;
+		const glow = BEHAVIOR_GLOWS[behavior] || 0x88ff88;
+		for (let i = 0; i < cfg.count; i++) {
 			const clone = template.clone(true);
 
 			// Normalize scale
@@ -405,7 +432,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			const glow = new THREE.Mesh(
 				new THREE.SphereGeometry(0.5, 12, 8),
 				new THREE.MeshBasicMaterial({
-					color: cfg.glow,
+					color: glow,
 					transparent: true,
 					opacity: 0.15,
 					blending: THREE.AdditiveBlending,
@@ -439,8 +466,8 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 				bobPhase: eid * 0.7,
 				baseY: 0.6,
 				modelIndex: mi,
-				behavior: cfg.behavior,
-				points: cfg.points,
+				behavior: behavior,
+				points: points,
 				baseX: x,
 				baseZ: z,
 				fleeSpeed: 2.0 + (eid % 3) * 0.3,
