@@ -52,8 +52,9 @@ const Collectible = reuseOrCreate('Collectible', {
 
 // ── ECS Systems ──
 
-// Module-level callback for attack hits (set by boot function)
+// Module-level refs set by boot function
 let _onPlayerHit = null;
+let world_camera = null;
 
 // Animation: spin + bob + behavior-driven movement (priority 0)
 // Handles passive (idle), evade (flee player), attack (chase player),
@@ -136,72 +137,15 @@ const AnimationSystem = class extends createSystem({
 // the animation loop. Only systems registered with world.registerSystem()
 // should extend createSystem.
 class CollectionSystem {
-	init() {
+	constructor() {
 		this.raycaster = new THREE.Raycaster();
 		this.pointer = new THREE.Vector2();
-		this.collectedCount = 0;
-		this._onCollect = null;
-	}
-
-	setupRaycast(camera, domElement) {
-		this.camera = camera;
-		this.domElement = domElement;
 		this.collectibles = [];
-
-		let lookActive = false;
-		let mouseDownPos = null;
-
-		const onPointerDown = (e) => {
-			lookActive = true;
-			mouseDownPos = { x: e.clientX, y: e.clientY, moved: false };
-		};
-
-		const onPointerUp = (e) => {
-			if (lookActive && mouseDownPos && !mouseDownPos.moved) {
-				this._tryCollect(mouseDownPos.x, mouseDownPos.y);
-			}
-			lookActive = false;
-		};
-
-		const onPointerMove = (e) => {
-			if (lookActive && mouseDownPos) {
-				if (Math.abs(e.clientX - mouseDownPos.x) > 5 ||
-					Math.abs(e.clientY - mouseDownPos.y) > 5) {
-					mouseDownPos.moved = true;
-				}
-			}
-		};
-
-		domElement.addEventListener('pointerdown', onPointerDown);
-		window.addEventListener('pointerup', onPointerUp);
-		window.addEventListener('pointermove', onPointerMove);
-
-		// Touch support
-		let touchStart = null;
-		const onTouchStart = (e) => {
-			const t = e.touches[0];
-			touchStart = { x: t.clientX, y: t.clientY };
-		};
-		const onTouchEnd = (e) => {
-			if (touchStart) {
-				this._tryCollect(touchStart.x, touchStart.y);
-			}
-			touchStart = null;
-		};
-		domElement.addEventListener('touchstart', onTouchStart);
-		domElement.addEventListener('touchend', onTouchEnd);
-
-		this._cleanupInput = () => {
-			domElement.removeEventListener('pointerdown', onPointerDown);
-			window.removeEventListener('pointerup', onPointerUp);
-			window.removeEventListener('pointermove', onPointerMove);
-			domElement.removeEventListener('touchstart', onTouchStart);
-			domElement.removeEventListener('touchend', onTouchEnd);
-		};
+		this._onCollect = null;
+		this._onCollectRemote = null;
 	}
 
 	registerCollectible(entity) {
-		this.collectibles = this.collectibles || [];
 		this.collectibles.push(entity);
 	}
 
@@ -210,12 +154,12 @@ class CollectionSystem {
 	}
 
 	_tryCollect(clientX, clientY) {
-		if (!this.camera || !this.collectibles) return;
+		if (!this.collectibles.length) return;
 		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
 		this.pointer.y = -(clientY / window.innerHeight) * 2 + 1;
-		this.raycaster.setFromCamera(this.pointer, this.camera);
+		this.raycaster.setFromCamera(this.pointer, world_camera);
+		this.raycaster.far = 10;
 
-		// Get meshes from active (non-collected) collectibles
 		const meshes = this.collectibles
 			.filter((e) => !e.getValue(Collectible, 'collected'))
 			.map((e) => e.object3D)
@@ -223,37 +167,33 @@ class CollectionSystem {
 
 		const hits = this.raycaster.intersectObjects(meshes, true);
 		if (hits.length > 0) {
-			// Walk up to find the entity
 			let obj = hits[0].object;
 			while (obj && !this.collectibles.some((e) => e.object3D === obj)) {
 				obj = obj.parent;
 			}
 			if (obj) {
 				const entity = this.collectibles.find((e) => e.object3D === obj);
-			if (entity && !entity.getValue(Collectible, 'collected')) {
-				entity.setValue(Collectible, 'collected', true);
-				entity.setValue(Collectible, 'collectTime', performance.now());
-				entity.setValue(Collectible, 'collectBy', 'you');
-				this.collectedCount++;
-				if (this._onCollect) this._onCollect(this.collectedCount);
-				// Broadcast to opponent
-				if (this._onCollectRemote) {
-					this._onCollectRemote(entity.getValue(Collectible, 'entityId'));
+				if (entity && !entity.getValue(Collectible, 'collected')) {
+					entity.setValue(Collectible, 'collected', true);
+					entity.setValue(Collectible, 'collectTime', performance.now());
+					entity.setValue(Collectible, 'collectBy', 'you');
+					this.collectedCount = (this.collectedCount || 0) + 1;
+					if (this._onCollect) this._onCollect(this.collectedCount);
+					if (this._onCollectRemote) {
+						this._onCollectRemote(entity.getValue(Collectible, 'entityId'));
+					}
 				}
-			}
 			}
 		}
 	}
 
 	update(dt) {
-		// Handle collected entity animation (shrink + fade)
-		for (const entity of this.collectibles || []) {
+		for (const entity of this.collectibles) {
 			if (entity.getValue(Collectible, 'collected')) {
 				const elapsed = (performance.now() - entity.getValue(Collectible, 'collectTime')) / 400;
 				const obj = entity.object3D;
 				if (!obj) continue;
 				if (elapsed >= 1) {
-					// Remove from scene
 					if (obj.parent) obj.parent.remove(obj);
 				} else {
 					obj.scale.setScalar(Math.max(0, 1 - elapsed));
@@ -308,12 +248,10 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	});
 
 	// Use the World's scene + camera + renderer — NOT our own.
-	// createTransformEntity adds objects to world.scene, and the World's
-	// internal render loop renders world.scene. If we use a separate scene,
-	// entities flash for one frame then vanish.
 	const scene = world.scene;
 	const camera = world.camera;
 	const renderer = world.renderer;
+	world_camera = camera; // for CollectionSystem access
 
 	// Position the camera
 	camera.position.set(0, 1.6, 5);
@@ -395,7 +333,6 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	world.registerComponent(Collectible);
 
 	const collectionSys = new CollectionSystem();
-	collectionSys.setupRaycast(camera, renderer.domElement);
 	collectionSys.setOnCollect(onCollect);
 
 	_onPlayerHit = (points) => {
@@ -638,16 +575,65 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	let lastPoseSent = 0;
 	connectWS();
 
-	// ── WASD movement + look ──
+	// ── WASD + touch thumbstick movement ──
 	const keys = {};
 	const onKeyDown = (e) => { keys[e.code] = true; };
 	const onKeyUp = (e) => { keys[e.code] = false; };
 	window.addEventListener('keydown', onKeyDown);
 	window.addEventListener('keyup', onKeyUp);
 
-	// ── Our animation loop handles ONLY: WASD, look, collection, WS ──
-	// The World's internal loop handles: ECS system execution + rendering.
-	// We do NOT call renderer.render() — the World does that.
+	// Touch thumbstick (left half of screen) + drag look (right half)
+	const touchInput = { x: 0, y: 0 }; // -1..1 for movement
+	let touchLookId = null;
+	let thumbstickId = null;
+	let thumbstickStart = null;
+
+	const isTouch = 'ontouchstart' in window;
+	if (isTouch) {
+		renderer.domElement.addEventListener('touchstart', (e) => {
+			for (const t of e.changedTouches) {
+				if (t.clientX < window.innerWidth / 2 && thumbstickId === null) {
+					// Left half = thumbstick
+					thumbstickId = t.identifier;
+					thumbstickStart = { x: t.clientX, y: t.clientY };
+				} else if (touchLookId === null) {
+					// Right half = look
+					touchLookId = t.identifier;
+				}
+			}
+		}, { passive: true });
+
+		renderer.domElement.addEventListener('touchmove', (e) => {
+			for (const t of e.changedTouches) {
+				if (t.identifier === thumbstickId && thumbstickStart) {
+					// Thumbstick movement
+					const dx = t.clientX - thumbstickStart.x;
+					const dy = t.clientY - thumbstickStart.y;
+					touchInput.x = Math.max(-1, Math.min(1, dx / 60));
+					touchInput.y = Math.max(-1, Math.min(1, dy / 60));
+				} else if (t.identifier === touchLookId) {
+					// Look (yaw + pitch)
+					yaw -= t.clientX * 0.001; // approximate
+				}
+			}
+		}, { passive: true });
+
+		renderer.domElement.addEventListener('touchend', (e) => {
+			for (const t of e.changedTouches) {
+				if (t.identifier === thumbstickId) {
+					thumbstickId = null;
+					thumbstickStart = null;
+					touchInput.x = 0;
+					touchInput.y = 0;
+				} else if (t.identifier === touchLookId) {
+					touchLookId = null;
+				}
+			}
+		}, { passive: true });
+	}
+
+	// ── Animation loop: movement + look + collection + WS ──
+	// World handles ECS system execution + rendering internally.
 	let animationId;
 	const moveDir = new THREE.Vector3();
 
@@ -655,17 +641,22 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		animationId = requestAnimationFrame(animate);
 		const dt = 0.016;
 
-		// Apply look (yaw + pitch)
+		// Apply look
 		camera.rotation.order = 'YXZ';
 		camera.rotation.y = yaw;
 		camera.rotation.x = pitch;
 
-		// WASD movement (camera-relative)
+		// Movement: keyboard OR touch thumbstick
 		moveDir.set(0, 0, 0);
 		if (keys['KeyW'] || keys['ArrowUp']) moveDir.z -= 1;
 		if (keys['KeyS'] || keys['ArrowDown']) moveDir.z += 1;
 		if (keys['KeyA'] || keys['ArrowLeft']) moveDir.x -= 1;
 		if (keys['KeyD'] || keys['ArrowRight']) moveDir.x += 1;
+		// Touch thumbstick overrides if active
+		if (touchInput.x !== 0 || touchInput.y !== 0) {
+			moveDir.x = touchInput.x;
+			moveDir.z = touchInput.y;
+		}
 		if (moveDir.lengthSq() > 0) {
 			moveDir.normalize().applyEuler(new THREE.Euler(0, yaw, 0));
 			camera.position.x += moveDir.x * 3 * dt;
@@ -673,7 +664,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			camera.position.y = 1.6;
 		}
 
-		// Run collection system update (handles collected animations)
+		// Collection animations
 		collectionSys.update(dt);
 
 		// Broadcast pose to opponent (throttled)
