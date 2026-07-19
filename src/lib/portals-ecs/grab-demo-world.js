@@ -76,13 +76,24 @@ class CollectionSystem {
 	}
 
 	update(dt) {
-		for (const entity of this.collectibles) {
+		for (let i = this.collectibles.length - 1; i >= 0; i--) {
+			const entity = this.collectibles[i];
 			if (entity.getValue(_Collectible, 'collected')) {
 				const elapsed = (performance.now() - entity.getValue(_Collectible, 'collectTime')) / 400;
 				const obj = entity.object3D;
-				if (!obj) continue;
+				if (!obj) {
+					// Already destroyed — drop from our tracking list.
+					this.collectibles.splice(i, 1);
+					continue;
+				}
 				if (elapsed >= 1) {
-					if (obj.parent) obj.parent.remove(obj);
+					// Animation done — destroy the entity properly so its
+					// Transform is removed and TransformSystem stops tracking
+					// it. Merely detaching the Object3D (obj.parent.remove)
+					// left a dangling Transform, which caused the per-frame
+					// "no valid parent entity" warning in TransformSystem.
+					try { entity.destroy(); } catch (e) { /* already gone */ }
+					this.collectibles.splice(i, 1);
 				} else {
 					obj.scale.setScalar(Math.max(0, 1 - elapsed));
 					obj.position.y += 0.03;
@@ -432,9 +443,10 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			group.position.set(x, 0.6, z);
 			group.rotation.y = eid * 0.4;
 
-			scene.add(group);
-
-			// Create ECS entity linked to this mesh
+			// Create ECS entity linked to this mesh. createTransformEntity
+			// auto-parents the group under the active level root — we must NOT
+			// also scene.add(group), which would double-parent and conflict
+			// with TransformSystem (the "no valid parent entity" warning).
 			const entity = world.createTransformEntity(group);
 			entity.addComponent(_Collectible, {
 				entityId: eid,
