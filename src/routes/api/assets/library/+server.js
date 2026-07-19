@@ -32,7 +32,7 @@ export async function GET({ url, platform, locals }) {
     }
 
     try {
-        let query = `SELECT id, kind, label, match_labels, file_path, pack, artist, tier, scale, collider_type, collider_size
+        let query = `SELECT id, kind, label, match_labels, file_path, pack, artist, tier, scale, collider_type, collider_size, game_name, game_behavior, game_points
                       FROM asset_library
                       WHERE kind = ? AND status = 'active'`;
         const binds = [kind];

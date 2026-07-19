@@ -47,7 +47,7 @@ export async function PUT({ params, request, locals, platform, url }) {
     let body;
     try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, { status: 400 }); }
 
-    const allowed = ['kind', 'label', 'match_labels', 'file_path', 'pack', 'artist', 'tier', 'scale', 'collider_type', 'collider_size', 'description', 'tags', 'status'];
+    const allowed = ['kind', 'label', 'match_labels', 'file_path', 'pack', 'artist', 'tier', 'scale', 'collider_type', 'collider_size', 'description', 'tags', 'status', 'game_name', 'game_behavior', 'game_points'];
     const sets = [];
     const values = [];
 

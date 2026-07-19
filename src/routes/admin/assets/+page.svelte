@@ -31,6 +31,14 @@
         ],
     };
 
+    const GAME_BEHAVIORS = [
+        { value: 'passive', label: 'Passive (stays still, easy to collect)' },
+        { value: 'evade', label: 'Evade (runs away when player approaches)' },
+        { value: 'attack', label: 'Attack (chases player, penalty on contact)' },
+        { value: 'hide', label: 'Hide (invisible until player is close)' },
+        { value: 'follow', label: 'Follow (trails behind the player once activated)' },
+    ];
+
     const COLLIDER_PRESETS = {
         box: { label: 'Box (buildings, vehicles)', defaultSize: '[0.5, 0.4, 0.8]' },
         sphere: { label: 'Sphere (rounded objects, spirits)', defaultSize: '[0.4]' },
@@ -47,7 +55,8 @@
         id: '', kind: 'figure', label: '', match_labels: '',
         file_path: '', pack: 'core', artist: '', tier: 'free',
         scale: 1.0, collider_type: 'box', collider_size: '[0.5, 0.4, 0.8]',
-        description: '', tags: ''
+        description: '', tags: '',
+        game_name: '', game_behavior: 'passive', game_points: 1
     });
 
     function resetForm() {
@@ -55,7 +64,8 @@
             id: '', kind: 'figure', label: '', match_labels: '',
             file_path: '', pack: 'core', artist: '', tier: 'free',
             scale: 1.0, collider_type: 'box', collider_size: '[0.5, 0.4, 0.8]',
-            description: '', tags: ''
+            description: '', tags: '',
+            game_name: '', game_behavior: 'passive', game_points: 1
         };
         editing = null;
         uploadProgress = '';
@@ -76,7 +86,10 @@
             collider_type: m.collider_type || 'box',
             collider_size: m.collider_size ? JSON.stringify(m.collider_size) : '[0.5, 0.4, 0.8]',
             description: m.description || '',
-            tags: (m.tags || []).join(', ')
+            tags: (m.tags || []).join(', '),
+            game_name: m.game_name || '',
+            game_behavior: m.game_behavior || 'passive',
+            game_points: m.game_points || 1
         };
         showForm = true;
     }
@@ -145,6 +158,9 @@
             match_labels: form.match_labels ? form.match_labels.split(',').map(s => s.trim()).filter(Boolean) : [],
             collider_size: form.collider_size ? JSON.parse(form.collider_size) : null,
             tags: form.tags ? form.tags.split(',').map(s => s.trim()).filter(Boolean) : [],
+            game_name: form.game_name || null,
+            game_behavior: form.game_behavior || 'passive',
+            game_points: parseInt(form.game_points) || 1,
         };
 
         try {
@@ -352,6 +368,36 @@
                         <span class="tooltip" title="Comma-separated keywords for search and organization. E.g. 'animal, mammal, ground'.">ⓘ</span>
                     </span>
                     <input bind:value={form.tags} placeholder="animal, mammal, character" />
+                </label>
+
+                <!-- Game fields -->
+                <label>
+                    <span class="field-label">
+                        Game world
+                        <span class="tooltip" title="Which game world this model is designed for (oz, galaga, parade). Leave blank for general use.">ⓘ</span>
+                    </span>
+                    <input list="game-name-suggestions" bind:value={form.game_name} placeholder="oz, galaga, parade..." />
+                    <datalist id="game-name-suggestions">
+                        <option value="oz"></option>
+                        <option value="galaga"></option>
+                        <option value="parade"></option>
+                    </datalist>
+                </label>
+                <label>
+                    <span class="field-label">
+                        Game behavior
+                        <span class="tooltip" title="How this model behaves in game worlds. Passive stays still, evade runs away, attack chases the player, hide is invisible until proximity, follow trails behind the player.">ⓘ</span>
+                    </span>
+                    <select bind:value={form.game_behavior}>
+                        {#each GAME_BEHAVIORS as b}<option value={b.value}>{b.label}</option>{/each}
+                    </select>
+                </label>
+                <label>
+                    <span class="field-label">
+                        Game points
+                        <span class="tooltip" title="Point value when this model is collected or defeated. Higher = more valuable. Attackers cost the player points on contact.">ⓘ</span>
+                    </span>
+                    <input type="number" min="1" max="20" bind:value={form.game_points} />
                 </label>
             </div>
             <div class="form-actions">

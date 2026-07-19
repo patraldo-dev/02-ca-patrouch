@@ -28,7 +28,8 @@ export async function POST({ request, locals, platform, url }) {
         id, kind, label, match_labels, file_path,
         pack = 'core', artist, tier = 'free',
         scale = 1.0, collider_type = 'box', collider_size,
-        description, tags
+        description, tags,
+        game_name = null, game_behavior = 'passive', game_points = 1
     } = body;
 
     if (!id || !kind || !label || !file_path) {
@@ -37,14 +38,15 @@ export async function POST({ request, locals, platform, url }) {
 
     try {
         await db.prepare(`
-            INSERT INTO asset_library (id, kind, label, match_labels, file_path, pack, artist, tier, scale, collider_type, collider_size, description, tags)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO asset_library (id, kind, label, match_labels, file_path, pack, artist, tier, scale, collider_type, collider_size, description, tags, game_name, game_behavior, game_points)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 kind=excluded.kind, label=excluded.label, match_labels=excluded.match_labels,
                 file_path=excluded.file_path, pack=excluded.pack, artist=excluded.artist,
                 tier=excluded.tier, scale=excluded.scale, collider_type=excluded.collider_type,
                 collider_size=excluded.collider_size, description=excluded.description,
-                tags=excluded.tags, updated_at=datetime('now')
+                tags=excluded.tags, game_name=excluded.game_name, game_behavior=excluded.game_behavior,
+                game_points=excluded.game_points, updated_at=datetime('now')
         `).bind(
             id, kind, label,
             match_labels ? JSON.stringify(match_labels) : null,
@@ -52,7 +54,10 @@ export async function POST({ request, locals, platform, url }) {
             collider_type,
             collider_size ? JSON.stringify(collider_size) : null,
             description || null,
-            tags ? JSON.stringify(tags) : null
+            tags ? JSON.stringify(tags) : null,
+            game_name,
+            game_behavior,
+            parseInt(game_points) || 1
         ).run();
 
         return json({ success: true, id });
