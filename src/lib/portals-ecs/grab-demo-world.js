@@ -20,33 +20,6 @@ const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const BG_IMAGE_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
 const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/portal-ws/ws';
 
-// Fetch models tagged for this game from the asset library API.
-// Falls back to hardcoded defaults if the API fails.
-const FALLBACK_MODELS = [
-	{ url: '/api/assets/models/spirit.glb', count: 10, label: 'Spirit', game_behavior: 'passive', game_points: 1 },
-	{ url: '/api/assets/models/hombre-amarillo.glb', count: 10, label: 'Hombre', game_behavior: 'evade', game_points: 3 },
-	{ url: '/api/assets/models/antoine/mujer-musa.glb', count: 10, label: 'Mujer Musa', game_behavior: 'attack', game_points: 5 },
-];
-
-async function fetchGameModels(gameName) {
-	try {
-		const res = await fetch(`/api/assets/library?game=${gameName}`);
-		const data = await res.json();
-		if (data.models && data.models.length > 0) {
-			return data.models.map((m) => ({
-				url: m.url,
-				count: 10,  // 10 of each
-				label: m.label,
-				game_behavior: m.game_behavior || 'passive',
-				game_points: m.game_points || 1,
-			}));
-		}
-	} catch (e) {
-		console.warn('[grab-demo] fetchGameModels failed, using fallback:', e?.message);
-	}
-	return FALLBACK_MODELS;
-}
-
 // ── ECS Components ──
 function reuseOrCreate(id, schema) {
 	return ComponentRegistry.has(id) ? ComponentRegistry.getById(id) : createComponent(id, schema);
@@ -331,7 +304,29 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	scene.add(ground);
 
 	// ── Fetch models tagged for this game from the asset library ──
-	const gameModels = await fetchGameModels('grab-demo');
+	let gameModels = [];
+	try {
+		const res = await fetch(`/api/assets/library?game=grab-demo`);
+		const data = await res.json();
+		if (data.models && data.models.length > 0) {
+			gameModels = data.models.map((m) => ({
+				url: m.url,
+				count: 10,
+				label: m.label,
+				game_behavior: m.game_behavior || 'passive',
+				game_points: m.game_points || 1,
+			}));
+		}
+	} catch (e) {
+		console.warn('[grab-demo] fetchGameModels failed, using fallback:', e?.message);
+	}
+	if (gameModels.length === 0) {
+		gameModels = [
+			{ url: '/api/assets/models/spirit.glb', count: 10, label: 'Spirit', game_behavior: 'passive', game_points: 1 },
+			{ url: '/api/assets/models/hombre-amarillo.glb', count: 10, label: 'Hombre', game_behavior: 'evade', game_points: 3 },
+			{ url: '/api/assets/models/antoine/mujer-musa.glb', count: 10, label: 'Mujer Musa', game_behavior: 'attack', game_points: 5 },
+		];
+	}
 
 	// ── Load GLB templates from the fetched model list ──
 	const loader = new GLTFLoader();
