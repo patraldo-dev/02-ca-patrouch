@@ -47,7 +47,10 @@ class CollectionSystem {
 	}
 
 	_tryCollect(clientX, clientY) {
-		if (!this.collectibles.length || !this.raycaster) return;
+		if (!this.collectibles.length || !this.raycaster) {
+			console.log('[grab-demo] _tryCollect skipped — collectibles:', this.collectibles.length, 'raycaster:', !!this.raycaster);
+			return;
+		}
 		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
 		this.pointer.y = -(clientY / window.innerHeight) * 2 + 1;
 		this.raycaster.setFromCamera(this.pointer, world_camera);
@@ -59,6 +62,7 @@ class CollectionSystem {
 			.filter(Boolean);
 
 		const hits = this.raycaster.intersectObjects(meshes, true);
+		console.log('[grab-demo] _tryCollect at', clientX, clientY, '— meshes:', meshes.length, 'hits:', hits.length, hits[0] ? `(dist ${hits[0].distance.toFixed(2)})` : '');
 		if (hits.length > 0) {
 			let obj = hits[0].object;
 			while (obj && !this.collectibles.some((e) => e.object3D === obj)) {
@@ -196,7 +200,35 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 					const dist = Math.hypot(dx, dz);
 					const cs = entity.getValue(_Collectible, 'chaseSpeed');
 					const cd = entity.getValue(_Collectible, 'hitCooldown');
+					// Chase the player (normalized direction × speed)
 					if (dist > 0.5) { obj.position.x += (dx / dist) * cs * dt; obj.position.z += (dz / dist) * cs * dt; }
+
+					// SEPARATION: repel from other nearby attackers so they
+					// don't stack into one blob. Each attacker pushes away from
+					// others within 1.5 units. This creates a ring/surround
+					// formation instead of all occupying the same point.
+					const SEP_RADIUS = 1.5;
+					const SEP_STRENGTH = 2.0;
+					let sepX = 0, sepZ = 0;
+					for (const other of this.queries.items.entities) {
+						if (other === entity) continue;
+						if (other.getValue(_Collectible, 'collected')) continue;
+						if (other.getValue(_Collectible, 'behavior') !== 'attack') continue;
+						const oobj = other.object3D;
+						if (!oobj) continue;
+						const sdx = obj.position.x - oobj.position.x;
+						const sdz = obj.position.z - oobj.position.z;
+						const sd = Math.hypot(sdx, sdz);
+						if (sd > 0.01 && sd < SEP_RADIUS) {
+							// Inverse-distance weighting: closer = stronger push
+							const force = (1 - sd / SEP_RADIUS) * SEP_STRENGTH;
+							sepX += (sdx / sd) * force * dt;
+							sepZ += (sdz / sd) * force * dt;
+						}
+					}
+					obj.position.x += sepX;
+					obj.position.z += sepZ;
+
 					obj.position.y = baseY + Math.sin(time * 4 + phase) * 0.15;
 					if (dist < 1.0 && cd <= 0 && _onPlayerHit) {
 						entity.setValue(_Collectible, 'hitCooldown', 2.0);

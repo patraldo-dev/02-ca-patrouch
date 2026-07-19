@@ -256,6 +256,11 @@
 		inset: 0;
 		background: #05030a;
 		overflow: hidden;
+		/* Cover the site nav (z-index: var(--z-nav) = 100). grab-demo is an
+		   immersive fullscreen experience like PortalScene — the nav shouldn't
+		   be visible while playing. Without this, the HUD piled on top of the
+		   nav because both shared the same stacking context. */
+		z-index: 200;
 	}
 	.canvas-container {
 		width: 100%;
