@@ -132,8 +132,11 @@ const AnimationSystem = class extends createSystem({
 	}
 };
 
-// Collection: raycast on click/tap, mark entities collected (priority 0)
-const CollectionSystem = class extends createSystem({}) {
+// Collection: raycast on click/tap, mark entities collected.
+// NOT an ECS system — this is a plain class that we call manually from
+// the animation loop. Only systems registered with world.registerSystem()
+// should extend createSystem.
+class CollectionSystem {
 	init() {
 		this.raycaster = new THREE.Raycaster();
 		this.pointer = new THREE.Vector2();
@@ -245,7 +248,7 @@ const CollectionSystem = class extends createSystem({}) {
 
 	update(dt) {
 		// Handle collected entity animation (shrink + fade)
-		for (const entity of this.queries?.items?.entities || []) {
+		for (const entity of this.collectibles || []) {
 			if (entity.getValue(Collectible, 'collected')) {
 				const elapsed = (performance.now() - entity.getValue(Collectible, 'collectTime')) / 400;
 				const obj = entity.object3D;
@@ -676,10 +679,9 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			controls.target.set(camera.position.x, 1, camera.position.z);
 		}
 
-		// Run ECS systems (animation)
-		world.execute(dt, performance.now());
-
-		// Run collection system update (handles collected animations)
+		// Run collection system update (handles collected animations).
+		// AnimationSystem is registered with the world and runs automatically
+		// via IWSDK's internal loop — we do NOT call world.execute() ourselves.
 		collectionSys.update(dt);
 
 		// Broadcast our pose to opponent (throttled to 10/s)

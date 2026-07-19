@@ -429,7 +429,8 @@ export async function bootOzWorld(container, options = {}) {
 			controls.target.set(camera.position.x, 1, camera.position.z);
 		}
 
-		world.execute(dt, performance.now());
+		// IWSDK's World runs registered systems automatically via its internal
+		// loop. We do NOT call world.execute() ourselves.
 		renderer.render(scene, camera);
 	}
 	animate();
