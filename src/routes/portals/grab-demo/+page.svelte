@@ -16,13 +16,30 @@
 	let errorMsg = $state('');
 	let cleanup = null;
 	let score = $state({ you: 0, opponent: 0, opponentName: 'Waiting...' });
+	let isTouch = $state(false);
 
 	// Room ID from URL query param, or generate one
 	let roomId = $derived($page.url.searchParams.get('room') || 'demo');
 	let shareUrl = $derived(typeof window !== 'undefined' ? `${window.location.origin}/portals/grab-demo?room=${roomId}` : '');
 
+	// ── Visible thumbstick state (mobile only) ──
+	// Floating thumbstick: the base repositions to wherever the first touch
+	// lands in the left half, then the knob follows the finger (clamped).
+	let stickActive = $state(false);
+	let stickOrigin = { x: 0, y: 0 };
+	let stickPos = $state({ x: 0, y: 0 });
+	let stickBasePos = $state({ x: -200, y: -200 }); // off-screen until first touch
+	const STICK_MAX_R = 60;
+
+	// ── Look-zone state (mobile only) — drag to look, tap to collect ──
+	let lookStart = null;
+	let lookLast = null;
+	let lookMoved = false;
+	const TAP_THRESHOLD = 10; // px of movement before it's a drag, not a tap
+
 	onMount(async () => {
 		if (!browser || !container) return;
+		isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 		try {
 			const { bootGrabDemo } = await import('$lib/portals-ecs/grab-demo-world.js');
 			cleanup = await bootGrabDemo(
@@ -48,6 +65,65 @@
 	function copyShareLink() {
 		navigator.clipboard?.writeText(shareUrl);
 	}
+
+	// ── Thumbstick (left side): drag to move ──
+	function onStickStart(e) {
+		e.preventDefault();
+		const t = e.touches[0];
+		stickActive = true;
+		stickOrigin = { x: t.clientX, y: t.clientY };
+		stickPos = { x: 0, y: 0 };
+	}
+	function onStickMove(e) {
+		if (!stickActive || !cleanup?.touch) return;
+		e.preventDefault();
+		const t = e.touches[0];
+		const dx = t.clientX - stickOrigin.x;
+		const dy = t.clientY - stickOrigin.y;
+		const len = Math.sqrt(dx * dx + dy * dy);
+		const clampedLen = Math.min(len, STICK_MAX_R);
+		const angle = Math.atan2(dy, dx);
+		stickPos = { x: Math.cos(angle) * clampedLen, y: Math.sin(angle) * clampedLen };
+		// Write normalized -1..1 into the shared touchInput the world reads.
+		cleanup.touch.input.x = stickPos.x / STICK_MAX_R;
+		cleanup.touch.input.y = stickPos.y / STICK_MAX_R;
+	}
+	function onStickEnd(e) {
+		e.preventDefault();
+		stickActive = false;
+		stickPos = { x: 0, y: 0 };
+		if (cleanup?.touch) { cleanup.touch.input.x = 0; cleanup.touch.input.y = 0; }
+	}
+
+	// ── Look-zone (right side): drag to look, tap to collect ──
+	function onLookStart(e) {
+		const t = e.touches[0];
+		lookStart = { x: t.clientX, y: t.clientY, time: Date.now() };
+		lookLast = { x: t.clientX, y: t.clientY };
+		lookMoved = false;
+	}
+	function onLookMove(e) {
+		if (!lookLast || !cleanup?.touch) return;
+		const t = e.touches[0];
+		const dx = t.clientX - lookLast.x;
+		const dy = t.clientY - lookLast.y;
+		if (Math.abs(t.clientX - lookStart.x) > TAP_THRESHOLD || Math.abs(t.clientY - lookStart.y) > TAP_THRESHOLD) {
+			lookMoved = true;
+		}
+		if (lookMoved) {
+			cleanup.touch.applyLook(dx, dy);
+		}
+		lookLast = { x: t.clientX, y: t.clientY };
+	}
+	function onLookEnd(e) {
+		// Tap (no drag, quick) = collect at the touch point.
+		if (lookStart && !lookMoved && Date.now() - lookStart.time < 300 && cleanup?.touch) {
+			cleanup.touch.tryCollectAt(lookStart.x, lookStart.y);
+		}
+		lookStart = null;
+		lookLast = null;
+		lookMoved = false;
+	}
 </script>
 
 <svelte:head>
@@ -56,6 +132,27 @@
 
 <div class="demo-page" class:booted>
 	<div class="canvas-container" bind:this={container}></div>
+
+	{#if booted && isTouch}
+		<!-- Look-zone: right half of screen. Drag to look, tap to collect. -->
+		<div
+			class="look-zone"
+			ontouchstart={onLookStart}
+			ontouchmove={onLookMove}
+			ontouchend={onLookEnd}
+		></div>
+		<!-- Thumbstick: left half of screen. Drag to move. Visible base + knob. -->
+		<div
+			class="thumbstick-zone"
+			ontouchstart={onStickStart}
+			ontouchmove={onStickMove}
+			ontouchend={onStickEnd}
+		>
+			<div class="thumbstick-base" class:active={stickActive}>
+				<div class="thumbstick-knob" style="transform: translate({stickPos.x}px, {stickPos.y}px)"></div>
+			</div>
+		</div>
+	{/if}
 
 	{#if booted}
 		<div class="hud">
@@ -89,9 +186,13 @@
 			<span class="room-id">Room: {roomId}</span>
 		</div>
 
-		<div class="instructions">
-			<p><strong>WASD</strong> move · <strong>Mouse drag</strong> look · <strong>Click</strong> collect</p>
-		</div>
+			<div class="instructions">
+				{#if isTouch}
+					<p><strong>Left stick</strong> move · <strong>Right side drag</strong> look · <strong>Tap</strong> collect</p>
+				{:else}
+					<p><strong>WASD</strong> move · <strong>Mouse drag</strong> look · <strong>Click</strong> collect</p>
+				{/if}
+			</div>
 	{:else if errorMsg}
 		<div class="hud">
 			<div class="error-msg">⚠️ {errorMsg}</div>
@@ -225,5 +326,62 @@
 		margin: 0;
 		font-size: 0.8rem;
 		color: rgba(255, 255, 255, 0.6);
+	}
+
+	/* ── Mobile touch overlays ── */
+	/* Look-zone: right half of screen, transparent. Intercepts touches
+	   before the canvas so drag=look and tap=collect work cleanly. */
+	.look-zone {
+		position: fixed;
+		top: 0;
+		right: 0;
+		width: 50%;
+		height: 100%;
+		z-index: 5;
+		touch-action: none;
+		background: transparent;
+	}
+	/* Thumbstick-zone: left half of screen. Captures touches (drag to move).
+	   The visible stick is a child that ignores pointer events itself. */
+	.thumbstick-zone {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 50%;
+		height: 100%;
+		z-index: 5;
+		touch-action: none;
+		display: flex;
+		align-items: flex-end;
+		justify-content: flex-start;
+		padding: 2rem;
+	}
+	.thumbstick-base {
+		width: 120px;
+		height: 120px;
+		border-radius: 50%;
+		border: 2px solid rgba(201, 168, 124, 0.3);
+		background: rgba(10, 10, 20, 0.35);
+		backdrop-filter: blur(6px);
+		position: relative;
+		pointer-events: none;
+		opacity: 0.55;
+		transition: opacity 0.15s ease, border-color 0.15s ease;
+	}
+	.thumbstick-base.active {
+		opacity: 1;
+		border-color: rgba(201, 168, 124, 0.6);
+	}
+	.thumbstick-knob {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 48px;
+		height: 48px;
+		margin: -24px 0 0 -24px;
+		border-radius: 50%;
+		background: radial-gradient(circle at 35% 35%, rgba(201, 168, 124, 0.9), rgba(201, 168, 124, 0.4));
+		border: 1px solid rgba(201, 168, 124, 0.6);
+		transition: transform 0.05s linear; /* snappy but smooths sub-pixel jitter */
 	}
 </style>

@@ -600,10 +600,20 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	window.addEventListener('keyup', onKeyUp);
 
 	// Touch thumbstick (left half of screen) + drag look (right half)
+	// touchInput is exposed via the returned `touch` handle so the Svelte
+	// page's visible thumbstick overlay can drive movement directly. The
+	// look-zone overlay calls applyTouchLook(dx, dy) each move tick.
 	const touchInput = { x: 0, y: 0 }; // -1..1 for movement
 	let touchLookId = null;
 	let thumbstickId = null;
 	let thumbstickStart = null;
+
+	// Called by the Svelte look-zone overlay on touch drag (deltas in pixels).
+	function applyTouchLook(dxPx, dyPx) {
+		yaw -= dxPx * 0.005;
+		pitch -= dyPx * 0.005;
+		pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
+	}
 
 	const isTouch = 'ontouchstart' in window;
 	if (isTouch) {
@@ -696,8 +706,16 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	}
 	animate();
 
-	// Return cleanup
+	// Return cleanup + touch handle
 	return {
+		// Exposed for the Svelte page's visible thumbstick/look overlays.
+		// Movement: write x/y in -1..1. Look: call applyTouchLook(dxPx, dyPx)
+		// per drag tick. Tap-to-collect: call tryCollectAt(clientX, clientY).
+		touch: {
+			input: touchInput,
+			applyLook: applyTouchLook,
+			tryCollectAt: (x, y) => collectionSys._tryCollect(x, y),
+		},
 		destroy() {
 			cancelAnimationFrame(animationId);
 			window.removeEventListener('keydown', onKeyDown);
