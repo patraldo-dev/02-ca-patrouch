@@ -626,22 +626,31 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			}
 			case 'round_end': {
 				roundActive = false;
-				onRoundUpdate({
-					active: false,
-					endMs: 0,
-					level,
-					winner: msg.winnerName,
-					winnerIsMe: msg.winner === mySessionId,
-					scores: msg.scores || [],
-				});
+				// Solo/no-contest round (winner is null): just restart, no overlay.
+				// Competitive round (winner set): show the win/lose overlay.
+				if (msg.winner === null) {
+					onRoundUpdate({ active: false, endMs: 0, level });
+				} else {
+					onRoundUpdate({
+						active: false,
+						endMs: 0,
+						level,
+						winner: msg.winnerName,
+						winnerIsMe: msg.winner === mySessionId,
+						scores: msg.scores || [],
+					});
+				}
 				break;
 			}
 			case 'promote': {
-				// We won — redirect to the next level's room (new DO instance).
-				if (typeof location !== 'undefined') {
+				// We won a competitive round — redirect to the next level's room.
+				// Use replace() so the back button doesn't bounce through levels.
+				// Guard against double-fire (if the DO sends promote twice).
+				if (typeof location !== 'undefined' && !window._grabDemoPromoting) {
+					window._grabDemoPromoting = true;
 					const url = new URL(location.href);
 					url.searchParams.set('level', String(msg.newLevel));
-					location.href = url.toString();
+					location.replace(url.toString());
 				}
 				break;
 			}

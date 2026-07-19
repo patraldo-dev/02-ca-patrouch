@@ -211,31 +211,42 @@ export class GrabDemoRoom {
 		}
 		const winnerConn = winner ? this.connections.get(winner) : null;
 
-		// Tell everyone the round ended + who won
-		this._broadcast({
-			type: 'round_end',
-			winner,
-			winnerName: winnerConn ? winnerConn.name : null,
-			scores,
-			nextLevel: this.level + 1,
-		});
+		// SOLO PLAYER GUARD: a solo player (alone in the room) should NOT be
+		// promoted just because the timer expired. Promotion requires:
+		//   - 2+ players were in the round (real competition), AND
+		//   - the winner scored at least 1 point (didn't just idle).
+		// Without this guard, a solo player wins by default every 90s, gets
+		// promoted, redirects to the next level, wins again, loops forever —
+		// each redirect cancels the in-flight WS + restarts the boot.
+		const shouldPromote = this.connections.size >= 2 && highScore > 0 && winnerConn;
 
-		// Winner promotes → send them a redirect; remove from this room
-		if (winnerConn) {
+		if (shouldPromote) {
+			this._broadcast({
+				type: 'round_end',
+				winner,
+				winnerName: winnerConn.name,
+				scores,
+				nextLevel: this.level + 1,
+			});
 			try {
-				winnerConn.ws.send(JSON.stringify({
-					type: 'promote',
-					newLevel: this.level + 1,
-				}));
+				winnerConn.ws.send(JSON.stringify({ type: 'promote', newLevel: this.level + 1 }));
 			} catch {}
 			this._removeConnection(winner, /* silent */ true);
+		} else {
+			// Solo or no-score round: just notify + restart. No promotion.
+			this._broadcast({
+				type: 'round_end',
+				winner: null,
+				winnerName: null,
+				scores,
+				nextLevel: this.level,  // same level, no promotion
+			});
 		}
 
 		// Reset scores for remaining players
 		for (const conn of this.connections.values()) conn.score = 0;
 
-		// If anyone remains, start a fresh round shortly (gives a beat for
-		// the winner's redirect + new arrivals)
+		// If anyone remains, start a fresh round shortly.
 		if (this.connections.size > 0) {
 			setTimeout(() => this._startRound(), 3000);
 		}
