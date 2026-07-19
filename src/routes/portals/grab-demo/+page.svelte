@@ -43,7 +43,17 @@
 
 	onMount(async () => {
 		if (!browser || !container) return;
-		isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		// Detect ACTUAL touch usage, not just capability. Touchscreen
+		// Chromebooks report maxTouchPoints > 0 even in laptop mode, which
+		// would render the look-zone/thumbstick overlays over the whole
+		// screen and intercept mouse clicks. We start assuming desktop
+		// (mouse), then flip to touch if a real touchstart fires.
+		isTouch = false;
+		const onFirstTouch = () => {
+			isTouch = true;
+			window.removeEventListener('touchstart', onFirstTouch);
+		};
+		window.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
 		try {
 			const { bootGrabDemo } = await import('$lib/portals-ecs/grab-demo-world.js');
 			cleanup = await bootGrabDemo(
