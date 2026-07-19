@@ -165,11 +165,11 @@ export async function bootOzWorld(container, options = {}) {
 	);
 	skyboxTexture.colorSpace = THREE.SRGBColorSpace;
 	const skybox = new THREE.Mesh(
-		new THREE.SphereGeometry(45, 32, 16),
-		new THREE.MeshBasicMaterial({ map: skyboxTexture, side: THREE.BackSide, depthWrite: false })
+		new THREE.SphereGeometry(30, 32, 16),
+		new THREE.MeshBasicMaterial({ map: skyboxTexture, side: THREE.BackSide, depthWrite: false, fog: false })
 	);
 	scene.add(skybox);
-	scene.fog = new THREE.Fog(0x2a3318, 12, 38);
+	scene.fog = new THREE.Fog(0x2a3318, 20, 50);
 
 	// Lighting — warm Oz daylight
 	scene.add(new THREE.AmbientLight(0xffe8aa, 0.5));

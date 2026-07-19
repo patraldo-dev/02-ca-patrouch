@@ -256,17 +256,17 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	// Position the camera
 	camera.position.set(0, 1.6, 5);
 
-	// ── Skybox ──
+	// ── Skybox: closer + brighter so the image fills the view ──
 	const skyboxTexture = new THREE.TextureLoader().load(
 		`https://imagedelivery.net/${CF_IMAGES_HASH}/${BG_IMAGE_ID}/full`
 	);
 	skyboxTexture.colorSpace = THREE.SRGBColorSpace;
 	const skybox = new THREE.Mesh(
-		new THREE.SphereGeometry(45, 32, 16),
-		new THREE.MeshBasicMaterial({ map: skyboxTexture, side: THREE.BackSide, depthWrite: false })
+		new THREE.SphereGeometry(30, 32, 16),
+		new THREE.MeshBasicMaterial({ map: skyboxTexture, side: THREE.BackSide, depthWrite: false, fog: false })
 	);
 	scene.add(skybox);
-	scene.fog = new THREE.Fog(0x1a1020, 15, 40);
+	scene.fog = new THREE.Fog(0x1a1020, 25, 60);
 
 	// Lighting
 	scene.add(new THREE.AmbientLight(0x8888aa, 0.6));

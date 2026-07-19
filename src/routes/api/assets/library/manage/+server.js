@@ -39,7 +39,7 @@ export async function POST({ request, locals, platform, url }) {
     try {
         await db.prepare(`
             INSERT INTO asset_library (id, kind, label, match_labels, file_path, pack, artist, tier, scale, collider_type, collider_size, description, tags, game_name, game_behavior, game_points)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 kind=excluded.kind, label=excluded.label, match_labels=excluded.match_labels,
                 file_path=excluded.file_path, pack=excluded.pack, artist=excluded.artist,
