@@ -71,6 +71,21 @@
 			"binding": "VECTORIZE",
 			"index_name": "patrouch-writings"
 		}
+	],
+
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "GRAB_DEMO_ROOM",
+				"class_name": "GrabDemoRoom"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["GrabDemoRoom"]
+		}
 	]
 	/**
 	 * Smart Placement

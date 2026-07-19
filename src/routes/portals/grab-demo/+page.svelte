@@ -1,8 +1,10 @@
 <!--
-	/portals/grab-demo — ECS collectible demo. 30 GLB entities (10×3 models)
-	scattered in a space with a background mural. Uses IWSDK World + elics
-	components/systems — same architecture as the real portal engine.
-	WASD to move, mouse drag to look, click objects to collect.
+	/portals/grab-demo — ECS collectible demo with shared-room multiplayer.
+	Players auto-join a level-N room (everyone at the same difficulty is in
+	the same room — no invite links). Presence roster shows who's here.
+	Round timer drives win condition: highest score when time expires
+	promotes to the next level; losers stay for the next round.
+	WASD/touch-stick to move, mouse/touch-drag to look, click/tap to collect.
 -->
 <script>
 	import { onMount, onDestroy } from 'svelte';
@@ -11,31 +13,33 @@
 
 	let container;
 	let counter = $state(0);
-	const total = 30;
 	let booted = $state(false);
 	let errorMsg = $state('');
 	let cleanup = null;
-	let score = $state({ you: 0, opponent: 0, opponentName: 'Waiting...' });
 	let isTouch = $state(false);
 
-	// Room ID from URL query param, or generate one
-	let roomId = $derived($page.url.searchParams.get('room') || 'demo');
-	let shareUrl = $derived(typeof window !== 'undefined' ? `${window.location.origin}/portals/grab-demo?room=${roomId}` : '');
+	// Multiplayer HUD state
+	let scoreState = $state({ scores: [], level: 1 });
+	let presence = $state({ count: 1, roster: [] });
+	let roundState = $state({ active: false, endMs: 0, level: 1 });
+	let roundOverlay = $state(null); // { winner, winnerIsMe, scores } | null
+	let timerDisplay = $state('');
+
+	// Level from URL query param (default 1). Promoted players redirect here
+	// with ?level=N+1, landing in a fresh (harder) DO room instance.
+	let level = $derived(parseInt($page.url.searchParams.get('level') || '1', 10));
 
 	// ── Visible thumbstick state (mobile only) ──
-	// Floating thumbstick: the base repositions to wherever the first touch
-	// lands in the left half, then the knob follows the finger (clamped).
 	let stickActive = $state(false);
 	let stickOrigin = { x: 0, y: 0 };
 	let stickPos = $state({ x: 0, y: 0 });
-	let stickBasePos = $state({ x: -200, y: -200 }); // off-screen until first touch
 	const STICK_MAX_R = 60;
 
 	// ── Look-zone state (mobile only) — drag to look, tap to collect ──
 	let lookStart = null;
 	let lookLast = null;
 	let lookMoved = false;
-	const TAP_THRESHOLD = 10; // px of movement before it's a drag, not a tap
+	const TAP_THRESHOLD = 10;
 
 	onMount(async () => {
 		if (!browser || !container) return;
@@ -46,12 +50,22 @@
 				container,
 				(count) => { counter = count; },
 				{
-					roomId,
+					level,
 					playerName: 'Player-' + Math.random().toString(36).slice(2, 5),
-					onScoreUpdate: (s) => { score = s; },
+					onScoreUpdate: (s) => { scoreState = s; },
+					onPresenceUpdate: (p) => { presence = p; },
+					onRoundUpdate: (r) => {
+						roundState = r;
+						if (r.winner !== undefined) {
+							roundOverlay = { winner: r.winner, winnerIsMe: r.winnerIsMe, scores: r.scores };
+							setTimeout(() => { roundOverlay = null; }, 4000);
+						}
+					},
 				}
 			);
 			booted = true;
+			// Tick the timer display every 200ms
+			startTimerTick();
 		} catch (e) {
 			console.error('[grab-demo] boot failed:', e);
 			errorMsg = e.message;
@@ -60,10 +74,21 @@
 
 	onDestroy(() => {
 		if (cleanup) cleanup.destroy();
+		if (timerInterval) clearInterval(timerInterval);
 	});
 
-	function copyShareLink() {
-		navigator.clipboard?.writeText(shareUrl);
+	// ── Round timer display ──
+	let timerInterval;
+	function startTimerTick() {
+		timerInterval = setInterval(() => {
+			if (roundState.active && roundState.endMs) {
+				const remaining = Math.max(0, roundState.endMs - Date.now());
+				const s = Math.ceil(remaining / 1000);
+				timerDisplay = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+			} else {
+				timerDisplay = '';
+			}
+		}, 200);
 	}
 
 	// ── Thumbstick (left side): drag to move ──
@@ -156,43 +181,68 @@
 
 	{#if booted}
 		<div class="hud">
-			<div class="scoreboard">
-				<div class="score-card you" class:winning={score.you > score.opponent} class:losing={score.you < score.opponent}>
-					<span class="score-label">You</span>
-					<span class="score-value">{score.you}</span>
-				</div>
-				<div class="vs">vs</div>
-				<div class="score-card opponent" class:winning={score.opponent > score.you} class:losing={score.opponent < score.you}>
-					<span class="score-label">{score.opponentName}</span>
-					<span class="score-value">{score.opponent}</span>
-				</div>
-			</div>
-			<div class="remaining">Remaining: {total - score.you - score.opponent}</div>
-			{#if score.you + score.opponent >= total}
-				<div class="complete-msg">
-					{#if score.you > score.opponent}
-						🎉 You win!
-					{:else if score.opponent > score.you}
-						😅 {score.opponentName} wins!
-					{:else}
-						🤝 Tie!
-					{/if}
-				</div>
-			{/if}
-		</div>
-
-		<div class="share-bar">
-			<button class="share-btn" onclick={copyShareLink}>📋 Copy link to invite opponent</button>
-			<span class="room-id">Room: {roomId}</span>
-		</div>
-
-			<div class="instructions">
-				{#if isTouch}
-					<p><strong>Left stick</strong> move · <strong>Right side drag</strong> look · <strong>Tap</strong> collect</p>
-				{:else}
-					<p><strong>WASD</strong> move · <strong>Mouse drag</strong> look · <strong>Click</strong> collect</p>
+			<div class="hud-top">
+				<div class="level-badge">Level {level}</div>
+				{#if timerDisplay}
+					<div class="timer" class:urgent={timerDisplay === '0:15' || (roundState.endMs && roundState.endMs - Date.now() < 15000)}>
+						⏱ {timerDisplay}
+					</div>
 				{/if}
 			</div>
+			<div class="scoreboard">
+				{#each scoreState.scores as s, i}
+					<div class="score-card" class:me={s.isMe} class:leading={i === 0 && scoreState.scores.length > 1}>
+						<span class="score-label">{s.name}{s.isMe ? ' (you)' : ''}</span>
+						<span class="score-value">{s.score}</span>
+					</div>
+				{/each}
+				{#if scoreState.scores.length === 0}
+					<div class="score-card"><span class="score-label">Waiting...</span></div>
+				{/if}
+			</div>
+			<div class="presence">
+				<span class="presence-count">👤 {presence.count}</span>
+				<span class="presence-names">
+					{#each presence.roster as r, i}{#if i > 0}, {/if}{r.name}{/each}
+					{#if presence.roster.length === 0}<em>just you so far</em>{/if}
+				</span>
+			</div>
+		</div>
+
+		{#if roundOverlay}
+			<div class="round-overlay">
+				{#if roundOverlay.winnerIsMe}
+					<div class="round-result win">
+						<div class="result-title">🎉 You won!</div>
+						<div class="result-detail">Promoting to Level {level + 1}...</div>
+					</div>
+				{:else if roundOverlay.winner}
+					<div class="round-result lose">
+						<div class="result-title">{roundOverlay.winner} won</div>
+						<div class="result-detail">Waiting for the next round...</div>
+					</div>
+				{:else}
+					<div class="round-result">
+						<div class="result-title">🤝 Tie!</div>
+					</div>
+				{/if}
+				<div class="result-scores">
+					{#each roundOverlay.scores as s}
+						<div class="result-score-row" class:me={s.name === presence.roster[0]?.name || s.name === 'you'}>
+							<span>{s.name}</span><span>{s.score}</span>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<div class="instructions">
+			{#if isTouch}
+				<p><strong>Left stick</strong> move · <strong>Right drag</strong> look · <strong>Tap</strong> collect</p>
+			{:else}
+				<p><strong>WASD</strong> move · <strong>Mouse drag</strong> look · <strong>Click</strong> collect</p>
+			{/if}
+		</div>
 	{:else if errorMsg}
 		<div class="hud">
 			<div class="error-msg">⚠️ {errorMsg}</div>
@@ -228,82 +278,109 @@
 	.scoreboard {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: 0.75rem;
 		background: rgba(10, 10, 20, 0.85);
 		backdrop-filter: blur(12px);
 		border: 1px solid rgba(201, 168, 124, 0.2);
 		border-radius: 16px;
-		padding: 0.75rem 1.5rem;
+		padding: 0.6rem 1.2rem;
+		flex-wrap: wrap;
+		justify-content: center;
+		max-width: 90vw;
 	}
 	.score-card {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		min-width: 80px;
+		min-width: 60px;
 	}
-	.score-card.winning .score-value { color: #8fbc8f; }
-	.score-card.losing .score-value { opacity: 0.5; }
+	.score-card.me .score-label { color: #c9a87c; }
+	.score-card.me .score-value { color: #c9a87c; }
+	.score-card.leading .score-value { color: #8fbc8f; }
 	.score-label {
-		font-size: 0.7rem;
+		font-size: 0.65rem;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		color: rgba(255, 255, 255, 0.5);
-		max-width: 100px;
+		max-width: 90px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 	.score-value {
-		font-size: 1.8rem;
+		font-size: 1.4rem;
 		font-weight: 800;
-		color: #c9a87c;
+		color: rgba(255, 255, 255, 0.85);
 	}
-	.score-card.you .score-label { color: #c9a87c; }
-	.score-card.opponent .score-label { color: #4fc3f7; }
-	.score-card.opponent .score-value { color: #4fc3f7; }
-	.vs {
-		font-size: 0.8rem;
-		color: rgba(255, 255, 255, 0.3);
-	}
-	.remaining {
-		margin-top: 0.4rem;
-		font-size: 0.8rem;
-		color: rgba(255, 255, 255, 0.5);
-	}
-	.complete-msg {
-		margin-top: 0.5rem;
-		font-size: 1.3rem;
-		font-weight: 700;
-		animation: pulse 1s ease-in-out infinite alternate;
-	}
-	.share-bar {
-		position: fixed;
-		top: 1.5rem;
-		right: 1.5rem;
-		z-index: 10;
+	.hud-top {
 		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 0.3rem;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		margin-bottom: 0.4rem;
 	}
-	.share-btn {
+	.level-badge {
 		background: rgba(201, 168, 124, 0.2);
 		border: 1px solid rgba(201, 168, 124, 0.4);
 		color: #c9a87c;
+		font-size: 0.75rem;
+		font-weight: 700;
+		padding: 0.2rem 0.7rem;
 		border-radius: 8px;
-		padding: 0.5rem 1rem;
-		font-size: 0.8rem;
-		cursor: pointer;
+		letter-spacing: 0.5px;
+	}
+	.timer {
+		font-size: 1rem;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.8);
+		font-variant-numeric: tabular-nums;
+	}
+	.timer.urgent { color: #ff6b6b; animation: pulse 0.5s ease-in-out infinite alternate; }
+	.presence {
+		margin-top: 0.4rem;
+		font-size: 0.75rem;
+		color: rgba(255, 255, 255, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+	.presence-count { font-weight: 700; color: rgba(255, 255, 255, 0.7); }
+	.presence-names em { opacity: 0.5; font-style: italic; }
+
+	/* Round-end overlay */
+	.round-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1.5rem;
+		background: rgba(5, 3, 10, 0.85);
 		backdrop-filter: blur(8px);
+		pointer-events: none;
 	}
-	.share-btn:hover {
-		background: rgba(201, 168, 124, 0.3);
+	.round-result { text-align: center; }
+	.result-title { font-size: 2rem; font-weight: 800; }
+	.round-result.win .result-title { color: #8fbc8f; }
+	.round-result.lose .result-title { color: #ff8888; }
+	.result-detail { font-size: 0.95rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.4rem; }
+	.result-scores {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		min-width: 200px;
 	}
-	.room-id {
-		font-size: 0.7rem;
-		color: rgba(255, 255, 255, 0.3);
-		font-family: monospace;
+	.result-score-row {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.9rem;
+		color: rgba(255, 255, 255, 0.7);
+		padding: 0.2rem 0.8rem;
 	}
+	.result-score-row.me { color: #c9a87c; font-weight: 700; }
 	@keyframes pulse {
 		from { opacity: 0.7; }
 		to { opacity: 1; }

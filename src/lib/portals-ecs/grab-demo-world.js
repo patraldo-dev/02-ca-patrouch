@@ -16,7 +16,12 @@
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const BG_IMAGE_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
-const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/portal-ws/ws';
+// WS URL now points at THIS worker's own GrabDemoRoom DO (no cross-domain
+// booty-chat-worker dependency). Level is passed as a query param so the DO
+// route picks the right room instance (level-1, level-2, ...).
+const WS_URL = `${typeof location !== 'undefined'
+	? `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`
+	: ''}/api/grab-demo/ws`;
 
 // Module-level refs set by boot function
 let _onPlayerHit = null;
@@ -203,17 +208,22 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		}
 	};
 
-	const roomId = options.roomId || 'demo';
+	const roomId = options.roomId || 'demo';  // kept for backwards compat, unused by new DO
+	const level = options.level || 1;  // difficulty tier → selects the DO room instance
 	const playerName = options.playerName || ('Player-' + Math.random().toString(36).slice(2, 6));
 	const onScoreUpdate = options.onScoreUpdate || (() => {});
+	const onPresenceUpdate = options.onPresenceUpdate || (() => {});
+	const onRoundUpdate = options.onRoundUpdate || (() => {});
 
-	// Multiplayer state
+	// Multiplayer state — N-player (was 1 opponent; now a peers map).
 	const myId = crypto.randomUUID();
-	let opponentId = null;
-	let opponentName = 'Waiting...';
+	let mySessionId = null;          // assigned by the DO in the roster message
+	const peers = new Map();         // sessionId → { name, score, x, y, z, yaw, avatarMesh, labelSprite }
 	let myScore = 0;
-	let opponentScore = 0;
-	const entityById = new Map(); // entityId → ECS entity
+	const entityById = new Map();    // entityId → ECS entity
+	// Round state — driven by the DO.
+	let roundActive = false;
+	let roundEndTime = 0;
 
 	// ── ECS World (creates its own scene, camera, renderer) ──
 	const world = await World.create(container, {
@@ -398,102 +408,100 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 
 	let entityIdCounter = 0;
 	const totalModels = gameModels.length;
-	for (let mi = 0; mi < templates.length; mi++) {
-		const template = templates[mi];
-		const cfg = gameModels[mi];
+
+	// Difficulty scaling: each level beyond 1 makes entities faster and adds
+	// +1 attacker per level. Applied per-entity below.
+	const speedMul = 1 + (level - 1) * 0.1;
+
+	// Spawn one collectible at a deterministic position derived from entityId.
+	// The DO uses the same formula so all clients agree on placement without
+	// per-entity position sync. Called both for the initial pool and for
+	// entity_spawn messages (mid-round respawns).
+	function spawnCollectibleAt(entityId, modelIndex) {
+		const mi = (modelIndex !== undefined) ? modelIndex : (entityId % Math.max(1, totalModels));
+		const template = templates[mi % templates.length];
+		const cfg = gameModels[mi % gameModels.length] || { game_behavior: 'passive', game_points: 1 };
 		const behavior = cfg.game_behavior || 'passive';
 		const points = cfg.game_points || 1;
 		const glow = BEHAVIOR_GLOWS[behavior] || 0x88ff88;
-		for (let i = 0; i < cfg.count; i++) {
-			const clone = template.clone(true);
 
-			// Normalize scale
-			const box = new THREE.Box3().setFromObject(clone);
-			const size = new THREE.Vector3();
-			box.getSize(size);
-			if (size.y > 0) clone.scale.setScalar(1.2 / size.y);
+		const clone = template.clone(true);
+		const box = new THREE.Box3().setFromObject(clone);
+		const size = new THREE.Vector3();
+		box.getSize(size);
+		if (size.y > 0) clone.scale.setScalar(1.2 / size.y);
 
-			// Add a glow halo based on behavior type.
-			// NOTE: named `halo` (not `glow`) to avoid shadowing the outer
-			// `glow` color const — shadowing caused a TDZ because the inner
-			// `const glow` Mesh was hoisted above the `color: glow` read in
-			// its own initializer ("Cannot access 'z' before initialization").
-			const halo = new THREE.Mesh(
-				new THREE.SphereGeometry(0.5, 12, 8),
-				new THREE.MeshBasicMaterial({
-					color: glow,
-					transparent: true,
-					opacity: 0.15,
-					blending: THREE.AdditiveBlending,
-					depthWrite: false,
-				})
-			);
-			clone.add(halo);
+		// Glow halo — named `halo` not `glow` to avoid the TDZ shadow bug.
+		const halo = new THREE.Mesh(
+			new THREE.SphereGeometry(0.5, 12, 8),
+			new THREE.MeshBasicMaterial({
+				color: glow,
+				transparent: true,
+				opacity: 0.15,
+				blending: THREE.AdditiveBlending,
+				depthWrite: false,
+			})
+		);
+		clone.add(halo);
 
-			// Wrap in a group for positioning
-			const group = new THREE.Group();
-			group.add(clone);
+		const group = new THREE.Group();
+		group.add(clone);
 
-			// Deterministic position based on entityId (both clients agree)
-			const eid = entityIdCounter++;
-			const angle = (eid / 30) * Math.PI * 2 + (mi * 0.3);
-			const radius = 4 + (eid % 3) * 3;
-			const x = Math.cos(angle) * radius;
-			const z = Math.sin(angle) * radius;
-			group.position.set(x, 0.6, z);
-			group.rotation.y = eid * 0.4;
+		// Position MUST match the DO's _spawnEntities formula exactly:
+		// angle = (entityId/30)*PI*2 + (entityId%3)*0.3, radius = 4 + (entityId%3)*3
+		const angle = (entityId / 30) * Math.PI * 2 + (entityId % 3) * 0.3;
+		const radius = 4 + (entityId % 3) * 3;
+		const x = Math.cos(angle) * radius;
+		const z = Math.sin(angle) * radius;
+		group.position.set(x, 0.6, z);
+		group.rotation.y = entityId * 0.4;
 
-			// Create ECS entity linked to this mesh. createTransformEntity
-			// auto-parents the group under the active level root — we must NOT
-			// also scene.add(group), which would double-parent and conflict
-			// with TransformSystem (the "no valid parent entity" warning).
-			const entity = world.createTransformEntity(group);
-			entity.addComponent(_Collectible, {
-				entityId: eid,
-				collected: false,
-				collectTime: 0,
-				spinSpeed: 0.3 + (eid % 5) * 0.1,
-				bobPhase: eid * 0.7,
-				baseY: 0.6,
-				modelIndex: mi,
-				behavior: behavior,
-				points: points,
-				baseX: x,
-				baseZ: z,
-				fleeSpeed: 2.0 + (eid % 3) * 0.3,
-				chaseSpeed: 1.2 + (eid % 2) * 0.4,
-				hitCooldown: 0,
-			});
+		const entity = world.createTransformEntity(group);
+		entity.addComponent(_Collectible, {
+			entityId,
+			collected: false,
+			collectTime: 0,
+			spinSpeed: (0.3 + (entityId % 5) * 0.1) * speedMul,
+			bobPhase: entityId * 0.7,
+			baseY: 0.6,
+			modelIndex: mi,
+			behavior,
+			points,
+			baseX: x,
+			baseZ: z,
+			fleeSpeed: (2.0 + (entityId % 3) * 0.3) * speedMul,
+			chaseSpeed: (1.2 + (entityId % 2) * 0.4) * speedMul,
+			hitCooldown: 0,
+		});
 
-			entityById.set(eid, entity);
-			collectionSys.registerCollectible(entity);
+		entityById.set(entityId, entity);
+		collectionSys.registerCollectible(entity);
+		return entity;
+	}
+
+	// Initial pool: spawn one round of each model. The total count is driven
+	// by gameModels (each cfg.count). The DO will send entity_spawn messages
+	// if the pool needs to grow (more players) or respawn mid-round.
+	for (let mi = 0; mi < templates.length; mi++) {
+		const cfg = gameModels[mi] || { count: 10 };
+		for (let i = 0; i < (cfg.count || 10); i++) {
+			spawnCollectibleAt(entityIdCounter++, mi);
 		}
 	}
 
-	// ── Opponent avatar (colored sphere that follows their position) ──
-	const opponentAvatar = new THREE.Mesh(
-		new THREE.SphereGeometry(0.3, 16, 12),
-		new THREE.MeshBasicMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.7 })
-	);
-	opponentAvatar.visible = false;
-	scene.add(opponentAvatar);
-	const opponentLabel = createTextSprite(THREE, 'Waiting...', '#4fc3f7');
-	opponentLabel.visible = false;
-	scene.add(opponentLabel);
-
 	// ── Multiplayer: WebSocket connection ──
+	// (Peer avatars are created lazily in ensurePeer() on first roster/join,
+	//  rather than a single hardcoded opponentAvatar — supports N players.)
 	function connectWS() {
 		const params = new URLSearchParams({
 			user: myId,
 			name: playerName,
-			room: roomId,
+			level: String(level),
 		});
 		const ws = new WebSocket(`${WS_URL}?${params.toString()}`);
 
 		ws.onopen = () => {
-			console.log('[grab-demo] WS connected to room', roomId);
-			// Announce presence
-			ws.send(JSON.stringify({ type: 'join', playerId: myId, name: playerName, room: roomId }));
+			console.log('[grab-demo] WS connected to level', level);
 		};
 
 		ws.onmessage = (event) => {
@@ -513,66 +521,159 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	}
 
 	function handleWSMessage(msg) {
-		// The PortalRoom broadcasts poses + custom messages. We handle:
-		// - join/leave: track opponent
-		// - collect: remote entity collected
-		// - pose: move opponent avatar
-		if (msg.type === 'join' && msg.playerId !== myId) {
-			opponentId = msg.playerId;
-			opponentName = msg.name || 'Opponent';
-			opponentAvatar.visible = true;
-			opponentLabel.visible = true;
-			updateOpponentLabel();
-			// Send our presence back (the room may not relay to existing members)
-			if (_ws?.readyState === WebSocket.OPEN) {
-				_ws.send(JSON.stringify({ type: 'join', playerId: myId, name: playerName }));
+		// GrabDemoRoom protocol — N-player presence + shared game state.
+		switch (msg.type) {
+			case 'roster': {
+				// Initial snapshot from the DO on connect.
+				mySessionId = msg.sessionId;
+				roundActive = !!msg.roundActive;
+				roundEndTime = msg.roundEnd || 0;
+				// Register existing peers + spawn their avatars.
+				for (const p of (msg.peers || [])) {
+					ensurePeer(p.sessionId, p.name, p.x, p.y, p.z);
+					const peer = peers.get(p.sessionId);
+					if (peer) peer.score = p.score || 0;
+				}
+				// Entities the DO has spawned (non-collected). Our local spawn
+				// loop may already have placed some — sync collected state.
+				for (const ent of (msg.entities || [])) {
+					const localEntity = entityById.get(ent.entityId);
+					if (localEntity) localEntity.setValue(_Collectible, 'collected', !!ent.collected);
+				}
+				broadcastPresence();
+				onRoundUpdate({ active: roundActive, endMs: roundEndTime, level });
+				updateScore();
+				break;
 			}
-			// Sync current state: send our score
-			if (_ws?.readyState === WebSocket.OPEN) {
-				_ws.send(JSON.stringify({ type: 'score', playerId: myId, score: myScore }));
+			case 'peer_joined': {
+				ensurePeer(msg.sessionId, msg.name, msg.x, msg.y, msg.z);
+				broadcastPresence();
+				break;
 			}
-		} else if (msg.type === 'pose' && msg.playerId === opponentId) {
-			// Move opponent avatar
-			opponentAvatar.position.set(msg.x, msg.y, msg.z);
-			opponentLabel.position.set(msg.x, msg.y + 0.8, msg.z);
-		} else if (msg.type === 'collect' && msg.playerId !== myId) {
-			// Opponent collected an entity — mark it locally
-			const entity = entityById.get(msg.entityId);
-			if (entity && !entity.getValue(_Collectible, 'collected')) {
-				entity.setValue(_Collectible, 'collected', true);
-				entity.setValue(_Collectible, 'collectTime', performance.now());
-				entity.setValue(_Collectible, 'collectBy', 'opponent');
+			case 'peer_left': {
+				removePeer(msg.sessionId);
+				broadcastPresence();
+				break;
 			}
-			opponentScore = msg.score || (opponentScore + 1);
-			updateScore();
-		} else if (msg.type === 'score' && msg.playerId !== myId) {
-			opponentScore = msg.score || 0;
-			updateScore();
-		} else if (msg.type === 'leave' && msg.playerId === opponentId) {
-			opponentAvatar.visible = false;
-			opponentLabel.visible = false;
-			opponentId = null;
-			opponentName = 'Waiting...';
-			updateOpponentLabel();
+			case 'peer_pose': {
+				const peer = peers.get(msg.sessionId);
+				if (peer && peer.avatarMesh) {
+					peer.avatarMesh.position.set(msg.x, msg.y, msg.z);
+					peer.labelSprite.position.set(msg.x, msg.y + 0.8, msg.z);
+					peer.avatarMesh.rotation.y = msg.yaw || 0;
+				}
+				break;
+			}
+			case 'peer_collect': {
+				// Another player collected an entity — hide it locally.
+				const entity = entityById.get(msg.entityId);
+				if (entity && !entity.getValue(_Collectible, 'collected')) {
+					entity.setValue(_Collectible, 'collected', true);
+					entity.setValue(_Collectible, 'collectTime', performance.now());
+					entity.setValue(_Collectible, 'collectBy', msg.sessionId);
+				}
+				const peer = peers.get(msg.sessionId);
+				if (peer) peer.score = msg.score || peer.score;
+				updateScore();
+				break;
+			}
+			case 'peer_score': {
+				const peer = peers.get(msg.sessionId);
+				if (peer) peer.score = msg.score;
+				updateScore();
+				break;
+			}
+			case 'entity_spawn': {
+				// Mid-round respawn from the DO. Spawn a new local collectible
+				// at the DO-assigned position so all clients agree on placement.
+				spawnCollectibleAt(msg.entityId, msg.x, msg.z, msg.modelIndex);
+				break;
+			}
+			case 'round_start': {
+				roundActive = true;
+				roundEndTime = msg.roundEnd;
+				// Re-sync entity collected flags (fresh round = all uncollected).
+				for (const ent of (msg.entities || [])) {
+					const localEntity = entityById.get(ent.entityId);
+					if (localEntity) localEntity.setValue(_Collectible, 'collected', !!ent.collected);
+				}
+				onRoundUpdate({ active: true, endMs: roundEndTime, level });
+				break;
+			}
+			case 'round_end': {
+				roundActive = false;
+				onRoundUpdate({
+					active: false,
+					endMs: 0,
+					level,
+					winner: msg.winnerName,
+					winnerIsMe: msg.winner === mySessionId,
+					scores: msg.scores || [],
+				});
+				break;
+			}
+			case 'promote': {
+				// We won — redirect to the next level's room (new DO instance).
+				if (typeof location !== 'undefined') {
+					const url = new URL(location.href);
+					url.searchParams.set('level', String(msg.newLevel));
+					location.href = url.toString();
+				}
+				break;
+			}
 		}
 	}
 
+	// ── N-player peer avatar management ──
+	function ensurePeer(sessionId, name, x = 0, y = 1.5, z = 3) {
+		if (peers.has(sessionId)) return peers.get(sessionId);
+		// Lazy-create avatar mesh + label on first sight.
+		const avatarMesh = new THREE.Mesh(
+			new THREE.SphereGeometry(0.3, 16, 12),
+			new THREE.MeshBasicMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.7 })
+		);
+		avatarMesh.position.set(x, y, z);
+		scene.add(avatarMesh);
+		const labelSprite = createTextSprite(THREE, name || 'Player', '#4fc3f7');
+		labelSprite.position.set(x, y + 0.8, z);
+		scene.add(labelSprite);
+		const peer = { name: name || 'Player', score: 0, x, y, z, yaw: 0, avatarMesh, labelSprite };
+		peers.set(sessionId, peer);
+		return peer;
+	}
+
+	function removePeer(sessionId) {
+		const peer = peers.get(sessionId);
+		if (!peer) return;
+		if (peer.avatarMesh) { scene.remove(peer.avatarMesh); peer.avatarMesh.geometry?.dispose(); peer.avatarMesh.material?.dispose(); }
+		if (peer.labelSprite) { scene.remove(peer.labelSprite); peer.labelSprite.material?.dispose(); }
+		peers.delete(sessionId);
+	}
+
+	function broadcastPresence() {
+		// Emit a DOM event so the Svelte HUD can render the roster.
+		const roster = [...peers.values()].map((p) => ({ name: p.name, score: p.score }));
+		const count = peers.size + 1;  // include self
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('grab-demo-presence', {
+				detail: { type: 'roster', count, roster, myName: playerName, myScore },
+			}));
+		}
+		onPresenceUpdate({ count, roster });
+	}
+
 	function updateScore() {
-		onScoreUpdate({ you: myScore, opponent: opponentScore, opponentName });
+		// Aggregate all peer scores for the HUD.
+		const allScores = [{ name: playerName, score: myScore, isMe: true }];
+		for (const p of peers.values()) allScores.push({ name: p.name, score: p.score });
+		allScores.sort((a, b) => b.score - a.score);
+		onScoreUpdate({ scores: allScores, level });
+		broadcastPresence();
 	}
 
-	function updateOpponentLabel() {
-		// Recreate the label sprite with new text
-		const pos = opponentLabel.position.clone();
-		scene.remove(opponentLabel);
-		opponentLabel.material.dispose();
-		opponentLabel = createTextSprite(THREE, opponentName, '#4fc3f7');
-		opponentLabel.visible = !!opponentId;
-		opponentLabel.position.copy(pos);
-		scene.add(opponentLabel);
-	}
-
-	// Wire collection broadcast — adds the entity's point value
+	// Wire collection broadcast — adds the entity's point value.
+	// The DO stamps the sender (it knows our sessionId), so we don't send
+	// playerId — just the entityId + our cumulative score.
 	collectionSys._onCollectRemote = (entityId) => {
 		const entity = entityById.get(entityId);
 		const pts = entity ? entity.getValue(_Collectible, 'points') : 1;
@@ -581,7 +682,6 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		if (_ws?.readyState === WebSocket.OPEN) {
 			_ws.send(JSON.stringify({
 				type: 'collect',
-				playerId: myId,
 				entityId,
 				score: myScore,
 			}));
@@ -694,13 +794,15 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		// Collection animations
 		collectionSys.update(dt);
 
-		// Broadcast pose to opponent (throttled)
+		// Broadcast pose to the DO (throttled) — it relays as peer_pose.
+		// The DO stamps the sender sessionId, so we just send position + yaw.
 		const now = performance.now();
 		if (_ws?.readyState === WebSocket.OPEN && now - lastPoseSent > 100) {
 			lastPoseSent = now;
 			_ws.send(JSON.stringify({
-				type: 'pose', playerId: myId, name: playerName,
+				type: 'pose',
 				x: camera.position.x, y: camera.position.y, z: camera.position.z,
+				yaw: yaw,
 			}));
 		}
 	}
