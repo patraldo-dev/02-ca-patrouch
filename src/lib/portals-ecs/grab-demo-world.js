@@ -11,129 +11,23 @@
 //  - createTransformEntity(mesh) links ECS + Three.js
 //  - Three.js for mesh/material creation only
 // ═══════════════════════════════════════════════════════════
-import * as THREE from 'three';
-import { World } from '@iwsdk/core';
-import { createComponent, createSystem, Types, ComponentRegistry } from 'elics';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+// All imports are dynamic inside bootGrabDemo() to avoid bundler TDZ issues
+// when this module is dynamically imported via await import().
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const BG_IMAGE_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
 const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/portal-ws/ws';
 
-// ── ECS Components ──
-function reuseOrCreate(id, schema) {
-	return ComponentRegistry.has(id) ? ComponentRegistry.getById(id) : createComponent(id, schema);
-}
-
-const Collectible = reuseOrCreate('Collectible', {
-	entityId:    { type: Types.Int32, default: 0 },
-	collected:   { type: Types.Boolean, default: false },
-	collectTime: { type: Types.Float32, default: 0 },
-	collectBy:   { type: Types.String, default: '' },
-	spinSpeed:   { type: Types.Float32, default: 0.5 },
-	bobPhase:    { type: Types.Float32, default: 0 },
-	baseY:       { type: Types.Float32, default: 0.6 },
-	modelIndex:  { type: Types.Int32, default: 0 },
-	// Game behavior fields
-	points:      { type: Types.Int32, default: 1 },
-	behavior:    { type: Types.String, default: 'passive' }, // passive|evade|attack|hide|follow
-	baseX:       { type: Types.Float32, default: 0 },  // home position for evade return
-	baseZ:       { type: Types.Float32, default: 0 },
-	fleeSpeed:   { type: Types.Float32, default: 2.0 },
-	chaseSpeed:  { type: Types.Float32, default: 1.5 },
-	hitCooldown: { type: Types.Float32, default: 0 },  // attack contact cooldown
-});
-
-// ── ECS Systems ──
-
 // Module-level refs set by boot function
 let _onPlayerHit = null;
 let world_camera = null;
+let _Collectible = null;  // set lazily inside bootGrabDemo
 
-// Animation: spin + bob + behavior-driven movement (priority 0)
-// Handles passive (idle), evade (flee player), attack (chase player),
-// and visual glow by behavior type.
-const AnimationSystem = class extends createSystem({
-	items: { required: [Collectible] },
-}) {
-	update(dt) {
-		const time = performance.now() / 1000;
-		const camera = this.world?.camera;
-		const playerPos = camera ? camera.position : null;
-
-		for (const entity of this.queries.items.entities) {
-			if (entity.getValue(Collectible, 'collected')) continue;
-			const obj = entity.object3D;
-			if (!obj) continue;
-
-			const behavior = entity.getValue(Collectible, 'behavior');
-			const spin = entity.getValue(Collectible, 'spinSpeed');
-			const phase = entity.getValue(Collectible, 'bobPhase');
-			const baseY = entity.getValue(Collectible, 'baseY');
-
-			obj.rotation.y += spin * dt;
-
-			if (behavior === 'evade' && playerPos) {
-				// Flee from the player when within flee radius
-				const dx = obj.position.x - playerPos.x;
-				const dz = obj.position.z - playerPos.z;
-				const dist = Math.hypot(dx, dz);
-				const fleeRadius = 4;
-				const fleeSpeed = entity.getValue(Collectible, 'fleeSpeed');
-				const baseX = entity.getValue(Collectible, 'baseX');
-				const baseZ = entity.getValue(Collectible, 'baseZ');
-
-				if (dist < fleeRadius && dist > 0.01) {
-					// Push away from player
-					obj.position.x += (dx / dist) * fleeSpeed * dt;
-					obj.position.z += (dz / dist) * fleeSpeed * dt;
-				} else {
-					// Drift back toward home position
-					obj.position.x += (baseX - obj.position.x) * 0.5 * dt;
-					obj.position.z += (baseZ - obj.position.z) * 0.5 * dt;
-				}
-				obj.position.y = baseY + Math.sin(time * 3 + phase) * 0.2;
-
-			} else if (behavior === 'attack' && playerPos) {
-				// Chase the player
-				const dx = playerPos.x - obj.position.x;
-				const dz = playerPos.z - obj.position.z;
-				const dist = Math.hypot(dx, dz);
-				const chaseSpeed = entity.getValue(Collectible, 'chaseSpeed');
-				const cooldown = entity.getValue(Collectible, 'hitCooldown');
-
-				if (dist > 0.5) {
-					obj.position.x += (dx / dist) * chaseSpeed * dt;
-					obj.position.z += (dz / dist) * chaseSpeed * dt;
-				}
-				obj.position.y = baseY + Math.sin(time * 4 + phase) * 0.15;
-
-				// Hit detection: if close to player and cooldown expired
-				if (dist < 1.0 && cooldown <= 0 && _onPlayerHit) {
-					entity.setValue(Collectible, 'hitCooldown', 2.0);
-					_onPlayerHit(entity.getValue(Collectible, 'points'));
-				}
-				// Tick down cooldown
-				if (cooldown > 0) {
-					entity.setValue(Collectible, 'hitCooldown', cooldown - dt);
-				}
-
-			} else {
-				// Passive: gentle spin + bob
-				obj.position.y = baseY + Math.sin(time * 2 + phase) * 0.15;
-			}
-		}
-	}
-};
-
-// Collection: raycast on click/tap, mark entities collected.
-// NOT an ECS system — this is a plain class that we call manually from
-// the animation loop. Only systems registered with world.registerSystem()
-// should extend createSystem.
+// CollectionSystem: plain class (not ECS). References _Collectible at runtime.
 class CollectionSystem {
 	constructor() {
-		this.raycaster = new THREE.Raycaster();
-		this.pointer = new THREE.Vector2();
+		this.raycaster = null;  // set in bootGrabDemo after THREE import
+		this.pointer = null;
 		this.collectibles = [];
 		this._onCollect = null;
 		this._onCollectRemote = null;
@@ -148,14 +42,14 @@ class CollectionSystem {
 	}
 
 	_tryCollect(clientX, clientY) {
-		if (!this.collectibles.length) return;
+		if (!this.collectibles.length || !this.raycaster) return;
 		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
 		this.pointer.y = -(clientY / window.innerHeight) * 2 + 1;
 		this.raycaster.setFromCamera(this.pointer, world_camera);
 		this.raycaster.far = 10;
 
 		const meshes = this.collectibles
-			.filter((e) => !e.getValue(Collectible, 'collected'))
+			.filter((e) => !e.getValue(_Collectible, 'collected'))
 			.map((e) => e.object3D)
 			.filter(Boolean);
 
@@ -167,14 +61,14 @@ class CollectionSystem {
 			}
 			if (obj) {
 				const entity = this.collectibles.find((e) => e.object3D === obj);
-				if (entity && !entity.getValue(Collectible, 'collected')) {
-					entity.setValue(Collectible, 'collected', true);
-					entity.setValue(Collectible, 'collectTime', performance.now());
-					entity.setValue(Collectible, 'collectBy', 'you');
+				if (entity && !entity.getValue(_Collectible, 'collected')) {
+					entity.setValue(_Collectible, 'collected', true);
+					entity.setValue(_Collectible, 'collectTime', performance.now());
+					entity.setValue(_Collectible, 'collectBy', 'you');
 					this.collectedCount = (this.collectedCount || 0) + 1;
 					if (this._onCollect) this._onCollect(this.collectedCount);
 					if (this._onCollectRemote) {
-						this._onCollectRemote(entity.getValue(Collectible, 'entityId'));
+						this._onCollectRemote(entity.getValue(_Collectible, 'entityId'));
 					}
 				}
 			}
@@ -183,8 +77,8 @@ class CollectionSystem {
 
 	update(dt) {
 		for (const entity of this.collectibles) {
-			if (entity.getValue(Collectible, 'collected')) {
-				const elapsed = (performance.now() - entity.getValue(Collectible, 'collectTime')) / 400;
+			if (entity.getValue(_Collectible, 'collected')) {
+				const elapsed = (performance.now() - entity.getValue(_Collectible, 'collectTime')) / 400;
 				const obj = entity.object3D;
 				if (!obj) continue;
 				if (elapsed >= 1) {
@@ -197,10 +91,10 @@ class CollectionSystem {
 			}
 		}
 	}
-};
+}
 
-// ── Helper: create a text label as a THREE.Sprite ──
-function createTextSprite(text, color = '#ffffff') {
+// Helper: create a text label as a THREE.Sprite
+function createTextSprite(THREE, text, color = '#ffffff') {
 	const canvas = document.createElement('canvas');
 	canvas.width = 256;
 	canvas.height = 64;
@@ -221,6 +115,81 @@ function createTextSprite(text, color = '#ffffff') {
 // ── Boot function ──
 export async function bootGrabDemo(container, onCollect, options = {}) {
 	if (!container) throw new Error('bootGrabDemo: container is null');
+
+	// Dynamic imports — avoid bundler TDZ issues
+	const THREE = await import('three');
+	const { World } = await import('@iwsdk/core');
+	const { createComponent, createSystem, Types, ComponentRegistry } = await import('elics');
+	const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+
+	// Create component now that elics is loaded
+	_Collectible = ComponentRegistry.has('_Collectible')
+		? ComponentRegistry.getById('_Collectible')
+		: createComponent('_Collectible', {
+			entityId:    { type: Types.Int32, default: 0 },
+			collected:   { type: Types.Boolean, default: false },
+			collectTime: { type: Types.Float32, default: 0 },
+			collectBy:   { type: Types.String, default: '' },
+			spinSpeed:   { type: Types.Float32, default: 0.5 },
+			bobPhase:    { type: Types.Float32, default: 0 },
+			baseY:       { type: Types.Float32, default: 0.6 },
+			modelIndex:  { type: Types.Int32, default: 0 },
+			points:      { type: Types.Int32, default: 1 },
+			behavior:    { type: Types.String, default: 'passive' },
+			baseX:       { type: Types.Float32, default: 0 },
+			baseZ:       { type: Types.Float32, default: 0 },
+			fleeSpeed:   { type: Types.Float32, default: 2.0 },
+			chaseSpeed:  { type: Types.Float32, default: 1.5 },
+			hitCooldown: { type: Types.Float32, default: 0 },
+		});
+
+	// AnimationSystem defined after elics loads
+	const AnimationSystem = class extends createSystem({
+		items: { required: [_Collectible] },
+	}) {
+		update(dt) {
+			const time = performance.now() / 1000;
+			const cam = this.world?.camera;
+			const pp = cam ? cam.position : null;
+			for (const entity of this.queries.items.entities) {
+				if (entity.getValue(_Collectible, 'collected')) continue;
+				const obj = entity.object3D;
+				if (!obj) continue;
+				const behavior = entity.getValue(_Collectible, 'behavior');
+				const spin = entity.getValue(_Collectible, 'spinSpeed');
+				const phase = entity.getValue(_Collectible, 'bobPhase');
+				const baseY = entity.getValue(_Collectible, 'baseY');
+				obj.rotation.y += spin * dt;
+				if (behavior === 'evade' && pp) {
+					const dx = obj.position.x - pp.x, dz = obj.position.z - pp.z;
+					const dist = Math.hypot(dx, dz);
+					if (dist < 4 && dist > 0.01) {
+						const fs = entity.getValue(_Collectible, 'fleeSpeed');
+						obj.position.x += (dx / dist) * fs * dt;
+						obj.position.z += (dz / dist) * fs * dt;
+					} else {
+						obj.position.x += (entity.getValue(_Collectible, 'baseX') - obj.position.x) * 0.5 * dt;
+						obj.position.z += (entity.getValue(_Collectible, 'baseZ') - obj.position.z) * 0.5 * dt;
+					}
+					obj.position.y = baseY + Math.sin(time * 3 + phase) * 0.2;
+				} else if (behavior === 'attack' && pp) {
+					const dx = pp.x - obj.position.x, dz = pp.z - obj.position.z;
+					const dist = Math.hypot(dx, dz);
+					const cs = entity.getValue(_Collectible, 'chaseSpeed');
+					const cd = entity.getValue(_Collectible, 'hitCooldown');
+					if (dist > 0.5) { obj.position.x += (dx / dist) * cs * dt; obj.position.z += (dz / dist) * cs * dt; }
+					obj.position.y = baseY + Math.sin(time * 4 + phase) * 0.15;
+					if (dist < 1.0 && cd <= 0 && _onPlayerHit) {
+						entity.setValue(_Collectible, 'hitCooldown', 2.0);
+						_onPlayerHit(entity.getValue(_Collectible, 'points'));
+					}
+					if (cd > 0) entity.setValue(_Collectible, 'hitCooldown', cd - dt);
+				} else {
+					obj.position.y = baseY + Math.sin(time * 2 + phase) * 0.15;
+				}
+			}
+		}
+	};
 
 	const roomId = options.roomId || 'demo';
 	const playerName = options.playerName || ('Player-' + Math.random().toString(36).slice(2, 6));
@@ -349,7 +318,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	);
 
 	// Register components + systems
-	world.registerComponent(Collectible);
+	world.registerComponent(_Collectible);
 
 	const collectionSys = new CollectionSystem();
 	collectionSys.setOnCollect(onCollect);
@@ -453,7 +422,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 
 			// Create ECS entity linked to this mesh
 			const entity = world.createTransformEntity(group);
-			entity.addComponent(Collectible, {
+			entity.addComponent(_Collectible, {
 				entityId: eid,
 				collected: false,
 				collectTime: 0,
@@ -543,10 +512,10 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		} else if (msg.type === 'collect' && msg.playerId !== myId) {
 			// Opponent collected an entity — mark it locally
 			const entity = entityById.get(msg.entityId);
-			if (entity && !entity.getValue(Collectible, 'collected')) {
-				entity.setValue(Collectible, 'collected', true);
-				entity.setValue(Collectible, 'collectTime', performance.now());
-				entity.setValue(Collectible, 'collectBy', 'opponent');
+			if (entity && !entity.getValue(_Collectible, 'collected')) {
+				entity.setValue(_Collectible, 'collected', true);
+				entity.setValue(_Collectible, 'collectTime', performance.now());
+				entity.setValue(_Collectible, 'collectBy', 'opponent');
 			}
 			opponentScore = msg.score || (opponentScore + 1);
 			updateScore();
@@ -571,7 +540,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		const pos = opponentLabel.position.clone();
 		scene.remove(opponentLabel);
 		opponentLabel.material.dispose();
-		opponentLabel = createTextSprite(opponentName, '#4fc3f7');
+		opponentLabel = createTextSprite(THREE, opponentName, '#4fc3f7');
 		opponentLabel.visible = !!opponentId;
 		opponentLabel.position.copy(pos);
 		scene.add(opponentLabel);
@@ -580,7 +549,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	// Wire collection broadcast — adds the entity's point value
 	collectionSys._onCollectRemote = (entityId) => {
 		const entity = entityById.get(entityId);
-		const pts = entity ? entity.getValue(Collectible, 'points') : 1;
+		const pts = entity ? entity.getValue(_Collectible, 'points') : 1;
 		myScore += pts;
 		updateScore();
 		if (_ws?.readyState === WebSocket.OPEN) {
