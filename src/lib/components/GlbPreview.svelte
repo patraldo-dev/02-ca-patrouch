@@ -19,15 +19,17 @@
         const THREE = await import('three');
         const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
         const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+        const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
         // Store on module-level refs for use in initScene/loadModel
         _THREE = THREE;
         _GLTFLoader = GLTFLoader;
+        _MeshoptDecoder = MeshoptDecoder;
         _OrbitControls = OrbitControls;
         initScene();
         loadModel();
     });
 
-    let _THREE, _GLTFLoader, _OrbitControls;
+    let _THREE, _GLTFLoader, _MeshoptDecoder, _OrbitControls;
 
     onDestroy(() => {
         if (animationId) cancelAnimationFrame(animationId);
@@ -87,6 +89,9 @@
         }
 
         const loader = new _GLTFLoader();
+        // Wire meshopt decoder so compressed GLBs (EXT_meshopt_compression) load.
+        // Additive: uncompressed GLBs load identically.
+        if (_MeshoptDecoder) loader.setMeshoptDecoder(_MeshoptDecoder);
         loader.load(
             url,
             (gltf) => {

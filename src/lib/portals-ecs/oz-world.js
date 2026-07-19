@@ -10,118 +10,21 @@
 //  ECS architecture: HideSystem handles proximity reveal, same pattern
 //  as the portal engine's RevelationSystem.
 // ═══════════════════════════════════════════════════════════
-import * as THREE from 'three';
-import { World } from '@iwsdk/core';
-import { createComponent, createSystem, Types, ComponentRegistry } from 'elics';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+// All imports are dynamic inside bootOzWorld() to avoid bundler TDZ issues
+// when this module is dynamically imported via await import(). This matches
+// the pattern in grab-demo-world.js — module-level elics component creation
+// (reuseOrCreate) causes "Cannot access 'X' before initialization" errors
+// because the bundler hoists static imports but defers their evaluation.
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const SKYBOX_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
 
-// ── ECS Components ──
-function reuseOrCreate(id, schema) {
-	return ComponentRegistry.has(id) ? ComponentRegistry.getById(id) : createComponent(id, schema);
-}
-
-const Munchkin = reuseOrCreate('OzMunchkin', {
-	state:       { type: Types.String, default: 'hidden' }, // hidden|emerging|visible|scattering
-	revealDist:  { type: Types.Float32, default: 3.0 },
-	hideDist:    { type: Types.Float32, default: 5.0 },
-	bobPhase:    { type: Types.Float32, default: 0 },
-	spinSpeed:   { type: Types.Float32, default: 0.5 },
-	scatterDir:  { type: Types.Float32, default: 0 }, // angle
-	scatterTime: { type: Types.Float32, default: 0 },
-	points:      { type: Types.Int32, default: 2 },
-	collected:   { type: Types.Boolean, default: false },
-});
-
-const Flower = reuseOrCreate('OzFlower', {
-	swayPhase: { type: Types.Float32, default: 0 },
-	swaySpeed: { type: Types.Float32, default: 0.5 },
-	hasMunchkin: { type: Types.Boolean, default: false },
-});
-
-// ── ECS Systems ──
-
-// HideRevealSystem: manages munchkin visibility based on player proximity.
-// Same pattern as the portal engine's RevelationSystem.
-const HideRevealSystem = class extends createSystem({
-	munchkins: { required: [Munchkin] },
-}) {
-	update(dt) {
-		const camera = this.world?.camera;
-		if (!camera) return;
-		const playerX = camera.position.x;
-		const playerZ = camera.position.z;
-
-		for (const entity of this.queries.munchkins.entities) {
-			if (entity.getValue(Munchkin, 'collected')) continue;
-			const obj = entity.object3D;
-			if (!obj) continue;
-
-			const state = entity.getValue(Munchkin, 'state');
-			const revealDist = entity.getValue(Munchkin, 'revealDist');
-			const hideDist = entity.getValue(Munchkin, 'hideDist');
-			const dist = Math.hypot(obj.position.x - playerX, obj.position.z - playerZ);
-
-			if (state === 'hidden' && dist < revealDist) {
-				entity.setValue(Munchkin, 'state', 'emerging');
-			} else if (state === 'emerging') {
-				// Scale up (pop out of flower)
-				const s = Math.min(1, obj.scale.x + dt * 3);
-				obj.scale.setScalar(s);
-				if (s >= 1) {
-					entity.setValue(Munchkin, 'state', 'visible');
-					entity.setValue(Munchkin, 'scatterDir', Math.random() * Math.PI * 2);
-					entity.setValue(Munchkin, 'scatterTime', 0);
-				}
-			} else if (state === 'visible') {
-				const scatterTime = entity.getValue(Munchkin, 'scatterTime');
-				const newTime = scatterTime + dt;
-
-				if (newTime < 2.0) {
-					// Scatter: run away from player
-					const dir = entity.getValue(Munchkin, 'scatterDir');
-					const speed = 1.5 * (1 - newTime / 2.0);
-					obj.position.x += Math.cos(dir) * speed * dt;
-					obj.position.z += Math.sin(dir) * speed * dt;
-					obj.rotation.y += dt * 3;
-				}
-
-				entity.setValue(Munchkin, 'scatterTime', newTime);
-				obj.position.y = 0.6 + Math.sin(performance.now() / 200 + entity.getValue(Munchkin, 'bobPhase')) * 0.1;
-
-				// Collect on touch
-				if (dist < 1.0) {
-					entity.setValue(Munchkin, 'collected', true);
-					if (_onMunchkinCollect) _onMunchkinCollect(entity.getValue(Munchkin, 'points'));
-				}
-			}
-		}
-	}
-};
-
-// FlowerSwaySystem: gentle flower animation
-const FlowerSwaySystem = class extends createSystem({
-	flowers: { required: [Flower] },
-}) {
-	update(dt) {
-		const time = performance.now() / 1000;
-		for (const entity of this.queries.flowers.entities) {
-			const obj = entity.object3D;
-			if (!obj) continue;
-			const phase = entity.getValue(Flower, 'swayPhase');
-			const speed = entity.getValue(Flower, 'swaySpeed');
-			obj.rotation.z = Math.sin(time * speed + phase) * 0.05;
-		}
-	}
-};
-
-// Module-level callbacks
+// Module-level callback — no elics dependency, safe to keep at module scope.
 let _onMunchkinCollect = null;
 
 // ── Text sprite helper ──
-function createTextSprite(text, color = '#ffd700') {
+// THREE passed in (we no longer statically import it).
+function createTextSprite(THREE, text, color = '#ffd700') {
 	const canvas = document.createElement('canvas');
 	canvas.width = 256;
 	canvas.height = 64;
@@ -142,6 +45,111 @@ function createTextSprite(text, color = '#ffd700') {
 // ── Boot function ──
 export async function bootOzWorld(container, options = {}) {
 	if (!container) throw new Error('bootOzWorld: container is null');
+
+	// Dynamic imports — avoid bundler TDZ issues
+	const THREE = await import('three');
+	const { World } = await import('@iwsdk/core');
+	const { createComponent, createSystem, Types, ComponentRegistry } = await import('elics');
+	const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+	const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
+
+	// ── ECS Components — created AFTER elics loads (deferred from module scope) ──
+	const Munchkin = ComponentRegistry.has('OzMunchkin')
+		? ComponentRegistry.getById('OzMunchkin')
+		: createComponent('OzMunchkin', {
+			state:       { type: Types.String, default: 'hidden' }, // hidden|emerging|visible|scattering
+			revealDist:  { type: Types.Float32, default: 3.0 },
+			hideDist:    { type: Types.Float32, default: 5.0 },
+			bobPhase:    { type: Types.Float32, default: 0 },
+			spinSpeed:   { type: Types.Float32, default: 0.5 },
+			scatterDir:  { type: Types.Float32, default: 0 }, // angle
+			scatterTime: { type: Types.Float32, default: 0 },
+			points:      { type: Types.Int32, default: 2 },
+			collected:   { type: Types.Boolean, default: false },
+		});
+
+	const Flower = ComponentRegistry.has('OzFlower')
+		? ComponentRegistry.getById('OzFlower')
+		: createComponent('OzFlower', {
+			swayPhase: { type: Types.Float32, default: 0 },
+			swaySpeed: { type: Types.Float32, default: 0.5 },
+			hasMunchkin: { type: Types.Boolean, default: false },
+		});
+
+	// ── ECS Systems — defined here so they close over Munchkin/Flower after creation ──
+
+	// HideRevealSystem: manages munchkin visibility based on player proximity.
+	// Same pattern as the portal engine's RevelationSystem.
+	const HideRevealSystem = class extends createSystem({
+		munchkins: { required: [Munchkin] },
+	}) {
+		update(dt) {
+			const camera = this.world?.camera;
+			if (!camera) return;
+			const playerX = camera.position.x;
+			const playerZ = camera.position.z;
+
+			for (const entity of this.queries.munchkins.entities) {
+				if (entity.getValue(Munchkin, 'collected')) continue;
+				const obj = entity.object3D;
+				if (!obj) continue;
+
+				const state = entity.getValue(Munchkin, 'state');
+				const revealDist = entity.getValue(Munchkin, 'revealDist');
+				const dist = Math.hypot(obj.position.x - playerX, obj.position.z - playerZ);
+
+				if (state === 'hidden' && dist < revealDist) {
+					entity.setValue(Munchkin, 'state', 'emerging');
+				} else if (state === 'emerging') {
+					// Scale up (pop out of flower)
+					const s = Math.min(1, obj.scale.x + dt * 3);
+					obj.scale.setScalar(s);
+					if (s >= 1) {
+						entity.setValue(Munchkin, 'state', 'visible');
+						entity.setValue(Munchkin, 'scatterDir', Math.random() * Math.PI * 2);
+						entity.setValue(Munchkin, 'scatterTime', 0);
+					}
+				} else if (state === 'visible') {
+					const scatterTime = entity.getValue(Munchkin, 'scatterTime');
+					const newTime = scatterTime + dt;
+
+					if (newTime < 2.0) {
+						// Scatter: run away from player
+						const dir = entity.getValue(Munchkin, 'scatterDir');
+						const speed = 1.5 * (1 - newTime / 2.0);
+						obj.position.x += Math.cos(dir) * speed * dt;
+						obj.position.z += Math.sin(dir) * speed * dt;
+						obj.rotation.y += dt * 3;
+					}
+
+					entity.setValue(Munchkin, 'scatterTime', newTime);
+					obj.position.y = 0.6 + Math.sin(performance.now() / 200 + entity.getValue(Munchkin, 'bobPhase')) * 0.1;
+
+					// Collect on touch
+					if (dist < 1.0) {
+						entity.setValue(Munchkin, 'collected', true);
+						if (_onMunchkinCollect) _onMunchkinCollect(entity.getValue(Munchkin, 'points'));
+					}
+				}
+			}
+		}
+	};
+
+	// FlowerSwaySystem: gentle flower animation
+	const FlowerSwaySystem = class extends createSystem({
+		flowers: { required: [Flower] },
+	}) {
+		update(dt) {
+			const time = performance.now() / 1000;
+			for (const entity of this.queries.flowers.entities) {
+				const obj = entity.object3D;
+				if (!obj) continue;
+				const phase = entity.getValue(Flower, 'swayPhase');
+				const speed = entity.getValue(Flower, 'swaySpeed');
+				obj.rotation.z = Math.sin(time * speed + phase) * 0.05;
+			}
+		}
+	};
 
 	const onScoreUpdate = options.onScoreUpdate || (() => {});
 	let score = 0;
@@ -230,6 +238,10 @@ export async function bootOzWorld(container, options = {}) {
 
 	// ── Load GLB munchkins from the asset library (game_name = 'oz') ──
 	const loader = new GLTFLoader();
+	// Wire meshopt decoder so compressed GLBs (EXT_meshopt_compression) load.
+	// Additive: uncompressed GLBs load identically.
+	loader.setMeshoptDecoder(MeshoptDecoder);
+
 	let munchkinModels = [];
 	try {
 		const res = await fetch(`/api/assets/library?game=oz`);

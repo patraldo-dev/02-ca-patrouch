@@ -13,6 +13,7 @@
 import { createSystem } from 'elics';
 import { Vector3, Box3, Mesh, MeshBasicMaterial, SphereGeometry, Group, Sprite, SpriteMaterial, CanvasTexture, TextureLoader, AnimationMixer } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { locomotion } from './locomotion-system.js';
 
 const WS_URL = 'wss://booty-chat-worker.chef-tech.workers.dev/portal-ws/ws';
@@ -92,6 +93,9 @@ function ensureSpiritLoaded(onReady) {
   if (_spiritLoading) return;
   _spiritLoading = true;
   const loader = new GLTFLoader();
+  // Wire meshopt decoder so compressed GLBs (EXT_meshopt_compression) load.
+  // Additive: uncompressed GLBs load identically.
+  loader.setMeshoptDecoder(MeshoptDecoder);
   loader.load(
     '/api/assets/models/spirit.glb',
     (gltf) => {

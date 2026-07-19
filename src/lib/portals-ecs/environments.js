@@ -5,18 +5,22 @@
 // fields Mistral generates). Each portal is a recognizable PLACE.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 
 // ── Asset Library GLB cache ──
 // Queries the D1 asset_library table via /api/assets/library to find
-// real 3D models matching what Mistral generated. Loaded once per
+// real 3D models matching what Mistral generates. Loaded once per
 // kind+label, cloned per instance. Falls back to procedural primitives
 // if no model is found or the load fails.
 const _glbCache = new Map();      // key: "kind:label" → { template, meta }
 const _glbLoading = new Map();    // key: "kind:label" → callback[]
 const _glbQueried = new Set();    // keys already queried from the API
 const _gltfLoader = new GLTFLoader();
+// Wire meshopt decoder so compressed GLBs (EXT_meshopt_compression) load.
+// Additive: uncompressed GLBs load identically.
+_gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
 /**
  * Query the asset library for models matching a kind + label.

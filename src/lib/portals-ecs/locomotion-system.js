@@ -1,16 +1,16 @@
 // @ts-nocheck — IWSDK/Three.js dynamic scene code; excluded from strict type-checking (jsconfig.json).
 // ═══════════════════════════════════════════════════════════
 //  locomotion-system.js
-//  Cross-platform locomotion. Two input sources, one movement system:
+//  Unified cross-platform locomotion. ONE movement system reads input
+//  through InputAdapter — which delegates to XR StatefulGamepads or
+//  InlineGamepads (keyboard/mouse/touch) depending on whether a real
+//  XR session is active. Gameplay code no longer branches on
+//  `world.session` to read input; the only session-dependent branch
+//  is the rig target (XR moves world.player, inline moves world.camera).
 //
-//  1. XR session (dev IWER / real headset): reads left thumbstick,
-//     moves world.player (the XROrigin rig the camera is parented to).
-//  2. Inline (production desktop + mobile): reads keyboard WASD or a
-//     virtual thumbstick via `inlineInput`, moves world.camera directly
-//     (the camera IS the viewpoint; no XR rig needed).
-//
-//  In both cases, setting `locomotion.userActive = true` causes the
-//  CameraOrbitSystem to yield (it checks that flag).
+//  Contract preserved: `locomotion.userActive` is the load-bearing
+//  flag consumed by CameraOrbitSystem, RevelationSystem, NetworkSystem.
+//  It is set true on any input, cleared by recenter / scene rebuild.
 // ═══════════════════════════════════════════════════════════
 import { createSystem } from 'elics';
 import { Vector3, Euler, Quaternion } from 'three';
@@ -18,8 +18,10 @@ import { InputComponent } from '@iwsdk/core';
 import { GroundedPlayer, isGroundedRealm } from './grounded-player.js';
 import { TeleportSystem } from './teleport-system.js';
 import { ComfortVignette } from './comfort-vignette.js';
+import { InputAdapter, AxesState } from './input-adapter.js';
 
-const THUMBSTICK = InputComponent.Thumbstick; // 'xr-standard-thumbstick'
+const THUMBSTICK = InputComponent.Thumbstick; // 'xr-standard-thumbstick' — same id adapter uses
+const TRIGGER = InputComponent.Trigger;
 const WALK_SPEED = 1.8;
 const FLIGHT_SPEED = 3.0;
 const DEAD_ZONE = 0.1;
@@ -73,6 +75,21 @@ export const locomotion = {
 	_flyTarget: null,      // { x, y, z, lookAt?: {x,y,z} }
 };
 
+// One shared adapter — created here so getSource() closes over our
+// private _keys / inlineInput / _mouseDown state (the DOM listeners below).
+const _keys = {};
+let _mouseDown = false;
+let _thumbstickActive = false;  // set by PortalScene thumbstick handlers
+
+function getSource() {
+	return { keys: _keys, inlineInput, thumbstickActive: _thumbstickActive, mouseDown: _mouseDown };
+}
+let adapter = null;
+function getAdapter() {
+	if (!adapter) adapter = new InputAdapter(getSource);
+	return adapter;
+}
+
 export function configureLocomotion(config, scene, camera) {
 	const envType = config?.environment?.type;
 	const grounded = isGroundedRealm(envType);
@@ -83,10 +100,7 @@ export function configureLocomotion(config, scene, camera) {
 	locomotion.groundedPlayer = grounded ? new GroundedPlayer() : null;
 	// Teleport system: create for grounded realms with a scene
 	if (grounded && scene) {
-		// Clean up previous teleport system if it exists
-		if (locomotion.teleport) {
-			locomotion.teleport.dispose();
-		}
+		if (locomotion.teleport) locomotion.teleport.dispose();
 		locomotion.teleport = new TeleportSystem(scene);
 		locomotion.teleport.setGroundedPlayer(locomotion.groundedPlayer);
 	} else if (locomotion.teleport) {
@@ -95,9 +109,7 @@ export function configureLocomotion(config, scene, camera) {
 	}
 	// Comfort vignette: create for grounded realms (reduces motion sickness)
 	if (grounded && camera) {
-		if (locomotion.vignette) {
-			locomotion.vignette.dispose();
-		}
+		if (locomotion.vignette) locomotion.vignette.dispose();
 		locomotion.vignette = new ComfortVignette(camera);
 	} else if (locomotion.vignette) {
 		locomotion.vignette.dispose();
@@ -121,30 +133,28 @@ export function recenter() {
 
 // Internal: process the fly target each frame. Returns true if it consumed
 // the frame (caller should skip normal input handling).
-function processFlyTarget(cam, delta) {
-	if (!locomotion._flyTarget || !cam) return false;
+function processFlyTarget(rigTarget, delta) {
+	if (!locomotion._flyTarget || !rigTarget) return false;
 	const t = locomotion._flyTarget;
-	const FLY_SPEED = 3.5;  // units per second ease rate
-	const ARRIVAL = 0.15;   // distance at which the fly completes
+	const FLY_SPEED = 3.5;
+	const ARRIVAL = 0.15;
 
-	cam.position.x += (t.x - cam.position.x) * Math.min(1, FLY_SPEED * delta);
-	cam.position.y += (t.y - cam.position.y) * Math.min(1, FLY_SPEED * delta);
-	cam.position.z += (t.z - cam.position.z) * Math.min(1, FLY_SPEED * delta);
+	rigTarget.position.x += (t.x - rigTarget.position.x) * Math.min(1, FLY_SPEED * delta);
+	rigTarget.position.y += (t.y - rigTarget.position.y) * Math.min(1, FLY_SPEED * delta);
+	rigTarget.position.z += (t.z - rigTarget.position.z) * Math.min(1, FLY_SPEED * delta);
 
-	if (t.lookAt) {
-		cam.lookAt(t.lookAt.x, t.lookAt.y, t.lookAt.z);
-	}
+	if (t.lookAt) rigTarget.lookAt(t.lookAt.x, t.lookAt.y, t.lookAt.z);
 
-	const dist = Math.hypot(t.x - cam.position.x, t.y - cam.position.y, t.z - cam.position.z);
-	if (dist < ARRIVAL) {
-		locomotion._flyTarget = null;  // arrived
-	}
+	const dist = Math.hypot(
+		t.x - rigTarget.position.x,
+		t.y - rigTarget.position.y,
+		t.z - rigTarget.position.z,
+	);
+	if (dist < ARRIVAL) locomotion._flyTarget = null;
 	return true;
 }
 
 // ── Inline input listeners (keyboard) ──
-const _keys = { KeyW: false, KeyA: false, KeyS: false, KeyD: false };
-let _thumbstickActive = false;  // set by PortalScene thumbstick handlers
 
 function onKeyDown(e) {
 	if (e.code === 'Escape') {
@@ -152,35 +162,24 @@ function onKeyDown(e) {
 		for (const k in _keys) _keys[k] = false;
 		inlineInput.x = 0; inlineInput.y = 0;
 		inlineInput.lookX = 0; inlineInput.lookY = 0;
-		locomotion._recenter = true;  // locomotion update() checks this
+		locomotion._recenter = true;
 		return;
 	}
-	if (e.code in _keys) { _keys[e.code] = true; e.preventDefault(); }
+	_keys[e.code] = true;
+	// Prevent page scroll on arrow keys / space when focused on canvas
+	if (['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) {
+		e.preventDefault();
+	}
 }
 function onKeyUp(e) {
-	if (e.code in _keys) { _keys[e.code] = false; }
+	_keys[e.code] = false;
 }
 
 // Mouse/touch look state
 let _lookActive = false;
 
-// Mouse position in NDC (-1..1) + button state, for the grab system
-let _mouseNDC = null;  // { x, y } or null
-let _mouseDown = false;
-
-function updateInlineInputFromKeys() {
-	// If the thumbstick is active (touch), don't overwrite — let it own x/y.
-	if (_thumbstickActive) return;
-	// Otherwise always write (including zeros when no keys pressed) so movement
-	// stops when keys are released.
-	let x = 0, y = 0;
-	if (_keys.KeyW) y -= 1;
-	if (_keys.KeyS) y += 1;
-	if (_keys.KeyA) x -= 1;
-	if (_keys.KeyD) x += 1;
-	inlineInput.x = x;
-	inlineInput.y = y;
-}
+// Mouse position in NDC (-1..1), for the grab system (inline mode only)
+let _mouseNDC = null;
 
 // Called by PortalScene when the thumbstick starts/stops dragging.
 export function setThumbstickActive(active) { _thumbstickActive = active; }
@@ -199,9 +198,9 @@ export function initInlineInput(domElement) {
 		mouseDownPos = { x: e.clientX, y: e.clientY };
 		mouseMoved = false;
 	});
-	window.addEventListener('mouseup', (e) => {
+	window.addEventListener('mouseup', () => {
 		if (_lookActive && mouseDownPos && !mouseMoved) {
-			// It was a click, not a drag — forward to canvas as pointerdown
+			// It was a click, not a drag — forward to canvas as a click
 			// so the themed scene / starfield tap handler can raycast + navigate.
 			domElement.dispatchEvent(new PointerEvent('click', {
 				clientX: mouseDownPos.x, clientY: mouseDownPos.y, bubbles: true,
@@ -237,6 +236,44 @@ export function disposeInlineInput() {
 	window.removeEventListener('keyup', onKeyUp);
 }
 
+// ── Shared movement helpers (used by both inline + XR paths) ──
+
+function applyMovement(rigTarget, axes, cameraYaw, delta) {
+	_moveDir.set(axes.x, 0, axes.y);
+	_moveDir.applyAxisAngle(_upAxis, cameraYaw);
+
+	if (locomotion.mode === 'flight') {
+		rigTarget.position.addScaledVector(_moveDir, FLIGHT_SPEED * delta);
+	} else {
+		_moveDir.y = 0;
+		_moveDir.multiplyScalar(WALK_SPEED * delta);
+
+		if (locomotion.grounded && locomotion.groundedPlayer) {
+			// Grounded physics: convert rig position to foot, step through
+			// collision, write back. Works whether rig is world.player or camera.
+			const footPos = new Vector3(rigTarget.position.x, rigTarget.position.y - EYE_HEIGHT, rigTarget.position.z);
+			locomotion.groundedPlayer.step(footPos, _moveDir, delta);
+			rigTarget.position.x = footPos.x;
+			rigTarget.position.y = footPos.y + EYE_HEIGHT;
+			rigTarget.position.z = footPos.z;
+		} else {
+			rigTarget.position.x += _moveDir.x;
+			rigTarget.position.z += _moveDir.z;
+			rigTarget.position.y = locomotion.floorY + EYE_HEIGHT;
+		}
+	}
+}
+
+// Apply gravity when no horizontal input (still falls if airborne).
+function applyGravity(rigTarget, delta) {
+	if (!locomotion.grounded || !locomotion.groundedPlayer) return;
+	const footPos = new Vector3(rigTarget.position.x, rigTarget.position.y - EYE_HEIGHT, rigTarget.position.z);
+	locomotion.groundedPlayer.step(footPos, new Vector3(0, 0, 0), delta);
+	rigTarget.position.x = footPos.x;
+	rigTarget.position.y = footPos.y + EYE_HEIGHT;
+	rigTarget.position.z = footPos.z;
+}
+
 export const LocomotionSystem = class extends createSystem({}) {
 	init() {
 		console.log('[locomotion] system registered & initialized ✓');
@@ -244,360 +281,244 @@ export const LocomotionSystem = class extends createSystem({}) {
 
 	update(delta, _time) {
 		const world = this.world;
-		const hasSession = !!world.session;
+		const a = getAdapter();
+		a.sync(world);          // pick XR vs inline based on gamepad availability
+		a.updateInline();       // advance inline edge buffers (no-op in XR)
 
-		// ── Inline mode (no XR session): keyboard/touch input ──
-		if (!hasSession) {
-			// Esc: recenter the camera to the scene origin.
-			if (locomotion._recenter) {
-				locomotion._recenter = false;
-				const cam = world.camera;
-				if (cam) {
-					cam.position.set(0, 2, 5);
-					_inlineYaw = 0;
-					_inlinePitch = 0;
-					cam.lookAt(0, 0, 0);
-				}
-				locomotion._flyTarget = null;  // cancel any in-progress fly
-				locomotion.userActive = false;
-				return;
+		// Esc: recenter the rig to scene origin.
+		if (locomotion._recenter) {
+			locomotion._recenter = false;
+			const rig = world.session ? world.player : world.camera;
+			if (rig) {
+				rig.position.set(0, 2, 5);
+				_inlineYaw = 0;
+				_inlinePitch = 0;
+				rig.lookAt(0, 0, 0);
 			}
-			// Fly-to-target (peer or recenter-via-UI). Takes priority over input.
-			if (locomotion._flyTarget) {
-				const cam = world.camera;
-				if (processFlyTarget(cam, delta)) return;
-			}
-			updateInlineInputFromKeys();
-			const hasMoveInput = Math.abs(inlineInput.x) > 0.01 || Math.abs(inlineInput.y) > 0.01;
-			const hasLookInput = Math.abs(inlineInput.lookX) > 0.0001 || Math.abs(inlineInput.lookY) > 0.0001;
-
-			if (!hasMoveInput && !hasLookInput) {
-				// No input this frame — stop moving, but DON'T clear userActive.
-				// Clearing it would hand control back to CameraOrbitSystem, which
-				// snaps the camera back to the orbit path (the "snap to start" bug).
-				// Once the visitor has moved, they keep control until an explicit
-				// recenter (Esc); the orbit yields permanently for this scene.
-
-				// In grounded mode, still apply gravity (player might be airborne).
-				// Also update teleport visuals if aiming.
-				if (locomotion.grounded && locomotion.groundedPlayer) {
-					const cam = world.camera;
-					if (cam) {
-						const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
-						locomotion.groundedPlayer.step(footPos, new Vector3(0, 0, 0), delta);
-						cam.position.y = footPos.y + EYE_HEIGHT;
-					}
-				}
-				// Teleport: if key held while idle, still show the ray
-				if (locomotion.teleport && locomotion.teleport._keyHeld) {
-					const cam = world.camera;
-					const aimDir = new Vector3();
-					cam.getWorldDirection(aimDir);
-					aimDir.y = 0.3;
-					aimDir.normalize();
-					const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
-					locomotion.teleport.update({
-						camera: cam, isAiming: true, aimDirection: aimDir,
-						shouldTeleport: false, playerPos: footPos,
-					});
-				}
-				locomotion.enabled = false;
-				// Consume look deltas so they don't accumulate
-				inlineInput.lookX = 0;
-				inlineInput.lookY = 0;
-				return;
-			}
-
-			locomotion.userActive = true;
-			locomotion.enabled = true;
-
-			const cam = world.camera;
-			if (!cam) return;
-
-			// Apply look (yaw + pitch) to camera rotation
-			if (hasLookInput) {
-				_inlineYaw -= inlineInput.lookX;
-				_inlinePitch -= inlineInput.lookY;
-				_inlinePitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, _inlinePitch));
-				_euler.set(_inlinePitch, _inlineYaw, 0, 'YXZ');
-				cam.quaternion.setFromEuler(_euler);
-				// Consume the look delta
-				inlineInput.lookX = 0;
-				inlineInput.lookY = 0;
-			}
-
-			// ── Teleport (desktop): hold Space + look to aim, release to teleport ──
-			if (locomotion.teleport) {
-				const wasHeld = locomotion.teleport._keyHeld;
-				// Aim direction: camera forward, flattened to horizontal + slight up
-				const aimDir = new Vector3();
-				cam.getWorldDirection(aimDir);
-				aimDir.y = Math.abs(aimDir.y) > 0.7 ? 0.5 * Math.sign(aimDir.y) : 0.3; // give upward arc
-				aimDir.normalize();
-
-				// Determine the foot position (for teleport target)
-				const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
-
-				locomotion.teleport.update({
-					camera: cam,
-					isAiming: wasHeld,
-					aimDirection: aimDir,
-					shouldTeleport: !wasHeld && locomotion.teleport._wasHeld, // released this frame
-					playerPos: footPos,
-				});
-				locomotion.teleport._wasHeld = wasHeld;
-
-				// If a teleport happened, update the camera position to match
-				footPos.y += EYE_HEIGHT;
-				cam.position.copy(footPos);
-
-				// If aiming teleport, skip normal movement (let them aim)
-				if (wasHeld) {
-					locomotion.userActive = true;
-					return;
-				}
-			}
-
-			// Movement: build direction from input, rotate by camera yaw.
-			// Any manual input cancels an in-progress fly-to.
-			if (hasMoveInput) {
-				locomotion._flyTarget = null;
-				_moveDir.set(inlineInput.x, 0, inlineInput.y);
-				_moveDir.applyAxisAngle(_upAxis, _inlineYaw);
-
-				if (locomotion.mode === 'flight') {
-					cam.position.addScaledVector(_moveDir, FLIGHT_SPEED * delta);
-				} else {
-					_moveDir.y = 0;
-					_moveDir.multiplyScalar(WALK_SPEED * delta);
-
-					if (locomotion.grounded && locomotion.groundedPlayer) {
-						// Grounded physics: gravity + collision resolution
-						const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
-						locomotion.groundedPlayer.step(footPos, _moveDir, delta);
-						cam.position.x = footPos.x;
-						cam.position.y = footPos.y + EYE_HEIGHT;
-						cam.position.z = footPos.z;
-					} else {
-						// Legacy hard-floor pin (fallback if no grounded player)
-						cam.position.x += _moveDir.x;
-						cam.position.z += _moveDir.z;
-						cam.position.y = locomotion.floorY + EYE_HEIGHT;
-					}
-				}
-			} else if (locomotion.grounded && locomotion.groundedPlayer && !locomotion._flyTarget) {
-				// No horizontal input but still in a grounded realm — apply gravity
-				const footPos = new Vector3(cam.position.x, cam.position.y - EYE_HEIGHT, cam.position.z);
-				locomotion.groundedPlayer.step(footPos, new Vector3(0, 0, 0), delta);
-				cam.position.y = footPos.y + EYE_HEIGHT;
-			}
-
-			// ── Comfort vignette: XR only. On desktop the 3D tube occludes the
-			// whole view, so we disable it entirely for inline mode. ──
-			if (locomotion.vignette) {
-				locomotion.vignette.setEnabled(false);
-			}
-
-			// ── Grab system (desktop): mouse position + click to grab ──
-			if (locomotion.grab && _mouseNDC) {
-				locomotion.grab.update({
-					camera: cam,
-					pointerNDC: _mouseNDC,
-					mouseHeld: _mouseDown,
-				});
-			}
+			locomotion._flyTarget = null;
+			locomotion.userActive = false;
 			return;
 		}
 
-		// ── XR session mode: gamepad input (existing path) ──
-		locomotion.enabled = true;
-
-		// On session start, place the player rig facing the scene center.
-		if (!locomotion._rigPlaced && world.player) {
-			const rad = 3;
-			// For grounded realms, start slightly above floor and let gravity settle.
-			// For flight realms, start at a viewing height.
-			const floorY = locomotion.mode === 'walk'
-				? locomotion.floorY + EYE_HEIGHT + 0.5
-				: 1;
-			world.player.position.set(0, floorY, rad);
-			world.player.lookAt(0, floorY, 0);
-			locomotion._rigPlaced = true;
+		// Fly-to-target (peer or recenter-via-UI). Takes priority over input.
+		if (locomotion._flyTarget) {
+			const rig = world.session ? world.player : world.camera;
+			if (processFlyTarget(rig, delta)) return;
 		}
 
-		// Show controller models — like Flowerbed, visible hands/controllers
-		// make the experience feel immersive rather than observational.
-		// (Previously these were hidden, which made it feel like a detached
-		// camera. Restored so the player sees their virtual hands.)
-		const va = world.input?.visualAdapters;
-		if (va) {
-			for (const side of ['left', 'right']) {
-				const model = va[side]?.value?.visual?.model;
-				if (model) model.visible = true;
-			}
+		const hasSession = !!world.session;
+		// The ONE structural branch: which Object3D does locomotion drive?
+		// In XR, the camera is parented to world.player (the XROrigin rig),
+		// so we move the rig. Inline, the camera IS the viewpoint.
+		const rig = hasSession ? world.player : world.camera;
+		if (!rig) return;
+
+		// Inline look (mouse-drag): continuous deltas consumed each frame.
+		// In XR, head-tracking drives the camera; this is a no-op (lookX/Y stay 0).
+		const hasLookInput = Math.abs(inlineInput.lookX) > 0.0001 || Math.abs(inlineInput.lookY) > 0.0001;
+		if (hasLookInput && !hasSession) {
+			_inlineYaw -= inlineInput.lookX;
+			_inlinePitch -= inlineInput.lookY;
+			_inlinePitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, _inlinePitch));
+			_euler.set(_inlinePitch, _inlineYaw, 0, 'YXZ');
+			rig.quaternion.setFromEuler(_euler);
+			inlineInput.lookX = 0;
+			inlineInput.lookY = 0;
 		}
 
-		const left = world.input?.gamepads?.left;
-		if (!left) return;
+		// ── Read input through the adapter (no session branching) ──
+		const left = a.left;
+		const right = a.right;
+		const moveMag = left?.get2DInputValue(THUMBSTICK) ?? 0;
+		const moveAxes = left?.getAxesValues(THUMBSTICK) ?? { x: 0, y: 0 };
+		const hasMoveInput = moveMag > DEAD_ZONE;
+		// Trigger counts as input too — so a stationary player clicking to
+		// grab still drives the grab system (and keeps userActive asserted).
+		const triggerHeld = right?.getButtonPressed(TRIGGER) ?? false;
+		const triggerDown = right?.getButtonDown(TRIGGER) ?? false;
+		const hasTriggerInput = triggerHeld || triggerDown;
 
-		const value = left.get2DInputValue(THUMBSTICK) ?? 0;
-		if (value < DEAD_ZONE) {
-			// Thumbstick centered — stop moving, but keep userActive true so the
-			// orbit doesn't snap the camera back to its idle path. Control is only
-			// relinquished on explicit recenter (Esc), not on releasing the stick.
-			// Fly-to-target continues even with thumbstick centered (it's a
-			// programmatic camera move, not thumbstick input).
-			if (locomotion._flyTarget && world.player) {
-				const player = world.player;
-				const t = locomotion._flyTarget;
-				const FLY_SPEED = 3.5;
-				const ARRIVAL = 0.15;
-				player.position.x += (t.x - player.position.x) * Math.min(1, FLY_SPEED * delta);
-				player.position.z += (t.z - player.position.z) * Math.min(1, FLY_SPEED * delta);
-				if (t.lookAt) player.lookAt(t.lookAt.x, t.lookAt.y, t.lookAt.z);
-				if (Math.hypot(t.x - player.position.x, t.z - player.position.z) < ARRIVAL) {
-					locomotion._flyTarget = null;
-				}
+		if (!hasMoveInput && !hasLookInput && !hasTriggerInput) {
+			// No input this frame — stop moving, but DON'T clear userActive.
+			// Clearing it would hand control back to CameraOrbitSystem, which
+			// snaps the camera back to the orbit path. Once the visitor has
+			// moved, they keep control until an explicit recenter (Esc).
+			if (locomotion.grounded) applyGravity(rig, delta);
+
+			// Teleport: if key held while idle, still show the ray
+			if (locomotion.teleport && locomotion.teleport._keyHeld) {
+				const aimDir = new Vector3();
+				rig.getWorldDirection(aimDir);
+				aimDir.y = 0.3;
+				aimDir.normalize();
+				const footPos = new Vector3(rig.position.x, rig.position.y - EYE_HEIGHT, rig.position.z);
+				locomotion.teleport.update({
+					camera: rig, isAiming: true, aimDirection: aimDir,
+					shouldTeleport: false, playerPos: footPos,
+				});
 			}
-			// Grounded: apply gravity even when left stick is idle
-			if (locomotion.grounded && locomotion.groundedPlayer && world.player) {
-				const player = world.player;
-				const footPos = new Vector3(player.position.x, player.position.y - EYE_HEIGHT, player.position.z);
-				locomotion.groundedPlayer.step(footPos, new Vector3(0, 0, 0), delta);
-				player.position.x = footPos.x;
-				player.position.y = footPos.y + EYE_HEIGHT;
-				player.position.z = footPos.z;
-			}
-			// Fall through to right-stick handling (don't return yet)
-			// ... right stick teleport/snap-turn handled below
-		} else {
-		locomotion._flyTarget = null;  // thumbstick input cancels fly
+			locomotion.enabled = false;
+			return;
+		}
+
 		locomotion.userActive = true;
+		locomotion.enabled = true;
+		locomotion._flyTarget = null;  // any manual input cancels a fly
 
-		const axes = left.getAxesValues?.(THUMBSTICK) ?? { x: 0, y: 0 };
-		_moveDir.set(axes.x, 0, axes.y);
-		const cam = world.camera;
-		const cameraYaw = Math.atan2(
-			cam.matrixWorld.elements[8],
-			cam.matrixWorld.elements[10],
-		);
-		_moveDir.applyAxisAngle(_upAxis, cameraYaw);
+		// ── Movement: rotate input by camera yaw (camera-relative strafe) ──
+		// In XR, yaw is derived from the camera world matrix (rig orientation).
+		// Inline, we use our own _inlineYaw (set by mouse-drag look above).
+		const cameraYaw = hasSession
+			? Math.atan2(world.camera.matrixWorld.elements[8], world.camera.matrixWorld.elements[10])
+			: _inlineYaw;
 
-		const player = world.player;
-		if (locomotion.mode === 'flight') {
-			player.position.addScaledVector(_moveDir, FLIGHT_SPEED * delta);
-		} else {
-			_moveDir.y = 0;
-			_moveDir.multiplyScalar(WALK_SPEED * delta);
-
-			if (locomotion.grounded && locomotion.groundedPlayer) {
-				// Grounded physics: convert player rig position to foot,
-				// step through collision, write back.
-				const footPos = new Vector3(player.position.x, player.position.y - EYE_HEIGHT, player.position.z);
-				locomotion.groundedPlayer.step(footPos, _moveDir, delta);
-				player.position.x = footPos.x;
-				player.position.y = footPos.y + EYE_HEIGHT;
-				player.position.z = footPos.z;
-			} else {
-				player.position.x += _moveDir.x;
-				player.position.z += _moveDir.z;
-				player.position.y = locomotion.floorY + EYE_HEIGHT;
-			}
-		}
+		if (hasMoveInput) {
+			applyMovement(rig, moveAxes, cameraYaw, delta);
+		} else if (locomotion.grounded && locomotion.groundedPlayer) {
+			// No horizontal input but still in a grounded realm — apply gravity
+			applyGravity(rig, delta);
 		}
 
-		// ── Right thumbstick: snap turn + teleport (XR, grounded realms only) ──
-		const right = world.input?.gamepads?.right;
+		// ── Right thumbstick: snap-turn + teleport (grounded realms only) ──
+		// Reads through the adapter — works for both Arrow keys (inline) and
+		// the right controller stick (XR). Edge-detected via getAxesEnteringState,
+		// so we no longer need _xrSnapState / _xrTeleportEngaged latches.
 		if (right && locomotion.grounded) {
-			const rValue = right.get2DInputValue(THUMBSTICK) ?? 0;
-			const rAxes = right.getAxesValues?.(THUMBSTICK) ?? { x: 0, y: 0 };
+			const rMag = right.get2DInputValue(THUMBSTICK);
+			const rAxes = right.getAxesValues(THUMBSTICK);
 
-			if (rValue >= SNAP_TURN_MAG) {
+			if (rMag >= SNAP_TURN_MAG) {
 				// Stick angle: 0 = forward, ±π = back (y inverted on controllers)
 				const angle = Math.atan2(rAxes.x, -rAxes.y);
 				const absAngle = Math.abs(angle);
 
 				if (absAngle < TELEPORT_FORWARD_MAX || absAngle > TELEPORT_BACKWARD_MIN) {
-					// ── TELEPORT ZONE (forward/back) — aim the ray ──
+					// TELEPORT ZONE (forward/back) — aim the ray
 					if (locomotion.teleport) {
-						const cam = world.camera;
-						const player = world.player;
 						const aimDir = new Vector3();
-						cam.getWorldDirection(aimDir);
+						rig.getWorldDirection(aimDir);
 						aimDir.y = 0.3;
 						aimDir.normalize();
-						const footPos = new Vector3(player.position.x, player.position.y - EYE_HEIGHT, player.position.z);
+						const footPos = new Vector3(rig.position.x, rig.position.y - EYE_HEIGHT, rig.position.z);
 						locomotion.teleport.update({
-							camera: cam, isAiming: true, aimDirection: aimDir,
+							camera: rig, isAiming: true, aimDirection: aimDir,
 							shouldTeleport: false, playerPos: footPos,
 						});
-						locomotion._xrTeleportEngaged = true;
+						locomotion._teleportAiming = true;
 					}
 				} else if (absAngle >= SNAP_TURN_MIN && absAngle <= SNAP_TURN_MAX) {
-					// ── SNAP TURN ZONE — edge-triggered 45° rotation ──
-					if (!locomotion._xrSnapState) {
-						world.player.rotateY((angle > 0 ? -1 : 1) * SNAP_ANGLE);
-						locomotion._xrSnapState = true;
-						// Pulse the comfort vignette on snap turn
+					// SNAP TURN ZONE — edge-triggered 45° rotation
+					if (right.getAxesEnteringState(THUMBSTICK, _axesStateFromAngle(angle))) {
+						rig.rotateY((angle > 0 ? -1 : 1) * SNAP_ANGLE);
 						if (locomotion.vignette) locomotion.vignette.pulse();
 					}
 				}
 			} else {
-				// Stick released below threshold
-				if (locomotion._xrTeleportEngaged && locomotion.teleport) {
-					const cam = world.camera;
-					const player = world.player;
-					const footPos = new Vector3(player.position.x, player.position.y - EYE_HEIGHT, player.position.z);
+				// Stick released below threshold — fire teleport if we were aiming
+				if (locomotion._teleportAiming && locomotion.teleport) {
+					const footPos = new Vector3(rig.position.x, rig.position.y - EYE_HEIGHT, rig.position.z);
 					const teleported = locomotion.teleport.update({
-						camera: cam, isAiming: false, aimDirection: null,
+						camera: rig, isAiming: false, aimDirection: null,
 						shouldTeleport: true, playerPos: footPos,
 					});
 					if (teleported) {
-						player.position.x = footPos.x;
-						player.position.y = footPos.y + EYE_HEIGHT;
-						player.position.z = footPos.z;
-						locomotion.groundedPlayer.velocity.set(0, 0, 0);
-						// Pulse the comfort vignette on teleport
+						rig.position.x = footPos.x;
+						rig.position.y = footPos.y + EYE_HEIGHT;
+						rig.position.z = footPos.z;
+						locomotion.groundedPlayer?.velocity.set(0, 0, 0);
 						if (locomotion.vignette) locomotion.vignette.pulse(0.8);
 					}
 				}
-				locomotion._xrTeleportEngaged = false;
-				locomotion._xrSnapState = false;
+				locomotion._teleportAiming = false;
 
 				// Hide teleport visuals when stick is centered
 				if (locomotion.teleport) {
 					locomotion.teleport.update({
-						camera: world.camera, isAiming: false, aimDirection: null,
+						camera: rig, isAiming: false, aimDirection: null,
 						shouldTeleport: false, playerPos: null,
 					});
 				}
 			}
 		}
 
-		// ── Comfort vignette (XR): modulate by left-stick magnitude ──
-		if (locomotion.vignette) {
-			locomotion.vignette.setEnabled(true); // ensure on for XR
-			const leftMag = left ? (left.get2DInputValue(THUMBSTICK) ?? 0) : 0;
-			// Normalize: our DEAD_ZONE is 0.1, max useful is ~1.0
-			const speed = Math.max(0, Math.min(1, (leftMag - DEAD_ZONE) / (1 - DEAD_ZONE)));
-			locomotion.vignette.update(speed);
+		// Desktop teleport (Space): hold to aim, release to fire.
+		// Not in the adapter (Space isn't a gamepad axis) — keep the
+		// existing Space-key path for inline mode.
+		if (!hasSession && locomotion.teleport) {
+			const wasHeld = locomotion.teleport._keyHeld;
+			if (wasHeld || locomotion.teleport._wasHeld) {
+				const aimDir = new Vector3();
+				rig.getWorldDirection(aimDir);
+				aimDir.y = Math.abs(aimDir.y) > 0.7 ? 0.5 * Math.sign(aimDir.y) : 0.3;
+				aimDir.normalize();
+				const footPos = new Vector3(rig.position.x, rig.position.y - EYE_HEIGHT, rig.position.z);
+				locomotion.teleport.update({
+					camera: rig,
+					isAiming: wasHeld,
+					aimDirection: aimDir,
+					shouldTeleport: !wasHeld && locomotion.teleport._wasHeld,
+					playerPos: footPos,
+				});
+				locomotion.teleport._wasHeld = wasHeld;
+				footPos.y += EYE_HEIGHT;
+				rig.position.copy(footPos);
+				if (wasHeld) {
+					locomotion.userActive = true;
+					return;  // skip grab while aiming teleport
+				}
+			}
 		}
 
-		// ── Grab system (XR): right controller ray + trigger to grab ──
-		if (locomotion.grab && world.input?.gamepads?.right) {
-			const rightGp = world.input.gamepads.right;
-			const triggerHeld = rightGp.getButtonPressed(InputComponent.Trigger);
-			const raySpace = world.player?.raySpaces?.right;
-			if (raySpace) {
-				raySpace.getWorldPosition(_grabOrigin);
-				raySpace.getWorldQuaternion(_grabQuat);
-				_grabDir.copy(_forward3).applyQuaternion(_grabQuat);
+		// ── Comfort vignette: XR only. On desktop the 3D tube occludes the
+		// whole view, so we disable it entirely for inline mode. ──
+		if (locomotion.vignette) {
+			if (hasSession) {
+				locomotion.vignette.setEnabled(true);
+				const norm = Math.max(0, Math.min(1, (moveMag - DEAD_ZONE) / (1 - DEAD_ZONE)));
+				locomotion.vignette.update(norm);
+			} else {
+				locomotion.vignette.setEnabled(false);
+			}
+		}
+
+		// ── Grab system: ray source is the only session-dependent part ──
+		// triggerHeld / triggerDown already read above (in the input check).
+		if (locomotion.grab) {
+			if (hasSession) {
+				// XR: right controller ray space origin + forward direction
+				const raySpace = world.player?.raySpaces?.right;
+				if (raySpace) {
+					raySpace.getWorldPosition(_grabOrigin);
+					raySpace.getWorldQuaternion(_grabQuat);
+					_grabDir.copy(_forward3).applyQuaternion(_grabQuat);
+					locomotion.grab.update({
+						controllerOrigin: _grabOrigin,
+						controllerDir: _grabDir,
+						triggerHeld,
+						triggerDown,
+					});
+				}
+			} else if (_mouseNDC) {
+				// Desktop: camera + pointer NDC + mouse held
 				locomotion.grab.update({
-					controllerOrigin: _grabOrigin,
-					controllerDir: _grabDir,
-					triggerHeld,
+					camera: rig,
+					pointerNDC: _mouseNDC,
+					mouseHeld: triggerHeld,
+					mouseDown: triggerDown,
 				});
 			}
 		}
 	}
 };
+
+// ── Helper: map a thumbstick angle (atan2(x, -y)) to an AxesState ──
+// so the adapter's edge detection works for snap-turn.
+function _axesStateFromAngle(angle) {
+	const absAngle = Math.abs(angle);
+	if (absAngle < TELEPORT_FORWARD_MAX || absAngle > TELEPORT_BACKWARD_MIN) {
+		// forward/back — treat as Up/Down for edge detection
+		return angle > 0 ? AxesState.Down : AxesState.Up;
+	}
+	if (angle > 0) return AxesState.Right;
+	return AxesState.Left;
+}

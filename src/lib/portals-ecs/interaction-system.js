@@ -11,6 +11,7 @@
 import { createSystem } from 'elics';
 import { Raycaster, Vector3, Quaternion } from 'three';
 import { InputComponent } from '@iwsdk/core';
+import { InputAdapter } from './input-adapter.js';
 
 const TRIGGER = InputComponent.Trigger;   // 'xr-standard-trigger'
 const RAY_LENGTH = 10;                     // max selection distance
@@ -22,23 +23,25 @@ const _direction = new Vector3();
 const _quat = new Quaternion();
 const _forward = new Vector3(0, 0, -1);
 
+// One adapter for this system — no manual _triggerPrev bookkeeping;
+// IWSDK's StatefulGamepad (and our InlineGamepad) provide getButtonDown.
+const _adapter = new InputAdapter(() => ({ keys: {}, inlineInput: { x: 0, y: 0 }, thumbstickActive: false, mouseDown: false }));
+
 export const InteractionSystem = class extends createSystem({}) {
 	init() {
 		console.log('[interaction] system registered & initialized ✓');
-		this._triggerPrev = false;
 	}
 
 	update(delta, _time) {
 		const world = this.world;
-		if (!world.session) return;
+		if (!world.session) return;   // XR-only system (ray-based selection)
 
-		const right = world.input?.gamepads?.right;
+		_adapter.sync(world);
+		const right = _adapter.right;
 		if (!right) return;
 
-		// Edge-detected trigger click (fires once per press, not every frame held).
-		const triggerNow = right.getButtonPressed(TRIGGER);
-		const clicked = triggerNow && !this._triggerPrev;
-		this._triggerPrev = triggerNow;
+		// Edge-detected trigger click — fires once per press.
+		const clicked = right.getButtonDown(TRIGGER);
 
 		// Get the right controller's ray space — this is where the ray originates.
 		// In IWER Play Mode, mouse-look aims this; on a headset, it's the controller.

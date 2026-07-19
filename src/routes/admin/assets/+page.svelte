@@ -11,6 +11,32 @@
     let uploadProgress = $state('');
     let previewModel = $state(null); // model being previewed in the modal
 
+    // ── Client-side GLB compression (meshopt — preserves morph targets + animations) ──
+    // Compresses in the browser before upload so the Worker stays lean (no
+    // @gltf-transform bundle bloat, no CPU burn) and the uncompressed file
+    // never traverses the network. A 16MB animated Monster Mash GLB → ~1.6MB.
+    // Meshopt is chosen over draco because draco corrupts morph targets.
+    let compressEnabled = $state(true);  // toggle in the upload card
+    let compressing = $state(false);
+
+    async function compressGlb(file) {
+        const { WebIO } = await import('@gltf-transform/core');
+        const { dedup, weld, meshopt } = await import('@gltf-transform/functions');
+        const { MeshoptEncoder } = await import('meshoptimizer');
+
+        const io = new WebIO({ logger: console });
+        const doc = await io.readBinary(new Uint8Array(await file.arrayBuffer()));
+
+        await doc.transform(
+            dedup(),                 // remove duplicate accessors/meshes
+            weld({ tolerance: 1e-4 }), // merge identical vertices
+            meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
+        );
+
+        const bytes = await io.writeBinary(doc);
+        return new Blob([bytes], { type: 'model/gltf-binary' });
+    }
+
     // ── Categorized options for the dropdowns ──
     const KIND_GROUPS = {
         'Living Things': [
@@ -108,11 +134,35 @@
         if (!file) return;
 
         uploading = true;
-        uploadProgress = `Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)...`;
+        const originalSizeMB = (file.size / 1024 / 1024).toFixed(1);
+        let uploadFile = file;
 
         try {
+            // Compress before upload (if enabled and the file looks like a GLB).
+            // Meshopt preserves morph targets + animations — safe for the
+            // animated GLBs we export from Monster Mash.
+            if (compressEnabled && /\.glb$/i.test(file.name)) {
+                compressing = true;
+                uploadProgress = `Compressing ${file.name} with meshopt (preserves animations)...`;
+                try {
+                    const compressed = await compressGlb(file);
+                    const compressedSizeMB = (compressed.size / 1024 / 1024).toFixed(1);
+                    uploadProgress = `✓ Compressed: ${originalSizeMB} MB → ${compressedSizeMB} MB. Uploading...`;
+                    uploadFile = compressed;
+                } catch (e) {
+                    console.warn('[assets] compression failed, uploading uncompressed:', e);
+                    uploadProgress = `⚠ Compression failed (${e.message}); uploading uncompressed (${originalSizeMB} MB)...`;
+                } finally {
+                    compressing = false;
+                }
+            } else {
+                uploadProgress = `Uploading ${file.name} (${originalSizeMB} MB)...`;
+            }
+
             const formData = new FormData();
-            formData.append('file', file);
+            // Preserve the original filename so the R2 key stays readable.
+            // FormData accepts a Blob + filename as the 3rd append() arg.
+            formData.append('file', uploadFile, file.name);
             formData.append('kind', form.kind);
             formData.append('pack', form.pack || 'core');
 
@@ -124,7 +174,11 @@
 
             if (res.ok) {
                 form.file_path = result.file_path;
-                uploadProgress = `✓ Uploaded: ${result.file_path} (${(result.size / 1024 / 1024).toFixed(1)} MB)`;
+                const finalMB = (result.size / 1024 / 1024).toFixed(1);
+                const note = (uploadFile !== file)
+                    ? ` (${originalSizeMB} MB → ${finalMB} MB after compression)`
+                    : ` (${finalMB} MB)`;
+                uploadProgress = `✓ Uploaded: ${result.file_path}${note}`;
                 // Auto-generate a label from the filename if empty
                 if (!form.label) {
                     const baseName = file.name.replace(/\.glb$/i, '').replace(/[-_]/g, ' ');
@@ -141,6 +195,7 @@
             uploadProgress = `✗ ${e.message}`;
         } finally {
             uploading = false;
+            compressing = false;
         }
     }
 
@@ -238,11 +293,15 @@
                         type="file"
                         accept=".glb,model/gltf-binary"
                         onchange={handleFileUpload}
-                        disabled={uploading}
+                        disabled={uploading || compressing}
                     />
                     {#if form.file_path}
                         <span class="file-done">✓ {form.file_path}</span>
                     {/if}
+                    <label class="compress-toggle" title="Compress with meshopt before upload (preserves morph targets + animations). A 16 MB animated GLB typically becomes ~1.6 MB.">
+                        <input type="checkbox" bind:checked={compressEnabled} disabled={uploading || compressing} />
+                        Compress before upload (meshopt)
+                    </label>
                 </div>
                 {#if uploadProgress}
                     <p class="upload-status">{uploadProgress}</p>
@@ -509,6 +568,12 @@
     }
     .file-done { color: #8fbc8f; font-size: 0.85rem; font-family: monospace; }
     .upload-status { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+    .compress-toggle {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        font-size: 0.82rem; color: var(--text-muted);
+        cursor: pointer; user-select: none;
+    }
+    .compress-toggle input[type="checkbox"] { cursor: pointer; }
 
     /* Form */
     .form-card {

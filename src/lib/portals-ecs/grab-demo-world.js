@@ -121,6 +121,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	const { World } = await import('@iwsdk/core');
 	const { createComponent, createSystem, Types, ComponentRegistry } = await import('elics');
 	const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+	const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
 
 	// Create component now that elics is loaded
 	_Collectible = ComponentRegistry.has('_Collectible')
@@ -299,6 +300,9 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 
 	// ── Load GLB templates from the fetched model list ──
 	const loader = new GLTFLoader();
+	// Wire meshopt decoder so compressed GLBs (EXT_meshopt_compression) load.
+	// Additive: uncompressed GLBs load identically.
+	loader.setMeshoptDecoder(MeshoptDecoder);
 	const templates = await Promise.all(
 		gameModels.map((m) =>
 			new Promise((resolve) => {
