@@ -15,7 +15,6 @@ import * as THREE from 'three';
 import { World } from '@iwsdk/core';
 import { createComponent, createSystem, Types, ComponentRegistry } from 'elics';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const BG_IMAGE_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
@@ -301,41 +300,35 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	let opponentScore = 0;
 	const entityById = new Map(); // entityId → ECS entity
 
-	// ── Three.js scene (setup only — ECS owns the logic) ──
-	const scene = new THREE.Scene();
+	// ── ECS World (creates its own scene, camera, renderer) ──
+	const world = await World.create(container, {
+		xr: { offer: 'none' },
+		render: { defaultLighting: false },
+		features: { locomotion: false, grabbing: false, physics: false },
+	});
 
-	// ── Skybox: the background image wraps ALL AROUND the player as a
-	// large sphere. The camera is inside the sphere, so wherever you look
-	// you see the image — not black void. This is what makes the space feel
-	// enclosed and defined, like stepping inside the artwork. ──
+	// Use the World's scene + camera + renderer — NOT our own.
+	// createTransformEntity adds objects to world.scene, and the World's
+	// internal render loop renders world.scene. If we use a separate scene,
+	// entities flash for one frame then vanish.
+	const scene = world.scene;
+	const camera = world.camera;
+	const renderer = world.renderer;
+
+	// Position the camera
+	camera.position.set(0, 1.6, 5);
+
+	// ── Skybox ──
 	const skyboxTexture = new THREE.TextureLoader().load(
 		`https://imagedelivery.net/${CF_IMAGES_HASH}/${BG_IMAGE_ID}/full`
 	);
 	skyboxTexture.colorSpace = THREE.SRGBColorSpace;
 	const skybox = new THREE.Mesh(
 		new THREE.SphereGeometry(45, 32, 16),
-		new THREE.MeshBasicMaterial({
-			map: skyboxTexture,
-			side: THREE.BackSide,  // render the inside of the sphere
-			depthWrite: false,
-		})
+		new THREE.MeshBasicMaterial({ map: skyboxTexture, side: THREE.BackSide, depthWrite: false })
 	);
 	scene.add(skybox);
-
-	// Fog for depth (fades distant objects into the skybox)
 	scene.fog = new THREE.Fog(0x1a1020, 15, 40);
-
-	// Camera
-	const camera = new THREE.PerspectiveCamera(
-		70, container.clientWidth / container.clientHeight, 0.1, 100
-	);
-	camera.position.set(0, 1.6, 5);
-
-	// Renderer
-	const renderer = new THREE.WebGLRenderer({ antialias: true });
-	renderer.setSize(container.clientWidth, container.clientHeight);
-	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-	container.appendChild(renderer.domElement);
 
 	// Lighting
 	scene.add(new THREE.AmbientLight(0x8888aa, 0.6));
@@ -346,23 +339,19 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	rimLight.position.set(-5, 3, -5);
 	scene.add(rimLight);
 
-	// ── Ground: textured plane so the floor reads as terrain, not void.
-	// Uses a canvas-generated grid texture so it has visible structure. ──
+	// ── Textured ground ──
 	const groundCanvas = document.createElement('canvas');
 	groundCanvas.width = 256;
 	groundCanvas.height = 256;
 	const gctx = groundCanvas.getContext('2d');
-	// Base color
 	gctx.fillStyle = '#1a1520';
 	gctx.fillRect(0, 0, 256, 256);
-	// Grid pattern
 	gctx.strokeStyle = '#2a2535';
 	gctx.lineWidth = 2;
 	for (let i = 0; i <= 256; i += 32) {
 		gctx.beginPath(); gctx.moveTo(i, 0); gctx.lineTo(i, 256); gctx.stroke();
 		gctx.beginPath(); gctx.moveTo(0, i); gctx.lineTo(256, i); gctx.stroke();
 	}
-	// Subtle noise dots for texture
 	for (let i = 0; i < 200; i++) {
 		const x = Math.random() * 256;
 		const y = Math.random() * 256;
@@ -382,16 +371,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	ground.rotation.x = -Math.PI / 2;
 	scene.add(ground);
 
-	// Grid
-	const grid = new THREE.GridHelper(50, 25, 0x333355, 0x222233);
-	scene.add(grid);
-
-	// Orbit controls (desktop look)
-	const controls = new OrbitControls(camera, renderer.domElement);
-	controls.enableDamping = true;
-	controls.target.set(0, 1, 0);
-
-	// ── Load all 3 GLB templates ──
+	// ── Load GLB templates ──
 	const loader = new GLTFLoader();
 	const templates = await Promise.all(
 		MODELS.map((m) =>
@@ -411,33 +391,54 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		)
 	);
 
-	// ── ECS World ──
-	const world = await World.create(container, {
-		xr: { offer: 'none' },
-		render: { defaultLighting: false },
-		features: { locomotion: false, grabbing: false, physics: false },
-	});
-
-	// Register components
+	// Register components + systems
 	world.registerComponent(Collectible);
 
-	// Create the collection system and wire it up
 	const collectionSys = new CollectionSystem();
 	collectionSys.setupRaycast(camera, renderer.domElement);
 	collectionSys.setOnCollect(onCollect);
 
-	// Register systems (priority 0 = before TransformSystem at priority 1)
-	// Set the attack-hit callback BEFORE the animation loop starts
 	_onPlayerHit = (points) => {
-		// Attacker hit the player — subtract 2 points (minimum 0)
 		myScore = Math.max(0, myScore - 2);
 		updateScore();
 		if (onCollect) onCollect(myScore);
 	};
 	world.registerSystem(AnimationSystem, { priority: 0 });
-	// CollectionSystem runs as a manual update (not an ECS query-based system
-	// since it needs DOM event handling). We'll call its update in the loop.
-	// But we register it so the AnimationSystem queries include Collectible.
+
+	// WASD look controls (simple — no OrbitControls, just yaw + pitch)
+	let yaw = 0;
+	let pitch = 0;
+	let lookActive = false;
+	let lookMoved = false;
+	let mouseDownPos = null;
+
+	const onPointerDown = (e) => {
+		lookActive = true;
+		lookMoved = false;
+		mouseDownPos = { x: e.clientX, y: e.clientY };
+	};
+	const onPointerUp = (e) => {
+		if (lookActive && !lookMoved && mouseDownPos) {
+			collectionSys._tryCollect(mouseDownPos.x, mouseDownPos.y);
+		}
+		lookActive = false;
+		mouseDownPos = null;
+	};
+	const onPointerMove = (e) => {
+		if (lookActive && e.buttons > 0) {
+			if (mouseDownPos && (Math.abs(e.clientX - mouseDownPos.x) > 5 || Math.abs(e.clientY - mouseDownPos.y) > 5)) {
+				lookMoved = true;
+			}
+			if (lookMoved) {
+				yaw -= e.movementX * 0.003;
+				pitch -= e.movementY * 0.003;
+				pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
+			}
+		}
+	};
+	renderer.domElement.addEventListener('pointerdown', onPointerDown);
+	window.addEventListener('pointerup', onPointerUp);
+	window.addEventListener('pointermove', onPointerMove);
 
 	// ── Spawn 30 collectible entities with deterministic IDs (0-29) ──
 	// Each model type gets a different behavior:
@@ -637,22 +638,16 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	let lastPoseSent = 0;
 	connectWS();
 
-	// ── WASD movement (inline, simple) ──
+	// ── WASD movement + look ──
 	const keys = {};
 	const onKeyDown = (e) => { keys[e.code] = true; };
 	const onKeyUp = (e) => { keys[e.code] = false; };
 	window.addEventListener('keydown', onKeyDown);
 	window.addEventListener('keyup', onKeyUp);
 
-	// ── Resize ──
-	const onResize = () => {
-		camera.aspect = container.clientWidth / container.clientHeight;
-		camera.updateProjectionMatrix();
-		renderer.setSize(container.clientWidth, container.clientHeight);
-	};
-	window.addEventListener('resize', onResize);
-
-	// ── Animation loop ──
+	// ── Our animation loop handles ONLY: WASD, look, collection, WS ──
+	// The World's internal loop handles: ECS system execution + rendering.
+	// We do NOT call renderer.render() — the World does that.
 	let animationId;
 	const moveDir = new THREE.Vector3();
 
@@ -660,45 +655,36 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		animationId = requestAnimationFrame(animate);
 		const dt = 0.016;
 
-		controls.update();
+		// Apply look (yaw + pitch)
+		camera.rotation.order = 'YXZ';
+		camera.rotation.y = yaw;
+		camera.rotation.x = pitch;
 
-		// WASD movement
+		// WASD movement (camera-relative)
 		moveDir.set(0, 0, 0);
 		if (keys['KeyW'] || keys['ArrowUp']) moveDir.z -= 1;
 		if (keys['KeyS'] || keys['ArrowDown']) moveDir.z += 1;
 		if (keys['KeyA'] || keys['ArrowLeft']) moveDir.x -= 1;
 		if (keys['KeyD'] || keys['ArrowRight']) moveDir.x += 1;
 		if (moveDir.lengthSq() > 0) {
-			moveDir.normalize();
-			const yaw = controls.getAzimuthalAngle();
-			const cos = Math.cos(yaw);
-			const sin = Math.sin(yaw);
-			camera.position.x += (moveDir.x * cos - moveDir.z * sin) * 3 * dt;
-			camera.position.z += (moveDir.x * sin + moveDir.z * cos) * 3 * dt;
+			moveDir.normalize().applyEuler(new THREE.Euler(0, yaw, 0));
+			camera.position.x += moveDir.x * 3 * dt;
+			camera.position.z += moveDir.z * 3 * dt;
 			camera.position.y = 1.6;
-			controls.target.set(camera.position.x, 1, camera.position.z);
 		}
 
-		// Run collection system update (handles collected animations).
-		// AnimationSystem is registered with the world and runs automatically
-		// via IWSDK's internal loop — we do NOT call world.execute() ourselves.
+		// Run collection system update (handles collected animations)
 		collectionSys.update(dt);
 
-		// Broadcast our pose to opponent (throttled to 10/s)
+		// Broadcast pose to opponent (throttled)
 		const now = performance.now();
 		if (_ws?.readyState === WebSocket.OPEN && now - lastPoseSent > 100) {
 			lastPoseSent = now;
 			_ws.send(JSON.stringify({
-				type: 'pose',
-				playerId: myId,
-				name: playerName,
-				x: camera.position.x,
-				y: camera.position.y,
-				z: camera.position.z,
+				type: 'pose', playerId: myId, name: playerName,
+				x: camera.position.x, y: camera.position.y, z: camera.position.z,
 			}));
 		}
-
-		renderer.render(scene, camera);
 	}
 	animate();
 
@@ -708,14 +694,13 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			cancelAnimationFrame(animationId);
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
-			window.removeEventListener('resize', onResize);
 			if (collectionSys._cleanupInput) collectionSys._cleanupInput();
 			if (_ws) { _ws.close(); _ws = null; }
-			controls.dispose();
-			renderer.dispose();
-			if (container.contains(renderer.domElement)) {
-				container.removeChild(renderer.domElement);
-			}
+			renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+			window.removeEventListener('pointerup', onPointerUp);
+			window.removeEventListener('pointermove', onPointerMove);
+			// The World owns the renderer — don't dispose it here.
+			// Calling world.destroy() if needed in the future.
 		},
 	};
 }

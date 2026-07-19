@@ -14,7 +14,6 @@ import * as THREE from 'three';
 import { World } from '@iwsdk/core';
 import { createComponent, createSystem, Types, ComponentRegistry } from 'elics';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const SKYBOX_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
@@ -147,8 +146,18 @@ export async function bootOzWorld(container, options = {}) {
 	const onScoreUpdate = options.onScoreUpdate || (() => {});
 	let score = 0;
 
-	// ── Scene ──
-	const scene = new THREE.Scene();
+	// ── ECS World (creates its own scene, camera, renderer) ──
+	const world = await World.create(container, {
+		xr: { offer: 'none' },
+		render: { defaultLighting: false },
+		features: { locomotion: false, grabbing: false, physics: false },
+	});
+
+	// Use the World's scene + camera + renderer
+	const scene = world.scene;
+	const camera = world.camera;
+	const renderer = world.renderer;
+	camera.position.set(0, 1.6, 6);
 
 	// Skybox
 	const skyboxTexture = new THREE.TextureLoader().load(
@@ -161,16 +170,6 @@ export async function bootOzWorld(container, options = {}) {
 	);
 	scene.add(skybox);
 	scene.fog = new THREE.Fog(0x2a3318, 12, 38);
-
-	// Camera
-	const camera = new THREE.PerspectiveCamera(70, container.clientWidth / container.clientHeight, 0.1, 100);
-	camera.position.set(0, 1.6, 6);
-
-	// Renderer
-	const renderer = new THREE.WebGLRenderer({ antialias: true });
-	renderer.setSize(container.clientWidth, container.clientHeight);
-	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-	container.appendChild(renderer.domElement);
 
 	// Lighting — warm Oz daylight
 	scene.add(new THREE.AmbientLight(0xffe8aa, 0.5));
@@ -188,7 +187,6 @@ export async function bootOzWorld(container, options = {}) {
 	const gctx = groundCanvas.getContext('2d');
 	gctx.fillStyle = '#2d4a1e';
 	gctx.fillRect(0, 0, 256, 256);
-	// Grass texture noise
 	for (let i = 0; i < 500; i++) {
 		const x = Math.random() * 256;
 		const y = Math.random() * 256;
@@ -208,24 +206,16 @@ export async function bootOzWorld(container, options = {}) {
 	ground.rotation.x = -Math.PI / 2;
 	scene.add(ground);
 
-	// ── Yellow brick road: golden path leading forward ──
+	// ── Yellow brick road ──
 	const roadGroup = new THREE.Group();
-	const roadSegments = 8;
-	for (let i = 0; i < roadSegments; i++) {
+	for (let i = 0; i < 8; i++) {
 		const seg = new THREE.Mesh(
 			new THREE.PlaneGeometry(2.5, 3),
-			new THREE.MeshStandardMaterial({
-				color: 0xd4a017,
-				roughness: 0.6,
-				metalness: 0.2,
-				emissive: 0x442200,
-			})
+			new THREE.MeshStandardMaterial({ color: 0xd4a017, roughness: 0.6, metalness: 0.2, emissive: 0x442200 })
 		);
 		seg.rotation.x = -Math.PI / 2;
 		seg.position.set(0, 0.01, -(i * 3.2) - 2);
 		roadGroup.add(seg);
-
-		// Brick pattern lines
 		for (let b = 0; b < 3; b++) {
 			const line = new THREE.Mesh(
 				new THREE.PlaneGeometry(2.3, 0.06),
@@ -269,19 +259,12 @@ export async function bootOzWorld(container, options = {}) {
 		}),
 	]);
 
-	// ── ECS World ──
-	const world = await World.create(container, {
-		xr: { offer: 'none' },
-		render: { defaultLighting: false },
-		features: { locomotion: false, grabbing: false, physics: false },
-	});
-
 	world.registerComponent(Munchkin);
 	world.registerComponent(Flower);
 	world.registerSystem(HideRevealSystem, { priority: 0 });
 	world.registerSystem(FlowerSwaySystem, { priority: 0 });
 
-	// ── Spawn flowers (some with hidden munchkins inside) ──
+	// ── Spawn flowers + munchkins ──
 	const FLOWER_COUNT = 20;
 	const MUNCHKIN_COUNT = 12;
 	const flowerColors = [0xff6688, 0xffcc44, 0xff8844, 0xee44aa, 0x66dd88];
@@ -384,10 +367,10 @@ export async function bootOzWorld(container, options = {}) {
 		onScoreUpdate(score);
 	};
 
-	// ── Controls + movement ──
-	const controls = new OrbitControls(camera, renderer.domElement);
-	controls.enableDamping = true;
-	controls.target.set(0, 1, 0);
+	// ── Movement: WASD + mouse-drag look (no OrbitControls) ──
+	let yaw = 0, pitch = 0;
+	let lookActive = false;
+	let lookMoved = false;
 
 	const keys = {};
 	const onKeyDown = (e) => { keys[e.code] = true; };
@@ -395,14 +378,21 @@ export async function bootOzWorld(container, options = {}) {
 	window.addEventListener('keydown', onKeyDown);
 	window.addEventListener('keyup', onKeyUp);
 
-	const onResize = () => {
-		camera.aspect = container.clientWidth / container.clientHeight;
-		camera.updateProjectionMatrix();
-		renderer.setSize(container.clientWidth, container.clientHeight);
+	const onMouseDown = () => { lookActive = true; lookMoved = false; };
+	const onMouseUp = () => { lookActive = false; };
+	const onMouseMove = (e) => {
+		if (lookActive && e.buttons > 0) {
+			lookMoved = true;
+			yaw -= e.movementX * 0.003;
+			pitch -= e.movementY * 0.003;
+			pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
+		}
 	};
-	window.addEventListener('resize', onResize);
+	renderer.domElement.addEventListener('mousedown', onMouseDown);
+	window.addEventListener('mouseup', onMouseUp);
+	window.addEventListener('mousemove', onMouseMove);
 
-	// ── Animation loop ──
+	// ── Animation loop: WASD + look only. World handles ECS + rendering. ──
 	let animationId;
 	const moveDir = new THREE.Vector3();
 
@@ -410,28 +400,24 @@ export async function bootOzWorld(container, options = {}) {
 		animationId = requestAnimationFrame(animate);
 		const dt = 0.016;
 
-		controls.update();
+		// Apply look
+		camera.rotation.order = 'YXZ';
+		camera.rotation.y = yaw;
+		camera.rotation.x = pitch;
 
-		// WASD movement
+		// WASD movement (camera-relative)
 		moveDir.set(0, 0, 0);
 		if (keys['KeyW'] || keys['ArrowUp']) moveDir.z -= 1;
 		if (keys['KeyS'] || keys['ArrowDown']) moveDir.z += 1;
 		if (keys['KeyA'] || keys['ArrowLeft']) moveDir.x -= 1;
 		if (keys['KeyD'] || keys['ArrowRight']) moveDir.x += 1;
 		if (moveDir.lengthSq() > 0) {
-			moveDir.normalize();
-			const yaw = controls.getAzimuthalAngle();
-			const cos = Math.cos(yaw);
-			const sin = Math.sin(yaw);
-			camera.position.x += (moveDir.x * cos - moveDir.z * sin) * 3 * dt;
-			camera.position.z += (moveDir.x * sin + moveDir.z * cos) * 3 * dt;
+			moveDir.normalize().applyEuler(new THREE.Euler(0, yaw, 0));
+			camera.position.x += moveDir.x * 3 * dt;
+			camera.position.z += moveDir.z * 3 * dt;
 			camera.position.y = 1.6;
-			controls.target.set(camera.position.x, 1, camera.position.z);
 		}
-
-		// IWSDK's World runs registered systems automatically via its internal
-		// loop. We do NOT call world.execute() ourselves.
-		renderer.render(scene, camera);
+		// Do NOT call renderer.render — the World handles rendering.
 	}
 	animate();
 
@@ -440,9 +426,9 @@ export async function bootOzWorld(container, options = {}) {
 			cancelAnimationFrame(animationId);
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
-			window.removeEventListener('resize', onResize);
-			controls.dispose();
-			renderer.dispose();
+			renderer.domElement.removeEventListener('mousedown', onMouseDown);
+			window.removeEventListener('mouseup', onMouseUp);
+			window.removeEventListener('mousemove', onMouseMove);
 			if (container.contains(renderer.domElement)) {
 				container.removeChild(renderer.domElement);
 			}
