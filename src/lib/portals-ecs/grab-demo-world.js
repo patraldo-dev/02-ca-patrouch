@@ -33,42 +33,99 @@ function reuseOrCreate(id, schema) {
 }
 
 const Collectible = reuseOrCreate('Collectible', {
-	entityId:    { type: Types.Int32, default: 0 },  // deterministic ID for multiplayer sync
+	entityId:    { type: Types.Int32, default: 0 },
 	collected:   { type: Types.Boolean, default: false },
 	collectTime: { type: Types.Float32, default: 0 },
-	collectBy:   { type: Types.String, default: '' },  // who collected it ('you' / 'opponent')
+	collectBy:   { type: Types.String, default: '' },
 	spinSpeed:   { type: Types.Float32, default: 0.5 },
 	bobPhase:    { type: Types.Float32, default: 0 },
 	baseY:       { type: Types.Float32, default: 0.6 },
 	modelIndex:  { type: Types.Int32, default: 0 },
+	// Game behavior fields
+	points:      { type: Types.Int32, default: 1 },
+	behavior:    { type: Types.String, default: 'passive' }, // passive|evade|attack|hide|follow
+	baseX:       { type: Types.Float32, default: 0 },  // home position for evade return
+	baseZ:       { type: Types.Float32, default: 0 },
+	fleeSpeed:   { type: Types.Float32, default: 2.0 },
+	chaseSpeed:  { type: Types.Float32, default: 1.5 },
+	hitCooldown: { type: Types.Float32, default: 0 },  // attack contact cooldown
 });
 
 // ── ECS Systems ──
 
-// Animation: spin + bob the collectibles (priority 0, before TransformSystem)
+// Module-level callback for attack hits (set by boot function)
+let _onPlayerHit = null;
+
+// Animation: spin + bob + behavior-driven movement (priority 0)
+// Handles passive (idle), evade (flee player), attack (chase player),
+// and visual glow by behavior type.
 const AnimationSystem = class extends createSystem({
 	items: { required: [Collectible] },
 }) {
 	update(dt) {
 		const time = performance.now() / 1000;
+		const camera = this.world?.camera;
+		const playerPos = camera ? camera.position : null;
+
 		for (const entity of this.queries.items.entities) {
 			if (entity.getValue(Collectible, 'collected')) continue;
 			const obj = entity.object3D;
 			if (!obj) continue;
+
+			const behavior = entity.getValue(Collectible, 'behavior');
 			const spin = entity.getValue(Collectible, 'spinSpeed');
 			const phase = entity.getValue(Collectible, 'bobPhase');
 			const baseY = entity.getValue(Collectible, 'baseY');
 
 			obj.rotation.y += spin * dt;
-			// Write position through ECS Transform (source of truth)
-			const pos = entity.getVectorView?.(
-				// Transform is available via the world; fall back to direct obj write
-				// since createTransformEntity handles the linkage
-				null, 'position'
-			);
-			if (pos) {
-				pos[1] = baseY + Math.sin(time * 2 + phase) * 0.15;
+
+			if (behavior === 'evade' && playerPos) {
+				// Flee from the player when within flee radius
+				const dx = obj.position.x - playerPos.x;
+				const dz = obj.position.z - playerPos.z;
+				const dist = Math.hypot(dx, dz);
+				const fleeRadius = 4;
+				const fleeSpeed = entity.getValue(Collectible, 'fleeSpeed');
+				const baseX = entity.getValue(Collectible, 'baseX');
+				const baseZ = entity.getValue(Collectible, 'baseZ');
+
+				if (dist < fleeRadius && dist > 0.01) {
+					// Push away from player
+					obj.position.x += (dx / dist) * fleeSpeed * dt;
+					obj.position.z += (dz / dist) * fleeSpeed * dt;
+				} else {
+					// Drift back toward home position
+					obj.position.x += (baseX - obj.position.x) * 0.5 * dt;
+					obj.position.z += (baseZ - obj.position.z) * 0.5 * dt;
+				}
+				obj.position.y = baseY + Math.sin(time * 3 + phase) * 0.2;
+
+			} else if (behavior === 'attack' && playerPos) {
+				// Chase the player
+				const dx = playerPos.x - obj.position.x;
+				const dz = playerPos.z - obj.position.z;
+				const dist = Math.hypot(dx, dz);
+				const chaseSpeed = entity.getValue(Collectible, 'chaseSpeed');
+				const cooldown = entity.getValue(Collectible, 'hitCooldown');
+
+				if (dist > 0.5) {
+					obj.position.x += (dx / dist) * chaseSpeed * dt;
+					obj.position.z += (dz / dist) * chaseSpeed * dt;
+				}
+				obj.position.y = baseY + Math.sin(time * 4 + phase) * 0.15;
+
+				// Hit detection: if close to player and cooldown expired
+				if (dist < 1.0 && cooldown <= 0 && _onPlayerHit) {
+					entity.setValue(Collectible, 'hitCooldown', 2.0);
+					_onPlayerHit(entity.getValue(Collectible, 'points'));
+				}
+				// Tick down cooldown
+				if (cooldown > 0) {
+					entity.setValue(Collectible, 'hitCooldown', cooldown - dt);
+				}
+
 			} else {
+				// Passive: gentle spin + bob
 				obj.position.y = baseY + Math.sin(time * 2 + phase) * 0.15;
 			}
 		}
@@ -243,25 +300,27 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 
 	// ── Three.js scene (setup only — ECS owns the logic) ──
 	const scene = new THREE.Scene();
-	scene.background = new THREE.Color(0x05030a);
 
-	// Background image as a large textured plane (the mural pattern)
-	const bgTexture = new THREE.TextureLoader().load(
+	// ── Skybox: the background image wraps ALL AROUND the player as a
+	// large sphere. The camera is inside the sphere, so wherever you look
+	// you see the image — not black void. This is what makes the space feel
+	// enclosed and defined, like stepping inside the artwork. ──
+	const skyboxTexture = new THREE.TextureLoader().load(
 		`https://imagedelivery.net/${CF_IMAGES_HASH}/${BG_IMAGE_ID}/full`
 	);
-	bgTexture.colorSpace = THREE.SRGBColorSpace;
-	const bgMaterial = new THREE.MeshBasicMaterial({
-		map: bgTexture,
-		transparent: true,
-		opacity: 0.4,
-		depthWrite: false,
-	});
-	const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(40, 24), bgMaterial);
-	bgPlane.position.set(0, 4, -18);
-	scene.add(bgPlane);
+	skyboxTexture.colorSpace = THREE.SRGBColorSpace;
+	const skybox = new THREE.Mesh(
+		new THREE.SphereGeometry(45, 32, 16),
+		new THREE.MeshBasicMaterial({
+			map: skyboxTexture,
+			side: THREE.BackSide,  // render the inside of the sphere
+			depthWrite: false,
+		})
+	);
+	scene.add(skybox);
 
-	// Fog for depth
-	scene.fog = new THREE.Fog(0x05030a, 10, 35);
+	// Fog for depth (fades distant objects into the skybox)
+	scene.fog = new THREE.Fog(0x1a1020, 15, 40);
 
 	// Camera
 	const camera = new THREE.PerspectiveCamera(
@@ -284,10 +343,38 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	rimLight.position.set(-5, 3, -5);
 	scene.add(rimLight);
 
-	// Ground
+	// ── Ground: textured plane so the floor reads as terrain, not void.
+	// Uses a canvas-generated grid texture so it has visible structure. ──
+	const groundCanvas = document.createElement('canvas');
+	groundCanvas.width = 256;
+	groundCanvas.height = 256;
+	const gctx = groundCanvas.getContext('2d');
+	// Base color
+	gctx.fillStyle = '#1a1520';
+	gctx.fillRect(0, 0, 256, 256);
+	// Grid pattern
+	gctx.strokeStyle = '#2a2535';
+	gctx.lineWidth = 2;
+	for (let i = 0; i <= 256; i += 32) {
+		gctx.beginPath(); gctx.moveTo(i, 0); gctx.lineTo(i, 256); gctx.stroke();
+		gctx.beginPath(); gctx.moveTo(0, i); gctx.lineTo(256, i); gctx.stroke();
+	}
+	// Subtle noise dots for texture
+	for (let i = 0; i < 200; i++) {
+		const x = Math.random() * 256;
+		const y = Math.random() * 256;
+		const c = Math.random() * 30 + 20;
+		gctx.fillStyle = `rgb(${c + 10},${c + 5},${c + 15})`;
+		gctx.fillRect(x, y, 2, 2);
+	}
+	const groundTexture = new THREE.CanvasTexture(groundCanvas);
+	groundTexture.wrapS = THREE.RepeatWrapping;
+	groundTexture.wrapT = THREE.RepeatWrapping;
+	groundTexture.repeat.set(12, 12);
+
 	const ground = new THREE.Mesh(
 		new THREE.PlaneGeometry(50, 50),
-		new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.9 })
+		new THREE.MeshStandardMaterial({ map: groundTexture, roughness: 0.9 })
 	);
 	ground.rotation.x = -Math.PI / 2;
 	scene.add(ground);
@@ -337,15 +424,33 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	collectionSys.setOnCollect(onCollect);
 
 	// Register systems (priority 0 = before TransformSystem at priority 1)
+	// Set the attack-hit callback BEFORE the animation loop starts
+	_onPlayerHit = (points) => {
+		// Attacker hit the player — subtract 2 points (minimum 0)
+		myScore = Math.max(0, myScore - 2);
+		updateScore();
+		if (onCollect) onCollect(myScore);
+	};
 	world.registerSystem(AnimationSystem, { priority: 0 });
 	// CollectionSystem runs as a manual update (not an ECS query-based system
 	// since it needs DOM event handling). We'll call its update in the loop.
 	// But we register it so the AnimationSystem queries include Collectible.
 
 	// ── Spawn 30 collectible entities with deterministic IDs (0-29) ──
+	// Each model type gets a different behavior:
+	//   Spirit (mi=0):     passive, 1 point — easy, stays still
+	//   Hombre (mi=1):     evade, 3 points — runs away when you approach
+	//   Mujer Musa (mi=2): attack, 5 points — chases you, -2 if it touches you
+	const BEHAVIORS = [
+		{ behavior: 'passive', points: 1, glow: 0x88ff88 },  // green
+		{ behavior: 'evade',   points: 3, glow: 0xffcc44 },  // yellow
+		{ behavior: 'attack',  points: 5, glow: 0xff4444 },  // red
+	];
+
 	let entityIdCounter = 0;
 	for (let mi = 0; mi < templates.length; mi++) {
 		const template = templates[mi];
+		const cfg = BEHAVIORS[mi] || BEHAVIORS[0];
 		for (let i = 0; i < MODELS[mi].count; i++) {
 			const clone = template.clone(true);
 
@@ -355,6 +460,19 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			box.getSize(size);
 			if (size.y > 0) clone.scale.setScalar(1.2 / size.y);
 
+			// Add a glow halo based on behavior type
+			const glow = new THREE.Mesh(
+				new THREE.SphereGeometry(0.5, 12, 8),
+				new THREE.MeshBasicMaterial({
+					color: cfg.glow,
+					transparent: true,
+					opacity: 0.15,
+					blending: THREE.AdditiveBlending,
+					depthWrite: false,
+				})
+			);
+			clone.add(glow);
+
 			// Wrap in a group for positioning
 			const group = new THREE.Group();
 			group.add(clone);
@@ -363,11 +481,9 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			const eid = entityIdCounter++;
 			const angle = (eid / 30) * Math.PI * 2 + (mi * 0.3);
 			const radius = 4 + (eid % 3) * 3;
-			group.position.set(
-				Math.cos(angle) * radius,
-				0.6,
-				Math.sin(angle) * radius
-			);
+			const x = Math.cos(angle) * radius;
+			const z = Math.sin(angle) * radius;
+			group.position.set(x, 0.6, z);
 			group.rotation.y = eid * 0.4;
 
 			scene.add(group);
@@ -382,6 +498,13 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 				bobPhase: eid * 0.7,
 				baseY: 0.6,
 				modelIndex: mi,
+				behavior: cfg.behavior,
+				points: cfg.points,
+				baseX: x,
+				baseZ: z,
+				fleeSpeed: 2.0 + (eid % 3) * 0.3,
+				chaseSpeed: 1.2 + (eid % 2) * 0.4,
+				hitCooldown: 0,
 			});
 
 			entityById.set(eid, entity);
@@ -491,9 +614,11 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		scene.add(opponentLabel);
 	}
 
-	// Wire collection broadcast
+	// Wire collection broadcast — adds the entity's point value
 	collectionSys._onCollectRemote = (entityId) => {
-		myScore++;
+		const entity = entityById.get(entityId);
+		const pts = entity ? entity.getValue(Collectible, 'points') : 1;
+		myScore += pts;
 		updateScore();
 		if (_ws?.readyState === WebSocket.OPEN) {
 			_ws.send(JSON.stringify({
