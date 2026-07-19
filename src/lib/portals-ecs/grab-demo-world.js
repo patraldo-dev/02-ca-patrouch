@@ -325,6 +325,12 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	world.registerComponent(_Collectible);
 
 	const collectionSys = new CollectionSystem();
+	// THREE is only available inside bootGrabDemo (dynamic import), so the
+	// raycaster + pointer vector must be created here — the CollectionSystem
+	// constructor runs before THREE is loaded. Without this, _tryCollect
+	// early-returns on every click (raycaster stays null) and nothing collects.
+	collectionSys.raycaster = new THREE.Raycaster();
+	collectionSys.pointer = new THREE.Vector2();
 	collectionSys.setOnCollect(onCollect);
 
 	_onPlayerHit = (points) => {
