@@ -396,8 +396,12 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			box.getSize(size);
 			if (size.y > 0) clone.scale.setScalar(1.2 / size.y);
 
-			// Add a glow halo based on behavior type
-			const glow = new THREE.Mesh(
+			// Add a glow halo based on behavior type.
+			// NOTE: named `halo` (not `glow`) to avoid shadowing the outer
+			// `glow` color const — shadowing caused a TDZ because the inner
+			// `const glow` Mesh was hoisted above the `color: glow` read in
+			// its own initializer ("Cannot access 'z' before initialization").
+			const halo = new THREE.Mesh(
 				new THREE.SphereGeometry(0.5, 12, 8),
 				new THREE.MeshBasicMaterial({
 					color: glow,
@@ -407,7 +411,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 					depthWrite: false,
 				})
 			);
-			clone.add(glow);
+			clone.add(halo);
 
 			// Wrap in a group for positioning
 			const group = new THREE.Group();
