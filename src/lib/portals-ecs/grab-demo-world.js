@@ -131,6 +131,7 @@ function createTextSprite(THREE, text, color = '#ffffff') {
 // ── Boot function ──
 export async function bootGrabDemo(container, onCollect, options = {}) {
 	if (!container) throw new Error('bootGrabDemo: container is null');
+	console.log('[grab-demo] boot starting...');
 
 	// Dynamic imports — avoid bundler TDZ issues
 	const THREE = await import('three');
@@ -138,6 +139,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	const { createComponent, createSystem, Types, ComponentRegistry } = await import('elics');
 	const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
 	const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
+	console.log('[grab-demo] imports resolved, creating World...');
 
 	// Create component now that elics is loaded
 	_Collectible = ComponentRegistry.has('_Collectible')
@@ -319,28 +321,50 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		];
 	}
 
+	console.log('[grab-demo] loading GLB templates:', gameModels.map(m => m.url));
 	// ── Load GLB templates from the fetched model list ──
+	// CRITICAL: each loader.load MUST have an error callback. Without it, a
+	// single failed GLB (404, decompression error, network) leaves the Promise
+	// unresolved forever — Promise.all hangs, the boot never completes, no
+	// pointer handlers attach, no console output appears. The whole scene is
+	// dead. On error we resolve with a fallback primitive so the game boots.
 	const loader = new GLTFLoader();
-	// Wire meshopt decoder so compressed GLBs (EXT_meshopt_compression) load.
-	// Additive: uncompressed GLBs load identically.
 	loader.setMeshoptDecoder(MeshoptDecoder);
 	const templates = await Promise.all(
 		gameModels.map((m) =>
 			new Promise((resolve) => {
-				loader.load(m.url, (gltf) => {
-					gltf.scene.traverse((child) => {
-						if (child.isMesh && child.material) {
-							child.material.transparent = true;
-							child.material.opacity = 0.9;
-							child.material.depthWrite = true;
-							child.material.side = THREE.DoubleSide;
-						}
-					});
-					resolve(gltf.scene);
-				});
+				loader.load(
+					m.url,
+					(gltf) => {
+						gltf.scene.traverse((child) => {
+							if (child.isMesh && child.material) {
+								child.material.transparent = true;
+								child.material.opacity = 0.9;
+								child.material.depthWrite = true;
+								child.material.side = THREE.DoubleSide;
+							}
+						});
+						resolve(gltf.scene);
+					},
+					undefined,  // onProgress (unused)
+					(err) => {
+						console.warn('[grab-demo] GLB load failed, using fallback primitive:', m.url, err?.message || err);
+						// Fallback: a simple colored box so the game still spawns
+						// something at that model's positions. Better than hanging.
+						const fallback = new THREE.Mesh(
+							new THREE.BoxGeometry(0.4, 0.6, 0.4),
+							new THREE.MeshStandardMaterial({
+								color: 0x888888, transparent: true, opacity: 0.9,
+								emissive: 0x222222, side: THREE.DoubleSide,
+							})
+						);
+						resolve(fallback);
+					}
+				);
 			})
 		)
 	);
+	console.log('[grab-demo] templates loaded:', templates.length, '— booting scene...');
 
 	// Register components + systems
 	world.registerComponent(_Collectible);
@@ -807,6 +831,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 		}
 	}
 	animate();
+	console.log('[grab-demo] boot complete —', entityById.size, 'collectibles, pointer handlers attached');
 
 	// Return cleanup + touch handle
 	return {
