@@ -47,10 +47,7 @@ class CollectionSystem {
 	}
 
 	_tryCollect(clientX, clientY) {
-		if (!this.collectibles.length || !this.raycaster) {
-			console.log('[grab-demo] _tryCollect skipped — collectibles:', this.collectibles.length, 'raycaster:', !!this.raycaster);
-			return;
-		}
+		if (!this.collectibles.length || !this.raycaster) return;
 		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
 		this.pointer.y = -(clientY / window.innerHeight) * 2 + 1;
 		this.raycaster.setFromCamera(this.pointer, world_camera);
@@ -62,7 +59,6 @@ class CollectionSystem {
 			.filter(Boolean);
 
 		const hits = this.raycaster.intersectObjects(meshes, true);
-		console.log('[grab-demo] _tryCollect at', clientX, clientY, '— meshes:', meshes.length, 'hits:', hits.length, hits[0] ? `(dist ${hits[0].distance.toFixed(2)})` : '');
 		if (hits.length > 0) {
 			let obj = hits[0].object;
 			while (obj && !this.collectibles.some((e) => e.object3D === obj)) {
@@ -658,8 +654,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			}
 			case 'round_end': {
 				roundActive = false;
-				// Solo/no-contest round (winner is null): just restart, no overlay.
-				// Competitive round (winner set): show the win/lose overlay.
+				// Show the round-end overlay if there was a winner; skip if solo.
 				if (msg.winner === null) {
 					onRoundUpdate({ active: false, endMs: 0, level });
 				} else {
@@ -674,18 +669,9 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 				}
 				break;
 			}
-			case 'promote': {
-				// We won a competitive round — redirect to the next level's room.
-				// Use replace() so the back button doesn't bounce through levels.
-				// Guard against double-fire (if the DO sends promote twice).
-				if (typeof location !== 'undefined' && !window._grabDemoPromoting) {
-					window._grabDemoPromoting = true;
-					const url = new URL(location.href);
-					url.searchParams.set('level', String(msg.newLevel));
-					location.replace(url.toString());
-				}
-				break;
-			}
+			// 'promote' is intentionally NOT handled for now — the single-room
+			// model doesn't redirect players. The pool-hall model will replace
+			// this when implemented (per-player difficulty, not room changes).
 		}
 	}
 

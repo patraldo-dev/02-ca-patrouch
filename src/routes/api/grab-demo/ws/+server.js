@@ -1,12 +1,15 @@
 // WebSocket upgrade → GrabDemoRoom Durable Object.
 //
-// The room is keyed by level: level-1 players share one DO instance,
-// level-2 promoted players share another. The ?level= query param (default 1)
-// selects the room. No invite links — everyone at a given level is in the
-// same room and sees everyone else via the presence roster.
+// ONE shared room for all players (keyed as 'global'). Everyone who opens
+// /portals/grab-demo lands in the same DO instance — no invite links, no
+// level-based fragmentation. The ?level= query param is ignored for room
+// routing (difficulty is handled per-player on the client for now).
 //
-// Mirrors the pattern in booty-chat-worker/src/index.js for PortalRoom, but
-// the DO lives in THIS worker (no cross-domain WS URL).
+// NOTE: the level-keyed room model split players across difficulty tiers,
+// so a desktop player on level 2 and a phone player on level 1 were in
+// DIFFERENT rooms and never saw each other. Collapsing to one room fixes
+// that — the pool-hall model (per-player difficulty) will replace this
+// when implemented.
 
 export async function GET({ request, url, platform }) {
 	const env = platform?.env;
@@ -14,14 +17,13 @@ export async function GET({ request, url, platform }) {
 		return new Response('GRAB_DEMO_ROOM binding not available', { status: 503 });
 	}
 
-	const level = url.searchParams.get('level') || '1';
-	// Room id: level-1, level-2, ... — one DO instance per difficulty tier.
-	const roomId = `level-${level}`;
+	// Single shared room — everyone plays together.
+	const roomId = 'global';
 
 	const id = env.GRAB_DEMO_ROOM.idFromName(roomId);
 	const stub = env.GRAB_DEMO_ROOM.get(id);
 
 	// Forward the original request (preserves query params the DO reads:
-	// user, name, level). The DO does the WebSocketPair + accept dance.
+	// user, name). The DO does the WebSocketPair + accept dance.
 	return stub.fetch(request);
 }

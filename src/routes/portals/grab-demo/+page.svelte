@@ -35,6 +35,14 @@
 	let stickPos = $state({ x: 0, y: 0 });
 	const STICK_MAX_R = 60;
 
+	// ── Friendly random player names (replaces 'Player-7nq') ──
+	const ADJECTIVES = ['Swift', 'Brave', 'Clever', 'Merry', 'Bold', 'Calm', 'Eager', 'Gentle', 'Happy', 'Lucky', 'Mighty', 'Noble', 'Playful', 'Quick', 'Silly', 'Wise', 'Zany', 'Cosmic', 'Golden', 'Silver'];
+	const ANIMALS = ['Fox', 'Otter', 'Owl', 'Wolf', 'Bear', 'Hawk', 'Crane', 'Lynx', 'Seal', 'Moth', 'Koi', 'Crow', 'Stag', 'Hare', 'Wren', 'Newt', 'Pika', 'Tern', 'Brambling', 'Caracol'];
+	function randomPlayerName() {
+		return ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
+			+ ' ' + ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+	}
+
 	// ── Look-zone state (mobile only) — drag to look, tap to collect ──
 	let lookStart = null;
 	let lookLast = null;
@@ -61,7 +69,7 @@
 				(count) => { counter = count; },
 				{
 					level,
-					playerName: 'Player-' + Math.random().toString(36).slice(2, 5),
+					playerName: randomPlayerName(),
 					onScoreUpdate: (s) => { scoreState = s; },
 					onPresenceUpdate: (p) => { presence = p; },
 					onRoundUpdate: (r) => {
@@ -102,10 +110,14 @@
 	}
 
 	// ── Thumbstick (left side): drag to move ──
+	let stickStartTime = 0;
+	let stickMoved = false;
 	function onStickStart(e) {
 		e.preventDefault();
 		const t = e.touches[0];
 		stickActive = true;
+		stickMoved = false;
+		stickStartTime = Date.now();
 		stickOrigin = { x: t.clientX, y: t.clientY };
 		stickPos = { x: 0, y: 0 };
 	}
@@ -116,6 +128,8 @@
 		const dx = t.clientX - stickOrigin.x;
 		const dy = t.clientY - stickOrigin.y;
 		const len = Math.sqrt(dx * dx + dy * dy);
+		// If the finger moved beyond the tap threshold, it's a drag — not a tap.
+		if (len > TAP_THRESHOLD) stickMoved = true;
 		const clampedLen = Math.min(len, STICK_MAX_R);
 		const angle = Math.atan2(dy, dx);
 		stickPos = { x: Math.cos(angle) * clampedLen, y: Math.sin(angle) * clampedLen };
@@ -128,6 +142,12 @@
 		stickActive = false;
 		stickPos = { x: 0, y: 0 };
 		if (cleanup?.touch) { cleanup.touch.input.x = 0; cleanup.touch.input.y = 0; }
+		// Tap on the left half (no drag, quick) = collect at the tap point.
+		// Without this, taps on GLBs that happen to be on the left side of the
+		// screen would be swallowed by the thumbstick zone and never collect.
+		if (!stickMoved && Date.now() - stickStartTime < 300 && cleanup?.touch) {
+			cleanup.touch.tryCollectAt(stickOrigin.x, stickOrigin.y);
+		}
 	}
 
 	// ── Look-zone (right side): drag to look, tap to collect ──
