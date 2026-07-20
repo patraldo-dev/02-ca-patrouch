@@ -90,23 +90,23 @@ class CollectionSystem {
 					this.collectibles.splice(i, 1);
 					continue;
 				}
-				// Trigger the behavior-specific death effect ONCE (when the
-				// death flag is first observed with a valid collectTime).
-				// Uses a _deathSpawned marker so we don't re-spawn every frame.
-				if (!entity._deathSpawned) {
-					entity._deathSpawned = true;
+				// Trigger the behavior-specific departure effect ONCE (when
+				// collection is first observed). Uses a _departing marker so
+				// we don't re-trigger every frame.
+				if (!entity._departing) {
+					entity._departing = true;
 					const behavior = entity.getValue(_Collectible, 'behavior') || 'passive';
-					// Death duration varies by type — shatter takes longer than pop.
+					// Departure duration varies by type — scatter takes longer than pop.
 					const durations = { attack: 0.7, evade: 0.5, hide: 0.6, passive: 0.35 };
-					entity._deathDuration = durations[behavior] || 0.4;
-					entity._deathStart = performance.now();
-					if (this.deathEffects) {
-						this.deathEffects.spawn(behavior, obj, this._glowFor(behavior));
+					entity._departDuration = durations[behavior] || 0.4;
+					entity._departStart = performance.now();
+					if (this.departEffects) {
+						this.departEffects.spawn(behavior, obj, this._glowFor(behavior));
 					}
 				}
-				// Destroy once the death animation has played.
-				const deathElapsed = (performance.now() - entity._deathStart) / 1000;
-				if (deathElapsed >= entity._deathDuration) {
+				// Release the entity once its departure animation completes.
+				const departElapsed = (performance.now() - entity._departStart) / 1000;
+				if (departElapsed >= entity._departDuration) {
 					try { entity.destroy(); } catch (e) { /* already gone */ }
 					this.collectibles.splice(i, 1);
 				}
@@ -124,18 +124,18 @@ class CollectionSystem {
 	}
 }
 
-// ── DeathEffects: behavior-specific collection animations ──
-// Spawns visual effects when a collectible is collected. Each behavior type
-// has a signature death:
-//   passive → POP (squash-to-zero with a bounce)
-//   evade    → DEFLATE (Z collapses first, balloon-like)
-//   attack   → SHATTER (child meshes fragment + scatter with gravity)
-//   hide     → FADE (scale up + opacity to zero, ghostly)
-// All deaths also spawn a small sparkle burst (colored by behavior glow).
+// ── DepartureEffects: behavior-specific collection animations ──
+// When a collectible is collected, it doesn't "die" — it departs. Each
+// behavior type has a signature way of leaving the scene:
+//   passive → POP (squash-and-stretch to zero, playful bounce)
+//   evade    → DEFLATE (Z collapses first, balloon letting out air)
+//   attack   → SCATTER (meshes disperse outward, drifting apart)
+//   hide     → DISSOLVE (scale up + opacity to zero, ghostly)
+// All departures also spawn a small sparkle burst (colored by behavior glow).
 //
 // Managed as raw THREE objects (not ECS entities) — updated each frame
 // via update(dt), disposed when all particles expire.
-class DeathEffects {
+class DepartureEffects {
 	constructor() {
 		this.THREE = null;
 		this.scene = null;
@@ -147,17 +147,17 @@ class DeathEffects {
 		this.scene = scene;
 	}
 
-	// Spawn the behavior-appropriate death at the entity's position.
+	// Spawn the behavior-appropriate departure at the entity's position.
 	// `obj` is the collected entity's object3D (Group containing the GLB clone).
 	spawn(behavior, obj, glowColor) {
 		if (!this.THREE || !this.scene) return;
 		const pos = obj.position.clone();
-		// Always spawn a sparkle burst (consistent feedback across deaths).
+		// Always spawn a sparkle burst (consistent feedback across departures).
 		this._sparkleBurst(pos, glowColor);
 		switch (behavior) {
-			case 'attack':  this._shatter(obj, glowColor); break;
+			case 'attack':  this._scatter(obj, glowColor); break;
 			case 'evade':   this._deflate(obj); break;
-			case 'hide':    this._fade(obj); break;
+			case 'hide':    this._dissolve(obj); break;
 			default:        this._pop(obj); break;  // passive + unknown
 		}
 	}
@@ -213,8 +213,8 @@ class DeathEffects {
 		});
 	}
 
-	// ── SHATTER: clone child meshes into fragments, scatter with gravity. ──
-	_shatter(obj, glowColor) {
+	// ── SCATTER: clone child meshes into fragments that disperse outward. ──
+	_scatter(obj, glowColor) {
 		const T = this.THREE;
 		const color = glowColor || 0xff4444;
 		const meshes = [];
@@ -268,8 +268,8 @@ class DeathEffects {
 		});
 	}
 
-	// ── FADE: scale up + opacity to zero. Ghostly departure for hiders. ──
-	_fade(obj) {
+	// ── DISSOLVE: scale up + opacity to zero. Ghostly departure for hiders. ──
+	_dissolve(obj) {
 		const startScale = obj.scale.x;
 		const meshes = [];
 		obj.traverse((c) => { if (c.isMesh && c.material) meshes.push(c); });
@@ -291,7 +291,7 @@ class DeathEffects {
 	}
 
 	// ── SPARKLE BURST: small colored particles radiating outward. ──
-	// Shared across all death types for consistent "I collected something" feedback.
+	// Shared across all departure types for consistent "I collected something" feedback.
 	_sparkleBurst(pos, glowColor) {
 		const T = this.THREE;
 		const color = glowColor || 0xffffff;
@@ -643,11 +643,11 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 	collectionSys.pointer = new THREE.Vector2();
 	collectionSys.setOnCollect(onCollect);
 
-	// DeathEffects: behavior-specific collection animations (pop/deflate/
-	// shatter/fade + sparkle burst). Needs THREE + scene, so init here.
-	const deathEffects = new DeathEffects();
-	deathEffects.init(THREE, scene);
-	collectionSys.deathEffects = deathEffects;
+	// DepartureEffects: behavior-specific collection animations (pop/deflate/
+	// scatter/dissolve + sparkle burst). Needs THREE + scene, so init here.
+	const departEffects = new DepartureEffects();
+	departEffects.init(THREE, scene);
+	collectionSys.departEffects = departEffects;
 
 	_onPlayerHit = (points) => {
 		myScore = Math.max(0, myScore - 2);
@@ -1085,9 +1085,9 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 			camera.position.y = 1.6;
 		}
 
-		// Collection animations + behavior-specific death effects
+		// Collection + behavior-specific departure effects
 		collectionSys.update(dt);
-		deathEffects.update(dt);
+		departEffects.update(dt);
 
 		// Broadcast pose to the DO (throttled) — it relays as peer_pose.
 		// The DO stamps the sender sessionId, so we just send position + yaw.
