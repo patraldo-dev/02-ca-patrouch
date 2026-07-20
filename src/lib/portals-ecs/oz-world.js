@@ -57,7 +57,8 @@ export async function bootOzWorld(container, options = {}) {
 	const Munchkin = ComponentRegistry.has('OzMunchkin')
 		? ComponentRegistry.getById('OzMunchkin')
 		: createComponent('OzMunchkin', {
-			state:       { type: Types.String, default: 'hidden' }, // hidden|emerging|visible|scattering
+			state:       { type: Types.String, default: 'hidden' }, // hidden|emerging|visible|scattering|collected
+			munchkinId:  { type: Types.Int32, default: -1 }, // shared collection sync ID
 			revealDist:  { type: Types.Float32, default: 3.0 },
 			hideDist:    { type: Types.Float32, default: 5.0 },
 			bobPhase:    { type: Types.Float32, default: 0 },
@@ -128,7 +129,11 @@ export async function bootOzWorld(container, options = {}) {
 					// Collect on touch
 					if (dist < 1.0) {
 						entity.setValue(Munchkin, 'collected', true);
-						if (_onMunchkinCollect) _onMunchkinCollect(entity.getValue(Munchkin, 'points'));
+						entity.setValue(Munchkin, 'state', 'collected');
+						if (_onMunchkinCollect) _onMunchkinCollect(
+							entity.getValue(Munchkin, 'munchkinId'),
+							entity.getValue(Munchkin, 'points'),
+						);
 					}
 				}
 			}
@@ -152,7 +157,21 @@ export async function bootOzWorld(container, options = {}) {
 	};
 
 	const onScoreUpdate = options.onScoreUpdate || (() => {});
+	const onPresenceUpdate = options.onPresenceUpdate || (() => {});
 	let score = 0;
+
+	// ── Multiplayer state ──
+	const WS_URL = `${typeof location !== 'undefined'
+		? `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`
+		: ''}/api/oz/ws`;
+	const playerName = options.playerName || ('Player-' + Math.random().toString(36).slice(2, 6));
+	const myId = crypto.randomUUID();
+	let mySessionId = null;
+	let _ws = null;
+	const peers = new Map();         // sessionId → { name, score, x, y, z, yaw, avatarMesh, labelSprite }
+	let lastPoseSent = 0;
+	const munchkinById = new Map();  // munchkinId (entity index) → ECS entity
+	let _wsReady = false;
 
 	// ── ECS World (creates its own scene, camera, renderer) ──
 	const world = await World.create(container, {
@@ -367,6 +386,7 @@ export async function bootOzWorld(container, options = {}) {
 		const entity = world.createTransformEntity(group);
 		entity.addComponent(Munchkin, {
 			state: 'hidden',
+			munchkinId: i,  // used for shared collection sync via the DO
 			revealDist: 3.0 + Math.random(),
 			hideDist: 5.0 + Math.random() * 2,
 			bobPhase: Math.random() * Math.PI * 2,
@@ -376,13 +396,136 @@ export async function bootOzWorld(container, options = {}) {
 			points: 2,
 			collected: false,
 		});
+		munchkinById.set(i, entity);
 	}
 
-	// Wire collect callback
-	_onMunchkinCollect = (pts) => {
+	// Wire collect callback — broadcasts to the DO so other clients hide
+	// the same munchkin. The munchkinId is the entity's index in our local
+	// array (matches the DO's shared collectedMunchkinIds set).
+	_onMunchkinCollect = (munchkinId, pts) => {
 		score += pts;
 		onScoreUpdate(score);
+		if (_ws?.readyState === WebSocket.OPEN) {
+			_ws.send(JSON.stringify({
+				type: 'collect_munchkin',
+				munchkinId,
+				score,
+			}));
+		}
+		broadcastPresence();
 	};
+
+	// ── Multiplayer: WebSocket connection + N-player peers ──
+	function connectWS() {
+		const params = new URLSearchParams({ user: myId, name: playerName });
+		const ws = new WebSocket(`${WS_URL}?${params.toString()}`);
+		ws.onopen = () => { console.log('[oz] WS connected'); _wsReady = true; };
+		ws.onmessage = (event) => {
+			try { handleWSMessage(JSON.parse(event.data)); } catch (e) {}
+		};
+		ws.onclose = () => { _wsReady = false; setTimeout(connectWS, 2000); };
+		ws.onerror = () => { ws.close(); };
+		_ws = ws;
+	}
+
+	function handleWSMessage(msg) {
+		switch (msg.type) {
+			case 'roster': {
+				mySessionId = msg.sessionId;
+				// Register existing peers
+				for (const p of (msg.peers || [])) ensurePeer(p.sessionId, p.name, p.x, p.y, p.z);
+				// Hide munchkins already collected by others
+				for (const mid of (msg.collectedMunchkinIds || [])) {
+					const e = munchkinById.get(mid);
+					if (e && !e.getValue(Munchkin, 'collected')) {
+						e.setValue(Munchkin, 'collected', true);
+					}
+				}
+				broadcastPresence();
+				break;
+			}
+			case 'peer_joined': {
+				ensurePeer(msg.sessionId, msg.name, msg.x, msg.y, msg.z);
+				broadcastPresence();
+				break;
+			}
+			case 'peer_left': {
+				removePeer(msg.sessionId);
+				broadcastPresence();
+				break;
+			}
+			case 'peer_pose': {
+				const peer = peers.get(msg.sessionId);
+				if (peer && peer.avatarMesh) {
+					peer.avatarMesh.position.set(msg.x, msg.y, msg.z);
+					peer.labelSprite.position.set(msg.x, msg.y + 0.8, msg.z);
+					peer.avatarMesh.rotation.y = msg.yaw || 0;
+				}
+				break;
+			}
+			case 'munchkin_collected': {
+				// Another player collected a munchkin — hide it locally.
+				const e = munchkinById.get(msg.munchkinId);
+				if (e && !e.getValue(Munchkin, 'collected')) {
+					e.setValue(Munchkin, 'collected', true);
+					e.setValue(Munchkin, 'state', 'collected');
+				}
+				const peer = peers.get(msg.sessionId);
+				if (peer) peer.score = msg.score || peer.score;
+				broadcastPresence();
+				break;
+			}
+			case 'monkey_collected': {
+				// Handled in step 4 (MonkeySystem) — stub for now.
+				break;
+			}
+			case 'peer_score': {
+				const peer = peers.get(msg.sessionId);
+				if (peer) peer.score = msg.score;
+				broadcastPresence();
+				break;
+			}
+		}
+	}
+
+	// ── Peer avatar management (simplified sphere + label, like grab-demo) ──
+	function ensurePeer(sessionId, name, x = 0, y = 1.5, z = 6) {
+		if (peers.has(sessionId)) return peers.get(sessionId);
+		// Dorothy-themed avatar: a glowing emerald sphere (Toto's energy?)
+		const avatarMesh = new THREE.Mesh(
+			new THREE.SphereGeometry(0.3, 16, 12),
+			new THREE.MeshBasicMaterial({ color: 0x66ddaa, transparent: true, opacity: 0.75 })
+		);
+		avatarMesh.position.set(x, y, z);
+		scene.add(avatarMesh);
+		const labelSprite = createTextSprite(THREE, name || 'Dorothy', '#ffd700');
+		labelSprite.position.set(x, y + 0.8, z);
+		scene.add(labelSprite);
+		const peer = { name: name || 'Dorothy', score: 0, x, y, z, yaw: 0, avatarMesh, labelSprite };
+		peers.set(sessionId, peer);
+		return peer;
+	}
+
+	function removePeer(sessionId) {
+		const peer = peers.get(sessionId);
+		if (!peer) return;
+		if (peer.avatarMesh) { scene.remove(peer.avatarMesh); peer.avatarMesh.geometry?.dispose(); peer.avatarMesh.material?.dispose(); }
+		if (peer.labelSprite) { scene.remove(peer.labelSprite); peer.labelSprite.material?.dispose(); }
+		peers.delete(sessionId);
+	}
+
+	function broadcastPresence() {
+		const roster = [...peers.values()].map((p) => ({ name: p.name, score: p.score }));
+		const count = peers.size + 1;
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('oz-presence', {
+				detail: { count, roster, myName: playerName, myScore: score },
+			}));
+		}
+		onPresenceUpdate({ count, roster });
+	}
+
+	connectWS();
 
 	// ── Movement: WASD + mouse-drag look (no OrbitControls) ──
 	let yaw = 0, pitch = 0;
@@ -434,6 +577,17 @@ export async function bootOzWorld(container, options = {}) {
 			camera.position.z += moveDir.z * 3 * dt;
 			camera.position.y = 1.6;
 		}
+
+		// Broadcast pose to the DO (throttled) for multiplayer presence.
+		const now = performance.now();
+		if (_ws?.readyState === WebSocket.OPEN && now - lastPoseSent > 100) {
+			lastPoseSent = now;
+			_ws.send(JSON.stringify({
+				type: 'pose',
+				x: camera.position.x, y: camera.position.y, z: camera.position.z,
+				yaw,
+			}));
+		}
 		// Do NOT call renderer.render — the World handles rendering.
 	}
 	animate();
@@ -446,6 +600,9 @@ export async function bootOzWorld(container, options = {}) {
 			renderer.domElement.removeEventListener('mousedown', onMouseDown);
 			window.removeEventListener('mouseup', onMouseUp);
 			window.removeEventListener('mousemove', onMouseMove);
+			// Close the WS + clean up peer avatars
+			if (_ws) { _ws.close(); _ws = null; }
+			for (const sid of [...peers.keys()]) removePeer(sid);
 			if (container.contains(renderer.domElement)) {
 				container.removeChild(renderer.domElement);
 			}
