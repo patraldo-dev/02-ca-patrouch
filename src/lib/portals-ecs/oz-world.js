@@ -19,8 +19,10 @@
 const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 const SKYBOX_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
 
-// Module-level callback — no elics dependency, safe to keep at module scope.
+// Module-level callbacks — no elics dependency, safe to keep at module scope.
 let _onMunchkinCollect = null;
+let _onMonkeyCollect = null;
+let _onPlayerHit = null;
 
 // ── Text sprite helper ──
 // THREE passed in (we no longer statically import it).
@@ -75,6 +77,26 @@ export async function bootOzWorld(container, options = {}) {
 			swayPhase: { type: Types.Float32, default: 0 },
 			swaySpeed: { type: Types.Float32, default: 0.5 },
 			hasMunchkin: { type: Types.Boolean, default: false },
+		});
+
+	// Flying monkeys — swoop down from the sky in waves, chase players,
+	// and must be clicked/tapped to defeat (scatters into fragments).
+	const Monkey = ComponentRegistry.has('OzMonkey')
+		? ComponentRegistry.getById('OzMonkey')
+		: createComponent('OzMonkey', {
+			monkeyId:     { type: Types.Int32, default: -1 },
+			state:        { type: Types.String, default: 'swooping' }, // swooping|attacking|retreating|collected
+			spawnTime:    { type: Types.Float32, default: 0 },
+			swoopPhase:   { type: Types.Float32, default: 0 },  // drives the sine-wave Y arc
+			swoopSpeed:   { type: Types.Float32, default: 1.5 },
+			swoopAmplitude: { type: Types.Float32, default: 3.0 },
+			baseY:        { type: Types.Float32, default: 5.0 },
+			chaseSpeed:   { type: Types.Float32, default: 1.8 },
+			bobPhase:     { type: Types.Float32, default: 0 },
+			points:       { type: Types.Int32, default: 5 },
+			collected:    { type: Types.Boolean, default: false },
+			collectTime:  { type: Types.Float32, default: 0 },
+			hitCooldown:  { type: Types.Float32, default: 0 },
 		});
 
 	// ── ECS Systems — defined here so they close over Munchkin/Flower after creation ──
@@ -156,6 +178,63 @@ export async function bootOzWorld(container, options = {}) {
 		}
 	};
 
+	// MonkeySystem: flying monkeys swoop in sine arcs, chase the nearest
+	// player, and hit on proximity. Defeated by click/tap (handled by the
+	// raycaster in step 5). Monkeys despawn after 30s if not collected.
+	const MonkeySystem = class extends createSystem({
+		monkeys: { required: [Monkey] },
+	}) {
+		update(dt) {
+			const cam = this.world?.camera;
+			if (!cam) return;
+			const pp = cam.position;
+			const time = performance.now() / 1000;
+			for (const entity of this.queries.monkeys.entities) {
+				if (entity.getValue(Monkey, 'collected')) continue;
+				const obj = entity.object3D;
+				if (!obj) continue;
+				const state = entity.getValue(Monkey, 'state');
+				const spawnTime = entity.getValue(Monkey, 'spawnTime');
+				const age = time - spawnTime;
+				// Despawn after 30s — fly away (retreat upward)
+				if (age > 30 && state !== 'collected') {
+					obj.position.y += dt * 3;
+					obj.scale.multiplyScalar(1 - dt * 0.5);
+					if (obj.scale.x < 0.05) {
+						entity.setValue(Monkey, 'collected', true);
+						entity.setValue(Monkey, 'state', 'collected');
+					}
+					continue;
+				}
+				const phase = entity.getValue(Monkey, 'swoopPhase');
+				const swoopSpeed = entity.getValue(Monkey, 'swoopSpeed');
+				const amplitude = entity.getValue(Monkey, 'swoopAmplitude');
+				const baseY = entity.getValue(Monkey, 'baseY');
+				const bobPhase = entity.getValue(Monkey, 'bobPhase');
+				// Sine-wave Y arc (the "flying" motion)
+				obj.position.y = baseY + Math.sin(time * swoopSpeed + phase) * amplitude + Math.sin(time * 6 + bobPhase) * 0.2;
+				// Chase the player on XZ
+				const dx = pp.x - obj.position.x;
+				const dz = pp.z - obj.position.z;
+				const dist = Math.hypot(dx, dz);
+				const chaseSpeed = entity.getValue(Monkey, 'chaseSpeed');
+				if (dist > 0.5) {
+					obj.position.x += (dx / dist) * chaseSpeed * dt;
+					obj.position.z += (dz / dist) * chaseSpeed * dt;
+				}
+				// Face the player + spin (menacing)
+				obj.rotation.y = Math.atan2(dx, dz) + time * 2;
+				// Hit the player on proximity (< 1.5 units) — cooldown to avoid spam
+				const hitCd = entity.getValue(Monkey, 'hitCooldown');
+				if (dist < 1.5 && hitCd <= 0 && obj.position.y < pp.y + 1) {
+					entity.setValue(Monkey, 'hitCooldown', 2.0);
+					if (_onPlayerHit) _onPlayerHit(entity.getValue(Monkey, 'points'));
+				}
+				if (hitCd > 0) entity.setValue(Monkey, 'hitCooldown', hitCd - dt);
+			}
+		}
+	};
+
 	const onScoreUpdate = options.onScoreUpdate || (() => {});
 	const onPresenceUpdate = options.onPresenceUpdate || (() => {});
 	let score = 0;
@@ -171,6 +250,7 @@ export async function bootOzWorld(container, options = {}) {
 	const peers = new Map();         // sessionId → { name, score, x, y, z, yaw, avatarMesh, labelSprite }
 	let lastPoseSent = 0;
 	const munchkinById = new Map();  // munchkinId (entity index) → ECS entity
+	const monkeyById = new Map();    // monkeyId → ECS entity (flying monkeys)
 	let _wsReady = false;
 
 	// ── ECS World (creates its own scene, camera, renderer) ──
@@ -297,8 +377,10 @@ export async function bootOzWorld(container, options = {}) {
 
 	world.registerComponent(Munchkin);
 	world.registerComponent(Flower);
+	world.registerComponent(Monkey);
 	world.registerSystem(HideRevealSystem, { priority: 0 });
 	world.registerSystem(FlowerSwaySystem, { priority: 0 });
+	world.registerSystem(MonkeySystem, { priority: 0 });
 
 	// ── Spawn flowers + munchkins ──
 	const FLOWER_COUNT = 20;
@@ -415,6 +497,80 @@ export async function bootOzWorld(container, options = {}) {
 		broadcastPresence();
 	};
 
+	// Wire monkey collect + player-hit callbacks
+	_onMonkeyCollect = (monkeyId, pts) => {
+		score += pts;
+		onScoreUpdate(score);
+		if (_ws?.readyState === WebSocket.OPEN) {
+			_ws.send(JSON.stringify({
+				type: 'collect_monkey',
+				monkeyId,
+				score,
+			}));
+		}
+		broadcastPresence();
+	};
+	_onPlayerHit = (pts) => {
+		// Monkey hit the player — penalty (subtract a few points, floor at 0)
+		score = Math.max(0, score - 2);
+		onScoreUpdate(score);
+	};
+
+	// Spawn a flying monkey at a DO-assigned position. Uses the munchkin
+	// templates as a proxy model (or a dark sphere fallback). All clients
+	// spawn the same monkey at the same position — positions are derived
+	// from monkeyId in the DO, so no per-client desync.
+	function spawnMonkey(monkeyId, x, z, spawnTimeSec) {
+		if (monkeyById.has(monkeyId)) return;  // already spawned (wave re-broadcast)
+		// Build a dark winged proxy: a sphere + cone "beak" group.
+		// TODO: replace with a real flying-monkey GLB when available.
+		const group = new THREE.Group();
+		const body = new THREE.Mesh(
+			new THREE.SphereGeometry(0.35, 12, 8),
+			new THREE.MeshStandardMaterial({ color: 0x3a2a4a, roughness: 0.7, emissive: 0x1a0a2a })
+		);
+		body.position.y = 0;
+		group.add(body);
+		// Wings (flat cones that flap — static for now, flap animation in step 5+)
+		for (const side of [-1, 1]) {
+			const wing = new THREE.Mesh(
+				new THREE.ConeGeometry(0.15, 0.5, 4),
+				new THREE.MeshStandardMaterial({ color: 0x2a1a3a, roughness: 0.8, side: THREE.DoubleSide })
+			);
+			wing.position.set(side * 0.3, 0.1, 0);
+			wing.rotation.z = side * Math.PI / 3;
+			group.add(wing);
+		}
+		// Glowing eyes (menacing)
+		const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff3300, blending: THREE.AdditiveBlending });
+		for (const side of [-1, 1]) {
+			const eye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 4), eyeMat);
+			eye.position.set(side * 0.1, 0.1, 0.3);
+			group.add(eye);
+		}
+
+		group.position.set(x, 8, z);  // start high (swoop down)
+		scene.add(group);
+
+		const entity = world.createTransformEntity(group);
+		entity.addComponent(Monkey, {
+			monkeyId,
+			state: 'swooping',
+			spawnTime: spawnTimeSec || (performance.now() / 1000),
+			swoopPhase: monkeyId * 0.7,
+			swoopSpeed: 1.2 + (monkeyId % 3) * 0.3,
+			swoopAmplitude: 2.5 + (monkeyId % 2) * 1.0,
+			baseY: 4.0,
+			chaseSpeed: 1.6 + (monkeyId % 3) * 0.3,
+			bobPhase: monkeyId * 1.3,
+			points: 5,
+			collected: false,
+			collectTime: 0,
+			hitCooldown: 0,
+		});
+		monkeyById.set(monkeyId, entity);
+	}
+
 	// ── Multiplayer: WebSocket connection + N-player peers ──
 	function connectWS() {
 		const params = new URLSearchParams({ user: myId, name: playerName });
@@ -476,7 +632,25 @@ export async function bootOzWorld(container, options = {}) {
 				break;
 			}
 			case 'monkey_collected': {
-				// Handled in step 4 (MonkeySystem) — stub for now.
+				// Another player defeated a monkey — hide it locally.
+				const monkeyEntity = monkeyById.get(msg.monkeyId);
+				if (monkeyEntity && !monkeyEntity.getValue(Monkey, 'collected')) {
+					monkeyEntity.setValue(Monkey, 'collected', true);
+					monkeyEntity.setValue(Monkey, 'state', 'collected');
+					monkeyEntity.setValue(Monkey, 'collectTime', performance.now());
+				}
+				const peer = peers.get(msg.sessionId);
+				if (peer) peer.score = msg.score || peer.score;
+				broadcastPresence();
+				break;
+			}
+			case 'monkey_wave': {
+				// The DO broadcasts a wave — spawn the same monkeys on all clients.
+				// Positions are derived from monkeyId (DO assigns them), so we
+				// use the DO-provided x/z rather than computing locally.
+				for (const m of (msg.monkeys || [])) {
+					spawnMonkey(m.monkeyId, m.x, m.z, m.spawnTime / 1000);
+				}
 				break;
 			}
 			case 'peer_score': {
