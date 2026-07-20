@@ -23,6 +23,7 @@ const SKYBOX_ID = 'e9fd4477-84f5-4a57-ac67-aba89d28b000';
 let _onMunchkinCollect = null;
 let _onMonkeyCollect = null;
 let _onPlayerHit = null;
+let _ozTouchHandle = null;  // set in bootOzWorld for mobile tap-to-collect
 
 // ── Text sprite helper ──
 // THREE passed in (we no longer statically import it).
@@ -54,6 +55,7 @@ export async function bootOzWorld(container, options = {}) {
 	const { createComponent, createSystem, Types, ComponentRegistry } = await import('elics');
 	const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
 	const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
+	const { DepartureEffects, BEHAVIOR_GLOWS } = await import('./departure-effects.js');
 
 	// ── ECS Components — created AFTER elics loads (deferred from module scope) ──
 	const Munchkin = ComponentRegistry.has('OzMunchkin')
@@ -712,19 +714,87 @@ export async function bootOzWorld(container, options = {}) {
 	window.addEventListener('keydown', onKeyDown);
 	window.addEventListener('keyup', onKeyUp);
 
-	const onMouseDown = () => { lookActive = true; lookMoved = false; };
-	const onMouseUp = () => { lookActive = false; };
+	// ── Click-to-collect raycaster (for monkeys) + look-drag ──
+	// Munchkins are proximity-collected (walk into them). Monkeys fly, so
+	// they need click/tap to defeat — this raycaster handles that. A click
+	// (no drag) raycasts against monkeys; a drag rotates the camera.
+	const raycaster = new THREE.Raycaster();
+	const pointer = new THREE.Vector2();
+	let mouseDownPos = null;
+	const departEffects = new DepartureEffects();
+	departEffects.init(THREE, scene);
+
+	function tryCollectMonkey(clientX, clientY) {
+		pointer.x = (clientX / window.innerWidth) * 2 - 1;
+		pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+		raycaster.setFromCamera(pointer, camera);
+		raycaster.far = 15;  // monkeys fly high — need a long ray
+		// Build the list of active (un-collected) monkey meshes
+		const monkeyMeshes = [];
+		for (const [mid, ent] of monkeyById) {
+			if (ent.getValue(Monkey, 'collected')) continue;
+			const obj = ent.object3D;
+			if (obj) monkeyMeshes.push(obj);
+		}
+		const hits = raycaster.intersectObjects(monkeyMeshes, true);
+		if (hits.length > 0) {
+			// Walk up to find the monkey entity whose object3D is an ancestor
+			let hit = hits[0].object;
+			let foundMid = null;
+			while (hit && foundMid === null) {
+				for (const [mid, ent] of monkeyById) {
+					if (ent.object3D === hit) { foundMid = mid; break; }
+				}
+				hit = hit.parent;
+			}
+			if (foundMid !== null) {
+				const ent = monkeyById.get(foundMid);
+				if (ent && !ent.getValue(Monkey, 'collected')) {
+					ent.setValue(Monkey, 'collected', true);
+					ent.setValue(Monkey, 'state', 'collected');
+					ent.setValue(Monkey, 'collectTime', performance.now());
+					// Trigger the scatter departure (purple monkey glow)
+					departEffects.spawn('monkey', ent.object3D, BEHAVIOR_GLOWS.monkey);
+					if (_onMonkeyCollect) _onMonkeyCollect(foundMid, ent.getValue(Monkey, 'points'));
+				}
+			}
+		}
+	}
+
+	const onMouseDown = (e) => {
+		lookActive = true;
+		lookMoved = false;
+		mouseDownPos = { x: e.clientX, y: e.clientY };
+	};
+	const onMouseUp = () => {
+		// Click (no drag) = try to collect a monkey at the click point
+		if (lookActive && !lookMoved && mouseDownPos) {
+			tryCollectMonkey(mouseDownPos.x, mouseDownPos.y);
+		}
+		lookActive = false;
+		mouseDownPos = null;
+	};
 	const onMouseMove = (e) => {
 		if (lookActive && e.buttons > 0) {
-			lookMoved = true;
-			yaw -= e.movementX * 0.003;
-			pitch -= e.movementY * 0.003;
-			pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
+			if (mouseDownPos && (Math.abs(e.clientX - mouseDownPos.x) > 5 || Math.abs(e.clientY - mouseDownPos.y) > 5)) {
+				lookMoved = true;
+			}
+			if (lookMoved) {
+				yaw -= e.movementX * 0.003;
+				pitch -= e.movementY * 0.003;
+				pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, pitch));
+			}
 		}
 	};
 	renderer.domElement.addEventListener('mousedown', onMouseDown);
 	window.addEventListener('mouseup', onMouseUp);
 	window.addEventListener('mousemove', onMouseMove);
+
+	// Expose tryCollectMonkey for the touch overlay (mobile tap-to-collect)
+	// and departEffects.update for the animation loop.
+	_ozTouchHandle = {
+		tryCollectMonkeyAt: (x, y) => tryCollectMonkey(x, y),
+	};
 
 	// ── Animation loop: WASD + look only. World handles ECS + rendering. ──
 	let animationId;
@@ -762,11 +832,17 @@ export async function bootOzWorld(container, options = {}) {
 				yaw,
 			}));
 		}
+
+		// Update departure effects (monkey scatter particles, etc.)
+		departEffects.update(dt);
+
 		// Do NOT call renderer.render — the World handles rendering.
 	}
 	animate();
 
 	return {
+		// Exposed for the Svelte page's touch overlay (mobile tap-to-collect).
+		touch: _ozTouchHandle,
 		destroy() {
 			cancelAnimationFrame(animationId);
 			window.removeEventListener('keydown', onKeyDown);
