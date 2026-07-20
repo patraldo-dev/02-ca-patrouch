@@ -78,6 +78,10 @@
 			{
 				"name": "GRAB_DEMO_ROOM",
 				"class_name": "GrabDemoRoom"
+			},
+			{
+				"name": "OZ_ROOM",
+				"class_name": "OzRoom"
 			}
 		]
 	},
@@ -85,6 +89,10 @@
 		{
 			"tag": "v1",
 			"new_sqlite_classes": ["GrabDemoRoom"]
+		},
+		{
+			"tag": "v2",
+			"new_sqlite_classes": ["OzRoom"]
 		}
 	]
 	/**

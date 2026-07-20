@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build && sveltekit-cloudflare-do --do src/do/grab-demo-room.js",
+    "build": "vite build && sveltekit-cloudflare-do --do src/do/grab-demo-room.js --do src/do/oz-room.js",
     "preview": "npm run build && wrangler dev",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
