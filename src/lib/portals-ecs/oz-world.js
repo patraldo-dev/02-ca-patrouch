@@ -24,6 +24,11 @@ let _onMunchkinCollect = null;
 let _onMonkeyCollect = null;
 let _onPlayerHit = null;
 let _ozTouchHandle = null;  // set in bootOzWorld for mobile tap-to-collect
+// Global hit cooldown: prevents multiple monkeys from all penalizing the
+// player in the same window. Once any monkey hits, ALL monkeys are on
+// cooldown for 3s. Without this, 3 monkeys in range = -6 points instantly
+// ("score all over the place").
+let _globalHitCooldown = 0;
 
 // ── Text sprite helper ──
 // THREE passed in (we no longer statically import it).
@@ -226,10 +231,16 @@ export async function bootOzWorld(container, options = {}) {
 				}
 				// Face the player + spin (menacing)
 				obj.rotation.y = Math.atan2(dx, dz) + time * 2;
-				// Hit the player on proximity (< 1.5 units) — cooldown to avoid spam
+				// Tick the global hit cooldown (shared across ALL monkeys —
+				// prevents 3 monkeys in range from penalizing -6 instantly).
+				if (_globalHitCooldown > 0) _globalHitCooldown -= dt;
+				// Hit the player on proximity — gated by BOTH a per-monkey
+				// cooldown AND the global cooldown. Tighter radius (1.2) so
+				// they have to really reach you, not just fly past.
 				const hitCd = entity.getValue(Monkey, 'hitCooldown');
-				if (dist < 1.5 && hitCd <= 0 && obj.position.y < pp.y + 1) {
-					entity.setValue(Monkey, 'hitCooldown', 2.0);
+				if (dist < 1.2 && hitCd <= 0 && _globalHitCooldown <= 0 && obj.position.y < pp.y + 1.5) {
+					entity.setValue(Monkey, 'hitCooldown', 4.0);    // this monkey can't re-hit for 4s
+					_globalHitCooldown = 3.0;                         // NO monkey can hit for 3s
 					if (_onPlayerHit) _onPlayerHit(entity.getValue(Monkey, 'points'));
 				}
 				if (hitCd > 0) entity.setValue(Monkey, 'hitCooldown', hitCd - dt);
@@ -513,8 +524,10 @@ export async function bootOzWorld(container, options = {}) {
 		broadcastPresence();
 	};
 	_onPlayerHit = (pts) => {
-		// Monkey hit the player — penalty (subtract a few points, floor at 0)
-		score = Math.max(0, score - 2);
+		// Monkey hit the player — small penalty, floor at 0.
+		// -1 (was -2) so the score doesn't swing wildly when multiple
+		// monkeys are nearby. The global cooldown also limits frequency.
+		score = Math.max(0, score - 1);
 		onScoreUpdate(score);
 	};
 
@@ -560,10 +573,10 @@ export async function bootOzWorld(container, options = {}) {
 			state: 'swooping',
 			spawnTime: spawnTimeSec || (performance.now() / 1000),
 			swoopPhase: monkeyId * 0.7,
-			swoopSpeed: 1.2 + (monkeyId % 3) * 0.3,
-			swoopAmplitude: 2.5 + (monkeyId % 2) * 1.0,
-			baseY: 4.0,
-			chaseSpeed: 1.6 + (monkeyId % 3) * 0.3,
+			swoopSpeed: 0.6 + (monkeyId % 3) * 0.15,    // slower oscillation
+			swoopAmplitude: 1.5 + (monkeyId % 2) * 0.5,  // gentler arcs
+			baseY: 3.0,                                   // lower ceiling
+			chaseSpeed: 0.8 + (monkeyId % 3) * 0.15,     // half speed — dodgeable
 			bobPhase: monkeyId * 1.3,
 			points: 5,
 			collected: false,

@@ -15,6 +15,7 @@
     import { getTheme, setTheme } from '$lib/theme.js';
     import { avatarVariant } from '$lib/utils.js';
     import NotificationBell from '$lib/components/NotificationBell.svelte';
+    import { authClient } from '$lib/auth-client';
 
     // Track page views on navigation
     if (browser) {
@@ -104,9 +105,8 @@
 
     async function handleLogout() {
         if (!browser) return;
-        try {
-            await fetch('/api/auth/sign-out', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-        } catch {}
+        const { error } = await authClient.signOut();
+        if (error) console.warn('sign-out failed', error);
         window.location.href = '/';
     }
 

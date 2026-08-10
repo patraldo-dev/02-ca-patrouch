@@ -31,7 +31,7 @@ export async function GET({ locals }) {
         url: `/writings/${w.id}`,
         priority: '0.6',
         changefreq: 'weekly',
-        lastmod: w.updated_at ? w.updated_at.replace(' ', 'T') : undefined
+        lastmod: w.updated_at ? w.updated_at.replace(' ', 'T') + 'Z' : undefined
     }));
 
     const allPages = [...staticPages, ...writingPages];
