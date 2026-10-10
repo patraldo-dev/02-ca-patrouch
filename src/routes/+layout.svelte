@@ -1,21 +1,20 @@
-<!-- src/routes/+layout.svelte -->
 <script>
     import '../app.css';
-    import { browser } from '$app/environment';
-    import { t, locale, setLocale } from '$lib/i18n';
+    import { browser } from '$app/env';
+    import { t, locale, setLocale } from '#lib/i18n/index.js';
     import { beforeNavigate } from '$app/navigation';
-    import SearchModal from '$lib/components/SearchModal.svelte';
-    import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
-    import { page } from '$app/stores';
-    import { getSeoMeta } from '$lib/seo';
-    import { track } from '$lib/analytics';
-    import NewsletterForm from '$lib/components/NewsletterForm.svelte';
-    import LanguageSwitcherDesktop from '$lib/components/LanguageSwitcherDesktop.svelte';
-    import LanguageSwitcherMobile from '$lib/components/LanguageSwitcherMobile.svelte';
-    import { getTheme, setTheme } from '$lib/theme.js';
-    import { avatarVariant } from '$lib/utils.js';
-    import NotificationBell from '$lib/components/NotificationBell.svelte';
-    import { authClient } from '$lib/auth-client';
+    import SearchModal from '#lib/components/SearchModal.svelte';
+    import OnboardingFlow from '#lib/components/OnboardingFlow.svelte';
+    import { page } from '$app/state';
+    import { getSeoMeta } from '#lib/seo.js';
+    import { track } from '#lib/analytics.js';
+    import NewsletterForm from '#lib/components/NewsletterForm.svelte';
+    import LanguageSwitcherDesktop from '#lib/components/LanguageSwitcherDesktop.svelte';
+    import LanguageSwitcherMobile from '#lib/components/LanguageSwitcherMobile.svelte';
+    import { getTheme, setTheme } from '#lib/theme.js';
+    import { avatarVariant } from '#lib/utils.js';
+    import NotificationBell from '#lib/components/NotificationBell.svelte';
+    import { authClient } from '#lib/auth-client.js';
 
     // Track page views on navigation
     if (browser) {
@@ -23,7 +22,7 @@
             document.documentElement.lang = $locale || 'es';
         });
         $effect(() => {
-            const path = $page.url.pathname;
+            const path = page.url.pathname;
             if (path) track('page_view', path);
         });
     }
@@ -32,9 +31,15 @@
     let { data, children } = $props();
 
     // SEO — reactive to route + locale changes
-    let seo = $derived(getSeoMeta($page.url.pathname, $locale));
+    let seo = $derived(getSeoMeta(page.url.pathname, $locale));
 
-    beforeNavigate(() => { mobileMenuOpen = false; tallerOpen = false; avatarMenuOpen = false; });
+    beforeNavigate(({ shallow }) => {
+        if (shallow) return;
+
+        mobileMenuOpen = false;
+        tallerOpen = false;
+        avatarMenuOpen = false;
+    });
 
     let mobileMenuOpen = $state(false);
     let currentTheme = $state(getTheme());
@@ -74,7 +79,7 @@
                 const d = await res.json();
                 activeProfileId = id;
                 activeDisplayName = d.activeProfile.display_name;
-                profiles = profiles.map(p => ({ ...p, is_active: p.id === id ? 1 : 0 }));
+                profiles = profiles.map((p) => ({ ...p, is_active: p.id === id ? 1 : 0 }));
                 profilesOpen = false;
                 goto('?t=' + Date.now()); // refresh data
             }
@@ -93,7 +98,7 @@
     function toggleMobileMenu() {
         mobileMenuOpen = !mobileMenuOpen;
         // Disable Leaflet map interactions when menu is open
-        document.querySelectorAll('.leaflet-container').forEach(el => {
+        document.querySelectorAll('.leaflet-container').forEach((el) => {
             el.style.pointerEvents = mobileMenuOpen ? 'none' : '';
         });
     }
@@ -113,7 +118,7 @@
     function onScroll() {
         scrolled = window.scrollY > 20;
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        scrollProgress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+        scrollProgress = docHeight > 0 ? window.scrollY / docHeight * 100 : 0;
     }
 
     function initObserver() {
@@ -152,6 +157,8 @@
     });
 </script>
 
+<!-- src/routes/+layout.svelte -->
+
 <svelte:head>
     <title>{seo.title} — patrouch.ca</title>
     <meta name="description" content={seo.description} />
@@ -178,38 +185,50 @@
 
             <!-- Desktop Nav -->
             <nav class="desktop-nav" aria-label="Main navigation">
-                <a href="/" class:active={$page.url.pathname === '/'}>{$t('common.nav.home')}</a>
-                <a href="/agora" class:active={$page.url.pathname.startsWith('/agora')}>{$t('common.nav.agora')}</a>
-                <a href="/write" class:active={$page.url.pathname.startsWith('/write')}>{$t('common.nav.write')}</a>
-                <a href="/portals" class:active={$page.url.pathname.startsWith('/portals')}>{$t('common.nav.games')}</a>
+                <a href="/" class:active={page.url.pathname === '/'}>{$t('common.nav.home')}</a>
+
+                <a
+                    href="/agora"
+                    class:active={page.url.pathname.startsWith('/agora')}
+                >{$t('common.nav.agora')}</a>
+
+                <a
+                    href="/write"
+                    class:active={page.url.pathname.startsWith('/write')}
+                >{$t('common.nav.write')}</a>
+
+                <a
+                    href="/portals"
+                    class:active={page.url.pathname.startsWith('/portals')}
+                >{$t('common.nav.games')}</a>
+
                 {#if data?.user?.role === 'admin' || data?.user?.role === 'member'}
-                <div class="taller-dropdown">
+                    <div class="taller-dropdown">
                     <button class="taller-trigger" onclick={() => tallerOpen = !tallerOpen}>{$t('common.nav.taller')}</button>
-                    {#if tallerOpen}
-                    <div class="taller-menu">
+                        {#if tallerOpen}
+                            <div class="taller-menu">
                         <a href="/evaluate" onclick={() => tallerOpen = false}>{$t('common.nav.evaluate')}</a>
-                        <a href="/refine" onclick={() => tallerOpen = false}>{$t('common.nav.refine')}</a>
-                        <a href="/audio" onclick={() => tallerOpen = false}>{$t('common.nav.audio')}</a>
-                        <span class="taller-coming-soon">{$t('taller.dictation_title')} ✨</span>
+                                <a href="/refine" onclick={() => tallerOpen = false}>{$t('common.nav.refine')}</a>
+                                <a href="/audio" onclick={() => tallerOpen = false}>{$t('common.nav.audio')}</a>
+                                <span class="taller-coming-soon">{$t('taller.dictation_title')} ✨</span>
+                            </div>
+                        {/if}
                     </div>
-                    {/if}
-                </div>
                 {:else}
-                <div class="taller-teaser-wrap">
+                    <div class="taller-teaser-wrap">
                     <button class="taller-teaser" title={tallerOpen ? '' : 'Members only'} onclick={() => tallerOpen = !tallerOpen}>{$t('common.nav.taller')} <small>Members</small></button>
-                    {#if tallerOpen}
-                    <div class="taller-teaser-menu">
-                        <div class="taller-teaser-group">
-                            <span class="taller-teaser-item">{$t('common.nav.evaluate')}</span>
-                            <span class="taller-teaser-item">{$t('common.nav.refine')}</span>
-                            <span class="taller-teaser-item">{$t('common.nav.audio')}</span>
-                        </div>
-                        <div class="taller-teaser-group taller-teaser-coming">
-                            <span class="taller-teaser-item">{$t('taller.dictation_title')} ✦</span>
-                        </div>
+                        {#if tallerOpen}
+                            <div class="taller-teaser-menu">
+                                <div class="taller-teaser-group">
+                                    <span class="taller-teaser-item">{$t('common.nav.evaluate')}</span>
+                                    <span class="taller-teaser-item">{$t('common.nav.refine')}</span>
+                                    <span class="taller-teaser-item">{$t('common.nav.audio')}</span>
+                                </div>
+
+                                <div class="taller-teaser-group taller-teaser-coming"><span class="taller-teaser-item">{$t('taller.dictation_title')} ✦</span></div>
+                            </div>
+                        {/if}
                     </div>
-                    {/if}
-                </div>
                 {/if}
             </nav>
 
@@ -217,43 +236,89 @@
             <div class="nav-actions">
                 <button class="theme-toggle" onclick={toggleTheme} aria-label={currentTheme === 'dark' ? $t('common.theme_light') : $t('common.theme_dark')} title={currentTheme === 'dark' ? $t('common.theme_light') : $t('common.theme_dark')}>
                     {#if currentTheme === 'dark'}
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
                     {:else}
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                            ></path>
+                        </svg>
                     {/if}
                 </button>
-                <button class="help-btn" onclick={() => helpOpen = !helpOpen} title="{$t('common.help')}">?</button>
+
+                <button
+                    class="help-btn"
+                    onclick={() => helpOpen = !helpOpen}
+                    title={$t('common.help')}
+                >?</button>
+
                 <LanguageSwitcherDesktop serverLocale={data.serverLocale} />
                 <div class="auth-actions">
                     {#if data?.user}
                         <NotificationBell />
                         {#if data.user?.role === 'admin'}
-                        <div class="profile-switcher">
+                            <div class="profile-switcher">
                             <button class="profile-trigger" onclick={() => profilesOpen = !profilesOpen}>
                                 <span class="profile-avatar">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')} alt="" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
-                                <span class="profile-name">{activeDisplayName}</span>
-                                <span class="admin-badge">admin</span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-                            </button>
-                            {#if profilesOpen}
-                                <div class="profile-dropdown">
-                                    {#each profiles as p}
+                                    <span class="profile-name">{activeDisplayName}</span>
+                                    <span class="admin-badge">admin</span>
+
+                                    <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    ><path d="M6 9l6 6 6-6"></path></svg>
+                                </button>
+                                {#if profilesOpen}
+                                    <div class="profile-dropdown">
+                                        {#each profiles as p}
                                         <button class="profile-option" class:active={p.is_active} onclick={() => switchProfile(p.id)} disabled={profileLoading}>
-                                            <span class="profile-option-avatar">{p.display_name[0].toUpperCase()}</span>
-                                            <span class="profile-option-info">
-                                                <span class="profile-option-name">{p.display_name}</span>
-                                                <span class="profile-option-locale">{p.locale?.toUpperCase()}</span>
-                                            </span>
-                                            {#if p.is_primary}
-                                                <span class="profile-primary-dot" title="Primary"></span>
-                                            {/if}
-                                        </button>
-                                    {/each}
-                                    <div class="profile-divider"></div>
-                                    <a href="/account" class="profile-manage">{$t('common.nav.manage_profiles')}</a>
-                                </div>
-                            {/if}
-                        </div>
+                                                <span class="profile-option-avatar">{p.display_name[0].toUpperCase()}</span>
+                                                <span class="profile-option-info">
+                                                    <span class="profile-option-name">{p.display_name}</span>
+                                                    <span class="profile-option-locale">{p.locale?.toUpperCase()}</span>
+                                                </span>
+                                                {#if p.is_primary}
+                                                    <span class="profile-primary-dot" title="Primary"></span>
+                                                {/if}
+                                            </button>
+                                        {/each}
+                                        <div class="profile-divider"></div>
+                                        <a href="/account" class="profile-manage">{$t('common.nav.manage_profiles')}</a>
+                                    </div>
+                                {/if}
+                            </div>
                         {:else}
                         <a href="/account" class="profile-switcher">
                                 <span class="profile-avatar">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar48')} alt="" />{:else}{(data.user.display_name || data.user.username || '?')[0].toUpperCase()}{/if}</span>
@@ -283,20 +348,20 @@
                 </span>
             </button>
             {#if data.user}
-            <div class="mobile-avatar-wrap desktop-hide">
+                <div class="mobile-avatar-wrap desktop-hide">
                 <button class="mobile-avatar-btn" onclick={() => avatarMenuOpen = !avatarMenuOpen} title={activeDisplayName}>
                     <span class="profile-avatar" style="width:32px;height:32px;font-size:0.8rem">{#if avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')}<img src={avatarVariant(data.avatarUrl || data.user?.image, 'avatar32')} alt="" style="width:32px;height:32px" />{:else}{(activeDisplayName || '?')[0].toUpperCase()}{/if}</span>
-                    {#if data.bootyFuel > 0}
-                        <span class="mobile-bean-badge">${data.bootyFuel}</span>
-                    {/if}
-                </button>
-                {#if avatarMenuOpen}
-                    <div class="avatar-dropdown">
+                        {#if data.bootyFuel > 0}
+                            <span class="mobile-bean-badge">${data.bootyFuel}</span>
+                        {/if}
+                    </button>
+                    {#if avatarMenuOpen}
+                        <div class="avatar-dropdown">
                         <a href="/account" onclick={() => avatarMenuOpen = false}>{$t('common.nav.manage_profiles')}</a>
                         <button onclick={() => { avatarMenuOpen = false; handleLogout(); }}>{$t('common.nav.logout')}</button>
-                    </div>
-                {/if}
-            </div>
+                        </div>
+                    {/if}
+                </div>
             <div class="mobile-bell desktop-hide">
                 <NotificationBell />
             </div>
@@ -318,25 +383,59 @@
                 <a href="/refine" onclick={toggleMobileMenu}>{$t('common.nav.refine')}</a>
                 <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
                 {:else}
-                <div class="mobile-taller-section">
-                    <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>
-                    <div class="mobile-taller-items">
-                        <span class="mobile-taller-coming">{$t('common.nav.evaluate')} ✦</span>
-                        <span class="mobile-taller-coming">{$t('common.nav.refine')} ✦</span>
-                        <span class="mobile-taller-coming">{$t('common.nav.audio')} ✦</span>
+                    <div class="mobile-taller-section">
+                        <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>
+                        <div class="mobile-taller-items">
+                            <span class="mobile-taller-coming">{$t('common.nav.evaluate')} ✦</span>
+                            <span class="mobile-taller-coming">{$t('common.nav.refine')} ✦</span>
+                            <span class="mobile-taller-coming">{$t('common.nav.audio')} ✦</span>
+                        </div>
+                        <span class="mobile-taller-coming mobile-taller-future">{$t('taller.dictation_title')} ✦</span>
                     </div>
-                    <span class="mobile-taller-coming mobile-taller-future">{$t('taller.dictation_title')} ✦</span>
-                </div>
                 {/if}
                 <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
             </nav>
             <div class="mobile-lang">
                 <button class="theme-toggle mobile-theme-toggle" onclick={toggleTheme} aria-label={currentTheme === 'dark' ? $t('common.theme_light') : $t('common.theme_dark')}>
                     {#if currentTheme === 'dark'}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+
                         <span>{$t('common.theme_light')}</span>
                     {:else}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                            ></path>
+                        </svg>
+
                         <span>{$t('common.theme_dark')}</span>
                     {/if}
                 </button>
@@ -378,52 +477,62 @@
         {/if}
 
         {#if helpOpen}
-        <div class="modal-overlay" onclick={() => helpOpen = false}>
-            <div class="help-modal" onclick={e => e.stopPropagation()}>
-                <button class="modal-close" onclick={() => helpOpen = false}>✕</button>
-                <h2>{$t('help.title')}</h2>
-                <div class="help-sections">
-                    <div class="help-tier">
-                        <h3 class="tier-label">{$t('help.tier_free')}</h3>
-                        <div class="help-section">
-                            <h3>{$t('help.write_title')}</h3>
-                            <p>{$t('help.write_desc')}</p>
+            <div
+                class="modal-overlay"
+                onclick={() => helpOpen = false}
+            >
+                <div
+                    class="help-modal"
+                    onclick={(e) => e.stopPropagation()}
+                >
+                    <button
+                        class="modal-close"
+                        onclick={() => helpOpen = false}
+                    >✕</button>
+
+                    <h2>{$t('help.title')}</h2>
+                    <div class="help-sections">
+                        <div class="help-tier">
+                            <h3 class="tier-label">{$t('help.tier_free')}</h3>
+                            <div class="help-section">
+                                <h3>{$t('help.write_title')}</h3>
+                                <p>{$t('help.write_desc')}</p>
+                            </div>
+                            <div class="help-section">
+                                <h3>{$t('help.findai_title')}</h3>
+                                <p>{$t('help.findai_desc')}</p>
+                            </div>
+                            <div class="help-section">
+                                <h3>{$t('help.agora_title')}</h3>
+                                <p>{$t('help.agora_desc')}</p>
+                            </div>
+                            <div class="help-section">
+                                <h3>{$t('help.profile_title')}</h3>
+                                <p>{$t('help.profile_desc')}</p>
+                            </div>
+                            <div class="help-section">
+                                <h3>{$t('help.games_title')}</h3>
+                                <p>{$t('help.games_desc')}</p>
+                            </div>
                         </div>
-                        <div class="help-section">
-                            <h3>{$t('help.findai_title')}</h3>
-                            <p>{$t('help.findai_desc')}</p>
-                        </div>
-                        <div class="help-section">
-                            <h3>{$t('help.agora_title')}</h3>
-                            <p>{$t('help.agora_desc')}</p>
-                        </div>
-                        <div class="help-section">
-                            <h3>{$t('help.profile_title')}</h3>
-                            <p>{$t('help.profile_desc')}</p>
-                        </div>
-                        <div class="help-section">
-                            <h3>{$t('help.games_title')}</h3>
-                            <p>{$t('help.games_desc')}</p>
-                        </div>
-                    </div>
-                    <div class="help-tier">
-                        <h3 class="tier-label">{$t('help.tier_member')}</h3>
-                        <div class="help-section">
-                            <h3>{$t('help.refine_title')}</h3>
-                            <p>{$t('help.refine_desc')}</p>
-                        </div>
-                        <div class="help-section">
-                            <h3>{$t('help.evaluate_title')}</h3>
-                            <p>{$t('help.evaluate_desc')}</p>
-                        </div>
-                        <div class="help-section">
-                            <h3>{$t('help.audio_title')}</h3>
-                            <p>{$t('help.audio_desc')}</p>
+                        <div class="help-tier">
+                            <h3 class="tier-label">{$t('help.tier_member')}</h3>
+                            <div class="help-section">
+                                <h3>{$t('help.refine_title')}</h3>
+                                <p>{$t('help.refine_desc')}</p>
+                            </div>
+                            <div class="help-section">
+                                <h3>{$t('help.evaluate_title')}</h3>
+                                <p>{$t('help.evaluate_desc')}</p>
+                            </div>
+                            <div class="help-section">
+                                <h3>{$t('help.audio_title')}</h3>
+                                <p>{$t('help.audio_desc')}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
         {/if}
     </main>
 
@@ -503,8 +612,13 @@
         color: var(--accent);
     }
 
-    .logo:hover .logo-initials { color: var(--text); }
-    .logo:hover .logo-name { color: var(--accent-hover, #d4b98f); }
+    .logo:hover .logo-initials {
+        color: var(--text);
+    }
+
+    .logo:hover .logo-name {
+        color: var(--accent-hover, #d4b98f);
+    }
 
     .desktop-nav {
         display: none;
@@ -895,9 +1009,17 @@
         transition: all 0.3s;
     }
 
-    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-    .hamburger.open span:nth-child(2) { opacity: 0; }
-    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+    .hamburger.open span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .hamburger.open span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .hamburger.open span:nth-child(3) {
+        transform: rotate(-45deg) translate(5px, -5px);
+    }
 
     /* ── Mobile Menu ── */
     .mobile-menu {
@@ -1009,9 +1131,21 @@
         margin-bottom: 0.5rem;
     }
 
-    .footer-built a { color: var(--accent); text-decoration: none; }
-    .footer-disclosure { font-size: 0.72rem; color: var(--text-muted); font-style: italic; margin-top: 0.25rem; }
-    .footer-built a:hover { text-decoration: underline; }
+    .footer-built a {
+        color: var(--accent);
+        text-decoration: none;
+    }
+
+    .footer-disclosure {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        font-style: italic;
+        margin-top: 0.25rem;
+    }
+
+    .footer-built a:hover {
+        text-decoration: underline;
+    }
 
     .footer-links {
         display: flex;
@@ -1020,11 +1154,21 @@
         font-size: 0.85rem;
     }
 
-    .footer-links a { color: var(--text-muted); }
-    .footer-links a:hover { color: var(--accent); }
-    .footer-sep { color: var(--text-muted); }
+    .footer-links a {
+        color: var(--text-muted);
+    }
 
-    .main-content { flex: 1; }
+    .footer-links a:hover {
+        color: var(--accent);
+    }
+
+    .footer-sep {
+        color: var(--text-muted);
+    }
+
+    .main-content {
+        flex: 1;
+    }
 
     /* ── Theme Toggle ── */
     .theme-toggle {

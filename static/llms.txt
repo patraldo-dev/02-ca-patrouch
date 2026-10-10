@@ -1,0 +1,22 @@
+# patrouch.ca
+
+> A personal creative platform: a community agora for writing and discussion, an augmented-reality gallery, portals into WebXR worlds, reviews, and site stats. Multilingual interface.
+
+## Explore
+
+- [Home](https://patrouch.ca/): Landing page.
+- [The Agora](https://patrouch.ca/agora): Community space for writing and discussion; community index at [/agora/community](https://patrouch.ca/agora/community).
+- [AR Gallery](https://patrouch.ca/ar/gallery): Augmented-reality artworks; live demo at [/ar/demo](https://patrouch.ca/ar/demo).
+- [Portals](https://patrouch.ca/portals): Gateways into WebXR worlds, including [Oz](https://patrouch.ca/portals/oz).
+- [Reviews](https://patrouch.ca/reviews): Published reviews.
+- [Stats](https://patrouch.ca/stats): Site statistics.
+
+## Legal
+
+- [Privacy](https://patrouch.ca/privacy)
+- [Terms](https://patrouch.ca/terms)
+
+## Notes for AI agents
+
+- The interface is multilingual (language switcher on all pages).
+- Account, admin, and invitation-token pages are private and not listed here.

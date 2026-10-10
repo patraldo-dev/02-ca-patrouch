@@ -5,8 +5,8 @@
 	straight to the existing random-realm experience.
 -->
 <script>
-	import PortalScene from '$lib/components/PortalScene.svelte';
-	import { t, locale } from '$lib/i18n';
+	import PortalScene from '#lib/components/PortalScene.svelte';
+	import { t, locale } from '#lib/i18n/index.js';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();

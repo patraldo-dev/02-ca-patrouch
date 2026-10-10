@@ -1,7 +1,6 @@
-<!-- src/routes/admin/invitations/+page.svelte -->
 <script>
-    import { t } from '$lib/i18n';
-    import { page } from '$app/stores';
+    import { t } from '#lib/i18n/index.js';
+    import { page } from '$app/state';
 
     let invitations = $state([]);
     let email = $state('');
@@ -37,7 +36,7 @@
     }
 
     async function copyLink(token) {
-        const url = `${$page.url.origin}/invite/${token}`;
+        const url = `${page.url.origin}/invite/${token}`;
         await navigator.clipboard.writeText(url);
         copied = true;
         setTimeout(() => copied = false, 2000);
@@ -50,6 +49,8 @@
 
     loadInvitations();
 </script>
+
+<!-- src/routes/admin/invitations/+page.svelte -->
 
 <div class="invitations-page">
     <h1>{$t('admin.invitations.title')}</h1>
@@ -129,10 +130,25 @@
 </div>
 
 <style>
-    .invitations-page { padding: 0; }
-    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
-    .subtitle { color: #64748b; margin-bottom: 2rem; }
-    h2 { font-size: 1.15rem; margin-bottom: 0.75rem; color: #334155; }
+    .invitations-page {
+        padding: 0;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+        color: #64748b;
+        margin-bottom: 2rem;
+    }
+
+    h2 {
+        font-size: 1.15rem;
+        margin-bottom: 0.75rem;
+        color: #334155;
+    }
 
     .create-section {
         background: #f8fafc;
@@ -191,13 +207,37 @@
         font-size: 1.1rem;
     }
 
-    .list-section h2 { margin-bottom: 0.75rem; }
-    .empty { color: #94a3b8; font-style: italic; }
+    .list-section h2 {
+        margin-bottom: 0.75rem;
+    }
 
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th { text-align: left; padding: 0.5rem; border-bottom: 2px solid #e2e8f0; color: #64748b; }
-    td { padding: 0.5rem; border-bottom: 1px solid #f1f5f9; }
+    .empty {
+        color: #94a3b8;
+        font-style: italic;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    th {
+        text-align: left;
+        padding: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+        color: #64748b;
+    }
+
+    td {
+        padding: 0.5rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
     .badge {
         display: inline-block;
         padding: 0.15rem 0.5rem;

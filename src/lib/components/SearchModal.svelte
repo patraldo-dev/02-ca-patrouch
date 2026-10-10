@@ -1,8 +1,7 @@
-<!-- src/lib/components/SearchModal.svelte -->
 <script>
-    import { browser } from '$app/environment';
+    import { browser } from '$app/env';
     import { goto } from '$app/navigation';
-    import { t } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
 
     let { serverLocale = 'en', open = $bindable(false) } = $props();
 
@@ -74,8 +73,8 @@
     }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
+<!-- src/lib/components/SearchModal.svelte -->
+<svelte:window onkeydown={handleKeydown}></svelte:window>
 <!-- FAB -->
 <button class="search-fab" onclick={toggleSearch} aria-label="Search">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -200,11 +199,31 @@
         padding: 1.25rem 1.5rem;
         border-bottom: 1px solid var(--border);
     }
-    .search-header h2 { color: var(--text); font-size: 1.1rem; margin: 0; font-family: var(--font-heading, serif); }
-    .close-btn { background: none; border: none; cursor: pointer; color: var(--text-dim); padding: 0.25rem; }
-    .close-btn:hover { color: var(--text); }
 
-    .search-body { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+    .search-header h2 {
+        color: var(--text);
+        font-size: 1.1rem;
+        margin: 0;
+        font-family: var(--font-heading, serif);
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-dim);
+        padding: 0.25rem;
+    }
+
+    .close-btn:hover {
+        color: var(--text);
+    }
+
+    .search-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 1.5rem;
+    }
 
     .search-input {
         width: 100%;
@@ -237,12 +256,27 @@
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .empty-msg { font-size: 0.95rem; }
-    .hint-text { font-size: 0.85rem; color: var(--text-muted); }
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 
-    .search-results { display: flex; flex-direction: column; gap: 0.75rem; }
+    .empty-msg {
+        font-size: 0.95rem;
+    }
+
+    .hint-text {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .search-results {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
 
     .result-card {
         background: var(--surface);

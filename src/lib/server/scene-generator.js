@@ -15,9 +15,9 @@
  * needing a static/scenes skeleton.
  */
 
-import { normalizeSceneConfig } from '$lib/portals-ecs/scene-normalizer.js';
+import { normalizeSceneConfig } from "#lib/portals-ecs/scene-normalizer.js";
 
-const MISTRAL_MODEL = '@cf/mistralai/mistral-small-3.1-24b-instruct';
+const MISTRAL_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
 
 // ── System prompt ──
 // Asks Mistral for the data it's good at (mood, palette, crystal excerpts,
@@ -131,7 +131,7 @@ Rules:
  * Exported so callers can reuse the exact wording the cron used.
  */
 export function buildUserPrompt(portal, excerpts) {
-	return `Portal: ${portal.name_es} (${portal.icon})
+  return `Portal: ${portal.name_es} (${portal.icon})
 Portal mood: ${portal.color_primary}
 Writings matched (${excerpts.length}):
 
@@ -145,26 +145,31 @@ Generate the scene JSON for this portal based on these writings.`;
  * Returns the parsed object or throws with context.
  */
 async function callMistral(ai, userPrompt) {
-	const aiResponse = await ai.run(MISTRAL_MODEL, {
-		messages: [
-			{ role: 'system', content: SCENE_SYSTEM_PROMPT },
-			{ role: 'user', content: userPrompt }
-		],
-		temperature: 0.7,
-		max_tokens: 1800,
-	});
+  const aiResponse = await ai.run(MISTRAL_MODEL, {
+    messages: [
+      { role: "system", content: SCENE_SYSTEM_PROMPT },
+      { role: "user", content: userPrompt },
+    ],
+    temperature: 0.7,
+    max_tokens: 1800,
+  });
 
-	let sceneText = aiResponse.response || aiResponse.result?.response || '';
-	sceneText = sceneText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  let sceneText = aiResponse.response || aiResponse.result?.response || "";
+  sceneText = sceneText
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
 
-	try {
-		return JSON.parse(sceneText);
-	} catch {
-		// Last resort: pull the first {...} block out of the text.
-		const jsonMatch = sceneText.match(/\{[\s\S]*\}/);
-		if (jsonMatch) return JSON.parse(jsonMatch[0]);
-		throw new Error(`Mistral returned unparseable JSON (first 120 chars: "${sceneText.slice(0, 120)}")`);
-	}
+  try {
+    return JSON.parse(sceneText);
+  } catch {
+    // Last resort: pull the first {...} block out of the text.
+    const jsonMatch = sceneText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    throw new Error(
+      `Mistral returned unparseable JSON (first 120 chars: "${sceneText.slice(0, 120)}")`,
+    );
+  }
 }
 
 /**
@@ -176,29 +181,29 @@ async function callMistral(ai, userPrompt) {
  * @returns {Promise<{ sceneConfig: object, sourceIds: Array }>}
  */
 export async function generateSceneForPortal(ai, portal, sourceWritings) {
-	const sourceIds = sourceWritings.map((w) => w.id);
+  const sourceIds = sourceWritings.map((w) => w.id);
 
-	// Excerpts: max 200 chars each, max 6 writings.
-	const excerpts = sourceWritings.slice(0, 6).map((w) => {
-		const text = (w.content || '').replace(/\s+/g, ' ').trim();
-		return {
-			title: w.title || 'Untitled',
-			excerpt: text.substring(0, 200),
-			locale: w.locale,
-		};
-	});
+  // Excerpts: max 200 chars each, max 6 writings.
+  const excerpts = sourceWritings.slice(0, 6).map((w) => {
+    const text = (w.content || "").replace(/\s+/g, " ").trim();
+    return {
+      title: w.title || "Untitled",
+      excerpt: text.substring(0, 200),
+      locale: w.locale,
+    };
+  });
 
-	const userPrompt = buildUserPrompt(portal, excerpts);
-	const rawConfig = await callMistral(ai, userPrompt);
+  const userPrompt = buildUserPrompt(portal, excerpts);
+  const rawConfig = await callMistral(ai, userPrompt);
 
-	const sceneConfig = normalizeSceneConfig(rawConfig, {
-		id: portal.id,
-		color_primary: portal.color_primary,
-		color_bg: portal.color_bg,
-	});
+  const sceneConfig = normalizeSceneConfig(rawConfig, {
+    id: portal.id,
+    color_primary: portal.color_primary,
+    color_bg: portal.color_bg,
+  });
 
-	sceneConfig.source_writings = sourceIds;
-	return { sceneConfig, sourceIds };
+  sceneConfig.source_writings = sourceIds;
+  return { sceneConfig, sourceIds };
 }
 
 /**
@@ -211,11 +216,11 @@ export async function generateSceneForPortal(ai, portal, sourceWritings) {
  * @returns {Array}
  */
 export function matchWritingsByTriggers(writings, triggers = [], max = 8) {
-	const lowered = (triggers || []).map((t) => String(t).toLowerCase());
-	return writings
-		.filter((w) => {
-			const text = ((w.title || '') + ' ' + (w.content || '')).toLowerCase();
-			return lowered.some((t) => t && text.includes(t));
-		})
-		.slice(0, max);
+  const lowered = (triggers || []).map((t) => String(t).toLowerCase());
+  return writings
+    .filter((w) => {
+      const text = ((w.title || "") + " " + (w.content || "")).toLowerCase();
+      return lowered.some((t) => t && text.includes(t));
+    })
+    .slice(0, max);
 }

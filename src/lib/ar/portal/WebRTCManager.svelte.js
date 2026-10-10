@@ -14,7 +14,7 @@
  *   manager.broadcastAnchor(anchorData);
  */
 
-import { browser } from '$app/environment';
+import { browser } from "$app/env";
 
 /**
  * @param {Object} opts
@@ -27,16 +27,16 @@ import { browser } from '$app/environment';
  */
 export function createWebRTCManager({
   roomId,
-  role = 'guest',
-  signalUrl = '/api/ar/signal',
+  role = "guest",
+  signalUrl = "/api/ar/signal",
   onAnchor,
   onPeerJoined,
   onPeerLeft,
 }) {
   const RTC_CONFIG = {
     iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
     ],
   };
 
@@ -53,8 +53,8 @@ export function createWebRTCManager({
     pc = new RTCPeerConnection(RTC_CONFIG);
 
     // Host creates the data channel
-    if (role === 'host') {
-      channel = pc.createDataChannel('ar-anchor', {
+    if (role === "host") {
+      channel = pc.createDataChannel("ar-anchor", {
         ordered: true,
         maxRetransmits: 3,
       });
@@ -68,11 +68,14 @@ export function createWebRTCManager({
     };
 
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'connected') {
+      if (pc.connectionState === "connected") {
         peerConnected = true;
         connected = true;
         onPeerJoined?.();
-      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      } else if (
+        pc.connectionState === "disconnected" ||
+        pc.connectionState === "failed"
+      ) {
         peerConnected = false;
         onPeerLeft?.();
       }
@@ -81,11 +84,13 @@ export function createWebRTCManager({
     // ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate && signalWS) {
-        signalWS.send(JSON.stringify({
-          type: 'ice-candidate',
-          roomId,
-          candidate: event.candidate,
-        }));
+        signalWS.send(
+          JSON.stringify({
+            type: "ice-candidate",
+            roomId,
+            candidate: event.candidate,
+          }),
+        );
       }
     };
   }
@@ -95,22 +100,22 @@ export function createWebRTCManager({
    */
   function setupChannel(ch) {
     ch.onopen = () => {
-      console.log('[WebRTC] DataChannel open');
+      console.log("[WebRTC] DataChannel open");
     };
 
     ch.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
 
-        if (data.type === 'anchor') {
+        if (data.type === "anchor") {
           // Anchor placement data from host
           onAnchor?.(data.payload);
-        } else if (data.type === 'transform') {
+        } else if (data.type === "transform") {
           // Real-time transform updates (drag/scale/rotate)
           onAnchor?.(data.payload);
         }
       } catch (e) {
-        console.warn('[WebRTC] Failed to parse message:', e);
+        console.warn("[WebRTC] Failed to parse message:", e);
       }
     };
 
@@ -138,44 +143,48 @@ export function createWebRTCManager({
     });
 
     // Join room
-    signalWS.send(JSON.stringify({ type: 'join', roomId, role }));
+    signalWS.send(JSON.stringify({ type: "join", roomId, role }));
 
     // Handle signaling messages
     signalWS.onmessage = async (event) => {
       const msg = JSON.parse(event.data);
 
       switch (msg.type) {
-        case 'offer':
-          if (role === 'guest') {
+        case "offer":
+          if (role === "guest") {
             await pc.setRemoteDescription(new RTCSessionDescription(msg.offer));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            signalWS.send(JSON.stringify({
-              type: 'answer',
-              roomId,
-              answer: pc.localDescription,
-            }));
+            signalWS.send(
+              JSON.stringify({
+                type: "answer",
+                roomId,
+                answer: pc.localDescription,
+              }),
+            );
           }
           break;
 
-        case 'answer':
-          if (role === 'host') {
-            await pc.setRemoteDescription(new RTCSessionDescription(msg.answer));
+        case "answer":
+          if (role === "host") {
+            await pc.setRemoteDescription(
+              new RTCSessionDescription(msg.answer),
+            );
           }
           break;
 
-        case 'ice-candidate':
+        case "ice-candidate":
           if (msg.candidate) {
             await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
           }
           break;
 
-        case 'peer-joined':
+        case "peer-joined":
           // A peer joined the room
           onPeerJoined?.();
           break;
 
-        case 'peer-left':
+        case "peer-left":
           onPeerLeft?.();
           break;
       }
@@ -187,12 +196,14 @@ export function createWebRTCManager({
    * @param {Object} payload - { position: {x,y,z}, quaternion: {x,y,z,w}, scale: {x,y,z} }
    */
   function broadcastAnchor(payload) {
-    if (!channel || channel.readyState !== 'open') return;
+    if (!channel || channel.readyState !== "open") return;
 
-    channel.send(JSON.stringify({
-      type: 'anchor',
-      payload,
-    }));
+    channel.send(
+      JSON.stringify({
+        type: "anchor",
+        payload,
+      }),
+    );
   }
 
   /**
@@ -200,12 +211,14 @@ export function createWebRTCManager({
    * @param {Object} payload - Same shape as broadcastAnchor
    */
   function broadcastTransform(payload) {
-    if (!channel || channel.readyState !== 'open') return;
+    if (!channel || channel.readyState !== "open") return;
 
-    channel.send(JSON.stringify({
-      type: 'transform',
-      payload,
-    }));
+    channel.send(
+      JSON.stringify({
+        type: "transform",
+        payload,
+      }),
+    );
   }
 
   /**
@@ -213,7 +226,7 @@ export function createWebRTCManager({
    */
   function disconnect() {
     if (signalWS) {
-      signalWS.send(JSON.stringify({ type: 'leave', roomId }));
+      signalWS.send(JSON.stringify({ type: "leave", roomId }));
       signalWS.close();
       signalWS = null;
     }
@@ -230,8 +243,12 @@ export function createWebRTCManager({
   }
 
   return {
-    get connected() { return connected; },
-    get peerConnected() { return peerConnected; },
+    get connected() {
+      return connected;
+    },
+    get peerConnected() {
+      return peerConnected;
+    },
     connect,
     broadcastAnchor,
     broadcastTransform,

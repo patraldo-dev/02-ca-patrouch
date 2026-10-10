@@ -5,7 +5,7 @@
 	Agora's card grid but scoped to the user's own saved worlds.
 -->
 <script>
-	import { t } from '$lib/i18n';
+	import { t } from '#lib/i18n/index.js';
 
 	let { data } = $props();
 

@@ -1,6 +1,6 @@
 <script>
-    import { t } from '$lib/i18n';
-    import { getLocale } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
+    import { getLocale } from '#lib/i18n/index.js';
     import { get } from 'svelte/store';
 
     let { badges = [] } = $props();

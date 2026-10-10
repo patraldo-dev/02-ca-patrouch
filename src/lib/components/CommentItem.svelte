@@ -1,8 +1,8 @@
 <script>
-    import { t } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
     import { marked } from 'marked';
     import ReplyForm from './ReplyForm.svelte';
-    import { avatarVariant } from '$lib/utils.js';
+    import { avatarVariant } from '#lib/utils.js';
 
     let {
         comment,

@@ -5,7 +5,7 @@
 	back-button-friendly. The 404 guard lives in +page.server.js.
 -->
 <script>
-	import PortalScene from '$lib/components/PortalScene.svelte';
+	import PortalScene from '#lib/components/PortalScene.svelte';
 	let { data } = $props();
 </script>
 

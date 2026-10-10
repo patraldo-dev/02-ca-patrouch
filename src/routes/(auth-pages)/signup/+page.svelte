@@ -1,8 +1,8 @@
 <!-- src/routes/(auth-pages)/signup/+page.svelte -->
 <script>
     import { onMount } from 'svelte';
-    import { t } from '$lib/i18n';
-    import { authClient } from '$lib/auth-client.js';
+    import { t } from '#lib/i18n/index.js';
+    import { authClient } from '#lib/auth-client.js';
 
     let showPassword = $state(false);
     let isAdult = $state(false);

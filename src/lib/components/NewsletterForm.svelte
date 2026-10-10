@@ -1,7 +1,6 @@
-<!-- src/lib/components/NewsletterForm.svelte -->
 <script>
-    import { t, getLocale } from '$lib/i18n';
-    import { page } from '$app/stores';
+    import { t, getLocale } from '#lib/i18n/index.js';
+    import { page } from '$app/state';
 
     let email = $state('');
     let friendEmails = $state('');
@@ -12,9 +11,9 @@
     let showFriendInput = $state(false);
     let subscribedEmails = $state([]);
 
-    let isLoggedIn = $derived(!!$page.data?.user);
-    let userEmail = $derived($page.data?.user?.email || '');
-    let isSubscribed = $state($page.data?.newsletterSubscribed || false);
+    let isLoggedIn = $derived(!!page.data?.user);
+    let userEmail = $derived(page.data?.user?.email || '');
+    let isSubscribed = $state(page.data?.newsletterSubscribed || false);
 
     async function subscribeEmail(addr) {
         const response = await fetch('/api/newsletter/subscribe', {
@@ -52,7 +51,7 @@
         const raw = friendEmails.trim();
         if (!raw) return;
 
-        const addrs = raw.split(/[\s,;]+/).filter(a => a.includes('@'));
+        const addrs = raw.split(/[\s,;]+/).filter((a) => a.includes('@'));
         if (addrs.length === 0) {
             message = $t('common.newsletter.error_email_empty');
             isSuccess = false;
@@ -108,6 +107,8 @@
         isSubmitting = false;
     }
 </script>
+
+<!-- src/lib/components/NewsletterForm.svelte -->
 
 <div class="newsletter-form">
     <h3>{$t('common.newsletter.title')}</h3>
@@ -217,8 +218,14 @@
         transition: background 0.2s;
     }
 
-    .subscribe-btn:hover { background: var(--accent-hover); }
-    .subscribe-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .subscribe-btn:hover {
+        background: var(--accent-hover);
+    }
+
+    .subscribe-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
     .subscribed-badge {
         padding: 0.6rem 1.2rem;
@@ -297,8 +304,14 @@
         transition: border-color 0.2s;
     }
 
-    .input-group input:focus { outline: none; border-color: var(--accent); }
-    .input-group input::placeholder { color: var(--text-muted); }
+    .input-group input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .input-group input::placeholder {
+        color: var(--text-muted);
+    }
 
     .input-group button {
         padding: 0.75rem 1.5rem;
@@ -314,8 +327,14 @@
         white-space: nowrap;
     }
 
-    .input-group button:hover { background: var(--accent-hover); }
-    .input-group button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .input-group button:hover {
+        background: var(--accent-hover);
+    }
+
+    .input-group button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
     .message {
         padding: 0.75rem 1rem;

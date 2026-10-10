@@ -1,6 +1,6 @@
 <!-- src/lib/components/CommentForm.svelte -->
 <script>
-    import { t } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
 
     let { writingId, parentId = null, onCommentPosted, userRole = 'user' } = $props();
 

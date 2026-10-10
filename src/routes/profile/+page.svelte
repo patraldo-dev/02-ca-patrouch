@@ -1,14 +1,14 @@
 <!-- src/routes/profile/+page.svelte -->
 <script>
-    import { t } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
     import { get } from 'svelte/store';
     import { goto } from '$app/navigation';
     import { tick } from 'svelte';
-    import { avatarVariant } from '$lib/utils.js';
-    import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
-    import WordMilestones from '$lib/components/WordMilestones.svelte';
-    import BadgeTrophyCase from '$lib/components/BadgeTrophyCase.svelte';
-    import WriterOfTheWeek from '$lib/components/WriterOfTheWeek.svelte';
+    import { avatarVariant } from '#lib/utils.js';
+    import WritingHeatmap from '#lib/components/WritingHeatmap.svelte';
+    import WordMilestones from '#lib/components/WordMilestones.svelte';
+    import BadgeTrophyCase from '#lib/components/BadgeTrophyCase.svelte';
+    import WriterOfTheWeek from '#lib/components/WriterOfTheWeek.svelte';
 
     let { data } = $props();
 

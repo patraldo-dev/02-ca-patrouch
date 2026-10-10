@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
 
   const CF_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 
@@ -25,7 +25,7 @@
   // Semicircular arrangement — all visible from camera at z=6
   const placements = ARTWORKS.map((_, i) => {
     const n = ARTWORKS.length;
-    const angle = ((i / (n - 1)) - 0.5) * Math.PI * 0.6; // -54° to +54°
+    const angle = (i / (n - 1) - 0.5) * Math.PI * 0.6; // -54° to +54°
     return {
       angle,
       radius: 4,

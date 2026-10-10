@@ -1,7 +1,6 @@
-<!-- src/lib/components/LanguageSwitcherMobile.svelte -->
 <script>
-  import { locale } from '$lib/i18n';
-  import { browser } from '$app/environment';
+  import { locale } from '#lib/i18n/index.js';
+  import { browser } from '$app/env';
 
   const languages = [
     { code: 'en', label: 'EN' },
@@ -34,6 +33,8 @@
     }
   }
 </script>
+
+<!-- src/lib/components/LanguageSwitcherMobile.svelte -->
 
 <div class="lang-switcher">
   {#each languages as lang}

@@ -1,6 +1,6 @@
 <script>
-    import { page } from '$app/stores';
-    import { t, locale, getLocale } from '$lib/i18n';
+    import { page } from '$app/state';
+    import { t, locale, getLocale } from '#lib/i18n/index.js';
 
     let { data } = $props();
 
@@ -20,7 +20,7 @@
     }
 
     function localeLabel(code) {
-        return { en: 'English', es: 'Español', fr: 'Français' }[code] || code;
+        return ({ en: 'English', es: 'Español', fr: 'Français' })[code] || code;
     }
 
     let revealed = $state({});
@@ -39,10 +39,15 @@
     async function loadGameStats() {
         showStatsModal = true;
         // Derive stats from localStorage (current round only)
-        const guesses = Object.entries(revealed).filter(([id]) => shuffledWritings.some(w => w.id === id));
-        let aiCorrect = 0, humanCorrect = 0, aiWrong = 0, humanWrong = 0;
+        const guesses = Object.entries(revealed).filter(([id]) => shuffledWritings.some((w) => w.id === id));
+
+        let aiCorrect = 0,
+            humanCorrect = 0,
+            aiWrong = 0,
+            humanWrong = 0;
+
         for (const [id, label] of guesses) {
-            const w = data.writings.find(x => x.id === id);
+            const w = data.writings.find((x) => x.id === id);
             if (!w) continue;
             const isCorrect = String(label).startsWith('Correct');
             const isAI = w.role === 'agent';
@@ -55,7 +60,9 @@
             total_reveals: guesses.length,
             ai_found: aiCorrect,
             human_found: humanCorrect,
-            accuracy: guesses.length > 0 ? Math.round(((aiCorrect + humanCorrect) / guesses.length) * 100) : 0
+            accuracy: guesses.length > 0
+                ? Math.round((aiCorrect + humanCorrect) / guesses.length * 100)
+                : 0
         };
     }
 
@@ -71,7 +78,7 @@
     }
 
     let shuffledWritings = $derived(showGame ? shuffle(data.writings) : data.writings);
-    let revealedCount = $derived(shuffledWritings.filter(w => revealed[w.id]).length);
+    let revealedCount = $derived(shuffledWritings.filter((w) => revealed[w.id]).length);
     let showLeaderboard = $state(false);
     let leaderboard = $state([]);
     let leaderboardLoading = $state(false);
@@ -186,80 +193,80 @@
         {#if data.writings?.length === 0}
             <div class="no-writings">{$t('agora.no_writings')}</div>
         {/if}
-    {#if showStatsModal}
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        {#if showStatsModal}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div class="modal-overlay" onclick={() => showStatsModal = false}>
             <div class="modal-content" onclick={(e) => e.stopPropagation()}>
-                <div class="modal-header">
-                    <h2>{$t('agora.game.stats_title')}</h2>
+                    <div class="modal-header">
+                        <h2>{$t('agora.game.stats_title')}</h2>
                     <button class="modal-close" onclick={() => showStatsModal = false}>✕</button>
-                </div>
-                {#if gameStats}
-                    <div class="stats-grid">
-                        <div class="stat-block">
-                            <span class="stat-value">{gameStats.total_reveals}</span>
-                            <span class="stat-label">{$t('agora.game.stats_reveals')}</span>
-                        </div>
-                        <div class="stat-block">
-                            <span class="stat-value">{gameStats.ai_found}</span>
-                            <span class="stat-label">{$t('agora.game.stats_ai_found')}</span>
-                        </div>
-                        <div class="stat-block">
-                            <span class="stat-value">{gameStats.human_found}</span>
-                            <span class="stat-label">{$t('agora.game.stats_human_found')}</span>
-                        </div>
-                        <div class="stat-block">
-                            <span class="stat-value">{gameStats.accuracy}%</span>
-                            <span class="stat-label">{$t('agora.game.stats_accuracy')}</span>
-                        </div>
                     </div>
-                    <p class="stats-hint">{$t('agora.game.stats_hint')}</p>
-                {:else}
-                    <div class="stats-loading">…</div>
-                {/if}
+                    {#if gameStats}
+                        <div class="stats-grid">
+                            <div class="stat-block">
+                                <span class="stat-value">{gameStats.total_reveals}</span>
+                                <span class="stat-label">{$t('agora.game.stats_reveals')}</span>
+                            </div>
+                            <div class="stat-block">
+                                <span class="stat-value">{gameStats.ai_found}</span>
+                                <span class="stat-label">{$t('agora.game.stats_ai_found')}</span>
+                            </div>
+                            <div class="stat-block">
+                                <span class="stat-value">{gameStats.human_found}</span>
+                                <span class="stat-label">{$t('agora.game.stats_human_found')}</span>
+                            </div>
+                            <div class="stat-block">
+                                <span class="stat-value">{gameStats.accuracy}%</span>
+                                <span class="stat-label">{$t('agora.game.stats_accuracy')}</span>
+                            </div>
+                        </div>
+                        <p class="stats-hint">{$t('agora.game.stats_hint')}</p>
+                    {:else}
+                        <div class="stats-loading">…</div>
+                    {/if}
+                </div>
             </div>
-        </div>
-    {/if}
+        {/if}
 
-    {#if showLeaderboard}
+        {#if showLeaderboard}
         <div class="modal-overlay" onclick={() => showLeaderboard = false}>
             <div class="modal-content modal-wide" onclick={(e) => e.stopPropagation()}>
-                <div class="modal-header">
-                    <h2>🏆 Leaderboard</h2>
+                    <div class="modal-header">
+                        <h2>🏆 Leaderboard</h2>
                     <button class="modal-close" onclick={() => showLeaderboard = false}>✕</button>
-                </div>
-                {#if leaderboardLoading}
-                    <div class="stats-loading">Loading leaderboard…</div>
-                {:else if leaderboard.length > 0}
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Player</th>
-                                <th>Guesses</th>
-                                <th>Correct</th>
-                                <th>Accuracy</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {#each leaderboard as entry, i}
-                                <tr class:top-three={i < 3}>
-                                    <td class="rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
-                                    <td class="player">{entry.username}</td>
-                                    <td>{entry.total_guesses}</td>
-                                    <td>{entry.correct_guesses}</td>
-                                    <td class="accuracy">{entry.accuracy}%</td>
+                    </div>
+                    {#if leaderboardLoading}
+                        <div class="stats-loading">Loading leaderboard…</div>
+                    {:else if leaderboard.length > 0}
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Player</th>
+                                    <th>Guesses</th>
+                                    <th>Correct</th>
+                                    <th>Accuracy</th>
                                 </tr>
-                            {/each}
-                        </tbody>
-                    </table>
-                {:else}
-                    <p class="empty-state-text">No leaderboard data yet. Play the game to rank up!</p>
-                {/if}
+                            </thead>
+                            <tbody>
+                                {#each leaderboard as entry, i}
+                                    <tr class:top-three={i < 3}>
+                                        <td class="rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+                                        <td class="player">{entry.username}</td>
+                                        <td>{entry.total_guesses}</td>
+                                        <td>{entry.correct_guesses}</td>
+                                        <td class="accuracy">{entry.accuracy}%</td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    {:else}
+                        <p class="empty-state-text">No leaderboard data yet. Play the game to rank up!</p>
+                    {/if}
+                </div>
             </div>
-        </div>
-    {/if}
+        {/if}
 
     {:else}
         <div class="empty-state">

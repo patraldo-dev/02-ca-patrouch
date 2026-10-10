@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import { THEMES, classifyText } from '$lib/ar/portal/themes.js';
-  import { calculateBearing, relativeBearing } from '$lib/geo.js';
+  import { THEMES, classifyText } from '#lib/ar/portal/themes.js';
+  import { calculateBearing, relativeBearing } from '#lib/geo.js';
 
   // $state declarations first
   let loaded = $state(false);
@@ -30,9 +30,9 @@
 
   onMount(async () => {
     const [ap, tc, sa] = await Promise.all([
-      import('$lib/ar/portal/ARPortal.svelte'),
-      import('$lib/ar/portal/TextContent.svelte'),
-      import('$lib/ar/portal/SpatialAudio.svelte'),
+      import('#lib/ar/portal/ARPortal.svelte'),
+      import('#lib/ar/portal/TextContent.svelte'),
+      import('#lib/ar/portal/SpatialAudio.svelte'),
     ]);
     components = {
       ARPortal: ap.default,

@@ -1,9 +1,8 @@
-<!-- src/routes/audio/+page.svelte -->
 <script>
-    import { t, locale, getLocale } from '$lib/i18n';
+    import { t, locale, getLocale } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import { browser } from '$app/environment';
+    import { browser } from '$app/env';
 
     let { data } = $props();
 
@@ -275,6 +274,8 @@
     }
 </script>
 
+<!-- src/routes/audio/+page.svelte -->
+
 <main class="audio-page">
     <div class="container">
         <h1>{$t('audio.title')}</h1>
@@ -377,8 +378,29 @@
                     rows="14"
                     disabled={isLoading || isAiLoading}
                 ></textarea>
-                <button class="copy-inline" onclick={() => { navigator.clipboard.writeText(text); showToast('Copied!'); }} title="{$t('audio.copy')}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+
+                <button
+                    class="copy-inline"
+                    onclick={() => {
+                        navigator.clipboard.writeText(text);
+                        showToast('Copied!');
+                    }}
+                    title={$t('audio.copy')}
+                >
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+
+                        <path
+                            d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                        ></path>
+                    </svg>
                 </button>
                 <div class="textarea-footer">
                     <span class="char-count">{text.length} / 5000 {$t('audio.chars') || 'characters'}</span>
@@ -426,10 +448,15 @@
             </div>
         {/if}
         {#if provider === 'cloudflare'}
-        <div class="key-status">
-            <span>{hasCfKey ? 'CF: configured' : 'CF: not configured'}</span>
-            <button onclick={() => { hasCfKey ? removeCfApiKey() : (showCfKeySetup = true); }}>{$t('audio.key_change')}</button>
-        </div>
+            <div class="key-status">
+                <span>{hasCfKey ? 'CF: configured' : 'CF: not configured'}</span>
+
+                <button
+                    onclick={() => {
+                        hasCfKey ? removeCfApiKey() : showCfKeySetup = true;
+                    }}
+                >{$t('audio.key_change')}</button>
+            </div>
         {/if}
     </div>
     {#if showCopyToast}
@@ -573,8 +600,14 @@
         transition: opacity 0.2s;
     }
 
-    button:hover:not(:disabled) { opacity: 0.85; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:hover:not(:disabled) {
+        opacity: 0.85;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
     button:not(.btn-primary):not(.btn-secondary) {
         padding: 0.75rem 1.5rem;

@@ -1,8 +1,7 @@
-<!-- src/lib/components/LanguageSwitcherDesktop.svelte -->
 <script>
-  import { locale, getLocale } from '$lib/i18n';
-  import { browser } from '$app/environment';
-  import { page } from '$app/stores';
+  import { locale, getLocale } from '#lib/i18n/index.js';
+  import { browser } from '$app/env';
+  import { page } from '$app/state';
 
   const languages = [
     { code: 'en', label: 'EN' },
@@ -36,8 +35,10 @@
 
   let { serverLocale = 'es' } = $props();
   let activeLocale = $state(serverLocale || 'es');
-  let current = $derived(languages.find(l => l.code === activeLocale));
+  let current = $derived(languages.find((l) => l.code === activeLocale));
 </script>
+
+<!-- src/lib/components/LanguageSwitcherDesktop.svelte -->
 
 <div class="lang-switcher">
   {#each languages as lang}

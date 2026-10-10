@@ -1,9 +1,8 @@
-<!-- src/routes/writings/[id]/edit/+page.svelte -->
 <script>
-    import { t, getLocale } from '$lib/i18n';
+    import { t, getLocale } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
     import { marked } from 'marked';
-    import { browser } from '$app/environment';
+    import { browser } from '$app/env';
 
     let { data } = $props();
     let title = $state(data.writing.title);
@@ -79,6 +78,8 @@
     function backToWriting() { goto('/writings/' + data.writing.id); }
 </script>
 
+<!-- src/routes/writings/[id]/edit/+page.svelte -->
+
 <div class="edit-page">
     <div class="edit-header">
         <button class="back-link" onclick={backToWriting}>← {$t('write.editor.back')}</button>
@@ -140,60 +141,262 @@
 </div>
 
 <style>
-    .edit-page { max-width: 820px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
-    .edit-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
-    .back-link { background: none; border: none; color: var(--accent, #c9a87c); font-family: var(--font-body); font-size: 0.9rem; cursor: pointer; padding: 0.25rem 0; }
-    .edit-meta { display: flex; align-items: center; gap: 1rem; font-size: 0.8rem; color: var(--text-dim, #a1a1aa); }
-    .from-prompt { background: rgba(201,168,124,0.15); color: var(--accent, #c9a87c); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; }
-    .word-count { font-variant-numeric: tabular-nums; }
+    .edit-page {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 3rem;
+    }
 
-    .toast { padding: 0.75rem 1rem; border-radius: var(--radius, 8px); margin-bottom: 1rem; font-size: 0.9rem; }
-    .toast.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
-    .toast.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
+    .edit-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
 
-    .editor-field label { display: block; color: var(--text); font-size: 0.85rem; margin-bottom: 0.4rem; }
+    .back-link {
+        background: none;
+        border: none;
+        color: var(--accent, #c9a87c);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        cursor: pointer;
+        padding: 0.25rem 0;
+    }
+
+    .edit-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: var(--text-dim, #a1a1aa);
+    }
+
+    .from-prompt {
+        background: rgba(201,168,124,0.15);
+        color: var(--accent, #c9a87c);
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+
+    .word-count {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .toast {
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius, 8px);
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .toast.success {
+        background: rgba(74,222,128,0.1);
+        border: 1px solid rgba(74,222,128,0.3);
+        color: #4ade80;
+    }
+
+    .toast.error {
+        background: rgba(248,113,113,0.1);
+        border: 1px solid rgba(248,113,113,0.3);
+        color: #f87171;
+    }
+
+    .editor-field label {
+        display: block;
+        color: var(--text);
+        font-size: 0.85rem;
+        margin-bottom: 0.4rem;
+    }
+
     .editor-field input {
         width: 100%; padding: 0.6rem 0.75rem; background: var(--surface, #141417);
         border: 2px solid var(--border, rgba(255,255,255,0.1)); border-radius: var(--radius, 8px);
         color: var(--text); font-family: var(--font-heading, 'Playfair Display', serif);
         font-size: 1.25rem; outline: none; transition: border-color 0.2s; box-sizing: border-box;
     }
-    .editor-field input:focus { border-color: var(--accent, #c9a87c); }
 
-    .editor-toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-    .toolbar-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; font-family: var(--font-body); }
-    .toolbar-btn:hover { border-color: var(--accent); }
-    .toolbar-spacer { flex: 1; }
-    .visibility-label { font-size: 0.8rem; color: var(--text-dim); }
-    .editor-toolbar select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 0.35rem 0.5rem; font-size: 0.8rem; cursor: pointer; }
+    .editor-field input:focus {
+        border-color: var(--accent, #c9a87c);
+    }
 
-    .editor-body { min-height: 400px; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius, 8px); overflow: hidden; }
+    .editor-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-btn {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        font-family: var(--font-body);
+    }
+
+    .toolbar-btn:hover {
+        border-color: var(--accent);
+    }
+
+    .toolbar-spacer {
+        flex: 1;
+    }
+
+    .visibility-label {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+    }
+
+    .editor-toolbar select {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        padding: 0.35rem 0.5rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+
+    .editor-body {
+        min-height: 400px;
+        background: var(--surface);
+        border: 2px solid var(--border);
+        border-radius: var(--radius, 8px);
+        overflow: hidden;
+    }
+
     .editor-textarea {
         width: 100%; min-height: 400px; padding: 1.25rem; background: transparent; border: none;
         color: var(--text); font-family: var(--font-body); font-size: 1rem;
         line-height: 1.8; resize: vertical; outline: none; box-sizing: border-box;
     }
-    .preview-pane { padding: 1.25rem; max-height: 600px; overflow-y: auto; }
-    .preview-content { color: var(--text); line-height: 1.8; font-size: 1rem; }
-    .preview-content :global(h1), .preview-content :global(h2), .preview-content :global(h3) { font-family: var(--font-heading, 'Playfair Display', serif); color: var(--text); margin: 1.5rem 0 0.75rem; }
-    .preview-content :global(h1) { font-size: 1.5rem; }
-    .preview-content :global(h2) { font-size: 1.25rem; }
-    .preview-content :global(p) { margin-bottom: 1rem; }
-    .preview-content :global(em) { color: var(--accent, #c9a87c); }
-    .preview-content :global(blockquote) { border-left: 3px solid var(--accent, #c9a87c); padding-left: 1rem; margin: 1rem 0; color: var(--text-dim); font-style: italic; }
-    .preview-content :global(strong) { color: var(--text); }
-    .preview-content :global(a) { color: var(--accent, #c9a87c); }
 
-    .editor-actions { display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.5rem; position: relative; }
-    .toast { position: absolute; bottom: 100%; right: 0; margin-bottom: 0.5rem; padding: 0.5rem 1rem; border-radius: var(--radius, 8px); font-size: 0.85rem; white-space: nowrap; }
-    .toast.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
-    .toast.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
-    .btn-save, .btn-publish { padding: 0.6rem 1.25rem; border: none; border-radius: var(--radius, 8px); font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-    .btn-save { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid var(--border); }
-    .btn-save:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
-    .btn-publish { background: var(--accent, #c9a87c); color: var(--bg); }
-    .btn-publish:hover:not(:disabled) { opacity: 0.9; }
-    .btn-save:disabled, .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
+    .preview-pane {
+        padding: 1.25rem;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .preview-content {
+        color: var(--text);
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+
+    .preview-content :global(h1),
+    .preview-content :global(h2),
+    .preview-content :global(h3) {
+        font-family: var(--font-heading, 'Playfair Display', serif);
+        color: var(--text);
+        margin: 1.5rem 0 0.75rem;
+    }
+
+    .preview-content :global(h1) {
+        font-size: 1.5rem;
+    }
+
+    .preview-content :global(h2) {
+        font-size: 1.25rem;
+    }
+
+    .preview-content :global(p) {
+        margin-bottom: 1rem;
+    }
+
+    .preview-content :global(em) {
+        color: var(--accent, #c9a87c);
+    }
+
+    .preview-content :global(blockquote) {
+        border-left: 3px solid var(--accent, #c9a87c);
+        padding-left: 1rem;
+        margin: 1rem 0;
+        color: var(--text-dim);
+        font-style: italic;
+    }
+
+    .preview-content :global(strong) {
+        color: var(--text);
+    }
+
+    .preview-content :global(a) {
+        color: var(--accent, #c9a87c);
+    }
+
+    .editor-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        padding-top: 0.5rem;
+        position: relative;
+    }
+
+    .toast {
+        position: absolute;
+        bottom: 100%;
+        right: 0;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius, 8px);
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .toast.success {
+        background: rgba(74,222,128,0.1);
+        border: 1px solid rgba(74,222,128,0.3);
+        color: #4ade80;
+    }
+
+    .toast.error {
+        background: rgba(248,113,113,0.1);
+        border: 1px solid rgba(248,113,113,0.3);
+        color: #f87171;
+    }
+
+    .btn-save,
+    .btn-publish {
+        padding: 0.6rem 1.25rem;
+        border: none;
+        border-radius: var(--radius, 8px);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .btn-save {
+        background: rgba(255,255,255,0.08);
+        color: var(--text);
+        border: 1px solid var(--border);
+    }
+
+    .btn-save:hover:not(:disabled) {
+        background: rgba(255,255,255,0.12);
+    }
+
+    .btn-publish {
+        background: var(--accent, #c9a87c);
+        color: var(--bg);
+    }
+
+    .btn-publish:hover:not(:disabled) {
+        opacity: 0.9;
+    }
+
+    .btn-save:disabled,
+    .btn-publish:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
     @media (max-width: 768px) {
         .edit-header { flex-direction: column; align-items: flex-start; }

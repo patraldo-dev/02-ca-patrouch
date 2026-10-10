@@ -1,5 +1,5 @@
 <script>
-    import GlbPreview from '$lib/components/GlbPreview.svelte';
+    import GlbPreview from '#lib/components/GlbPreview.svelte';
 
     let { data } = $props();
 

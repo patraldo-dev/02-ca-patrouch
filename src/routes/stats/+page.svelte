@@ -1,8 +1,8 @@
 <script>
-    import { t } from '$lib/i18n';
-    import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
-    import BadgeTrophyCase from '$lib/components/BadgeTrophyCase.svelte';
-    import WordMilestones from '$lib/components/WordMilestones.svelte';
+    import { t } from '#lib/i18n/index.js';
+    import WritingHeatmap from '#lib/components/WritingHeatmap.svelte';
+    import BadgeTrophyCase from '#lib/components/BadgeTrophyCase.svelte';
+    import WordMilestones from '#lib/components/WordMilestones.svelte';
 
     let { data } = $props();
 

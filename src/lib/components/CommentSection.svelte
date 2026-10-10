@@ -1,7 +1,7 @@
 <script>
-    import { t } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
     import { get } from 'svelte/store';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import CommentItem from './CommentItem.svelte';
 
     let { writingId, writingAuthorId, allowComments = 1, user, isAdmin = false, isAuthor = false } = $props();
@@ -29,7 +29,7 @@
     });
 
     // Enrich comments with parent_username
-    let enrichedComments = $derived(comments.map(c => ({
+    let enrichedComments = $derived(comments.map((c) => ({
         ...c,
         parent_username: c.parent_id ? usernameMap[c.parent_id] : null
     })));
@@ -84,9 +84,13 @@
     }
 
     async function handleLike(commentId, liked) {
-        comments = comments.map(c =>
-            c.id === commentId ? { ...c, liked, likes_count: liked ? c.likes_count + 1 : c.likes_count - 1 } : c
-        );
+        comments = comments.map((c) => c.id === commentId
+            ? {
+                ...c,
+                liked,
+                likes_count: liked ? c.likes_count + 1 : c.likes_count - 1
+            }
+            : c);
     }
 
     async function handleReply(parentId, content) {
@@ -105,9 +109,7 @@
     }
 
     async function handlePick(commentId, is_featured) {
-        comments = comments.map(c =>
-            c.id === commentId ? { ...c, is_featured } : c
-        );
+        comments = comments.map((c) => c.id === commentId ? { ...c, is_featured } : c);
     }
 
     async function toggleComments() {
@@ -184,10 +186,10 @@
         {:else}
             {#each enrichedComments as comment (comment.id)}
                 <CommentItem
-                    {comment}
-                    {user}
-                    {writingAuthorId}
-                    {isAdmin}
+                    comment={comment}
+                    user={user}
+                    writingAuthorId={writingAuthorId}
+                    isAdmin={isAdmin}
                     onLike={handleLike}
                     onReply={handleReply}
                     onPick={handlePick}

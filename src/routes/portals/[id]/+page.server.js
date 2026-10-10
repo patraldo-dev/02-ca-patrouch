@@ -1,5 +1,5 @@
-import { error } from '@sveltejs/kit';
-import { loadPortalsData } from '$lib/server/portals-data.js';
+import { error } from "@sveltejs/kit";
+import { loadPortalsData } from "#lib/server/portals-data.js";
 
 // Canonical portal ids that have a static/scenes/<id>.json fallback config.
 // These are the renderable worlds independent of D1/Mistral state. Kept in sync
@@ -7,28 +7,36 @@ import { loadPortalsData } from '$lib/server/portals-data.js';
 // any of these so direct links like /portals/cosmos resolve even if the portal
 // is mid-rename in D1 or has no Mistral-generated scene yet.
 const STATIC_SCENE_IDS = new Set([
-	'arboleda', 'cosmos', 'fiesta', 'mysterious-market', 'narrador',
-	'nostalgias', 'oceano', 'passage-to-the-past', 'spectral-dreams',
-	'suenos', 'urbano',
+  "arboleda",
+  "cosmos",
+  "fiesta",
+  "mysterious-market",
+  "narrador",
+  "nostalgias",
+  "oceano",
+  "passage-to-the-past",
+  "spectral-dreams",
+  "suenos",
+  "urbano",
 ]);
 
 export async function load({ params, platform, locals }) {
-	const data = await loadPortalsData(platform?.env?.DB_book);
-	const { id } = params;
+  const data = await loadPortalsData(platform?.env?.DB_book);
+  const { id } = params;
 
-	// Resolve if the id is a known active portal (D1), has a stored Mistral
-	// scene config, OR has a static fallback config. The static configs are the
-	// source of truth for rendering, so this guarantees every renderable world
-	// is reachable via direct URL.
-	const isKnownPortal = (data.portals || []).some((p) => p.id === id);
-	const hasSceneConfig = !!data.sceneConfigs?.[id];
-	const hasStaticConfig = STATIC_SCENE_IDS.has(id);
+  // Resolve if the id is a known active portal (D1), has a stored Mistral
+  // scene config, OR has a static fallback config. The static configs are the
+  // source of truth for rendering, so this guarantees every renderable world
+  // is reachable via direct URL.
+  const isKnownPortal = (data.portals || []).some((p) => p.id === id);
+  const hasSceneConfig = !!data.sceneConfigs?.[id];
+  const hasStaticConfig = STATIC_SCENE_IDS.has(id);
 
-	if (!isKnownPortal && !hasSceneConfig && !hasStaticConfig) {
-		throw error(404, `Unknown portal: ${id}`);
-	}
+  if (!isKnownPortal && !hasSceneConfig && !hasStaticConfig) {
+    throw error(404, `Unknown portal: ${id}`);
+  }
 
-	// user/display_name threaded for co-presence (NetworkSystem identifies the
-	// visitor by name instead of the anonymous "visitor" literal).
-	return { ...data, initialPortalId: id, user: locals.user || null };
+  // user/display_name threaded for co-presence (NetworkSystem identifies the
+  // visitor by name instead of the anonymous "visitor" literal).
+  return { ...data, initialPortalId: id, user: locals.user || null };
 }

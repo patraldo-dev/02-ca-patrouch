@@ -13,9 +13,9 @@
 -->
 <script>
 	import { onMount } from 'svelte';
-	import { t, locale, setLocale } from '$lib/i18n';
+	import { t, locale, setLocale } from '#lib/i18n/index.js';
 	import { invalidateAll } from '$app/navigation';
-	import { avatarVariant } from '$lib/utils.js';
+	import { avatarVariant } from '#lib/utils.js';
 
 	let { data, initialPortalId = null, onRewrite = null } = $props();
 
@@ -51,7 +51,7 @@
 
 	// Fly the camera to a remote peer's position (approach from a few meters back).
 	async function flyToPeer(peer) {
-		const mod = await import('$lib/portals-ecs/locomotion-system.js');
+		const mod = await import('#lib/portals-ecs/locomotion-system.js');
 		// Approach from behind/above so you see them, not inside them.
 		const approachDist = 2.5;
 		const approachY = 0.5;
@@ -60,7 +60,7 @@
 
 	// Recenter the scene (same as Esc — works on mobile where there's no Esc key).
 	async function recenterScene() {
-		const mod = await import('$lib/portals-ecs/locomotion-system.js');
+		const mod = await import('#lib/portals-ecs/locomotion-system.js');
 		mod.recenter();
 		drawerOpen = false;
 	}
@@ -133,7 +133,7 @@
 
 	// ── Voice chat ──
 	async function enableVoice() {
-		const mod = await import('$lib/portals-ecs/network-system.js');
+		const mod = await import('#lib/portals-ecs/network-system.js');
 		const stream = await mod.captureMic();
 		if (stream) {
 			mod.voice.enabled = true;
@@ -143,7 +143,7 @@
 		}
 	}
 	async function toggleMute() {
-		const mod = await import('$lib/portals-ecs/network-system.js');
+		const mod = await import('#lib/portals-ecs/network-system.js');
 		voiceMuted = mod.toggleMute();
 	}
 
@@ -152,7 +152,7 @@
 		e.preventDefault();
 		const t = e.touches[0];
 		stickActive = true;
-		import('$lib/portals-ecs/locomotion-system.js').then(({ setThumbstickActive }) => setThumbstickActive(true));
+		import('#lib/portals-ecs/locomotion-system.js').then(({ setThumbstickActive }) => setThumbstickActive(true));
 		stickOrigin = { x: t.clientX, y: t.clientY };
 		stickPos = { x: 0, y: 0 };
 	}
@@ -175,7 +175,7 @@
 		stickActive = false;
 		stickPos = { x: 0, y: 0 };
 		if (inlineInput) { inlineInput.x = 0; inlineInput.y = 0; }
-		import('$lib/portals-ecs/locomotion-system.js').then(({ setThumbstickActive }) => setThumbstickActive(false));
+		import('#lib/portals-ecs/locomotion-system.js').then(({ setThumbstickActive }) => setThumbstickActive(false));
 	}
 
 	// ── Drag-look handlers (touch, on the canvas area) ──
@@ -267,14 +267,14 @@
 					throw new Error('No scene configs found (neither D1/Mistral nor static fallbacks)');
 				}
 
-				const { bootPortalEngine, registerSceneRenderer } = await import('$lib/portals-ecs/world-builder.js');
-				const { buildOceanScene } = await import('$lib/portals-ecs/ocean-scene.js');
-				const { buildForestScene } = await import('$lib/portals-ecs/forest-scene.js');
-				const { buildCelebrationScene } = await import('$lib/portals-ecs/celebration-scene.js');
-				const { buildCityScene } = await import('$lib/portals-ecs/city-scene.js');
-				const { buildDreamScene } = await import('$lib/portals-ecs/dream-scene.js');
-				const { buildTheaterScene } = await import('$lib/portals-ecs/theater-scene.js');
-				const { buildMemoryScene } = await import('$lib/portals-ecs/memory-scene.js');
+				const { bootPortalEngine, registerSceneRenderer } = await import('#lib/portals-ecs/world-builder.js');
+				const { buildOceanScene } = await import('#lib/portals-ecs/ocean-scene.js');
+				const { buildForestScene } = await import('#lib/portals-ecs/forest-scene.js');
+				const { buildCelebrationScene } = await import('#lib/portals-ecs/celebration-scene.js');
+				const { buildCityScene } = await import('#lib/portals-ecs/city-scene.js');
+				const { buildDreamScene } = await import('#lib/portals-ecs/dream-scene.js');
+				const { buildTheaterScene } = await import('#lib/portals-ecs/theater-scene.js');
+				const { buildMemoryScene } = await import('#lib/portals-ecs/memory-scene.js');
 				const ENV_TO_SCENE = {
 					ocean: buildOceanScene, forest: buildForestScene,
 					celebration: buildCelebrationScene, city: buildCityScene,
@@ -311,7 +311,7 @@
 				// Load locomotion inline input dynamically (client-side only —
 				// @iwsdk/core references `document` at module-eval time, which
 				// crashes SSR).
-				const locMod = await import('$lib/portals-ecs/locomotion-system.js');
+				const locMod = await import('#lib/portals-ecs/locomotion-system.js');
 				inlineInput = locMod.inlineInput;
 				initInlineInput = locMod.initInlineInput;
 				disposeInlineInput = locMod.disposeInlineInput;

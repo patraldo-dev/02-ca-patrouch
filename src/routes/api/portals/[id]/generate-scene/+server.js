@@ -22,123 +22,157 @@
  * Response: the generated (and stored) scene config.
  */
 
-import { json } from '@sveltejs/kit';
-import { requireRole } from '$lib/server/require-role.js';
-import { generateSceneForPortal, matchWritingsByTriggers } from '$lib/server/scene-generator.js';
+import { json } from "@sveltejs/kit";
+import { requireRole } from "#lib/server/require-role.js";
+import {
+  generateSceneForPortal,
+  matchWritingsByTriggers,
+} from "#lib/server/scene-generator.js";
 
 export async function POST({ params, platform, request, locals, url }) {
-	// Human-action auth: a logged-in editor/admin. Session-based, scoped to the
-	// user, no shared secret exposed to any UI. requireRole throws on failure
-	// (302→login if unauthenticated, 403 if insufficient role).
-	try {
-		await requireRole(locals, ['admin', 'editor'], url);
-	} catch (e) {
-		// requireRole throws SvelteKit redirect/error objects; for an API endpoint
-		// we want a JSON 401/403 rather than an HTML redirect.
-		if (e?.status === 303 || e?.status === 302) {
-			return json({ error: 'Authentication required' }, { status: 401 });
-		}
-		if (e?.status === 403) {
-			return json({ error: 'Editor or admin access required' }, { status: 403 });
-		}
-		throw e;
-	}
+  // Human-action auth: a logged-in editor/admin. Session-based, scoped to the
+  // user, no shared secret exposed to any UI. requireRole throws on failure
+  // (302→login if unauthenticated, 403 if insufficient role).
+  try {
+    await requireRole(locals, ["admin", "editor"], url);
+  } catch (e) {
+    // requireRole throws SvelteKit redirect/error objects; for an API endpoint
+    // we want a JSON 401/403 rather than an HTML redirect.
+    if (e?.status === 303 || e?.status === 302) {
+      return json({ error: "Authentication required" }, { status: 401 });
+    }
+    if (e?.status === 403) {
+      return json(
+        { error: "Editor or admin access required" },
+        { status: 403 },
+      );
+    }
+    throw e;
+  }
 
-	const db = platform?.env?.DB_book;
-	const ai = platform?.env?.AI;
-	if (!db || !ai) {
-		return json({ error: 'DB or AI binding unavailable' }, { status: 503 });
-	}
+  const db = platform?.env?.DB_book;
+  const ai = platform?.env?.AI;
+  if (!db || !ai) {
+    return json({ error: "DB or AI binding unavailable" }, { status: 503 });
+  }
 
-	const { id } = params;
+  const { id } = params;
 
-	let body = {};
-	try {
-		body = await request.json();
-	} catch {
-		// empty/non-JSON body is fine — fall back to trigger matching
-		body = {};
-	}
-	const force = body.force === true;
-	const requestedWritingIds = Array.isArray(body.writings) ? body.writings : null;
+  let body = {};
+  try {
+    body = await request.json();
+  } catch {
+    // empty/non-JSON body is fine — fall back to trigger matching
+    body = {};
+  }
+  const force = body.force === true;
+  const requestedWritingIds = Array.isArray(body.writings)
+    ? body.writings
+    : null;
 
-	try {
-		// 1. Load the portal (need name/icon/colors/triggers).
-		const portal = await db.prepare(
-			`SELECT id, icon, color_primary, color_bg, triggers, name_es, name_en, name_fr
-			 FROM portals WHERE id = ? AND status = 'active'`
-		).bind(id).first();
+  try {
+    // 1. Load the portal (need name/icon/colors/triggers).
+    const portal = await db
+      .prepare(
+        `SELECT id, icon, color_primary, color_bg, triggers, name_es, name_en, name_fr
+			 FROM portals WHERE id = ? AND status = 'active'`,
+      )
+      .bind(id)
+      .first();
 
-		if (!portal) {
-			return json({ error: 'Portal not found or inactive' }, { status: 404 });
-		}
+    if (!portal) {
+      return json({ error: "Portal not found or inactive" }, { status: 404 });
+    }
 
-		let triggers = [];
-		try { triggers = JSON.parse(portal.triggers || '[]'); } catch { triggers = []; }
+    let triggers = [];
+    try {
+      triggers = JSON.parse(portal.triggers || "[]");
+    } catch {
+      triggers = [];
+    }
 
-		// 2. Resolve the writings to analyze.
-		let sourceWritings;
+    // 2. Resolve the writings to analyze.
+    let sourceWritings;
 
-		if (requestedWritingIds && requestedWritingIds.length > 0) {
-			// Explicit list — fetch those ids (must be published).
-			const placeholders = requestedWritingIds.map(() => '?').join(',');
-			const { results } = await db.prepare(
-				`SELECT id, title, content, locale FROM writings
-				 WHERE status = 'published' AND id IN (${placeholders})`
-			).bind(...requestedWritingIds).all();
-			sourceWritings = results || [];
-		} else {
-			// Auto-match by triggers over the last 30 days.
-			const { results: recent } = await db.prepare(
-				`SELECT id, title, content, locale, category FROM writings
+    if (requestedWritingIds && requestedWritingIds.length > 0) {
+      // Explicit list — fetch those ids (must be published).
+      const placeholders = requestedWritingIds.map(() => "?").join(",");
+      const { results } = await db
+        .prepare(
+          `SELECT id, title, content, locale FROM writings
+				 WHERE status = 'published' AND id IN (${placeholders})`,
+        )
+        .bind(...requestedWritingIds)
+        .all();
+      sourceWritings = results || [];
+    } else {
+      // Auto-match by triggers over the last 30 days.
+      const { results: recent } = await db
+        .prepare(
+          `SELECT id, title, content, locale, category FROM writings
 				 WHERE status = 'published' AND created_at > datetime('now', '-30 days')
-				 ORDER BY created_at DESC LIMIT 50`
-			).all();
-			sourceWritings = matchWritingsByTriggers(recent || [], triggers, 8);
-		}
+				 ORDER BY created_at DESC LIMIT 50`,
+        )
+        .all();
+      sourceWritings = matchWritingsByTriggers(recent || [], triggers, 8);
+    }
 
-		// 3. Guard: don't fabricate a scene from too little evidence.
-		const minNeeded = force ? 1 : 3;
-		if (sourceWritings.length < minNeeded) {
-			// Return whatever config already exists rather than generating.
-			const existing = await db.prepare(
-				`SELECT scene_config FROM portal_scenes WHERE portal_id = ?`
-			).bind(id).first();
-			return json({
-				message: `Only ${sourceWritings.length} writing(s) matched (need ${minNeeded}). Not generating.`,
-				portal_id: id,
-				scene_config: existing ? safeParse(existing.scene_config) : null,
-			}, { status: 200 });
-		}
+    // 3. Guard: don't fabricate a scene from too little evidence.
+    const minNeeded = force ? 1 : 3;
+    if (sourceWritings.length < minNeeded) {
+      // Return whatever config already exists rather than generating.
+      const existing = await db
+        .prepare(`SELECT scene_config FROM portal_scenes WHERE portal_id = ?`)
+        .bind(id)
+        .first();
+      return json(
+        {
+          message: `Only ${sourceWritings.length} writing(s) matched (need ${minNeeded}). Not generating.`,
+          portal_id: id,
+          scene_config: existing ? safeParse(existing.scene_config) : null,
+        },
+        { status: 200 },
+      );
+    }
 
-		// 4. Generate + normalize + store.
-		const { sceneConfig, sourceIds } = await generateSceneForPortal(ai, portal, sourceWritings);
+    // 4. Generate + normalize + store.
+    const { sceneConfig, sourceIds } = await generateSceneForPortal(
+      ai,
+      portal,
+      sourceWritings,
+    );
 
-		await db.prepare(
-			`INSERT INTO portal_scenes (portal_id, scene_config, source_writings, generated_at)
+    await db
+      .prepare(
+        `INSERT INTO portal_scenes (portal_id, scene_config, source_writings, generated_at)
 			 VALUES (?, ?, ?, datetime('now'))
 			 ON CONFLICT(portal_id) DO UPDATE SET
 			   scene_config = excluded.scene_config,
 			   source_writings = excluded.source_writings,
-			   generated_at = excluded.generated_at`
-		).bind(
-			id,
-			JSON.stringify(sceneConfig),
-			JSON.stringify(sourceIds)
-		).run();
+			   generated_at = excluded.generated_at`,
+      )
+      .bind(id, JSON.stringify(sceneConfig), JSON.stringify(sourceIds))
+      .run();
 
-		return json({
-			success: true,
-			portal_id: id,
-			writings_analyzed: sourceIds.length,
-			scene_config: sceneConfig,
-		});
-	} catch (e) {
-		console.error(`generate-scene [${id}] error:`, e);
-		return json({ error: 'Scene generation failed: ' + e.message }, { status: 500 });
-	}
+    return json({
+      success: true,
+      portal_id: id,
+      writings_analyzed: sourceIds.length,
+      scene_config: sceneConfig,
+    });
+  } catch (e) {
+    console.error(`generate-scene [${id}] error:`, e);
+    return json(
+      { error: "Scene generation failed: " + e.message },
+      { status: 500 },
+    );
+  }
 }
 
 function safeParse(s) {
-	try { return typeof s === 'string' ? JSON.parse(s) : s; } catch { return null; }
+  try {
+    return typeof s === "string" ? JSON.parse(s) : s;
+  } catch {
+    return null;
+  }
 }

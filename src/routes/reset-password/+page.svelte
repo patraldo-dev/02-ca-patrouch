@@ -1,7 +1,6 @@
-<!-- src/routes/reset-password/+page.svelte -->
 <script>
-    import { browser } from '$app/environment';
-    import { t } from '$lib/i18n';
+    import { browser } from '$app/env';
+    import { t } from '#lib/i18n/index.js';
 
     let password = $state('');
     let confirmPassword = $state('');
@@ -23,10 +22,10 @@
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
         let pw = '';
         // ensure at least 1 of each: upper, lower, digit, special
-        pw += 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random() * 22)];
-        pw += 'abcdefghijkmnpqrstuvwxyz'[Math.floor(Math.random() * 23)];
-        pw += '23456789'[Math.floor(Math.random() * 8)];
-        pw += '!@#$%'[Math.floor(Math.random() * 5)];
+        pw += ('ABCDEFGHJKLMNPQRSTUVWXYZ')[Math.floor(Math.random() * 22)];
+        pw += ('abcdefghijkmnpqrstuvwxyz')[Math.floor(Math.random() * 23)];
+        pw += ('23456789')[Math.floor(Math.random() * 8)];
+        pw += ('!@#$%')[Math.floor(Math.random() * 5)];
         for (let i = pw.length; i < 16; i++) pw += chars[Math.floor(Math.random() * chars.length)];
         // shuffle
         pw = pw.split('').sort(() => Math.random() - 0.5).join('');
@@ -69,6 +68,8 @@
         }
     }
 </script>
+
+<!-- src/routes/reset-password/+page.svelte -->
 
 <div class="auth-container">
     <div class="auth-card">

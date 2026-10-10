@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
-    import { t } from '$lib/i18n';
-    import { browser } from '$app/environment';
+    import { t } from '#lib/i18n/index.js';
+    import { browser } from '$app/env';
 
     let letter = $state('');
     let senderName = $state('');
@@ -44,10 +44,9 @@
         const L = leafletLib;
         if (trajectoryLine) mapInstance.removeLayer(trajectoryLine);
 
-        const coords = result.trajectory.map(p => [p.lat, p.lon]);
-        trajectoryLine = L.polyline(coords, {
-            color: '#c9a87c', weight: 2, opacity: 0.6, dashArray: '6, 4'
-        }).addTo(mapInstance);
+        const coords = result.trajectory.map((p) => [p.lat, p.lon]);
+
+        trajectoryLine = L.polyline(coords, { color: '#c9a87c', weight: 2, opacity: 0.6, dashArray: '6, 4' }).addTo(mapInstance);
 
         // Start marker
         L.circleMarker([result.launch.lat, result.launch.lon], {
@@ -139,26 +138,26 @@
     </div>
 
     {#if result}
-    <div class="travesia-result">
-        <div class="result-stats">
-            <div class="stat">
-                <span class="stat-value">{result.totalKm} km</span>
-                <span class="stat-label">Distancia</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">{result.estimatedWeeks} semanas</span>
-                <span class="stat-label">Travesía estimada</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">{result.trajectory.length} posiciones</span>
-                <span class="stat-label">Puntos de drift</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">{result.arrived ? '✅' : '🌊'}</span>
-                <span class="stat-label">{result.arrived ? '¡Llegó!' : 'En camino'}</span>
+        <div class="travesia-result">
+            <div class="result-stats">
+                <div class="stat">
+                    <span class="stat-value">{result.totalKm} km</span>
+                    <span class="stat-label">Distancia</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">{result.estimatedWeeks} semanas</span>
+                    <span class="stat-label">Travesía estimada</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">{result.trajectory.length} posiciones</span>
+                    <span class="stat-label">Puntos de drift</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">{result.arrived ? '✅' : '🌊'}</span>
+                    <span class="stat-label">{result.arrived ? '¡Llegó!' : 'En camino'}</span>
+                </div>
             </div>
         </div>
-    </div>
     {/if}
 </div>
 

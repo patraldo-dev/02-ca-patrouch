@@ -6,8 +6,8 @@
 	and link back to the spatial experience.
 -->
 <script>
-	import { t } from '$lib/i18n';
-	import { locale } from '$lib/i18n';
+	import { t } from '#lib/i18n/index.js';
+	import { locale } from '#lib/i18n/index.js';
 
 	let { data } = $props();
 

@@ -1,10 +1,9 @@
-<!-- src/routes/evaluate/+page.svelte -->
 <script>
-    import { t } from '$lib/i18n';
-    import { getLocale } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
+    import { getLocale } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import { browser } from '$app/environment';
+    import { browser } from '$app/env';
 
     let { data } = $props();
 
@@ -135,7 +134,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id })
         });
-        history = history.filter(h => h.id !== id);
+        history = history.filter((h) => h.id !== id);
         if (currentResult?.id === id) currentResult = null;
     }
 
@@ -149,6 +148,8 @@
     // Load history on mount
     $effect(() => { loadHistory(); });
 </script>
+
+<!-- src/routes/evaluate/+page.svelte -->
 
 <main class="evaluate-page">
     <div class="container">
@@ -206,8 +207,26 @@
                         rows="16"
                         disabled={isLoading}
                     ></textarea>
-                    <button class="copy-inline" onclick={() => navigator.clipboard.writeText(text)} title="{$t('audio.copy')}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+
+                    <button
+                        class="copy-inline"
+                        onclick={() => navigator.clipboard.writeText(text)}
+                        title={$t('audio.copy')}
+                    >
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+
+                            <path
+                                d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                            ></path>
+                        </svg>
                     </button>
                     <div class="textarea-footer">
                         <span class="char-count">{text.length} {$t('evaluate.words') || 'chars'}</span>
@@ -247,7 +266,7 @@
                             <strong>{line.replace(/\*\*/g, '')}</strong><br />
                         {:else if line.startsWith('- ') || line.startsWith('* ')}
                             <div class="result-line">• {line.slice(2)}</div>
-                        {:else if /^\d+\./.test(line.trim())}
+                        {:else if (/^\d+\./).test(line.trim())}
                             <div class="result-line">{line.trim()}</div>
                         {:else}
                             <div class="result-line">{line}</div>
@@ -268,27 +287,27 @@
             </button>
             {#if promptVisible}
                 {#if systemPrompts}
-                <div class="prompt-box">
-                    <div class="prompt-box-header">
-                        <h4>{$t('taller.evaluate_prompt_label')}</h4>
-                        {#if !promptEditing}
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <h4>{$t('taller.evaluate_prompt_label')}</h4>
+                            {#if !promptEditing}
                             <button class="btn-small" onclick={() => { customPrompt = systemPrompts.evaluate[locale || 'en']; promptEditing = true; }}>✏️ {$t('evaluate.edit_prompt') || 'Editar'}</button>
-                        {:else}
-                            <div class="prompt-edit-actions">
+                            {:else}
+                                <div class="prompt-edit-actions">
                                 <button class="btn-small" onclick={() => { localStorage.setItem('evaluate_custom_prompt_' + locale, customPrompt); promptEditing = false; }}>💾 {$t('evaluate.save_prompt') || 'Guardar'}</button>
                                 <button class="btn-small" onclick={() => { localStorage.removeItem('evaluate_custom_prompt_' + locale); customPrompt = ''; promptEditing = false; }}>↩️ {$t('evaluate.reset_prompt') || 'Restaurar'}</button>
-                            </div>
+                                </div>
+                            {/if}
+                        </div>
+                        {#if promptEditing}
+                        <textarea class="prompt-textarea" bind:value={customPrompt} rows="12" placeholder="System prompt..."></textarea>
+                        {:else}
+                            <pre>{systemPrompts.evaluate[locale || 'en']}</pre>
+                            {#if customPrompt}
+                                <div class="custom-badge">✏️ Prompt personalizado activo</div>
+                            {/if}
                         {/if}
                     </div>
-                    {#if promptEditing}
-                        <textarea class="prompt-textarea" bind:value={customPrompt} rows="12" placeholder="System prompt..."></textarea>
-                    {:else}
-                        <pre>{systemPrompts.evaluate[locale || 'en']}</pre>
-                        {#if customPrompt}
-                            <div class="custom-badge">✏️ Prompt personalizado activo</div>
-                        {/if}
-                    {/if}
-                </div>
                 {/if}
             {/if}
         </div>
@@ -425,8 +444,14 @@
         transition: opacity 0.2s;
     }
 
-    button:hover { opacity: 0.85; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:hover {
+        opacity: 0.85;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
     button[type="submit"] {
         grid-column: 1 / -1;

@@ -1,5 +1,5 @@
 <script>
-    import { browser } from '$app/environment';
+    import { browser } from '$app/env';
     import { onMount } from 'svelte';
 
     let open = $state(false);
@@ -97,7 +97,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: [id] })
             });
-            notifications = notifications.filter(n => n.id !== id);
+            notifications = notifications.filter((n) => n.id !== id);
             unreadCount = Math.max(0, unreadCount - 1);
         } catch {}
     }
@@ -148,42 +148,42 @@
 </script>
 
 {#if browser}
-<div class="notification-bell">
+    <div class="notification-bell">
     <button class="bell-btn" onclick={toggle} aria-label={t('title')}>
-        🔔
-        {#if unreadCount > 0}
-            <span class="badge">{unreadCount}</span>
-        {/if}
-    </button>
+            🔔 
+            {#if unreadCount > 0}
+                <span class="badge">{unreadCount}</span>
+            {/if}
+        </button>
 
-    {#if open}
-        <div class="notification-dropdown">
-            <div class="dropdown-header">
-                <span class="dropdown-title">{t('title')}</span>
-                {#if unreadCount > 0}
-                    <button class="mark-all-btn" onclick={markAllRead}>{t('mark_all_read')}</button>
-                {/if}
-            </div>
+        {#if open}
+            <div class="notification-dropdown">
+                <div class="dropdown-header">
+                    <span class="dropdown-title">{t('title')}</span>
+                    {#if unreadCount > 0}
+                        <button class="mark-all-btn" onclick={markAllRead}>{t('mark_all_read')}</button>
+                    {/if}
+                </div>
 
-            <div class="notification-list">
-                {#if notifications.length === 0}
-                    <div class="empty-state">{t('empty')}</div>
-                {:else}
-                    {#each notifications as n (n.id)}
+                <div class="notification-list">
+                    {#if notifications.length === 0}
+                        <div class="empty-state">{t('empty')}</div>
+                    {:else}
+                        {#each notifications as n (n.id)}
                         <button class="notification-item" onclick={() => markRead(n.id)}>
-                            <div class="notification-title">{n.title}</div>
-                            <div class="notification-body">{n.body || ''}</div>
-                            {#if portalLink(n)}
+                                <div class="notification-title">{n.title}</div>
+                                <div class="notification-body">{n.body || ''}</div>
+                                {#if portalLink(n)}
                                 <a class="notification-link" href={portalLink(n)} onclick={(e) => e.stopPropagation()}>{t('enter_portal')}</a>
-                            {/if}
-                            <div class="notification-time">{timeAgo(n.created_at)}</div>
-                        </button>
-                    {/each}
-                {/if}
+                                {/if}
+                                <div class="notification-time">{timeAgo(n.created_at)}</div>
+                            </button>
+                        {/each}
+                    {/if}
+                </div>
             </div>
-        </div>
-    {/if}
-</div>
+        {/if}
+    </div>
 {/if}
 
 <style>

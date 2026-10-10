@@ -1,15 +1,7 @@
-<!--
-	/portals/grab-demo — ECS collectible demo with shared-room multiplayer.
-	Players auto-join a level-N room (everyone at the same difficulty is in
-	the same room — no invite links). Presence roster shows who's here.
-	Round timer drives win condition: highest score when time expires
-	promotes to the next level; losers stay for the next round.
-	WASD/touch-stick to move, mouse/touch-drag to look, click/tap to collect.
--->
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { browser } from '$app/environment';
-	import { page } from '$app/stores';
+	import { browser } from '$app/env';
+	import { page } from '$app/state';
 
 	let container;
 	let counter = $state(0);
@@ -27,7 +19,7 @@
 
 	// Level from URL query param (default 1). Promoted players redirect here
 	// with ?level=N+1, landing in a fresh (harder) DO room instance.
-	let level = $derived(parseInt($page.url.searchParams.get('level') || '1', 10));
+	let level = $derived(parseInt(page.url.searchParams.get('level') || '1', 10));
 
 	// ── Visible thumbstick state (mobile only) ──
 	let stickActive = $state(false);
@@ -63,7 +55,7 @@
 		};
 		window.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
 		try {
-			const { bootGrabDemo } = await import('$lib/portals-ecs/grab-demo-world.js');
+			const { bootGrabDemo } = await import('#lib/portals-ecs/grab-demo-world.js');
 			cleanup = await bootGrabDemo(
 				container,
 				(count) => { counter = count; },
@@ -181,9 +173,15 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Grab Demo — Collect 30</title>
-</svelte:head>
+<!--
+	/portals/grab-demo — ECS collectible demo with shared-room multiplayer.
+	Players auto-join a level-N room (everyone at the same difficulty is in
+	the same room — no invite links). Presence roster shows who's here.
+	Round timer drives win condition: highest score when time expires
+	promotes to the next level; losers stay for the next round.
+	WASD/touch-stick to move, mouse/touch-drag to look, click/tap to collect.
+-->
+<svelte:head><title>Grab Demo — Collect 30</title></svelte:head>
 
 <div class="demo-page" class:booted>
 	<div class="canvas-container" bind:this={container}></div>
@@ -214,9 +212,10 @@
 			<div class="hud-top">
 				<div class="level-badge">Level {level}</div>
 				{#if timerDisplay}
-					<div class="timer" class:urgent={timerDisplay === '0:15' || (roundState.endMs && roundState.endMs - Date.now() < 15000)}>
-						⏱ {timerDisplay}
-					</div>
+					<div
+						class="timer"
+						class:urgent={timerDisplay === '0:15' || roundState.endMs && roundState.endMs - Date.now() < 15000}
+					>⏱ {timerDisplay}</div>
 				{/if}
 			</div>
 			<div class="scoreboard">

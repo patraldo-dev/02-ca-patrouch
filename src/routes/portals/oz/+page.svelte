@@ -1,14 +1,6 @@
-<!--
-	/portals/oz — Wizard of Oz-inspired multiplayer world. You arrive as
-	Dorothy in a field of flowers. Munchkins hide inside — walk close to
-	reveal them. Flying monkeys swoop down in waves — click/tap to defeat.
-	Other players (Dorothys) appear as glowing emerald avatars. Shared
-	collectibles: whoever reaches a munchkin or defeats a monkey first
-	gets the points.
--->
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
 	let container;
 	let score = $state(0);
@@ -56,7 +48,7 @@
 		window.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
 
 		try {
-			const { bootOzWorld } = await import('$lib/portals-ecs/oz-world.js');
+			const { bootOzWorld } = await import('#lib/portals-ecs/oz-world.js');
 			cleanup = await bootOzWorld(container, {
 				playerName: randomPlayerName(),
 				onScoreUpdate: (s) => { score = s; },
@@ -149,9 +141,15 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Oz — Munchkin Garden</title>
-</svelte:head>
+<!--
+	/portals/oz — Wizard of Oz-inspired multiplayer world. You arrive as
+	Dorothy in a field of flowers. Munchkins hide inside — walk close to
+	reveal them. Flying monkeys swoop down in waves — click/tap to defeat.
+	Other players (Dorothys) appear as glowing emerald avatars. Shared
+	collectibles: whoever reaches a munchkin or defeats a monkey first
+	gets the points.
+-->
+<svelte:head><title>Oz — Munchkin Garden</title></svelte:head>
 
 <div class="demo-page" class:booted>
 	<div class="canvas-container" bind:this={container}></div>

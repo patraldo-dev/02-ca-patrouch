@@ -1,12 +1,12 @@
 <script>
-    import { t } from '$lib/i18n';
-    import { page } from '$app/stores';
+    import { t } from '#lib/i18n/index.js';
+    import { page } from '$app/state';
 
     let { data } = $props();
 
     let confirmMessage = $state('');
     $effect(() => {
-        const params = $page.url.searchParams;
+        const params = page.url.searchParams;
         if (params.get('confirmed') === 'success') {
             confirmMessage = $t('newsletter.confirmed_success');
             // Clean URL
@@ -177,42 +177,65 @@
 
 <!-- TODAY'S PROMPT TEASER -->
 {#if data.pastPrompts?.length > 0}
-<section id="prompt-teaser" class="prompt-teaser">
-    <div class="container">
-        <span class="teaser-label">{$t('pages.home.prompt.label')}</span>
-        <div class="carousel-container">
-            <button class="carousel-arrow carousel-arrow-left" onclick={prevPrompt} aria-label="Previous prompt">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
+    <section id="prompt-teaser" class="prompt-teaser">
+        <div class="container">
+            <span class="teaser-label">{$t('pages.home.prompt.label')}</span>
+            <div class="carousel-container">
+                <button
+                    class="carousel-arrow carousel-arrow-left"
+                    onclick={prevPrompt}
+                    aria-label="Previous prompt"
+                >
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    ><path d="M15 18l-6-6 6-6"></path></svg>
+                </button>
             <div class="carousel-viewport" ontouchstart={handleTouchStart} ontouchend={handleTouchEnd}>
-                {#each data.pastPrompts as prompt, i}
-                    {#if i === currentPrompt}
+                    {#each data.pastPrompts as prompt, i}
+                        {#if i === currentPrompt}
                         <blockquote class="carousel-slide" class:slide-in-right={carouselDirection === 'next'} class:slide-in-left={carouselDirection === 'prev'}>
-                            <span class="slide-date">{prompt.dateLabel}</span>
-                            <p>{prompt.prompt_text}</p>
-                        </blockquote>
-                    {/if}
+                                <span class="slide-date">{prompt.dateLabel}</span>
+                                <p>{prompt.prompt_text}</p>
+                            </blockquote>
+                        {/if}
+                    {/each}
+                </div>
+
+                <button
+                    class="carousel-arrow carousel-arrow-right"
+                    onclick={nextPrompt}
+                    aria-label="Next prompt"
+                >
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    ><path d="M9 18l6-6-6-6"></path></svg>
+                </button>
+            </div>
+            <div class="carousel-dots">
+                {#each data.pastPrompts as _, i}
+                <span class="dot" class:active={i === currentPrompt} onclick={() => { carouselDirection = i > currentPrompt ? 'next' : 'prev'; currentPrompt = i; }}></span>
                 {/each}
             </div>
-            <button class="carousel-arrow carousel-arrow-right" onclick={nextPrompt} aria-label="Next prompt">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-            </button>
+            {#if data.user}
+                <a href="/write" class="teaser-cta">{$t('pages.home.prompt.start_writing')}</a>
+            {:else}
+                <div class="auth-cta-group">
+                    <a href="/login" class="teaser-cta">{$t('common.nav.login')}</a>
+                    <a href="/signup" class="teaser-cta secondary">{$t('common.nav.signup')}</a>
+                </div>
+            {/if}
         </div>
-        <div class="carousel-dots">
-            {#each data.pastPrompts as _, i}
-                <span class="dot" class:active={i === currentPrompt} onclick={() => { carouselDirection = i > currentPrompt ? 'next' : 'prev'; currentPrompt = i; }}></span>
-            {/each}
-        </div>
-        {#if data.user}
-            <a href="/write" class="teaser-cta">{$t('pages.home.prompt.start_writing')}</a>
-        {:else}
-            <div class="auth-cta-group">
-                <a href="/login" class="teaser-cta">{$t('common.nav.login')}</a>
-                <a href="/signup" class="teaser-cta secondary">{$t('common.nav.signup')}</a>
-            </div>
-        {/if}
-    </div>
-</section>
+    </section>
 {/if}
 
 <!-- WORKS -->
@@ -501,8 +524,13 @@
         margin-bottom: 1rem;
     }
 
-    .slide-in-right { animation: slideFromRight 0.35s ease; }
-    .slide-in-left { animation: slideFromLeft 0.35s ease; }
+    .slide-in-right {
+        animation: slideFromRight 0.35s ease;
+    }
+
+    .slide-in-left {
+        animation: slideFromLeft 0.35s ease;
+    }
 
     @keyframes slideFromRight {
         from { opacity: 0; transform: translateX(30px); }

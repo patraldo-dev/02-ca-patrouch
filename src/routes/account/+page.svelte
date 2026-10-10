@@ -1,11 +1,11 @@
 <!-- src/routes/account/+page.svelte -->
 <script>
-    import { t } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
     import { tick } from 'svelte';
-    import EmojiPicker from '$lib/components/EmojiPicker.svelte';
-import { avatarVariant } from '$lib/utils.js';
-    import { authClient } from '$lib/auth-client.js';
+    import EmojiPicker from '#lib/components/EmojiPicker.svelte';
+import { avatarVariant } from '#lib/utils.js';
+    import { authClient } from '#lib/auth-client.js';
 
     let { data } = $props();
 

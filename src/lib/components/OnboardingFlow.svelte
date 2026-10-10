@@ -1,5 +1,5 @@
 <script>
-    import { t } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
 
     let { user, prompt, onclose } = $props();
 

@@ -340,7 +340,7 @@
                 console.warn('[WebXR] Timed out waiting for AR session');
                 webxrLoading = false;
                 if (webxrState) {
-                    import('$lib/ar-poc/bottle-world.js').then(({ destroyBottleAR }) => {
+                    import('#lib/ar-poc/bottle-world.js').then(({ destroyBottleAR }) => {
                         destroyBottleAR(webxrState);
                         webxrState = null;
                     });
@@ -351,7 +351,7 @@
         }, 15000);
 
         try {
-            const { initBottleAR } = await import('$lib/ar-poc/bottle-world.js');
+            const { initBottleAR } = await import('#lib/ar-poc/bottle-world.js');
 
             // Clean up any previous container
             if (webxrContainer) { webxrContainer.remove(); webxrContainer = null; }
@@ -458,7 +458,7 @@
         webxrLoading = false;
         if (webxrState) {
             try { webxrState.exitAR(); } catch {}
-            import('$lib/ar-poc/bottle-world.js').then(({ destroyBottleAR }) => {
+            import('#lib/ar-poc/bottle-world.js').then(({ destroyBottleAR }) => {
                 destroyBottleAR(webxrState);
                 webxrState = null;
             });

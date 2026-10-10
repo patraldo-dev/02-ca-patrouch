@@ -1,5 +1,5 @@
 <script>
-    import { t, locale } from '$lib/i18n';
+    import { t, locale } from '#lib/i18n/index.js';
 
     let { data } = $props();
 

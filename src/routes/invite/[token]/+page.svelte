@@ -1,8 +1,7 @@
-<!-- src/routes/invite/[token]/+page.svelte -->
 <script>
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { goto } from '$app/navigation';
-    import { t } from '$lib/i18n';
+    import { t } from '#lib/i18n/index.js';
 
     let { data } = $props();
     let loading = $state(true);
@@ -11,7 +10,7 @@
 
     async function acceptInvite() {
         try {
-            const res = await fetch(`/api/invite/${$page.params.token}`);
+            const res = await fetch(`/api/invite/${page.params.token}`);
             if (res.ok) {
                 success = true;
                 setTimeout(() => goto('/'), 2000);
@@ -30,6 +29,8 @@
         acceptInvite();
     }
 </script>
+
+<!-- src/routes/invite/[token]/+page.svelte -->
 
 <div class="invite-page">
     {#if loading}

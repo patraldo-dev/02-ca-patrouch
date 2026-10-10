@@ -1,6 +1,6 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
 
     let { data } = $props();
 
@@ -59,7 +59,7 @@
 
             marker.on('dragend', () => {
                 const pos = marker.getLatLng();
-                const b = bottles.find(b => b.id === bottle.id);
+                const b = bottles.find((b) => b.id === bottle.id);
                 if (b) {
                     b.current_lat = parseFloat(pos.lat.toFixed(7));
                     b.current_lon = parseFloat(pos.lng.toFixed(7));

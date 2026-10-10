@@ -1,10 +1,11 @@
-<!-- src/routes/admin/+error.svelte -->
 <script>
-  import { page } from '$app/stores';
-  import { t } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { t } from '#lib/i18n/index.js';
 
-  let status = $derived($page.status);
+  let status = $derived(page.status);
 </script>
+
+<!-- src/routes/admin/+error.svelte -->
 
 <div class="error-page">
   {#if status === 403}

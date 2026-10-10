@@ -1,21 +1,37 @@
-<!-- src/routes/api/admin/+layout.svelte -->
 <script>
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     let { children } = $props();
 </script>
 
-<svelte:head>
-    <title>Admin — Ex Libris</title>
-</svelte:head>
+<!-- src/routes/api/admin/+layout.svelte -->
+<svelte:head><title>Admin — Ex Libris</title></svelte:head>
 
 <div class="admin-layout">
     <nav class="admin-nav">
-        <a href="/admin" class:active={$page.url.pathname === '/admin'}>Dashboard</a>
-        <a href="/admin/books" class:active={$page.url.pathname.startsWith('/admin/books')}>Books</a>
-        <a href="/admin/reviews" class:active={$page.url.pathname.startsWith('/admin/reviews')}>Reviews</a>
-        <a href="/admin/blog" class:active={$page.url.pathname.startsWith('/admin/blog')}>Blog Posts</a>
-	<a href="/admin/users" class:active={$page.url.pathname.startsWith('/admin/users')}>User Management</a>
+        <a
+            href="/admin"
+            class:active={page.url.pathname === '/admin'}
+        >Dashboard</a>
 
+        <a
+            href="/admin/books"
+            class:active={page.url.pathname.startsWith('/admin/books')}
+        >Books</a>
+
+        <a
+            href="/admin/reviews"
+            class:active={page.url.pathname.startsWith('/admin/reviews')}
+        >Reviews</a>
+
+        <a
+            href="/admin/blog"
+            class:active={page.url.pathname.startsWith('/admin/blog')}
+        >Blog Posts</a>
+
+        <a
+            href="/admin/users"
+            class:active={page.url.pathname.startsWith('/admin/users')}
+        >User Management</a>
     </nav>
 
     <main class="admin-content">

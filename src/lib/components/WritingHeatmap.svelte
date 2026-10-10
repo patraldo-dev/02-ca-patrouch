@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
 
-    import { t, getLocale } from '$lib/i18n';
+    import { t, getLocale } from '#lib/i18n/index.js';
 
     let { heatmapData = {} } = $props();
 

@@ -1,10 +1,10 @@
 <script>
-    import { t, getLocale } from '$lib/i18n';
-    import { track } from '$lib/analytics';
+    import { t, getLocale } from '#lib/i18n/index.js';
+    import { track } from '#lib/analytics.js';
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { marked } from 'marked';
-    import CommentSection from '$lib/components/CommentSection.svelte';
+    import CommentSection from '#lib/components/CommentSection.svelte';
 
     let { data } = $props();
     let w = $state(data.writing);
@@ -16,7 +16,7 @@
     let renderedContent = $state('');
     let isPublishing = $state(false);
     let feedback = $state('');
-    let gameMode = $derived($page.url.searchParams.get('game') === '1');
+    let gameMode = $derived(page.url.searchParams.get('game') === '1');
     let revealed = $state(false);
     let showGuess = $state(false);
     let guessCorrect = $state(false);

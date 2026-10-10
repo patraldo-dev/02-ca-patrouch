@@ -1,15 +1,15 @@
 <script>
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { goto, invalidateAll } from '$app/navigation';
-    import { t, locale, getLocale } from '$lib/i18n';
-    import { track } from '$lib/analytics';
-    import WritingHeatmap from '$lib/components/WritingHeatmap.svelte';
-    import WordMilestones from '$lib/components/WordMilestones.svelte';
-    import BadgeTrophyCase from '$lib/components/BadgeTrophyCase.svelte';
-    import WriterOfTheWeek from '$lib/components/WriterOfTheWeek.svelte';
-    import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
-    import Image3DManipulator from '$lib/components/Image3DManipulator.svelte';
-    import { browser } from '$app/environment';
+    import { t, locale, getLocale } from '#lib/i18n/index.js';
+    import { track } from '#lib/analytics.js';
+    import WritingHeatmap from '#lib/components/WritingHeatmap.svelte';
+    import WordMilestones from '#lib/components/WordMilestones.svelte';
+    import BadgeTrophyCase from '#lib/components/BadgeTrophyCase.svelte';
+    import WriterOfTheWeek from '#lib/components/WriterOfTheWeek.svelte';
+    import OnboardingFlow from '#lib/components/OnboardingFlow.svelte';
+    import Image3DManipulator from '#lib/components/Image3DManipulator.svelte';
+    import { browser } from '$app/env';
 
     import { onMount } from 'svelte';
 
@@ -32,8 +32,15 @@
     let showBadges = $state(false);
 
     // Initialize from server-side load
-    let prompt = $state(sparkFromEmail ? { id: null, prompt_text: sparkFromEmail, category: 'spark-dominical' } : (data.prompt || null));
-    let promptSource = $state(sparkFromEmail ? 'newsletter' : (data.promptSource || 'community'));
+    let prompt = $state(sparkFromEmail
+        ? {
+            id: null,
+            prompt_text: sparkFromEmail,
+            category: 'spark-dominical'
+        }
+        : data.prompt || null);
+
+    let promptSource = $state(sparkFromEmail ? 'newsletter' : data.promptSource || 'community');
     let userAction = $state(data.userAction || null);
     let promptId = $state(data.acceptedPromptId || null);
     let passesRemaining = $state(data.passesRemaining || 3);
@@ -114,7 +121,10 @@
     function catLabel(key) {
         const k = 'write.category.' + key;
         const label = $t(k);
-        return label !== k ? label : key.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+        return label !== k
+            ? label
+            : key.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     }
 
     async function loadVisualPrompt() {
@@ -337,8 +347,36 @@
     let completedToday = $derived(userAction === 'completed');
     let exhaustedPasses = $derived(passesRemaining <= 0 && !acceptedToday);
 
-    function fmtNum(n) { return n != null ? n.toLocaleString() : '0'; }
-    function formatDate(d) { if (!d) return ''; let ms; if (typeof d === 'number') { ms = d < 1e12 ? d * 1000 : d; } else { const num = Number(d); ms = (!isNaN(num) && String(d).trim() === String(num)) ? (num < 1e12 ? num * 1000 : num) : new Date(d.replace(' ', 'T')).getTime(); } const date = new Date(ms); if (isNaN(date.getTime())) return ''; return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    function fmtNum(n) {
+        return n != null ? n.toLocaleString() : '0';
+    }
+
+    function formatDate(d) {
+        if (!d) return '';
+
+        let ms;
+
+        if (typeof d === 'number') {
+            ms = d < 1e12 ? d * 1000 : d;
+        } else {
+            const num = Number(d);
+
+            ms = !isNaN(num) && String(d).trim() === String(num)
+                ? num < 1e12 ? num * 1000 : num
+                : new Date(d.replace(' ', 'T')).getTime();
+        }
+
+        const date = new Date(ms);
+
+        if (isNaN(date.getTime())) return '';
+
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
 </script>
 
 <div class="write-page">
@@ -364,81 +402,115 @@
                 {:else}
                     <!-- Prompt Mode Toggle -->
                     <div class="prompt-mode-toggle">
-                        <button class="mode-btn" class:active={promptMode === 'text'} onclick={() => { promptMode = 'text'; }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                        <button
+                            class="mode-btn"
+                            class:active={promptMode === 'text'}
+                            onclick={() => {
+                                promptMode = 'text';
+                            }}
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            ><path d="M4 7V4h16v3M9 20h6M12 4v16"></path></svg>
+
                             {$t('write.art.mode_text')}
                         </button>
-                        <button class="mode-btn" class:active={promptMode === 'visual'} onclick={() => { promptMode = 'visual'; loadVisualPrompt(); }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+
+                        <button
+                            class="mode-btn"
+                            class:active={promptMode === 'visual'}
+                            onclick={() => {
+                                promptMode = 'visual';
+                                loadVisualPrompt();
+                            }}
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <path d="M21 15l-5-5L5 21"></path>
+                            </svg>
+
                             {$t('write.art.mode_visual')}
                         </button>
                     </div>
 
                     {#if promptMode === 'text' && prompt}
-                    <div class="prompt-card">
-                        <div class="prompt-header">
-                            <span class="prompt-category">{catLabel(prompt.category)}</span>
-                            {#if promptSource === 'personal'}
-                                <span class="prompt-source-tag personal">{$t('write.dashboard.personal_prompt')}</span>
-                            {/if}
-                            {#if acceptedToday}
-                                <span class="accepted-badge">{$t('write.dashboard.accepted')}</span>
-                            {/if}
-                        </div>
-                        <p class="prompt-text">{prompt.prompt_text}</p>
-                        {#if !acceptedToday && !completedToday}
-                            <div class="prompt-actions">
-                                <button class="btn-accept" onclick={() => handleAction('accepted')} disabled={isAccepting}>{isAccepting ? '…' : $t('write.dashboard.accept')}</button>
-                                {#if !exhaustedPasses}
-                                    <button class="btn-pass" onclick={() => handleAction('passed')} disabled={isPassing}>
-                                        {isPassing ? $t('write.dashboard.passing') : $t('write.dashboard.pass')}
-                                    </button>
-                                    <span class="passes-remaining">{passesRemaining === 1 ? $t('write.dashboard.passes_remaining_one').replace('{count}', passesRemaining) : $t('write.dashboard.passes_remaining').replace('{count}', passesRemaining)}</span>
-                                {:else}
-                                    <p class="passes-exhausted">{@html $t('write.dashboard.passes_exhausted')}</p>
+                        <div class="prompt-card">
+                            <div class="prompt-header">
+                                <span class="prompt-category">{catLabel(prompt.category)}</span>
+                                {#if promptSource === 'personal'}
+                                    <span class="prompt-source-tag personal">{$t('write.dashboard.personal_prompt')}</span>
+                                {/if}
+                                {#if acceptedToday}
+                                    <span class="accepted-badge">{$t('write.dashboard.accepted')}</span>
                                 {/if}
                             </div>
-                        {/if}
-                    </div>
+                            <p class="prompt-text">{prompt.prompt_text}</p>
+                            {#if !acceptedToday && !completedToday}
+                                <div class="prompt-actions">
+                                <button class="btn-accept" onclick={() => handleAction('accepted')} disabled={isAccepting}>{isAccepting ? '…' : $t('write.dashboard.accept')}</button>
+                                    {#if !exhaustedPasses}
+                                    <button class="btn-pass" onclick={() => handleAction('passed')} disabled={isPassing}>
+                                        {isPassing ? $t('write.dashboard.passing') : $t('write.dashboard.pass')}
+                                        </button>
+                                    <span class="passes-remaining">{passesRemaining === 1 ? $t('write.dashboard.passes_remaining_one').replace('{count}', passesRemaining) : $t('write.dashboard.passes_remaining').replace('{count}', passesRemaining)}</span>
+                                    {:else}
+                                        <p class="passes-exhausted">{@html $t('write.dashboard.passes_exhausted')}</p>
+                                    {/if}
+                                </div>
+                            {/if}
+                        </div>
                     {/if}
 
                     {#if promptMode === 'visual'}
-                    <div class="art-inspiration">
-                        {#if visualLoading}
-                            <div class="art-loading">
-                                <div class="spinner-small"></div>
-                                <span>{$t('write.art.generating')}</span>
-                            </div>
-                        {:else if visualError}
-                            <div class="visual-error">
-                                <p>{$t('write.art.error')}</p>
-                                <button class="btn-glass" onclick={loadVisualPrompt}>{$t('write.art.retry')}</button>
-                            </div>
-                        {:else if visualPrompt}
+                        <div class="art-inspiration">
+                            {#if visualLoading}
+                                <div class="art-loading">
+                                    <div class="spinner-small"></div>
+                                    <span>{$t('write.art.generating')}</span>
+                                </div>
+                            {:else if visualError}
+                                <div class="visual-error">
+                                    <p>{$t('write.art.error')}</p>
+                                    <button class="btn-glass" onclick={loadVisualPrompt}>{$t('write.art.retry')}</button>
+                                </div>
+                            {:else if visualPrompt}
                             <div class="art-3d-wrapper">
                                 <Image3DManipulator imageUrl={visualPrompt.artwork.imageUrl} />
                             </div>
-                            {#if visualPrompt.prompt}
+                                {#if visualPrompt.prompt}
                                 <div class="art-prompt-text">
                                     <p>{visualPrompt.prompt}</p>
                                 </div>
-                            {/if}
-                            <div class="art-meta">
-                                <span class="art-title">{visualPrompt.artwork.title}</span>
-                                <span class="art-credit">{visualPrompt.artwork.credit}</span>
-                            </div>
-                        {:else if data.artwork}
+                                {/if}
+                                <div class="art-meta">
+                                    <span class="art-title">{visualPrompt.artwork.title}</span>
+                                    <span class="art-credit">{visualPrompt.artwork.credit}</span>
+                                </div>
+                            {:else if data.artwork}
                             <div class="art-3d-wrapper">
                                 <Image3DManipulator imageUrl={data.artwork.imageUrl} />
                             </div>
-                            <div class="art-meta">
-                                <span class="art-title">{data.artwork.title}</span>
-                                <span class="art-credit">{data.artwork.credit}</span>
-                            </div>
-                        {:else}
-                            <p class="art-loading">{$t('write.art.generating')}</p>
-                        {/if}
-                    </div>
+                                <div class="art-meta">
+                                    <span class="art-title">{data.artwork.title}</span>
+                                    <span class="art-credit">{data.artwork.credit}</span>
+                                </div>
+                            {:else}
+                                <p class="art-loading">{$t('write.art.generating')}</p>
+                            {/if}
+                        </div>
                     {/if}
                 {/if}
 
@@ -456,14 +528,68 @@
                             <label>{$t('write.editor.title')}</label>
                             <input type="text" bind:value={editorTitle} placeholder={$t('write.editor.title_placeholder')} required />
                         </div>
-                        <div class="editor-field full" style="position:relative;">
-                            <label>{$t('write.editor.content')} <span class="word-count">{editorWordCount} {$t('write.editor.words')}</span></label>
-                            <textarea bind:value={editorContent} lang={data.serverLocale || 'en'} spellcheck="true" placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
-                            <button class="mic-btn {dictating ? 'mic-active' : ''}" onclick={toggleDictation} title="Dictate" aria-label="Voice dictation">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+
+                        <div
+                            class="editor-field full"
+                            style="position:relative;"
+                        >
+                            <label>
+                                {$t('write.editor.content')} 
+                                <span class="word-count">{editorWordCount} {$t('write.editor.words')}</span>
+                            </label>
+
+                            <textarea
+                                bind:value={editorContent}
+                                lang={data.serverLocale || 'en'}
+                                spellcheck="true"
+                                placeholder={$t('write.editor.content_placeholder')}
+                                rows="16"
+                                required
+                            ></textarea>
+
+                            <button
+                                class="mic-btn {dictating ? 'mic-active' : ''}"
+                                onclick={toggleDictation}
+                                title="Dictate"
+                                aria-label="Voice dictation"
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"
+                                    ></path>
+
+                                    <path d="M19 10v2a7 7 0 01-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>
                             </button>
-                            <button class="copy-inline" onclick={() => navigator.clipboard.writeText(editorContent)} title="Copy">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+
+                            <button
+                                class="copy-inline"
+                                onclick={() => navigator.clipboard.writeText(editorContent)}
+                                title="Copy"
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+
+                                    <path
+                                        d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+                                    ></path>
+                                </svg>
                             </button>
                         </div>
                         <div class="editor-options">
@@ -486,7 +612,14 @@
                         {#if timerRunning}
                             <div class="timer-bar">
                                 <div class="timer-display">{timerDisplay.min}:{timerDisplay.sec}</div>
-                                <div class="timer-progress"><div class="timer-fill" style="width: {((timerDuration * 60 - timerSeconds) / (timerDuration * 60)) * 100}%"></div></div>
+
+                                <div class="timer-progress">
+                                    <div
+                                        class="timer-fill"
+                                        style="width: {(timerDuration * 60 - timerSeconds) / (timerDuration * 60) * 100}%"
+                                    ></div>
+                                </div>
+
                                 <span class="timer-words">+{timerWordsWritten} {$t('write.editor.words')}</span>
                                 <button class="timer-stop" onclick={stopTimer}>{$t('write.timer.stop')}</button>
                             </div>
@@ -619,9 +752,20 @@
 
 {#if showMilestones}
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <div class="modal-overlay" onclick={() => showMilestones = false}>
-        <div class="modal-content" onclick={e => e.stopPropagation()}>
-            <button class="modal-close" onclick={() => showMilestones = false}>×</button>
+
+    <div
+        class="modal-overlay"
+        onclick={() => showMilestones = false}
+    >
+        <div
+            class="modal-content"
+            onclick={(e) => e.stopPropagation()}
+        >
+            <button
+                class="modal-close"
+                onclick={() => showMilestones = false}
+            >×</button>
+
             <WordMilestones stats={stats} />
         </div>
     </div>
@@ -629,9 +773,20 @@
 
 {#if showHeatmap}
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <div class="modal-overlay" onclick={() => showHeatmap = false}>
-        <div class="modal-content" onclick={e => e.stopPropagation()}>
-            <button class="modal-close" onclick={() => showHeatmap = false}>×</button>
+
+    <div
+        class="modal-overlay"
+        onclick={() => showHeatmap = false}
+    >
+        <div
+            class="modal-content"
+            onclick={(e) => e.stopPropagation()}
+        >
+            <button
+                class="modal-close"
+                onclick={() => showHeatmap = false}
+            >×</button>
+
             <WritingHeatmap heatmapData={data.heatmapData || {}} />
         </div>
     </div>
@@ -639,9 +794,20 @@
 
 {#if showBadges}
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <div class="modal-overlay" onclick={() => showBadges = false}>
-        <div class="modal-content" onclick={e => e.stopPropagation()}>
-            <button class="modal-close" onclick={() => showBadges = false}>×</button>
+
+    <div
+        class="modal-overlay"
+        onclick={() => showBadges = false}
+    >
+        <div
+            class="modal-content"
+            onclick={(e) => e.stopPropagation()}
+        >
+            <button
+                class="modal-close"
+                onclick={() => showBadges = false}
+            >×</button>
+
             <BadgeTrophyCase badges={data.userBadges || []} />
         </div>
     </div>
@@ -1074,9 +1240,24 @@
         transition: color 0.2s;
     }
 
-    .tour-link:hover { color: var(--accent); }
-    .sidebar-stats-link { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--text-muted); font-size: 0.75rem; text-decoration: none; padding: 0.3rem 0; transition: color 0.2s; }
-    .sidebar-stats-link:hover { color: var(--accent); }
+    .tour-link:hover {
+        color: var(--accent);
+    }
+
+    .sidebar-stats-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-decoration: none;
+        padding: 0.3rem 0;
+        transition: color 0.2s;
+    }
+
+    .sidebar-stats-link:hover {
+        color: var(--accent);
+    }
 
     /* Sidebar */
     .stats-card, .recent-card {

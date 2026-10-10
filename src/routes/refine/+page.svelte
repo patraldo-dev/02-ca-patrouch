@@ -1,9 +1,8 @@
-<!-- src/routes/refine/+page.svelte -->
 <script>
-    import { t, getLocale } from '$lib/i18n';
+    import { t, getLocale } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import { browser } from '$app/environment';
+    import { browser } from '$app/env';
 
     let { data } = $props();
 
@@ -143,7 +142,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id })
         });
-        history = history.filter(h => h.id !== id);
+        history = history.filter((h) => h.id !== id);
         if (currentResult?.id === id) currentResult = null;
     }
 
@@ -156,6 +155,8 @@
 
     $effect(() => { loadHistory(); });
 </script>
+
+<!-- src/routes/refine/+page.svelte -->
 
 <main class="refine-page">
     <div class="container">
@@ -437,8 +438,14 @@
         transition: opacity 0.2s;
     }
 
-    button:hover { opacity: 0.85; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:hover {
+        opacity: 0.85;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 
     button[type="submit"] {
         grid-column: 1 / -1;

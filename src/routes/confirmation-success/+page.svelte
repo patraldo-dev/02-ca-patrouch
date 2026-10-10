@@ -1,10 +1,11 @@
-<!-- src/routes/confirmation-success/+page.svelte -->
 <script>
-    import { page } from '$app/stores';
-    
-    let alreadyConfirmed = $derived($page.url.searchParams.get('already') === 'true');
-    let type = $derived($page.url.searchParams.get('type') || 'user'); // 'user' or 'newsletter'
+    import { page } from '$app/state';
+
+    let alreadyConfirmed = $derived(page.url.searchParams.get('already') === 'true');
+    let type = $derived(page.url.searchParams.get('type') || 'user'); // 'user' or 'newsletter'
 </script>
+
+<!-- src/routes/confirmation-success/+page.svelte -->
 
 <div class="container">
     <div class="confirmation-card">

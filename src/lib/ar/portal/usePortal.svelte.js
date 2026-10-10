@@ -7,14 +7,14 @@
  *   portal.launch(); // must be called from user gesture
  */
 
-import { browser } from '$app/environment';
+import { browser } from "$app/env";
 
 const STATUS = {
-  LOADING: 'loading',
-  READY: 'ready',
-  UNSUPPORTED: 'unsupported',
-  ACTIVE: 'ar-active',
-  ERROR: 'error',
+  LOADING: "loading",
+  READY: "ready",
+  UNSUPPORTED: "unsupported",
+  ACTIVE: "ar-active",
+  ERROR: "error",
 };
 
 /**
@@ -24,7 +24,12 @@ const STATUS = {
  * @param {Function} [opts.onStatusChange] - Callback on status transitions
  * @returns {Object} Portal controller
  */
-export function usePortal({ theme = 'narrador', contentType = 'image', onStatusChange, onExit } = {}) {
+export function usePortal({
+  theme = "narrador",
+  contentType = "image",
+  onStatusChange,
+  onExit,
+} = {}) {
   // REACTIVE — only what the template needs to observe
   let status = $state(STATUS.LOADING);
   let placed = $state(false);
@@ -56,10 +61,10 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
     }
 
     try {
-      const THREE = await import('three');
-      const xrCheck = navigator.xr.isSessionSupported('immersive-ar');
+      const THREE = await import("three");
+      const xrCheck = navigator.xr.isSessionSupported("immersive-ar");
       const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('XR check timed out')), 5000)
+        setTimeout(() => reject(new Error("XR check timed out")), 5000),
       );
       const supported = await Promise.race([xrCheck, timeout]);
 
@@ -85,10 +90,10 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
     if (status !== STATUS.READY) return;
 
     try {
-      const THREE = await import('three');
+      const THREE = await import("three");
 
-      const xrSession = await navigator.xr.requestSession('immersive-ar', {
-        optionalFeatures: ['hit-test', 'dom-overlay', 'local-floor'],
+      const xrSession = await navigator.xr.requestSession("immersive-ar", {
+        optionalFeatures: ["hit-test", "dom-overlay", "local-floor"],
         domOverlay: { root: document.body },
       });
 
@@ -100,13 +105,19 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
       r.setPixelRatio(window.devicePixelRatio);
       r.xr.enabled = true;
       r.outputColorSpace = THREE.SRGBColorSpace;
-      r.domElement.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;';
+      r.domElement.style.cssText =
+        "position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;";
       document.body.appendChild(r.domElement);
       renderer = r;
 
       // Scene + Camera
       const s = new THREE.Scene();
-      const c = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const c = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000,
+      );
       s.add(new THREE.AmbientLight(0xffffff, 1.5));
       s.add(new THREE.DirectionalLight(0xffffff, 0.8));
       scene = s;
@@ -116,9 +127,9 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
       await renderer.xr.setSession(xrSession);
 
       // Reference spaces
-      const viewerSpace = await xrSession.requestReferenceSpace('viewer');
+      const viewerSpace = await xrSession.requestReferenceSpace("viewer");
       let localSpace;
-      for (const type of ['local-floor', 'local', 'viewer']) {
+      for (const type of ["local-floor", "local", "viewer"]) {
         try {
           localSpace = await xrSession.requestReferenceSpace(type);
           break;
@@ -126,21 +137,27 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
       }
       if (!localSpace) {
         await xrSession.end();
-        throw new Error('No supported reference space');
+        throw new Error("No supported reference space");
       }
 
       // Hit-test
       try {
-        hitTestSource = await xrSession.requestHitTestSource({ space: viewerSpace });
+        hitTestSource = await xrSession.requestHitTestSource({
+          space: viewerSpace,
+        });
       } catch (_) {
-        console.warn('Hit test not available');
+        console.warn("Hit test not available");
       }
 
       // Reticle
-      const themeConfig = (await import('./themes.js')).getTheme(opts.theme || theme);
+      const themeConfig = (await import("./themes.js")).getTheme(
+        opts.theme || theme,
+      );
       const reticleGeo = new THREE.RingGeometry(0.03, 0.05, 32);
       reticleGeo.rotateX(-Math.PI / 2);
-      const reticleMat = new THREE.MeshBasicMaterial({ color: themeConfig.colors.reticle });
+      const reticleMat = new THREE.MeshBasicMaterial({
+        color: themeConfig.colors.reticle,
+      });
       const ret = new THREE.Mesh(reticleGeo, reticleMat);
       ret.matrixAutoUpdate = false;
       ret.visible = false;
@@ -153,15 +170,15 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
         c.updateProjectionMatrix();
         r.setSize(window.innerWidth, window.innerHeight);
       };
-      window.addEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
 
       // Session end
-      xrSession.addEventListener('end', () => {
+      xrSession.addEventListener("end", () => {
         cleanup(handleResize);
       });
 
       // Place on tap
-      xrSession.addEventListener('select', () => {
+      xrSession.addEventListener("select", () => {
         if (!placed && lastHitPose && contentMesh) {
           placed = true;
           const m = new THREE.Matrix4().fromArray(lastHitPose.transform.matrix);
@@ -177,7 +194,11 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
       if (!hitTestSource && contentMesh) {
         contentMesh.visible = true;
         contentMesh.matrixAutoUpdate = true;
-        contentMesh.position.set(0, themeConfig.portal.defaultY || -0.5, themeConfig.portal.defaultDistance || -1.2);
+        contentMesh.position.set(
+          0,
+          themeConfig.portal.defaultY || -0.5,
+          themeConfig.portal.defaultDistance || -1.2,
+        );
         placed = true;
         reticle.visible = false;
       }
@@ -204,14 +225,17 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
             reticle.visible = false;
             if (!contentMesh.visible) {
               contentMesh.visible = true;
-              contentMesh.position.set(0, themeConfig.portal.defaultY || -0.5, themeConfig.portal.defaultDistance || -1.2);
+              contentMesh.position.set(
+                0,
+                themeConfig.portal.defaultY || -0.5,
+                themeConfig.portal.defaultDistance || -1.2,
+              );
             }
           }
         }
 
         renderer.render(scene, renderer.xr.getCamera());
       });
-
     } catch (e) {
       error = e.message;
       setStatus(STATUS.ERROR);
@@ -229,15 +253,17 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
     renderer?.setAnimationLoop(null);
     renderer?.domElement?.remove();
     renderer?.dispose();
-    window.removeEventListener('resize', handleResize);
+    window.removeEventListener("resize", handleResize);
 
     // Reset body styles
-    ['overflow', 'position', 'top', 'width', 'height', 'touchAction'].forEach((p) => {
-      document.body.style.removeProperty(p);
-    });
+    ["overflow", "position", "top", "width", "height", "touchAction"].forEach(
+      (p) => {
+        document.body.style.removeProperty(p);
+      },
+    );
 
     // Remove any lingering AR UI elements
-    document.querySelectorAll('[data-ar-portal]').forEach((el) => el.remove());
+    document.querySelectorAll("[data-ar-portal]").forEach((el) => el.remove());
 
     setStatus(STATUS.READY);
     session = null;
@@ -251,25 +277,59 @@ export function usePortal({ theme = 'narrador', contentType = 'image', onStatusC
     reticle = null;
 
     // Hard reset — AR changes GL context
-    onExit?.() ?? window.location.replace('/');
+    onExit?.() ?? window.location.replace("/");
   }
 
   return {
     // State (reactive via $state)
-    get status() { return status; },
-    get session() { return session; },
-    get renderer() { return renderer; },
-    get scene() { return scene; },
-    get camera() { return camera; },
-    get hitTestSource() { return hitTestSource; },
-    get lastHitPose() { return lastHitPose; },
-    get placed() { return placed; },
-    get contentMesh() { return contentMesh; },
-    get reticle() { return reticle; },
-    get error() { return error; },
+    get status() {
+      return status;
+    },
+
+    get session() {
+      return session;
+    },
+
+    get renderer() {
+      return renderer;
+    },
+
+    get scene() {
+      return scene;
+    },
+
+    get camera() {
+      return camera;
+    },
+
+    get hitTestSource() {
+      return hitTestSource;
+    },
+
+    get lastHitPose() {
+      return lastHitPose;
+    },
+
+    get placed() {
+      return placed;
+    },
+
+    get contentMesh() {
+      return contentMesh;
+    },
+
+    get reticle() {
+      return reticle;
+    },
+
+    get error() {
+      return error;
+    },
 
     // Setters for content components
-    setContentMesh(mesh) { contentMesh = mesh; },
+    setContentMesh(mesh) {
+      contentMesh = mesh;
+    },
 
     // Actions
     init,
