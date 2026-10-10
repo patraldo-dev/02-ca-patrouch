@@ -1,7 +1,8 @@
+import { env } from 'cloudflare:workers';
 // src/routes/api/test-secrets/+server.js
 export async function GET({ platform }) {
-  const accountId = platform?.env?.CLOUDFLARE_ACCOUNT_ID;
-  const apiToken = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
+  const accountId = env?.CLOUDFLARE_ACCOUNT_ID;
+  const apiToken = (await env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
   
   return new Response(JSON.stringify({
     accountId: accountId ? 'present' : 'missing',

@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 // WebSocket upgrade → OzRoom Durable Object.
 //
 // One shared room for all Oz players (keyed 'global'). Everyone who opens
@@ -5,7 +6,6 @@
 // shared monkey waves, shared presence.
 
 export async function GET({ request, url, platform }) {
-	const env = platform?.env;
 	if (!env?.OZ_ROOM) {
 		return new Response('OZ_ROOM binding not available', { status: 503 });
 	}

@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, platform, locals }) {
     const user = locals.user;
@@ -8,11 +9,11 @@ export async function POST({ request, platform, locals }) {
         return json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    if (!platform?.env?.AI) {
+    if (!env?.AI) {
         return json({ error: 'AI not available' }, { status: 503 });
     }
 
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
 
     try {
         const { text, locale = 'en' } = await request.json();
@@ -23,7 +24,7 @@ export async function POST({ request, platform, locals }) {
 
         const system = 'You are a skilled literary editor. Refine and improve the following text while preserving the author\'s voice, style, and intent. Focus on: rhythm, word choice, imagery, emotional impact. Do NOT change the meaning or tone. Output only the refined text, no explanations.';
 
-        const response = await platform.env.AI.run(
+        const response = await env.AI.run(
             '@cf/mistralai/mistral-small-3.1-24b-instruct',
             {
                 messages: [
@@ -59,7 +60,7 @@ export async function GET({ platform, locals, url }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
 
     const refinements = await db.prepare(
@@ -73,7 +74,7 @@ export async function DELETE({ platform, locals, request }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     const { id } = await request.json();
 
     if (!id) return json({ error: 'Missing id' }, { status: 400 });

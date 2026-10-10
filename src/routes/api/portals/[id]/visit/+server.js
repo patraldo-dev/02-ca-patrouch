@@ -9,11 +9,12 @@
 // so we don't spam: only notify a prior visitor once per ~10 minutes per portal.
 import { json } from "@sveltejs/kit";
 import { notify } from "#lib/server/notify.js";
+import { env } from 'cloudflare:workers';
 
 const NOTIFY_COOLDOWN_MS = 10 * 60 * 1000; // 10 min between same-portal co-visit pings
 
 export async function POST({ params, request, platform, locals }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "Database unavailable" }, { status: 503 });
 
   const { id: portalId } = params;

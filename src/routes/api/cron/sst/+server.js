@@ -8,16 +8,17 @@ import {
   cacheSSTData,
   generateSSTNarrativeContext,
 } from "#lib/server/sst-cache.js";
+import { env } from 'cloudflare:workers';
 
 export async function GET({ request, platform }) {
   // Auth check
-  const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+  const cronSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
   const auth = request.headers.get("Authorization");
   if (!auth || !cronSecret || auth !== `Bearer ${cronSecret}`) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
 
   try {
@@ -41,7 +42,7 @@ export async function GET({ request, platform }) {
     let narratorEvents = 0;
 
     if (narrativeSeeds.length > 0) {
-      const ai = platform?.env?.AI;
+      const ai = env?.AI;
       if (ai) {
         // Pick the most significant event
         const topEvent = narrativeSeeds.sort(

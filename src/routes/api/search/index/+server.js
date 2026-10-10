@@ -3,17 +3,18 @@
 // POST /api/search/index - trigger indexing (auth required)
 
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, platform }) {
     const authHeader = request.headers.get('authorization');
-    const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+    const cronSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ai = platform?.env?.AI;
-    const vectorize = platform?.env?.VECTORIZE;
-    const db = platform?.env?.DB_book;
+    const ai = env?.AI;
+    const vectorize = env?.VECTORIZE;
+    const db = env?.DB_book;
 
     if (!ai || !vectorize || !db) {
         return json({ error: 'Missing bindings' }, { status: 503 });

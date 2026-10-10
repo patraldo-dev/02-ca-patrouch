@@ -1,15 +1,16 @@
 // src/routes/api/auth/[...all]/+server.js
 import { createAuth } from "#lib/auth.js";
+import { env } from 'cloudflare:workers';
 
 export async function GET({ request, platform }) {
   console.log(
     "[AUTH GET] path:",
     new URL(request.url).pathname,
     "env keys:",
-    Object.keys(platform?.env || {}),
+    Object.keys(env || {}),
   );
   try {
-    const auth = createAuth(platform.env);
+    const auth = createAuth(env);
     const response = await auth.handler(request);
     console.log("[AUTH GET] response type:", response?.constructor?.name);
     if (response instanceof Response) return response;
@@ -42,10 +43,10 @@ export async function POST({ request, platform }) {
     "[AUTH POST] path:",
     new URL(request.url).pathname,
     "env keys:",
-    Object.keys(platform?.env || {}),
+    Object.keys(env || {}),
   );
   try {
-    const auth = createAuth(platform.env);
+    const auth = createAuth(env);
     const response = await auth.handler(request);
     console.log("[AUTH POST] response type:", response?.constructor?.name);
     if (response instanceof Response) return response;

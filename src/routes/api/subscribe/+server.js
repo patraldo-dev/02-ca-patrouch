@@ -1,10 +1,11 @@
 // src/routes/api/subscribe/+server.js
 import { json } from "@sveltejs/kit";
 import { sendMailgunEmail, getConfirmationEmailContent } from "#lib/email.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, platform, url }) {
   try {
-    if (!platform?.env) {
+    if (!env) {
       return json(
         {
           success: false,
@@ -48,10 +49,10 @@ export async function POST({ request, platform, url }) {
       );
     }
 
-    console.log("DB binding:", platform.env.DB_book ? "PRESENT" : "MISSING");
+    console.log("DB binding:", env.DB_book ? "PRESENT" : "MISSING");
 
     // Check if already confirmed
-    const existingSubscriber = await platform.env.DB_book.prepare(
+    const existingSubscriber = await env.DB_book.prepare(
       "SELECT id, confirmed FROM subscribers WHERE email = ? AND type = ?",
     )
       .bind(email, type)
@@ -77,13 +78,13 @@ export async function POST({ request, platform, url }) {
 
     // Insert or update
     if (existingSubscriber) {
-      await platform.env.DB_book.prepare(
+      await env.DB_book.prepare(
         "UPDATE subscribers SET confirmation_token = ?, token_expires_at = ? WHERE id = ?",
       )
         .bind(confirmationToken, expiresAt.toISOString(), existingSubscriber.id)
         .run();
     } else {
-      await platform.env.DB_book.prepare(
+      await env.DB_book.prepare(
         `
                     INSERT INTO subscribers (email, type, confirmation_token, token_expires_at, confirmed, created_at) 
                     VALUES (?, ?, ?, ?, 0, ?)
@@ -109,7 +110,7 @@ export async function POST({ request, platform, url }) {
         to: email,
         ...emailContent,
       },
-      platform.env,
+      env,
     );
 
     if (!emailSent) {

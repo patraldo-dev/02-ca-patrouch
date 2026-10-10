@@ -2,6 +2,7 @@
 // Semantic search for Agora writings using Cloudflare Vectorize + Workers AI embeddings
 
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ url, platform }) {
     const query = url.searchParams.get('q')?.trim();
@@ -12,9 +13,9 @@ export async function GET({ url, platform }) {
         return json({ results: [], message: 'Query too short' });
     }
 
-    const ai = platform?.env?.AI;
-    const vectorize = platform?.env?.VECTORIZE;
-    const db = platform?.env?.DB_book;
+    const ai = env?.AI;
+    const vectorize = env?.VECTORIZE;
+    const db = env?.DB_book;
 
     if (!ai || !vectorize || !db) {
         return json({ error: 'Missing bindings' }, { status: 503 });

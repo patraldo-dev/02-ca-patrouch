@@ -1,6 +1,7 @@
 // src/routes/api/writings/save/+server.js
 import { json } from "@sveltejs/kit";
 import { saveDraft } from "#lib/server/writing-stats.js";
+import { env } from 'cloudflare:workers';
 
 const STOP_WORDS = new Set([
   "the",
@@ -262,8 +263,8 @@ export async function POST({ request, locals }) {
 
     // Index into Vectorize (both drafts and published)
     try {
-      const ai = platform?.env?.AI;
-      const vectorize = platform?.env?.VECTORIZE;
+      const ai = env?.AI;
+      const vectorize = env?.VECTORIZE;
       if (ai && vectorize) {
         const writing = await db
           .prepare("SELECT id, title, content FROM writings WHERE id = ?")

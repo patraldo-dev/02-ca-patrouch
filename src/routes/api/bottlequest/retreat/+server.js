@@ -3,9 +3,10 @@
 
 import { json } from "@sveltejs/kit";
 import { retreatToPier } from "#lib/server/pier.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   const user = locals.user;
   if (!user || !db)
     return json({ error: "Not authenticated" }, { status: 401 });

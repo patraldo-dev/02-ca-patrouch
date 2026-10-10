@@ -1,11 +1,12 @@
 import { redirect } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function load({ locals, platform }) {
     if (!locals.user) {
         throw redirect(302, `/login?redirect=${encodeURIComponent('/portals/my-realms')}`);
     }
 
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return { realms: [], user: locals.user };
 
     try {

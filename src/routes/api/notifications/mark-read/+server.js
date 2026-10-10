@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ locals, request, platform }) {
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'No DB' }, { status: 500 });
 
     try {

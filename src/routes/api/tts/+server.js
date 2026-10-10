@@ -1,5 +1,6 @@
 // src/routes/api/tts/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 function decryptUserKey(hex, userId) {
     const encoder = new TextEncoder();
@@ -23,7 +24,7 @@ export async function POST({ request, locals, platform }) {
 
         if (provider === 'cloudflare' || provider === 'cf') {
         // Use CF Workers AI binding directly — no user token needed
-        const ai = platform?.env?.AI;
+        const ai = env?.AI;
         if (!ai) {
             return json({ error: 'AI binding not available' }, { status: 503 });
         }

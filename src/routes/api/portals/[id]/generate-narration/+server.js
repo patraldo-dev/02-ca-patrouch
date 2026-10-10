@@ -8,7 +8,7 @@
  *
  * Auth: logged-in session with role 'admin' or 'editor' (requireRole).
  *       The Mistral + TTS calls cost neurons/time; gate it.
- * AI:   platform.env.AI binding.
+ * AI:   env.AI binding.
  *
  * Response: the generated narration summary.
  */
@@ -17,6 +17,7 @@ import { json } from "@sveltejs/kit";
 import { requireRole } from "#lib/server/require-role.js";
 import { generateNarrationForPortal } from "#lib/server/generate-narration.js";
 import { matchWritingsByTriggers } from "#lib/server/scene-generator.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ params, platform, request, locals, url }) {
   // Human-action auth (same pattern as generate-scene).
@@ -35,8 +36,8 @@ export async function POST({ params, platform, request, locals, url }) {
     throw e;
   }
 
-  const db = platform?.env?.DB_book;
-  const ai = platform?.env?.AI;
+  const db = env?.DB_book;
+  const ai = env?.AI;
   if (!db || !ai) {
     return json({ error: "DB or AI binding unavailable" }, { status: 503 });
   }

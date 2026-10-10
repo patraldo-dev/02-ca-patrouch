@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ locals, platform, request }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     const user = locals.user;
     if (!user || !db) return json({ error: 'Not authenticated' }, { status: 401 });
 
@@ -16,7 +17,7 @@ export async function POST({ locals, platform, request }) {
     // Store content in R2
     const r2Key = bottleId;
     try {
-        await platform.env.BOOTY_CONTENT.put(r2Key, content, {
+        await env.BOOTY_CONTENT.put(r2Key, content, {
             httpMetadata: { contentType: 'text/plain' }
         });
     } catch (e) {

@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ params, platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'Database unavailable' }, { status: 503 });
 
     const { id } = params;

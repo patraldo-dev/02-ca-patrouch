@@ -10,12 +10,13 @@
  *             created_at, environment_type, color_primary }] }
  */
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ locals, platform }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'Database unavailable' }, { status: 503 });
 
     try {

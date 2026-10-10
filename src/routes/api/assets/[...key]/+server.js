@@ -1,6 +1,7 @@
+import { env } from 'cloudflare:workers';
 // Serve R2 objects with proper content-type — catch-all for nested keys like models/spirit.glb
 export async function GET({ params, platform }) {
-    const r2 = platform?.env?.R2_ASSETS;
+    const r2 = env?.R2_ASSETS;
     if (!r2) return new Response('R2 not configured', { status: 500 });
 
     const key = params.key;

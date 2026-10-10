@@ -4,6 +4,7 @@
 
 import { json } from "@sveltejs/kit";
 import { sendSundaySparkEmail } from "#lib/server/mailgun.js";
+import { env } from 'cloudflare:workers';
 
 const DUALITY_PROMPTS = {
   en: `You are the creative voice of patrouch.ca, a playful space for serious writing.
@@ -75,7 +76,7 @@ Réponds UNIQUEMENT avec le JSON. Pas de markdown. Pas d'explication.`,
 };
 
 export async function POST({ request, platform }) {
-  const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+  const cronSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
   const authHeader = request.headers.get("authorization");
   const internalToken = "cron-cf-trigger-2026";
   if (
@@ -86,8 +87,8 @@ export async function POST({ request, platform }) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = platform?.env?.DB_book;
-  const ai = platform?.env?.AI;
+  const db = env?.DB_book;
+  const ai = env?.AI;
 
   if (!db) return json({ error: "DB unavailable" }, { status: 503 });
 
@@ -152,7 +153,7 @@ export async function POST({ request, platform }) {
     // Send to all subscribers of this locale
     for (const email of emails) {
       try {
-        await sendSundaySparkEmail(email, dualPrompt, locale, platform.env);
+        await sendSundaySparkEmail(email, dualPrompt, locale, env);
         sent++;
       } catch (e) {
         errors.push(`${email}: ${e.message}`);

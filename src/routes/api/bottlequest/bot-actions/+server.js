@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /**
  * GET: List all Booty Bots (public)
@@ -28,7 +29,7 @@ const BOT_BEHAVIORS = {
 };
 
 export async function GET({ platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ bots: [] });
 
     try {
@@ -40,7 +41,7 @@ export async function GET({ platform }) {
 }
 
 export async function POST({ request, platform, locals }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'No DB' }, { status: 500 });
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -93,7 +94,7 @@ export async function POST({ request, platform, locals }) {
 }
 
 export async function PATCH({ request, locals, platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'No DB' }, { status: 500 });
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 

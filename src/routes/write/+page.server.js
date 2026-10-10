@@ -7,12 +7,13 @@ import {
 } from "#lib/server/engagement.js";
 import { getTranslation } from "#lib/i18n/server.js";
 import { getDailyArtwork } from "#lib/server/art-prompt.js";
+import { env } from 'cloudflare:workers';
 
 export async function load({ locals, url }) {
   if (!locals.user) return { user: null };
 
   const db = locals.db;
-  const ai = locals.platform?.env?.AI;
+  const ai = locals.env?.AI;
   const lang = locals.locale || "es";
   const t = getTranslation(lang);
   const locale = ["en", "es", "fr"].includes(lang) ? lang : "es";

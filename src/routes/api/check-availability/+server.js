@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ url, platform }) {
     const field = url.searchParams.get('field'); // 'username' or 'email'
@@ -8,7 +9,7 @@ export async function GET({ url, platform }) {
         return json({ error: 'Invalid parameters' }, { status: 400 });
     }
 
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) {
         return json({ error: 'Service unavailable' }, { status: 500 });
     }

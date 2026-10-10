@@ -1,15 +1,16 @@
 // src/routes/api/evaluate/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, platform, locals }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (!platform?.env?.AI) {
+    if (!env?.AI) {
         return json({ error: 'AI not available' }, { status: 503 });
     }
 
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
 
     try {
         const { text, locale = 'en', systemPrompt: customSystemPrompt } = await request.json();
@@ -42,7 +43,7 @@ export async function POST({ request, platform, locals }) {
         const label = labels[locale] || labels.en;
         const prompt = `${label}:\n---\n${text}`;
 
-        const response = await platform.env.AI.run(
+        const response = await env.AI.run(
             '@cf/mistralai/mistral-small-3.1-24b-instruct',
             {
                 messages: [
@@ -77,7 +78,7 @@ export async function GET({ platform, locals, url }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
 
     const evaluations = await db.prepare(
@@ -91,7 +92,7 @@ export async function DELETE({ platform, locals, request }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     const { id } = await request.json();
 
     if (!id) return json({ error: 'Missing id' }, { status: 400 });

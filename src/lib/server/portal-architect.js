@@ -29,6 +29,7 @@ import {
 import { normalizeSceneConfig } from "#lib/portals-ecs/scene-normalizer.js";
 import { generatePortalArt } from "./generate-portal-art.js";
 import { generateNarrationForPortal } from "./generate-narration.js";
+import { env } from 'cloudflare:workers';
 
 // ── Guardrails ──────────────────────────────────────────────
 const MAX_PORTALS = 30; // hard ceiling; after this, only enhance
@@ -52,8 +53,8 @@ const MISTRAL_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
 /**
  * Run one architect cycle.
  *
- * @param {D1Database} db   - platform.env.DB_book
- * @param {object} ai       - platform.env.AI
+ * @param {D1Database} db   - env.DB_book
+ * @param {object} ai       - env.AI
  * @param {object} [opts]   - { now?: Date, forceBirth?: boolean }
  * @returns {Promise<{ actions: Array, applied: Array, skipped: Array }>}
  */

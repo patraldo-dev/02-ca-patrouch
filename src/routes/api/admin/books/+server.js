@@ -1,5 +1,6 @@
 // src/routes/api/admin/books/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 // Function to create a slug from a title
 function createSlug(title) {
@@ -13,14 +14,14 @@ function createSlug(title) {
 
 export async function GET({ platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
             }, { status: 500 });
         }
         
-        const result = await platform.env.DB_book.prepare("SELECT * FROM books ORDER BY title").all();
+        const result = await env.DB_book.prepare("SELECT * FROM books ORDER BY title").all();
         
         return json(result.results);
     } catch (error) {
@@ -34,7 +35,7 @@ export async function GET({ platform }) {
 
 export async function POST({ request, platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
@@ -59,8 +60,8 @@ export async function POST({ request, platform }) {
         // Handle image upload if provided
         if (coverImageFile && coverImageFile.size > 0) {
             // Upload the image to Cloudflare Images directly
-const accountId = platform?.env?.CLOUDFLARE_ACCOUNT_ID;
-const apiKey = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
+const accountId = env?.CLOUDFLARE_ACCOUNT_ID;
+const apiKey = (await env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
             
             if (!accountId || !apiKey) {
                 return json({ 
@@ -97,7 +98,7 @@ const apiKey = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
         }
         
         // Insert the new book - let SQLite auto-generate the ID
-        const result = await platform.env.DB_book.prepare(`
+        const result = await env.DB_book.prepare(`
             INSERT INTO books (title, author, description, published_year, slug, published, coverImageId)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `).bind(

@@ -6,28 +6,29 @@
  * based on recent writings vs the existing portal landscape.
  *
  * Auth: Authorization: Bearer <CRON_SECRET>
- * AI:   platform.env.AI binding
+ * AI:   env.AI binding
  */
 
 import { runCycle } from "#lib/server/portal-architect.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ platform, request }) {
   const auth = request.headers.get("authorization");
-  const CRON_SECRET = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+  const CRON_SECRET = (await env?.CRON_SECRET?.get?.()) ?? null;
 
   if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = platform?.env?.DB_book;
-  const ai = platform?.env?.AI;
+  const db = env?.DB_book;
+  const ai = env?.AI;
 
   if (!db || !ai) {
     return json({ error: "DB or AI binding unavailable" }, { status: 503 });
   }
 
   // CLOUDFLARE_API_TOKEN is needed for art generation on birthed portals.
-  const cfToken = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
+  const cfToken = (await env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
 
   try {
     const result = await runCycle(db, ai, { cfToken });

@@ -1,9 +1,10 @@
 // src/routes/api/admin/cleanup/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
@@ -11,10 +12,10 @@ export async function POST({ platform }) {
         }
         
         // Remove the auto-generated book
-        const result = await platform.env.DB_book.prepare("DELETE FROM books WHERE title = 'Your Book Title' AND author = 'Author Name'").run();
+        const result = await env.DB_book.prepare("DELETE FROM books WHERE title = 'Your Book Title' AND author = 'Author Name'").run();
         
         // Also check for any books with ID 'book-123'
-        const result2 = await platform.env.DB_book.prepare("DELETE FROM books WHERE id = 'book-123'").run();
+        const result2 = await env.DB_book.prepare("DELETE FROM books WHERE id = 'book-123'").run();
         
         return json({ 
             success: true, 

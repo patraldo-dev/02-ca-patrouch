@@ -1,6 +1,7 @@
 // src/routes/api/newsletter/subscribe/+server.js
 import { json } from "@sveltejs/kit";
 import { sendMailgunEmail } from "#lib/server/mailgun.js";
+import { env } from 'cloudflare:workers';
 
 function generateToken() {
   const array = new Uint8Array(32);
@@ -27,11 +28,11 @@ export async function POST({ request, platform }) {
       return json({ error: "Invalid email format" }, { status: 400 });
     }
 
-    if (!platform?.env?.DB_book) {
+    if (!env?.DB_book) {
       return json({ error: "Database not available" }, { status: 500 });
     }
 
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
 
     // Check if already subscribed
     const existing = await db
@@ -80,7 +81,7 @@ export async function POST({ request, platform }) {
             m.subject,
             `<a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${m.subject}</a>`,
             m.body,
-            platform.env,
+            env,
           );
         } catch (e) {
           console.error("Confirmation email error:", e);
@@ -127,7 +128,7 @@ export async function POST({ request, platform }) {
         m.subject,
         `<a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${m.subject}</a>`,
         m.body,
-        platform.env,
+        env,
       );
     } catch (e) {
       console.error("Confirmation email error:", e);

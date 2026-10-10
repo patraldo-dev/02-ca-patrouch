@@ -1,13 +1,14 @@
 // src/routes/api/admin/reviews/+server.js
 import { json, error } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ platform }) {
-    if (!platform?.env?.DB_book) {
+    if (!env?.DB_book) {
         return json({ error: 'Database not available' }, { status: 500 });
     }
     
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     
     try {
         // Fetch all reviews with book and user information
@@ -36,11 +37,11 @@ export async function GET({ platform }) {
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request, platform }) {
-    if (!platform?.env?.DB_book) {
+    if (!env?.DB_book) {
         return json({ error: 'Database not available' }, { status: 500 });
     }
     
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     
     try {
         const { content, rating, book_id } = await request.json();

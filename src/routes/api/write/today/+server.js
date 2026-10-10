@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { getTodayData } from "#lib/server/writing-stats.js";
+import { env } from 'cloudflare:workers';
 
 function getUrlLocale(event) {
   const q = event.url.searchParams.get("locale");
@@ -17,7 +18,7 @@ export async function GET(event) {
   if (!user) return json({ error: "Unauthorized" }, { status: 401 });
 
   const db = event.locals.db;
-  const ai = event.platform?.env?.AI;
+  const ai = env?.AI;
   const locale = getUrlLocale(event) || "en";
 
   try {

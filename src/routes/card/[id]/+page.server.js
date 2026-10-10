@@ -1,7 +1,8 @@
 import { error } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function load({ params, platform, cookies }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) throw error(503, 'Database unavailable');
 
     const writingId = params.id;

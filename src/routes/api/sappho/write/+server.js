@@ -3,6 +3,7 @@
 // POST /api/sappho/write — trigger Sappho to write a response to today's community prompt
 
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 const SAPPHO_USER_ID = 'sappho-agent-001';
 const TARGET_WORD_COUNT = 300;
@@ -17,15 +18,15 @@ const SAPPHO_CATEGORIES = ['fiction', 'creative_nonfiction', 'poetry', 'memoir',
 
 export async function POST({ request, platform }) {
     try {
-        const db = platform?.env?.DB_book;
-        const ai = platform?.env?.AI;
+        const db = env?.DB_book;
+        const ai = env?.AI;
         if (!db || !ai) {
             return json({ error: 'Missing DB or AI binding' }, { status: 503 });
         }
 
         // Auth: accept from cron (CF internal), OpenClaw agent, or skip if no secret configured
         const authHeader = request.headers.get('authorization');
-        const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+        const cronSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
         const internalToken = 'cron-cf-trigger-2026';
         if (cronSecret && authHeader !== `Bearer ${cronSecret}` && authHeader !== `Bearer ${internalToken}`) {
             return json({ error: 'Unauthorized' }, { status: 401 });

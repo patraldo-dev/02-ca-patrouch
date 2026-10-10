@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 /**
  * Portal art generation — flux-1-schnell → Cloudflare Images upload.
  *
@@ -15,7 +16,7 @@ const CF_IMAGES_HASH = '4bRSwPonOXfEIBVZiDXg0w';
 /**
  * Generate a portal backdrop image and upload it to Cloudflare Images.
  *
- * @param {object} ai              - platform.env.AI (Workers AI binding)
+ * @param {object} ai              - env.AI (Workers AI binding)
  * @param {string} apiToken        - CLOUDFLARE_API_TOKEN value (for upload auth)
  * @param {object} opts
  * @param {string} opts.portalId   - slug, used as the image ID prefix

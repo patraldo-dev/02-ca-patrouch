@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 // Creative Tide — communal creativity gauge
 // Measures the writing community's output over the last 7 days
@@ -6,7 +7,7 @@ import { json } from '@sveltejs/kit';
 // Power is distributed communally, not individually
 
 export async function GET({ platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ tide: 0, label: 'Calma', detail: 'Sin datos' });
 
     try {

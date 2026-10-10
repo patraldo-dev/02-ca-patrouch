@@ -9,6 +9,7 @@ import {
   TRAVEL_MODES,
   canBoat,
 } from "#lib/poi.js";
+import { env } from 'cloudflare:workers';
 
 const CAPTURE_RADIUS = 0.001; // ~100 meters
 
@@ -30,7 +31,7 @@ function degDist(lat1, lon1, lat2, lon2) {
 }
 
 export async function POST({ request, locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
   if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
 
@@ -396,7 +397,7 @@ function nearestPoi(lat, lon) {
 }
 
 export async function GET({ locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
   if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
 

@@ -1,9 +1,10 @@
 // src/routes/api/admin/books/[slug]/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ params, platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
@@ -13,7 +14,7 @@ export async function GET({ params, platform }) {
         const { slug } = params;
         
         // Get book by slug
-        const result = await platform.env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
+        const result = await env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
         
         if (!result) {
             return json({ 
@@ -34,7 +35,7 @@ export async function GET({ params, platform }) {
 
 export async function PUT({ params, request, platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
@@ -45,7 +46,7 @@ export async function PUT({ params, request, platform }) {
         const data = await request.json();
         
         // Update the book
-        await platform.env.DB_book.prepare(`
+        await env.DB_book.prepare(`
             UPDATE books 
             SET title = ?, author = ?, description = ?, published_year = ?, slug = ?, published = ?, coverImageId = ?
             WHERE slug = ?
@@ -72,7 +73,7 @@ export async function PUT({ params, request, platform }) {
 
 export async function DELETE({ params, platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
@@ -82,7 +83,7 @@ export async function DELETE({ params, platform }) {
         const { slug } = params;
         
         // First, get the book to see if it exists
-        const book = await platform.env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
+        const book = await env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
         
         if (!book) {
             return json({ 
@@ -92,7 +93,7 @@ export async function DELETE({ params, platform }) {
         }
         
         // Delete the book using both slug and ID to be sure
-        const result = await platform.env.DB_book.prepare("DELETE FROM books WHERE slug = ? OR id = ?").bind(slug, book.id).run();
+        const result = await env.DB_book.prepare("DELETE FROM books WHERE slug = ? OR id = ?").bind(slug, book.id).run();
         
         return json({ 
             success: true, 

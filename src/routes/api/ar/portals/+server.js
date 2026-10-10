@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /**
  * POST /api/ar/portals
@@ -7,7 +8,7 @@ import { json } from '@sveltejs/kit';
  * Used by admin panel or Narrator cron worker.
  */
 export async function POST({ request, platform, locals }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: 'No database' }, { status: 500 });
 
   if (!locals.user) {

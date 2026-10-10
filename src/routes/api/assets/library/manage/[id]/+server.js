@@ -6,6 +6,7 @@
  */
 import { json } from "@sveltejs/kit";
 import { requireRole } from "#lib/server/require-role.js";
+import { env } from 'cloudflare:workers';
 
 export async function DELETE({ params, locals, platform, url }) {
   try {
@@ -16,7 +17,7 @@ export async function DELETE({ params, locals, platform, url }) {
     return json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "Database unavailable" }, { status: 503 });
 
   try {
@@ -46,7 +47,7 @@ export async function PUT({ params, request, locals, platform, url }) {
     return json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "Database unavailable" }, { status: 503 });
 
   let body;

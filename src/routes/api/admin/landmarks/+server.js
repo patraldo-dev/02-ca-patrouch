@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /**
  * GET /api/admin/landmarks — list all tour landmarks
@@ -11,7 +12,7 @@ export async function GET({ platform, locals }) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: 'No database' }, { status: 500 });
 
   const { results } = await db.prepare(`
@@ -28,7 +29,7 @@ export async function POST({ request, platform, locals }) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: 'No database' }, { status: 500 });
 
   try {
@@ -62,7 +63,7 @@ export async function PUT({ request, platform, locals }) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: 'No database' }, { status: 500 });
 
   try {
@@ -99,7 +100,7 @@ export async function DELETE({ url, platform, locals }) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: 'No database' }, { status: 500 });
 
   const id = url.searchParams.get('id');

@@ -1,8 +1,8 @@
+import { env } from 'cloudflare:workers';
 // WebSocket proxy to BootyChatRoom Durable Object
 // SvelteKit +server.js can return WebSocket 101 responses on Cloudflare
 
 export async function GET({ request, platform }) {
-    const env = platform?.env;
     if (!env?.BOOTY_CHAT) {
         return new Response('Chat not available', { status: 503 });
     }

@@ -1,8 +1,9 @@
 import { json } from "@sveltejs/kit";
 import { logTransaction } from "#lib/server/bottlequest-logger.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ locals, platform, request }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   const user = locals.user;
   if (!user || !db)
     return json(

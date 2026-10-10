@@ -5,7 +5,7 @@
  *   - src/routes/api/cron/generate-scenes  (daily, all portals)
  *   - src/routes/api/portals/[id]/generate-scene  (on-demand, single portal)
  *
- * Runs on the Cloudflare Workers AI binding (`platform.env.AI`) routing the
+ * Runs on the Cloudflare Workers AI binding (`env.AI`) routing the
  * Mistral model @cf/mistralai/mistral-small-3.1-24b-instruct. No external
  * LLM SDK, no new secrets.
  *
@@ -16,6 +16,7 @@
  */
 
 import { normalizeSceneConfig } from "#lib/portals-ecs/scene-normalizer.js";
+import { env } from 'cloudflare:workers';
 
 const MISTRAL_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
 
@@ -175,7 +176,7 @@ async function callMistral(ai, userPrompt) {
 /**
  * Generate a single portal's scene config from matched writings.
  *
- * @param {object} ai             - platform.env.AI (Workers AI binding)
+ * @param {object} ai             - env.AI (Workers AI binding)
  * @param {object} portal         - portal row (needs name_es, icon, color_primary, color_bg, id)
  * @param {Array}  sourceWritings - writings to analyze ({ title, content, locale })
  * @returns {Promise<{ sceneConfig: object, sourceIds: Array }>}

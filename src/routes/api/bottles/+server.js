@@ -1,8 +1,9 @@
 import { json } from "@sveltejs/kit";
 import { xorEncrypt, xorDecrypt } from "#lib/server/bottle-crypto.js";
+import { env } from 'cloudflare:workers';
 
 export async function GET({ platform, url, locals }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "Database not available" }, { status: 500 });
 
   const status = url.searchParams.get("status");
@@ -76,7 +77,7 @@ export async function GET({ platform, url, locals }) {
 }
 
 export async function POST({ platform, locals, request }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "Database not available" }, { status: 500 });
 
   const user = locals.user;

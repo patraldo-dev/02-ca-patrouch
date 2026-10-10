@@ -8,6 +8,7 @@ globalThis.process.env = globalThis.process.env || {};
 import { createAuth } from "#lib/auth.js";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { building } from "$app/env";
+import { env } from 'cloudflare:workers';
 
 /** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
@@ -15,12 +16,12 @@ export async function handle({ event, resolve }) {
   if (building) return resolve(event);
 
   // ⚠️ CRITICAL: Force real D1
-  if (!event.platform?.env?.DB_book) {
+  if (!env?.DB_book) {
     throw new Error('❌ D1 database binding "DB_book" not found.');
   }
 
-  event.locals.db = event.platform.env.DB_book;
-  event.locals.platform = event.platform;
+  event.locals.db = env.DB_book;
+  event.locals.platform = { env }; // kit3: adapter no longer passes platform; shim for any locals.platform consumers
 
   // Locale
   const localeCookie =
@@ -30,7 +31,7 @@ export async function handle({ event, resolve }) {
     : "es";
 
   // Better Auth — intercept /api/auth/* first
-  const auth = createAuth(event.platform.env);
+  const auth = createAuth(env);
   event.locals.auth = auth;
 
   if (event.url.pathname.startsWith("/api/auth")) {

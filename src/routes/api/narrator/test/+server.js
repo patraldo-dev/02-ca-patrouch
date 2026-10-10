@@ -6,9 +6,10 @@
 import { json } from "@sveltejs/kit";
 import { applyInstantEffects } from "#lib/server/narrator-effects.js";
 import { NARRATOR_CATALOG } from "#lib/narrator-catalog.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
 
   // Only admins can trigger test events

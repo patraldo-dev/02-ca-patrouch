@@ -1,9 +1,10 @@
 // src/routes/api/books/[slug]/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ params, platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
@@ -14,7 +15,7 @@ export async function GET({ params, platform }) {
         console.log('Fetching book with slug:', slug); // Debug log
         
         // Get book by slug
-        const result = await platform.env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
+        const result = await env.DB_book.prepare("SELECT * FROM books WHERE slug = ?").bind(slug).first();
         
         if (!result) {
             console.log('Book not found for slug:', slug); // Debug log

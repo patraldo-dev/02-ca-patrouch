@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 // Simple Pacific coast points (Baja to Peru) for land detection
 const COAST_POINTS = [
@@ -66,7 +67,7 @@ function driftBottle(bottle) {
 }
 
 export async function POST({ platform, request }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: 'Database not available' }, { status: 500 });
 
   const body = await request.json();

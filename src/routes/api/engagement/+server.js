@@ -9,10 +9,11 @@ import {
   getActiveChallenges,
   getChallengeEntries,
 } from "#lib/server/engagement.js";
+import { env } from 'cloudflare:workers';
 
 export async function GET({ url, platform, locals }) {
   try {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) {
       return json({ error: "Database unavailable" }, { status: 503 });
     }

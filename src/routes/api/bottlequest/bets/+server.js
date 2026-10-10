@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { logTransaction } from "#lib/server/bottlequest-logger.js";
+import { env } from 'cloudflare:workers';
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -23,7 +24,7 @@ function calcOdds(distKm) {
 
 // POST: place a bet
 export async function POST({ request, locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
   if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
 
@@ -156,7 +157,7 @@ export async function POST({ request, locals, platform }) {
 
 // GET: list bets + odds for active bottles
 export async function GET({ url, locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
 
   try {
@@ -233,7 +234,7 @@ export async function GET({ url, locals, platform }) {
 
 // Resolve bets when a bottle is captured — called internally
 export async function PUT({ request, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
 
   try {

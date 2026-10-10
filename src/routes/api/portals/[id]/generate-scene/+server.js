@@ -8,7 +8,7 @@
  * Auth: logged-in session with role 'admin' or 'editor' (requireRole).
  *       This is a human action, so it uses session auth, not the CRON_SECRET
  *       (which is reserved for the machine-to-machine daily cron).
- * AI:   platform.env.AI binding (@cf/mistralai/mistral-small-3.1-24b-instruct)
+ * AI:   env.AI binding (@cf/mistralai/mistral-small-3.1-24b-instruct)
  *
  * Body (optional, JSON):
  *   { "writings": ["<writing-id>", ...], "force": true }
@@ -28,6 +28,7 @@ import {
   generateSceneForPortal,
   matchWritingsByTriggers,
 } from "#lib/server/scene-generator.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ params, platform, request, locals, url }) {
   // Human-action auth: a logged-in editor/admin. Session-based, scoped to the
@@ -50,8 +51,8 @@ export async function POST({ params, platform, request, locals, url }) {
     throw e;
   }
 
-  const db = platform?.env?.DB_book;
-  const ai = platform?.env?.AI;
+  const db = env?.DB_book;
+  const ai = env?.AI;
   if (!db || !ai) {
     return json({ error: "DB or AI binding unavailable" }, { status: 503 });
   }

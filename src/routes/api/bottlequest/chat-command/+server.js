@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, locals, platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'No DB' }, { status: 500 });
 
     const user = locals.user;
@@ -101,7 +102,7 @@ Reply ONLY with raw JSON, no markdown fences:
   "reply": "<friendly pirate-style response, max 120 chars, in the same language as the player's message>"
 }`;
 
-        const ai = platform.env.AI;
+        const ai = env.AI;
         if (!ai) return json({ error: 'AI unavailable' }, { status: 503 });
 
         const aiRes = await ai.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {

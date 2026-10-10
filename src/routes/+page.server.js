@@ -1,8 +1,9 @@
 import { redirect } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function load({ locals }) {
     const db = locals?.db;
-    const ai = locals?.platform?.env?.AI;
+    const ai = locals?.env?.AI;
     const user = locals?.user || null;
 
     // Get historical community prompts for carousel (no auth needed)

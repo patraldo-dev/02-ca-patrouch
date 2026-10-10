@@ -1,12 +1,13 @@
 // src/routes/api/writing-card/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /**
  * Get writing data for card generation
  */
 export async function GET({ url, platform }) {
     try {
-        const db = platform?.env?.DB_book;
+        const db = env?.DB_book;
         if (!db) {
             return json({ error: 'Database unavailable' }, { status: 503 });
         }

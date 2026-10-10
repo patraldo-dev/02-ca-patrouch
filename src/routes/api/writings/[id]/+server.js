@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function PUT({ request, locals, params }) {
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -46,7 +47,7 @@ export async function DELETE({ request, locals, params, platform }) {
 
     // Remove from Vectorize
     try {
-        const vectorize = platform?.env?.VECTORIZE;
+        const vectorize = env?.VECTORIZE;
         if (vectorize) await vectorize.deleteByIds([params.id]);
     } catch (e) {
         console.error('Vectorize delete error:', e);

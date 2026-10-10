@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ locals, url, platform }) {
     if (!locals.user) return json({ notifications: [], unreadCount: 0 });
 
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ notifications: [], unreadCount: 0 });
 
     try {

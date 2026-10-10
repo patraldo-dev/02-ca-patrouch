@@ -1,5 +1,6 @@
 // src/routes/api/agora/leaderboard/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /**
  * Get Agora game leaderboard
@@ -7,7 +8,7 @@ import { json } from '@sveltejs/kit';
  */
 export async function GET({ platform }) {
     try {
-        const db = platform?.env?.DB_book;
+        const db = env?.DB_book;
         if (!db) {
             return json({ error: 'Database unavailable' }, { status: 503 });
         }

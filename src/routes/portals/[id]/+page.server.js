@@ -1,5 +1,6 @@
 import { error } from "@sveltejs/kit";
 import { loadPortalsData } from "#lib/server/portals-data.js";
+import { env } from 'cloudflare:workers';
 
 // Canonical portal ids that have a static/scenes/<id>.json fallback config.
 // These are the renderable worlds independent of D1/Mistral state. Kept in sync
@@ -21,7 +22,7 @@ const STATIC_SCENE_IDS = new Set([
 ]);
 
 export async function load({ params, platform, locals }) {
-  const data = await loadPortalsData(platform?.env?.DB_book);
+  const data = await loadPortalsData(env?.DB_book);
   const { id } = params;
 
   // Resolve if the id is a known active portal (D1), has a stored Mistral

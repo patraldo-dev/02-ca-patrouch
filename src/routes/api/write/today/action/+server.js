@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { handleAction } from "#lib/server/writing-stats.js";
+import { env } from 'cloudflare:workers';
 
 function getLocale(event) {
   const q = event.url.searchParams.get("locale");
@@ -28,7 +29,7 @@ export async function POST(event) {
   }
 
   const db = event.locals.db;
-  const ai = event.platform?.env?.AI;
+  const ai = env?.AI;
   const result = await handleAction(db, ai, user.id, action, locale);
 
   if (result.error) return json(result, { status: 429 });

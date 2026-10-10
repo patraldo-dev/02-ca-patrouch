@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { haversineDistance } from "#lib/geo.js";
+import { env } from 'cloudflare:workers';
 
 /**
  * Proximity-based bottle capture.
@@ -17,7 +18,7 @@ const CAPTURE_BONUS = 50;
 const CAPTURE_FUEL = 25;
 
 export async function POST({ request, locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
   if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
 

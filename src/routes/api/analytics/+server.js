@@ -1,9 +1,10 @@
 // src/routes/api/analytics/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, platform, getClientAddress }) {
   try {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) {
       return json({ error: 'Database unavailable' }, { status: 503 });
     }
@@ -47,7 +48,7 @@ export async function POST({ request, platform, getClientAddress }) {
 
 export async function GET({ url, platform }) {
   try {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) {
       return json({ error: 'Database unavailable' }, { status: 503 });
     }

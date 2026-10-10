@@ -1,7 +1,8 @@
 import { error, redirect } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function load({ params, platform, locals }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) {
         throw error(503, 'Database unavailable');
     }

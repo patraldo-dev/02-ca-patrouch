@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 // WebSocket upgrade → GrabDemoRoom Durable Object.
 //
 // ONE shared room for all players (keyed as 'global'). Everyone who opens
@@ -12,7 +13,6 @@
 // when implemented.
 
 export async function GET({ request, url, platform }) {
-	const env = platform?.env;
 	if (!env?.GRAB_DEMO_ROOM) {
 		return new Response('GRAB_DEMO_ROOM binding not available', { status: 503 });
 	}

@@ -12,19 +12,20 @@
  * No auth required — anyone can try it. (Saving as a permanent portal is a
  * future member-gated feature via the Workshop /materialize route.)
  *
- * AI: platform.env.AI binding (@cf/mistralai/mistral-small-3.1-24b-instruct)
+ * AI: env.AI binding (@cf/mistralai/mistral-small-3.1-24b-instruct)
  *
  * Body: { "text": "string (min 20 chars)", "locale": "es|en|fr" }
  * Response: { "portalId": "materialized-<uuid>", "sceneConfig": {...} }
  */
 import { json } from "@sveltejs/kit";
 import { generateSceneForPortal } from "#lib/server/scene-generator.js";
+import { env } from 'cloudflare:workers';
 
 const MIN_CHARS = 20;
 const MAX_CHARS = 5000;
 
 export async function POST({ request, platform }) {
-  const ai = platform?.env?.AI;
+  const ai = env?.AI;
   if (!ai) return json({ error: "AI not available" }, { status: 503 });
 
   let body;

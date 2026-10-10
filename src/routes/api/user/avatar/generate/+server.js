@@ -1,5 +1,6 @@
 // POST /api/user/avatar/generate — Generate AI avatar via CF Workers AI (Flux Schnell)
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 const CF_ACCOUNT_ID = '477082f5c9678c608889bd8f03f7b807';
 
@@ -14,7 +15,7 @@ export async function POST({ locals, request, platform }) {
     if (!prompt || prompt.length < 3) return json({ error: 'Prompt too short' }, { status: 400 });
     if (prompt.length > 200) return json({ error: 'Prompt too long (max 200 chars)' }, { status: 400 });
 
-    const ai = platform?.env?.AI;
+    const ai = env?.AI;
     if (!ai) return json({ error: 'AI service not available' }, { status: 503 });
 
     try {
@@ -39,7 +40,7 @@ export async function POST({ locals, request, platform }) {
         const blob = new Blob([imageBytes], { type: 'image/png' });
 
         // Upload to Cloudflare Images
-        const apiToken = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
+        const apiToken = (await env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
         const imageId = `avatar-${user.id}-${Date.now()}`;
 
         const uploadForm = new FormData();

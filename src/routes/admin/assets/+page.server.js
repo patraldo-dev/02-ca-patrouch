@@ -1,5 +1,6 @@
+import { env } from 'cloudflare:workers';
 export async function load({ platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return { models: [] };
 
     try {

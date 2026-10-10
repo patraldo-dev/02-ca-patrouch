@@ -1,13 +1,14 @@
 // src/routes/api/admin/reviews/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ platform }) {
-    if (!platform?.env?.DB_book) {
+    if (!env?.DB_book) {
         return json({ error: 'Database not available' }, { status: 500 });
     }
     
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     
     try {
         const { results } = await db.prepare(`
@@ -35,11 +36,11 @@ export async function GET({ platform }) {
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request, platform, locals }) {
-    if (!platform?.env?.DB_book) {
+    if (!env?.DB_book) {
         return json({ error: 'Database not available' }, { status: 500 });
     }
     
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     
     try {
         const { content, rating, book_id, user_id } = await request.json();

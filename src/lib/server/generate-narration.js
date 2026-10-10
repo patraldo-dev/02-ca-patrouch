@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 /**
  * Portal narration generation — Mistral passage + melotts audio pre-render.
  *
@@ -22,7 +23,7 @@ const MAX_PASSAGE_CHARS = 1500;
  * Generate the narration text — a story-like passage per locale, in the
  * portal's mood, derived from its associated writings.
  *
- * @param {object} ai        - platform.env.AI
+ * @param {object} ai        - env.AI
  * @param {object} portal    - portal row (needs name_es, narrator_* columns)
  * @param {Array}  writings  - associated writings ({ title, content, locale })
  * @returns {Promise<{es:string, en:string, fr:string}>}

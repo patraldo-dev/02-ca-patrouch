@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { logTransaction } from "#lib/server/bottlequest-logger.js";
+import { env } from 'cloudflare:workers';
 
 // GET: list marketplace + word index
 // POST: list a writing for sale
@@ -8,7 +9,7 @@ import { logTransaction } from "#lib/server/bottlequest-logger.js";
 const ROYALTY_RATE = 0.1; // 10% to original author on resale
 
 export async function GET({ locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ listings: [], wordIndex: [], myWritings: [] });
 
   try {
@@ -48,7 +49,7 @@ export async function GET({ locals, platform }) {
 }
 
 export async function POST({ request, locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
   if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
 
@@ -132,7 +133,7 @@ export async function POST({ request, locals, platform }) {
 }
 
 export async function PATCH({ request, locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
   if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
 

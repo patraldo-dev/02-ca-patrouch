@@ -1,10 +1,11 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'No DB' }, { status: 500 });
 
-    const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+    const cronSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
     const auth = request.headers.get('Authorization');
     if (!auth || !cronSecret || auth !== `Bearer ${cronSecret}`) {
         return json({ error: 'Unauthorized' }, { status: 401 });

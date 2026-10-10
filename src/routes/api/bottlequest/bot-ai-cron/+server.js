@@ -1,4 +1,5 @@
 import { json } from "@sveltejs/kit";
+import { env } from 'cloudflare:workers';
 
 // Booty Bot Autonomous Cron
 // POST to /api/bottlequest/bot-ai-cron to trigger
@@ -10,11 +11,11 @@ import { json } from "@sveltejs/kit";
 // 3. Bot must protect itself (unless conflicts with Rule 1 or 2)
 
 export async function POST({ request, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No DB" }, { status: 500 });
 
   // Cron auth - accept from cron with secret
-  const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+  const cronSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
   if (cronSecret) {
     const auth = request.headers.get("Authorization");
     if (!auth || auth !== `Bearer ${cronSecret}`) {
@@ -155,12 +156,12 @@ Decide your action. Reply with ONLY valid JSON:
       try {
         const aiResponse = await fetch(
           "https://api.cloudflare.com/client/v4/accounts/" +
-            platform.env.CF_ACCOUNT_ID +
+            env.CF_ACCOUNT_ID +
             "/ai/run/@cf/mistralai/mistral-small-3.1-24b-instruct",
           {
             method: "POST",
             headers: {
-              Authorization: "Bearer " + platform.env.CF_API_TOKEN,
+              Authorization: "Bearer " + env.CF_API_TOKEN,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({

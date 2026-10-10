@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 /**
  * Shared SSR data loading for the portals spatial experience.
  *
@@ -15,7 +16,7 @@
  * Returns a safe empty shape if the DB binding is missing or the query fails,
  * so a missing binding never crashes the page — it just renders with fallbacks.
  *
- * @param {D1Database} db - platform.env.DB_book
+ * @param {D1Database} db - env.DB_book
  * @returns {Promise<{ galaxies: Array, portals: Array, count: number, featuredPortal: object|null, sceneConfigs: object }>}
  */
 export async function loadPortalsData(db) {

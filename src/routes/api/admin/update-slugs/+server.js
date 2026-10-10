@@ -1,5 +1,6 @@
 // src/routes/api/admin/update-slugs/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 function createSlug(title) {
     return title
@@ -12,7 +13,7 @@ function createSlug(title) {
 
 export async function POST({ platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
@@ -20,13 +21,13 @@ export async function POST({ platform }) {
         }
         
         // Get all books
-        const booksResult = await platform.env.DB_book.prepare("SELECT * FROM books").all();
+        const booksResult = await env.DB_book.prepare("SELECT * FROM books").all();
         const books = booksResult.results;
         
         // Update each book with a proper slug
         for (const book of books) {
             const slug = createSlug(book.title);
-            await platform.env.DB_book.prepare("UPDATE books SET slug = ? WHERE id = ?")
+            await env.DB_book.prepare("UPDATE books SET slug = ? WHERE id = ?")
                 .bind(slug, book.id)
                 .run();
         }

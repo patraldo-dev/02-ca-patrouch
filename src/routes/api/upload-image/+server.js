@@ -1,11 +1,12 @@
+import { env } from 'cloudflare:workers';
 // src/routes/api/upload-image/+server.js
 export async function POST({ request, platform }) {
   console.log('=== UPLOAD REQUEST START ===');
   
   try {
     // 1. Check environment variables
-    const accountId = platform?.env?.CLOUDFLARE_ACCOUNT_ID;
-    const apiToken = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
+    const accountId = env?.CLOUDFLARE_ACCOUNT_ID;
+    const apiToken = (await env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
     
     console.log('Environment variables:', {
       accountId: accountId ? 'present' : 'missing',

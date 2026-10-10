@@ -16,6 +16,7 @@
  */
 import { json } from "@sveltejs/kit";
 import { requireRole } from "#lib/server/require-role.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ request, locals, platform, url }) {
   try {
@@ -26,7 +27,7 @@ export async function POST({ request, locals, platform, url }) {
     return json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const r2 = platform?.env?.R2_ASSETS;
+  const r2 = env?.R2_ASSETS;
   if (!r2) return json({ error: "R2 not configured" }, { status: 503 });
 
   const formData = await request.formData();

@@ -3,10 +3,11 @@
 // OpenClaw crons can be decommissioned after migration
 
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ url, platform }) {
     const secret = url.searchParams.get('secret');
-    const envSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+    const envSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
     if (!envSecret || secret !== envSecret) {
         return json({ error: 'Forbidden' }, { status: 403 });
     }

@@ -12,12 +12,13 @@
  * committing it to 03-digital-pp). No auth gate because the input is
  * blog content and the output is a translation — nothing sensitive.
  *
- * AI: platform.env.AI (@cf/mistralai/mistral-small-3.1-24b-instruct)
+ * AI: env.AI (@cf/mistralai/mistral-small-3.1-24b-instruct)
  *
  * Body: { "post": { ...blog post JSON... }, "targetLang": "es|fr" }
  * Response: { "translated": { ...same shape, content translated... } }
  */
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 const MISTRAL_MODEL = '@cf/mistralai/mistral-small-3.1-24b-instruct';
 const VALID_TARGETS = ['es', 'fr'];
@@ -25,7 +26,7 @@ const VALID_TARGETS = ['es', 'fr'];
 const LANG_NAMES = { en: 'English', es: 'Spanish', fr: 'French' };
 
 export async function POST({ request, platform }) {
-    const ai = platform?.env?.AI;
+    const ai = env?.AI;
     if (!ai) return json({ error: 'AI not available' }, { status: 503 });
 
     let body;

@@ -13,12 +13,13 @@
 
 import { json } from "@sveltejs/kit";
 import { runCycle } from "#lib/server/portal-architect.js";
+import { env } from 'cloudflare:workers';
 
 const ACTIVATION_THRESHOLD = 5;
 
 export async function POST({ platform }) {
-  const db = platform?.env?.DB_book;
-  const ai = platform?.env?.AI;
+  const db = env?.DB_book;
+  const ai = env?.AI;
   if (!db) return json({ error: "Database unavailable" }, { status: 503 });
 
   try {
@@ -99,7 +100,7 @@ export async function POST({ platform }) {
     let architectResult = { applied: [], skipped: [], actions: [] };
     if (ai) {
       const cfToken =
-        (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
+        (await env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
       try {
         architectResult = await runCycle(db, ai, { cfToken });
       } catch (err) {

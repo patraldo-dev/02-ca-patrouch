@@ -1,5 +1,6 @@
 // src/routes/newsletter/confirm/+server.js
 import { redirect, error } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function GET({ url, platform }) {
     const token = url.searchParams.get('token');
@@ -8,11 +9,11 @@ export async function GET({ url, platform }) {
         throw error(400, { message: 'Missing confirmation token' });
     }
 
-    if (!platform?.env?.DB_book) {
+    if (!env?.DB_book) {
         throw error(500, { message: 'Database not available' });
     }
 
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
 
     try {
         const subscriber = await db.prepare(

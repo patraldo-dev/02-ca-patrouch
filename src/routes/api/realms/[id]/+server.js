@@ -8,12 +8,13 @@
  * Auth required (Pattern A — locals.user).
  */
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function PUT({ params, request, locals, platform }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'Database unavailable' }, { status: 503 });
 
     let body;
@@ -47,7 +48,7 @@ export async function DELETE({ params, locals, platform }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'Database unavailable' }, { status: 503 });
 
     const realmId = params.id;

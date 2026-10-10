@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ platform, request }) {
-    const ai = platform?.env?.AI;
+    const ai = env?.AI;
     if (!ai) return json({ error: 'AI not available' }, { status: 500 });
 
     const { mode = 'event', theme = 'celebración' } = await request.json();

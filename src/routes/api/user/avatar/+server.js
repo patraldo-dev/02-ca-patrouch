@@ -1,5 +1,6 @@
 // POST /api/user/avatar — Upload avatar via Cloudflare Images REST API + AI moderation
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
@@ -29,7 +30,7 @@ export async function POST({ locals, request, platform }) {
 
     // AI moderation via Workers AI
     try {
-        const ai = platform?.env?.AI;
+        const ai = env?.AI;
         if (ai) {
             const result = await ai.run('@cf/meta/llama-3.2-11b-vision-instruct', {
                 image: Array.from(imageBytes),
@@ -49,7 +50,7 @@ export async function POST({ locals, request, platform }) {
 
     // Upload to Cloudflare Images via REST API
     try {
-        const apiToken = (await platform?.env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
+        const apiToken = (await env?.CLOUDFLARE_API_TOKEN?.get?.()) ?? null;
         if (!apiToken) {
             return json({ error: 'Image service not configured' }, { status: 503 });
         }

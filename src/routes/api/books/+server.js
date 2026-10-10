@@ -1,13 +1,14 @@
 // src/routes/api/books/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ platform }) {
-    if (!platform?.env?.DB_book) {
+    if (!env?.DB_book) {
         return json({ error: 'Database not available' }, { status: 500 });
     }
     
-    const db = platform.env.DB_book;
+    const db = env.DB_book;
     
     try {
         // Only fetch books that have valid titles, authors, and covers

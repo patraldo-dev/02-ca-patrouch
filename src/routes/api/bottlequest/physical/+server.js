@@ -1,10 +1,11 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 const COOLDOWN_MS = 60_000; // 60s between captures
 const TRAP_PENALTY = 50;
 
 export async function POST({ locals, platform, request }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'No database' }, { status: 500 });
 
     const { bottle_id, nickname } = await request.json();
@@ -64,7 +65,7 @@ export async function POST({ locals, platform, request }) {
     let content = bottle.content;
     if (content.startsWith('[R2:')) {
         try {
-            const r2Obj = await platform?.env?.BOOTY_CONTENT?.get(content.slice(4, -1));
+            const r2Obj = await env?.BOOTY_CONTENT?.get(content.slice(4, -1));
             if (r2Obj) content = await r2Obj.text();
         } catch (e) {}
     }

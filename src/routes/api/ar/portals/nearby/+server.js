@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { haversineDistance } from "#lib/geo.js";
+import { env } from 'cloudflare:workers';
 
 /**
  * GET /api/ar/portals/nearby?lat=&lng=&game=arbooty&radius=500
@@ -9,7 +10,7 @@ import { haversineDistance } from "#lib/geo.js";
  * Bounding box pre-filter, then exact haversine filter.
  */
 export async function GET({ url, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   if (!db) return json({ error: "No database" }, { status: 500 });
 
   const lat = parseFloat(url.searchParams.get("lat"));

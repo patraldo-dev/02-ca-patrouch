@@ -1,11 +1,12 @@
 // POST /api/bottlequest/drift/simulate — Run drift simulation for active bottles
 import { json } from "@sveltejs/kit";
 import { simulateDrift } from "#lib/server/drift-model.js";
+import { env } from 'cloudflare:workers';
 
 export async function POST({ locals, request, platform }) {
   // Allow cron via Bearer token OR authenticated admin
   const authHeader = request.headers.get("Authorization");
-  const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+  const cronSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
   const isCron = authHeader === `Bearer ${cronSecret}`;
   const user = locals?.user;
 

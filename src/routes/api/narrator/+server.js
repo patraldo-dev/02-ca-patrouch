@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 /**
  * GET: Fetch active narrator events (for display)
@@ -10,7 +11,7 @@ import { json } from '@sveltejs/kit';
  */
 
 export async function GET({ platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ events: [] });
 
     try {
@@ -26,16 +27,16 @@ export async function GET({ platform }) {
 }
 
 export async function POST({ request, platform }) {
-    const db = platform?.env?.DB_book;
+    const db = env?.DB_book;
     if (!db) return json({ error: 'No DB' }, { status: 500 });
 
-    const cronSecret = (await platform?.env?.CRON_SECRET?.get?.()) ?? null;
+    const cronSecret = (await env?.CRON_SECRET?.get?.()) ?? null;
     const auth = request.headers.get('Authorization');
     if (!auth || !cronSecret || auth !== `Bearer ${cronSecret}`) {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ai = platform?.env?.AI;
+    const ai = env?.AI;
 
     try {
         // Gather context: recent writings, portal activity

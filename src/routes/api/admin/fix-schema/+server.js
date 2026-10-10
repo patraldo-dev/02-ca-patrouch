@@ -1,9 +1,10 @@
 // src/routes/api/admin/fix-schema/+server.js
 import { json } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 
 export async function POST({ platform }) {
     try {
-        if (!platform?.env?.DB_book) {
+        if (!env?.DB_book) {
             return json({ 
                 success: false, 
                 error: 'Database not available' 
@@ -11,14 +12,14 @@ export async function POST({ platform }) {
         }
         
         // Check current schema
-        const schema = await platform.env.DB_book.prepare("PRAGMA table_info(books);").all();
+        const schema = await env.DB_book.prepare("PRAGMA table_info(books);").all();
         
         // Check if the table exists
-        const tableExists = await platform.env.DB_book.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='books';").all();
+        const tableExists = await env.DB_book.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='books';").all();
         
         if (tableExists.results.length === 0) {
             // Create the table with proper schema
-            await platform.env.DB_book.exec(`
+            await env.DB_book.exec(`
                 CREATE TABLE books (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     title TEXT NOT NULL,
@@ -47,25 +48,25 @@ export async function POST({ platform }) {
         
         // Add missing columns if needed
         if (!hasSlugColumn) {
-            await platform.env.DB_book.exec("ALTER TABLE books ADD COLUMN slug TEXT;");
+            await env.DB_book.exec("ALTER TABLE books ADD COLUMN slug TEXT;");
             changes.push('Added slug column');
         }
         
         if (!hasPublishedColumn) {
-            await platform.env.DB_book.exec("ALTER TABLE books ADD COLUMN published INTEGER DEFAULT 0;");
+            await env.DB_book.exec("ALTER TABLE books ADD COLUMN published INTEGER DEFAULT 0;");
             changes.push('Added published column');
         }
         
         // If the table exists but has issues, we might need to recreate it
         if (!hasIdColumn) {
             // Backup existing data
-            const existingData = await platform.env.DB_book.prepare("SELECT * FROM books").all();
+            const existingData = await env.DB_book.prepare("SELECT * FROM books").all();
             
             // Drop and recreate table
-            await platform.env.DB_book.exec("DROP TABLE books;");
+            await env.DB_book.exec("DROP TABLE books;");
             
             // Create with proper schema
-            await platform.env.DB_book.exec(`
+            await env.DB_book.exec(`
                 CREATE TABLE books (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     title TEXT NOT NULL,
@@ -80,7 +81,7 @@ export async function POST({ platform }) {
             
             // Restore data if any
             for (const book of existingData.results) {
-                await platform.env.DB_book.prepare(`
+                await env.DB_book.prepare(`
                     INSERT INTO books (title, author, description, published_year, slug, published, coverImageId)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 `).bind(
@@ -98,27 +99,27 @@ export async function POST({ platform }) {
         }
         
         // ── daily_prompt_log: add is_community ──
-        const promptLogTable = await platform.env.DB_book.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='daily_prompt_log';").first();
+        const promptLogTable = await env.DB_book.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='daily_prompt_log';").first();
         if (promptLogTable) {
-            const promptLogInfo = await platform.env.DB_book.prepare("PRAGMA table_info(daily_prompt_log);").all();
+            const promptLogInfo = await env.DB_book.prepare("PRAGMA table_info(daily_prompt_log);").all();
             const hasIsCommunity = promptLogInfo.results.some(c => c.name === 'is_community');
             if (!hasIsCommunity) {
-                await platform.env.DB_book.exec("ALTER TABLE daily_prompt_log ADD COLUMN is_community INTEGER DEFAULT 1;");
+                await env.DB_book.exec("ALTER TABLE daily_prompt_log ADD COLUMN is_community INTEGER DEFAULT 1;");
                 changes.push('Added is_community column to daily_prompt_log');
             }
         }
 
         // ── writings: add locale and category columns ──
-        const writingsTable = await platform.env.DB_book.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='writings';").first();
+        const writingsTable = await env.DB_book.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='writings';").first();
         if (writingsTable) {
-            const writingsInfo = await platform.env.DB_book.prepare("PRAGMA table_info(writings);").all();
+            const writingsInfo = await env.DB_book.prepare("PRAGMA table_info(writings);").all();
             const cols = writingsInfo.results.map(c => c.name);
             if (!cols.includes('locale')) {
-                await platform.env.DB_book.exec("ALTER TABLE writings ADD COLUMN locale TEXT DEFAULT 'en';");
+                await env.DB_book.exec("ALTER TABLE writings ADD COLUMN locale TEXT DEFAULT 'en';");
                 changes.push('Added locale column to writings');
             }
             if (!cols.includes('category')) {
-                await platform.env.DB_book.exec("ALTER TABLE writings ADD COLUMN category TEXT;");
+                await env.DB_book.exec("ALTER TABLE writings ADD COLUMN category TEXT;");
                 changes.push('Added category column to writings');
             }
         }

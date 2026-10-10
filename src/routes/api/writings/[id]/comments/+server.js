@@ -1,4 +1,5 @@
 import { json } from "@sveltejs/kit";
+import { env } from 'cloudflare:workers';
 
 const MODERATION_PROMPT =
   'You are a moderation filter for a literary writing community. Check for: hate speech, harassment, spam, explicit content unrelated to writing, personal attacks. Respond ONLY with "approve" or "reject: [brief reason]".';
@@ -115,7 +116,7 @@ export async function POST({ locals, params, request, platform }) {
     status = "approved";
   } else {
     try {
-      const ai = platform?.env?.AI;
+      const ai = env?.AI;
       if (ai) {
         const resp = await ai.run(
           "@cf/mistralai/mistral-small-3.1-24b-instruct",

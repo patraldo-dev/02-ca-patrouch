@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { logTransaction } from "#lib/server/bottlequest-logger.js";
+import { env } from 'cloudflare:workers';
 
 const CST_OFFSET = -6;
 
@@ -24,7 +25,7 @@ async function expireCheckinFuel(db, playerId) {
 }
 
 export async function GET({ locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   const user = locals.user;
   if (!user || !db)
     return json({ checkedIn: false, streak: 0, checkinFuel: 0 });
@@ -78,7 +79,7 @@ export async function GET({ locals, platform }) {
 }
 
 export async function POST({ locals, platform }) {
-  const db = platform?.env?.DB_book;
+  const db = env?.DB_book;
   const user = locals.user;
   if (!user || !db)
     return json(
