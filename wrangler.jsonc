@@ -3,6 +3,9 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
+	"build": {
+		"command": "vite build && node scripts/append-do-exports.mjs . GrabDemoRoom=src/do/grab-demo-room.js OzRoom=src/do/oz-room.js"
+	},
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "02-ca-patrouch",
 	"main": ".svelte-kit/cloudflare/_worker.js",
