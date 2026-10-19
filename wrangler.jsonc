@@ -36,6 +36,7 @@
 	],
 
 	"vars": {
+		"PASSPORT_SITE": "https://staging-site.ambientx.dev",
                 "MAILGUN_DOMAIN": "patrouch.ca",
 	       	"CONTACT_EMAIL": "contact@patrouch.ca",
 	       	"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca",

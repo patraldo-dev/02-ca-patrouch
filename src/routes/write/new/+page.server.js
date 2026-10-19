@@ -1,3 +1,4 @@
+import { passportXp } from '$lib/server/passport.js';
 import { redirect, fail } from '@sveltejs/kit';
 
 export async function load({ locals, url }) {
@@ -67,6 +68,10 @@ export const actions = {
                  VALUES (?, 1, ?, 1, 1, 0, 0, ?, datetime('now'))`
             ).bind(locals.user.id, wordCount, today).run();
         }
+
+        // Passport: a published writing earns XP for the linked account
+        // (soft-fail — publishing never blocks on the Passport).
+        passportXp(locals.user.id, 'patrouch.writing_published', { words: wordCount, ai_assisted: !!aiAssisted }).catch(() => {});
 
         throw redirect(303, '/write');
     },
