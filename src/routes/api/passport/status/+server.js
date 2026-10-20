@@ -1,6 +1,6 @@
 // GET /api/passport/status — the member's Passport (rank/xp/links).
 import { json } from '@sveltejs/kit';
-import { passportStatus } from '$lib/server/passport.js';
+import { passportStatus } from '#lib/server/passport.js';
 
 export async function GET({ locals }) {
 	const user = locals?.user;

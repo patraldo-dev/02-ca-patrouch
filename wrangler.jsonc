@@ -4,7 +4,7 @@
  */
 {
 	"build": {
-		"command": "vite build && node scripts/append-do-exports.mjs . GrabDemoRoom=src/do/grab-demo-room.js OzRoom=src/do/oz-room.js"
+		"command": "node node_modules/vite/bin/vite.js build && node scripts/append-do-exports.mjs . GrabDemoRoom=src/do/grab-demo-room.js OzRoom=src/do/oz-room.js"
 	},
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "02-ca-patrouch",
@@ -36,7 +36,7 @@
 	],
 
 	"vars": {
-		"PASSPORT_SITE": "https://staging-site.ambientx.dev",
+		"PASSPORT_SITE": "https://ambientx.dev",
                 "MAILGUN_DOMAIN": "patrouch.ca",
 	       	"CONTACT_EMAIL": "contact@patrouch.ca",
 	       	"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca",
@@ -98,7 +98,50 @@
 			"tag": "v2",
 			"new_sqlite_classes": ["OzRoom"]
 		}
-	]
+	],
+
+	// --- Staging environment --- isolated D1 (fresh schema), staging
+	// Passport target; R2/Images/AI/Vectorize shared with prod for now
+	// (the greenroom-staging precedent). Deploys as 02-ca-patrouch-staging.
+	"env": {
+		"staging": {
+			"workers_dev": true,
+			"routes": [{ "pattern": "staging.patrouch.ca", "custom_domain": true }],
+			"vars": {
+				"PATROUCH_BASE_URL": "https://staging.patrouch.ca",
+				"PASSPORT_SITE": "https://staging-site.ambientx.dev",
+				"MAILGUN_DOMAIN": "patrouch.ca",
+				"CONTACT_EMAIL": "contact@patrouch.ca",
+				"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca"
+			},
+			"d1_databases": [
+				{
+					"binding": "DB_book",
+					"database_name": "patrouch-ca-staging",
+					"database_id": "eb0c3f26-ad9f-4f4f-923b-152fb3e4a17d"
+				}
+			],
+			"r2_buckets": [
+				{ "binding": "R2_ASSETS", "bucket_name": "patrouch-ca-assets" },
+				{ "binding": "BOOTY_CONTENT", "bucket_name": "booty-content" }
+			],
+			"images": { "binding": "IMAGES" },
+			"ai": { "binding": "AI" },
+			"vectorize": [
+				{ "binding": "VECTORIZE", "index_name": "patrouch-writings" }
+			],
+			"durable_objects": {
+				"bindings": [
+					{ "name": "GRAB_DEMO_ROOM", "class_name": "GrabDemoRoom" },
+					{ "name": "OZ_ROOM", "class_name": "OzRoom" }
+				]
+			},
+			"migrations": [
+				{ "tag": "v1", "new_sqlite_classes": ["GrabDemoRoom"] },
+				{ "tag": "v2", "new_sqlite_classes": ["OzRoom"] }
+			]
+		}
+	}
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

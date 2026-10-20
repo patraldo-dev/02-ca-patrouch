@@ -1,4 +1,4 @@
-import { passportXp } from '$lib/server/passport.js';
+import { passportXp } from '#lib/server/passport.js';
 import { redirect, fail } from '@sveltejs/kit';
 
 export async function load({ locals, url }) {

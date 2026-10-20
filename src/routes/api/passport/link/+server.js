@@ -1,7 +1,7 @@
 // POST /api/passport/link { code } — the signed-in member redeems an
 // AmbientX link code. Requires session (locals.user set by hooks).
 import { json } from '@sveltejs/kit';
-import { linkAmbientX } from '$lib/server/passport.js';
+import { linkAmbientX } from '#lib/server/passport.js';
 
 export async function POST({ request, locals }) {
 	const user = locals?.user;

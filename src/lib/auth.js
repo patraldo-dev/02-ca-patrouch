@@ -100,7 +100,10 @@ export function createAuth(env) {
 
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET || "",
-    baseURL: "https://patrouch.ca",
+    // Tier-aware: staging requests keep their own origin (cookies +
+    // trustedOrigins must match the host actually serving them); prod
+    // stays pinned to the canonical domain.
+    baseURL: env.PATROUCH_BASE_URL || "https://patrouch.ca",
     advanced: {
       ipAddress: {
         ipAddressHeaders: ["cf-connecting-ip"],
@@ -119,6 +122,11 @@ export function createAuth(env) {
         verify: ({ hash, password }) => verifyPassword(hash, password),
       },
       sendResetPassword: async ({ user, token, url }, request) => {
+        // Same staging guard as verification: no Mailgun config → skip send.
+        if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN) {
+          console.warn("[sendResetPassword] mailgun not configured — skipping send for", user.email);
+          return;
+        }
         const { sendMailgunEmail } = await import("#lib/server/mailgun.js");
         const acceptLang = request?.headers?.get("accept-language") || "";
         const lang = acceptLang.startsWith("fr")
@@ -126,7 +134,8 @@ export function createAuth(env) {
           : acceptLang.startsWith("en")
             ? "en"
             : "es";
-        const resetUrl = `https://patrouch.ca/reset-password?token=${token}`;
+        const base = env.PATROUCH_BASE_URL || "https://patrouch.ca";
+        const resetUrl = `${base}/reset-password?token=${token}`;
         const t = {
           en: {
             subject: "Reset your password — Patrouch",
@@ -188,6 +197,12 @@ export function createAuth(env) {
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, url }) => {
         console.log("[sendVerificationEmail] called for:", user.email);
+        // Staging has no Mailgun key — a missing config must never fail
+        // the signup itself; skip the send and log (prod sends normally).
+        if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN) {
+          console.warn("[sendVerificationEmail] mailgun not configured — skipping send for", user.email);
+          return;
+        }
         const { sendVerificationEmail } =
           await import("#lib/server/mailgun.js");
         const verifyUrl = url.replace(
@@ -246,6 +261,7 @@ export function createAuth(env) {
     },
     trustedOrigins: [
       "https://patrouch.ca",
+      "https://staging.patrouch.ca",
       "https://*.chef-tech.workers.dev",
       "http://localhost:5173",
     ],
