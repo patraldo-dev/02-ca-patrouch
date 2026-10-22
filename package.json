@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "packageManager": "pnpm@12.14.0",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && sveltekit-cloudflare-do --do src/do/grab-demo-room.js --do src/do/oz-room.js",
@@ -41,12 +42,14 @@
     "better-auth": "^1.6.8",
     "capnweb": "^0.1.0",
     "drizzle-orm": "^0.45.2",
+    "elics": "3.4.2",
     "emoji-mart": "^5.6.0",
     "iwer": "^2.2.0",
     "kysely-d1": "^0.4.0",
     "leaflet": "^1.9.4",
     "marked": "^16.4.2",
-    "three": "^0.183.2"
+    "three": "^0.183.2",
+    "three-mesh-bvh": "0.9.10"
   },
   "imports": {
     "#lib": "./src/lib/index.js",
