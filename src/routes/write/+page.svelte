@@ -86,16 +86,13 @@
         insertAtCursor(text.trim() + ' ');
     }
 
-    // Editor-stage voice commands: save / publish the writing being dictated.
-    function onEditorCommand(cmd) {
+    // Single-mic voice commands: editor actions plus prompt accept/pass
+    // while the daily estímulo is still undecided.
+    function onDictationCommand(cmd) {
         if (cmd === 'save') handleSave();
         else if (cmd === 'publish') handlePublish();
-    }
-
-    // Prompt-stage voice commands: accept the estímulo or pass to the next one.
-    function onPromptCommand(cmd) {
-        if (cmd === 'accept') handleAction('accepted');
-        else if (cmd === 'pass') handleAction('passed');
+        else if (cmd === 'accept' && !acceptedToday && !completedToday) handleAction('accepted');
+        else if (cmd === 'pass' && !acceptedToday && !completedToday) handleAction('passed');
     }
 
     let editorSaving = $state(false);
@@ -308,7 +305,7 @@
     }
 
     async function handlePublish(e) {
-        e.preventDefault();
+        e?.preventDefault();
         if (!editorTitle.trim() || !editorContent.trim()) return;
         editorSaving = true;
         editorMessage = '';
@@ -461,15 +458,6 @@
                                         <p class="passes-exhausted">{@html $t('write.dashboard.passes_exhausted')}</p>
                                     {/if}
                                 </div>
-                                <!-- Hands-free: accept or pass the estímulo by voice -->
-                                <div class="prompt-dictation">
-                                    <DictationButton
-                                        lang={data.serverLocale || 'es'}
-                                        commands={true}
-                                        onCommand={onPromptCommand}
-                                        onError={() => showToast($t('write.dictation.error'))}
-                                    />
-                                </div>
                             {/if}
                         </div>
                     {/if}
@@ -563,7 +551,7 @@
                                 onFinal={onDictationFinal}
                                 onInterim={(s) => (interimText = s)}
                                 onInterimEnd={() => (interimText = '')}
-                                onCommand={onEditorCommand}
+                                onCommand={onDictationCommand}
                                 onError={(kind) => showToast($t('write.dictation.error'))}
                             />
 
@@ -806,7 +794,6 @@
 
 <style>
     .dictation-interim { margin-top: 0.4rem; font-style: italic; color: var(--text-muted, var(--muted)); font-size: 0.85rem; min-height: 1.2em; }
-    .prompt-dictation { margin-top: 0.6rem; }
     .inspiration-tape { background: var(--surface); border-bottom: 1px solid var(--border); overflow: hidden; white-space: nowrap; padding: 0.6rem 0; margin-bottom: 1rem; border-radius: 8px; }
     .ticker-marquee { overflow: hidden; }
     .ticker-track { display: inline-block; animation: marquee 1800s linear infinite; }

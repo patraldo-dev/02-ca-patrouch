@@ -4,7 +4,7 @@
  */
 {
 	"build": {
-		"command": "node node_modules/vite/bin/vite.js build && node scripts/append-do-exports.mjs . GrabDemoRoom=src/do/grab-demo-room.js OzRoom=src/do/oz-room.js"
+		"command": "node node_modules/vite/bin/vite.js build && node scripts/append-do-exports.mjs . GrabDemoRoom=src/do/grab-demo-room.js OzRoom=src/do/oz-room.js && node scripts/append-cron.mjs ."
 	},
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "02-ca-patrouch",
@@ -21,6 +21,11 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	// Weekly bridge export: Monday 06:00 — patrouch's top human writings
+	// enter ambientx's operator review queue (Phase 2 content bridge).
+	"triggers": {
+		"crons": ["0 6 * * 1"]
 	},
 	"secrets_store_secrets": [
 	  {
