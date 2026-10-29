@@ -51,6 +51,15 @@
             </div>
         </section>
 
+        <!-- Maintenance -->
+        <section class="admin-card">
+            <h2>Maintenance</h2>
+            <p class="card-desc">Cleanup tools: expired sessions, old notifications, duplicate writings, test data, stats repair, user removal.</p>
+            <div class="admin-actions">
+                <a href="/admin/maintenance" class="btn-primary">Open Maintenance</a>
+            </div>
+        </section>
+
     </div>
 
     <div class="admin-footer">

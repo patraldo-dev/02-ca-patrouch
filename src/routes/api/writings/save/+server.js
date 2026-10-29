@@ -1,6 +1,6 @@
 // src/routes/api/writings/save/+server.js
 import { json } from "@sveltejs/kit";
-import { saveDraft } from "#lib/server/writing-stats.js";
+import { saveDraft, adjustWordCount } from "#lib/server/writing-stats.js";
 import { env } from 'cloudflare:workers';
 
 const STOP_WORDS = new Set([
@@ -229,13 +229,17 @@ export async function POST({ request, locals }) {
   if (!db) return json({ error: "No database" }, { status: 503 });
 
   const {
+    id,
     title,
     content,
     promptId,
     aiAssisted,
     visibility = "private",
+    status: statusPref,
+    newDraft,
     visualPromptText,
     visualArtworkUrl,
+    manuscriptUrl,
   } = await request.json();
 
   if (!title?.trim() || !content?.trim()) {
@@ -243,21 +247,97 @@ export async function POST({ request, locals }) {
   }
 
   try {
-    const status = visibility === "public" ? "published" : "draft";
-    const result = await saveDraft(db, user.id, {
-      title: title.trim(),
-      content: content.trim(),
-      promptId,
-      aiAssisted: aiAssisted || false,
-    });
+    // Publish intent: honor an explicit status field; otherwise derive from
+    // visibility (the editor's publish button sends visibility only).
+    const wantsPublish = statusPref
+      ? statusPref === "published"
+      : visibility === "public";
 
-    // If publishing, update status and visibility
-    if (status === "published") {
+    // ── Resolve the target row: saving must never fork a draft. ──
+    // 1. Explicit id (client tracked its draft) → must exist and be owned.
+    // 2. Otherwise adopt the user's latest draft for this prompt, so a reload
+    //    or stale client still updates in place. newDraft opts out (the
+    //    "write something new" flow intentionally starts a fresh row).
+    // 3. Else create the first draft.
+    let existing = null;
+    if (id) {
+      existing = await db
+        .prepare(
+          "SELECT id, word_count, status, visibility FROM writings WHERE id = ? AND user_id = ?",
+        )
+        .bind(id, user.id)
+        .first();
+      if (!existing) {
+        return json({ error: "Writing not found" }, { status: 404 });
+      }
+    } else if (promptId && !newDraft) {
+      existing = await db
+        .prepare(
+          "SELECT id, word_count, status, visibility FROM writings WHERE user_id = ? AND prompt_id = ? AND status = 'draft' ORDER BY updated_at DESC LIMIT 1",
+        )
+        .bind(user.id, promptId)
+        .first();
+    }
+
+    let result;
+    if (existing) {
+      const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
       await db
         .prepare(
-          "UPDATE writings SET status = 'published', visibility = 'public', visual_prompt_text = ?, visual_artwork_url = ?, updated_at = datetime('now') WHERE id = ?",
+          `UPDATE writings SET title = ?, content = ?, word_count = ?, ai_assisted = ?,
+             visual_prompt_text = COALESCE(?, visual_prompt_text),
+             visual_artwork_url = COALESCE(?, visual_artwork_url),
+             updated_at = datetime('now')
+           WHERE id = ? AND user_id = ?`,
         )
-        .bind(visualPromptText || null, visualArtworkUrl || null, result.id)
+        .bind(
+          title.trim(),
+          content.trim(),
+          wordCount,
+          aiAssisted ? 1 : 0,
+          visualPromptText || null,
+          visualArtworkUrl || null,
+          existing.id,
+          user.id,
+        )
+        .run();
+      // Saving an edit is not a new writing — only apply the word delta.
+      try {
+        await adjustWordCount(db, user.id, wordCount - (existing.word_count || 0));
+      } catch (e) {
+        console.error("Word delta adjust failed:", e);
+      }
+      result = { id: existing.id, wordCount };
+    } else {
+      result = await saveDraft(db, user.id, {
+        title: title.trim(),
+        content: content.trim(),
+        promptId,
+        aiAssisted: aiAssisted || false,
+        visualPromptText,
+        visualArtworkUrl,
+      });
+    }
+
+    // Phase 3: optionally attach the kept manuscript facsimile to this writing.
+    if (manuscriptUrl) {
+      try {
+        await db
+          .prepare('UPDATE writings SET manuscript_url = ? WHERE id = ? AND user_id = ?')
+          .bind(manuscriptUrl, result.id, user.id)
+          .run();
+      } catch (e) {
+        console.error('[handwriting] attach failed:', e.message);
+      }
+    }
+
+    // If publishing, set the canonical pair in a single statement.
+    if (wantsPublish) {
+      await db
+        .prepare(
+          "UPDATE writings SET status = 'published', visibility = 'public', visual_prompt_text = ?, visual_artwork_url = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?",
+        )
+        .bind(visualPromptText || null, visualArtworkUrl || null, result.id, user.id)
         .run();
     }
 
@@ -291,7 +371,7 @@ export async function POST({ request, locals }) {
     }
 
     // Auto-extract keywords for Bottle Quest when publishing
-    if (status === "published" && result.content) {
+    if (wantsPublish && result.content) {
       // Check if any active keyword proposals match this writing
       // Decay model: points halve with each match, 5 decimal precision
       // Words never expire, just lose force
@@ -391,14 +471,14 @@ export async function POST({ request, locals }) {
 
     // ── Portal reindex: fire-and-forget after publish ──
     // Triggers portal count updates + potential new portal discovery
-    if (status === "published") {
+    if (wantsPublish) {
       try {
         const reindexUrl = new URL("/api/portals/reindex", request.url);
         fetch(reindexUrl, { method: "POST" }).catch(() => {});
       } catch {}
     }
 
-    return json({ id: result.id, wordCount: result.wordCount, status });
+    return json({ id: result.id, wordCount: result.wordCount, status: wantsPublish ? "published" : (existing?.status || "draft") });
   } catch (err) {
     console.error("Save writing error:", err);
     return json({ error: err.message }, { status: 500 });

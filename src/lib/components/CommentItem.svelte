@@ -99,7 +99,7 @@
         <span>{$t('comments.deleted')}</span>
     </div>
 {:else}
-    <div class="comment-item" class:is-featured={comment.is_featured}>
+    <div class="comment-item" id={`comment-${comment.id}`} class:is-featured={comment.is_featured}>
         <div class="comment-avatar">{#if avatarUrl}<img src={avatarUrl} alt="" />{:else}{avatar}{/if}</div>
         <div class="comment-body">
             <div class="comment-header">

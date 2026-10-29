@@ -185,20 +185,79 @@ export async function POST({ locals, params, request, platform }) {
     .bind(commentId)
     .first();
 
-  // Notify writing author about new comment
+  // Notify the right human about this comment:
+  //   reply    → the author of the parent comment
+  //   top-level → the writing's author
+  // Honors notification_preferences.writing (default on), localizes the text,
+  // and carries meta so the bell can deep-link into the thread.
   try {
     const { notify } = await import("#lib/server/notify.js");
+    const lang = ["en", "es", "fr"].includes(locals.locale) ? locals.locale : "es";
+
     const writing = await db
       .prepare("SELECT user_id, title FROM writings WHERE id = ?")
       .bind(writingId)
       .first();
-    if (writing && writing.user_id !== locals.user.id) {
-      await notify(db, {
-        user_id: writing.user_id,
-        type: "comment",
-        title: "💬 New comment",
-        body: "Someone commented on: " + (writing.title || "your writing"),
-      });
+
+    // Recipient: parent-comment author for replies, writing author otherwise.
+    let recipient = null;
+    if (newComment.parent_id) {
+      recipient = await db
+        .prepare("SELECT c.user_id, u.username FROM comments c JOIN users u ON u.id = c.user_id WHERE c.id = ?")
+        .bind(newComment.parent_id)
+        .first();
+    } else if (writing) {
+      recipient = { user_id: writing.user_id, username: null };
+    }
+
+    if (recipient && recipient.user_id && recipient.user_id !== locals.user.id) {
+      // Respect the recipient's writing/community preference; no row = default on.
+      const pref = await db
+        .prepare("SELECT writing FROM notification_preferences WHERE user_id = ?")
+        .bind(recipient.user_id)
+        .first();
+      if (!pref || pref.writing === 1) {
+        const t = {
+          es: {
+            comment: (u) => `💬 ${u} comentó en tu escrito`,
+            reply: (u) => `↩️ ${u} respondió a tu comentario`,
+            on: (title) => `«${title}»`,
+            link: "Ver comentario",
+          },
+          en: {
+            comment: (u) => `💬 ${u} commented on your writing`,
+            reply: (u) => `↩️ ${u} replied to your comment`,
+            on: (title) => `“${title}”`,
+            link: "View comment",
+          },
+          fr: {
+            comment: (u) => `💬 ${u} a commenté ton écrit`,
+            reply: (u) => `↩️ ${u} a répondu à ton commentaire`,
+            on: (title) => `« ${title} »`,
+            link: "Voir le commentaire",
+          },
+        }[lang];
+
+        const commenter = newComment.username || "Alguien";
+        const snippet = String(newComment.content || "")
+          .replace(/[#*_>`~[\]()]/g, "")
+          .trim()
+          .slice(0, 80);
+        const body = [
+          writing?.title ? t.on(writing.title) : null,
+          snippet ? `“${snippet}${String(newComment.content || "").length > 80 ? "…" : ""}”` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
+        await notify(db, {
+          user_id: recipient.user_id,
+          type: newComment.parent_id ? "reply" : "comment",
+          title: newComment.parent_id ? t.reply(commenter) : t.comment(commenter),
+          body,
+          meta: { writing_id: writingId, comment_id: commentId },
+        });
+      }
     }
   } catch (e) {
     console.error("[comment] notify failed:", e.message);

@@ -217,13 +217,16 @@ export function createAuth(env) {
       },
     },
     socialProviders: {
+      // Staging credentials carry an explicit _STAGING_ prefix (the ambientx
+      // pattern) so it's always obvious which environment a var belongs to.
+      // Prod sets the plain names; the fallbacks keep both working.
       google: {
-        clientId: env.GOOGLE_CLIENT_ID || "",
-        clientSecret: env.GOOGLE_CLIENT_SECRET || "",
+        clientId: env.GOOGLE_STAGING_CLIENT_ID || env.GOOGLE_CLIENT_ID || "",
+        clientSecret: env.GOOGLE_STAGING_CLIENT_SECRET || env.GOOGLE_CLIENT_SECRET || "",
       },
       github: {
-        clientId: env.GITHUB_CLIENT_ID || "",
-        clientSecret: env.GITHUB_CLIENT_SECRET || "",
+        clientId: env.GITHUB_STAGING_CLIENT_ID || env.GITHUB_CLIENT_ID || "",
+        clientSecret: env.GITHUB_STAGING_CLIENT_SECRET || env.GITHUB_CLIENT_SECRET || "",
       },
     },
     session: {
@@ -232,6 +235,13 @@ export function createAuth(env) {
       cookieCache: {
         enabled: false,
         maxAge: 5 * 60,
+      },
+    },
+    user: {
+      additionalFields: {
+        // Everyone who registers is a member until the community is large
+        // enough to need a gate; input:false keeps roles out of client reach.
+        role: { type: 'string', defaultValue: 'member', input: false },
       },
     },
     databaseHooks: {

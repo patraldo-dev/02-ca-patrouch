@@ -2,19 +2,46 @@
     import { t, getLocale } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
     import { marked } from 'marked';
+    import DictationButton from '#lib/components/DictationButton.svelte';
+    import HandwritingImport from '#lib/components/HandwritingImport.svelte';
     import { browser } from '$app/env';
 
     let { data } = $props();
     let title = $state(data.writing.title);
     let content = $state(data.writing.content);
     let isPublished = $state(data.writing.status === 'published');
-    let visibility = $state(data.writing.visibility || 'public');
     let wordCount = $state(data.writing.word_count || 0);
     let showPreview = $state(false);
     let previewHtml = $state('');
     let saving = $state(false);
     let toast = $state(null);
     let toastTimer = null;
+
+    // Hands-free dictation into the content box
+    let contentTextarea = $state(null);
+    let interimText = $state('');
+    let manuscriptUrl = $state(null);
+
+    function insertAtCursor(text) {
+        if (!text) return;
+        if (contentTextarea) {
+            const pos = contentTextarea.selectionStart ?? content.length;
+            content = content.slice(0, pos) + text + content.slice(pos);
+            requestAnimationFrame(() => {
+                contentTextarea.focus();
+                contentTextarea.selectionStart = contentTextarea.selectionEnd = pos + text.length;
+            });
+        } else {
+            content = (content ? content + ' ' : '') + text;
+        }
+    }
+
+    function onDictationFinal(text) { insertAtCursor(text.trim() + ' '); }
+
+    function onDictationCommand(cmd) {
+        if (cmd === 'save') save('draft');
+        else if (cmd === 'publish') save('published');
+    }
 
     function showToast(type, message) {
         toast = { type, message };
@@ -54,7 +81,9 @@
             const res = await fetch(`/api/writings/${data.writing.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content, visibility, status })
+                // Canonical pairs only: publish = published+public, draft = draft+private.
+                // Sending stale visibility alongside a draft save caused drift.
+                body: JSON.stringify({ title, content, status, visibility: status === 'published' ? 'public' : 'private', manuscript_url: manuscriptUrl || undefined })
             });
             const result = await res.json();
             if (result.error) {
@@ -102,11 +131,6 @@
             {showPreview ? '✏️ Edit' : '👁 Preview'}
         </button>
         <div class="toolbar-spacer"></div>
-        <span class="visibility-label">{$t('write.editor.visibility')}:</span>
-        <select bind:value={visibility}>
-            <option value="public">{$t('write.editor.public')}</option>
-            <option value="private">{$t('write.editor.private')}</option>
-        </select>
     </div>
 
     <div class="editor-body">
@@ -119,10 +143,27 @@
         {:else}
             <textarea
                 bind:value={content}
+                bind:this={contentTextarea}
                 placeholder={$t("write.start_placeholder")}
                 class="editor-textarea"
             ></textarea>
         {/if}
+        {#if interimText}
+            <div class="dictation-interim" aria-live="polite">{interimText}</div>
+        {/if}
+        <HandwritingImport
+            onText={onDictationFinal}
+            onManuscript={(u) => (manuscriptUrl = u)}
+        />
+
+        <DictationButton
+            lang={getLocale() || 'es'}
+            commands={true}
+            onFinal={onDictationFinal}
+            onInterim={(s) => (interimText = s)}
+            onInterimEnd={() => (interimText = '')}
+            onCommand={onDictationCommand}
+        />
     </div>
 
     <div class="editor-actions">
@@ -141,6 +182,7 @@
 </div>
 
 <style>
+    .dictation-interim { margin: 0.4rem 0; font-style: italic; color: var(--muted, #999); font-size: 0.85rem; min-height: 1.2em; }
     .edit-page {
         max-width: 820px;
         margin: 0 auto;

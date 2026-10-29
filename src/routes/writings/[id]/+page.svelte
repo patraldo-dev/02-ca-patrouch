@@ -258,6 +258,14 @@
             {/if}
         </div>
 
+        {#if w.manuscript_url}
+            <!-- Phase 3: the author's own hand, kept alongside the typed text -->
+            <figure class="manuscript">
+                <img src={w.manuscript_url} alt={$t('write.view.manuscript')} loading="lazy" />
+                <figcaption>✍️ {$t('write.view.manuscript')}</figcaption>
+            </figure>
+        {/if}
+
         {#if data.user?.id === w.user_id && w.status === 'published'}
             <div class="writing-pipeline">
                 <button class="btn-pipeline" onclick={evaluateWriting} disabled={isEvaluating}>
@@ -327,6 +335,13 @@
 </div>
 
 <style>
+    .manuscript { margin: 2rem 0 1rem; text-align: center; }
+    .manuscript img {
+        max-width: 100%; max-height: 32rem; border-radius: 10px;
+        border: 1px solid var(--border, #333);
+        box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    }
+    .manuscript figcaption { margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted, #888); font-style: italic; }
     .view-page {
         max-width: 780px;
         margin: 0 auto;

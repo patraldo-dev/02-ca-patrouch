@@ -210,7 +210,7 @@
                         <a href="/evaluate" onclick={() => tallerOpen = false}>{$t('common.nav.evaluate')}</a>
                                 <a href="/refine" onclick={() => tallerOpen = false}>{$t('common.nav.refine')}</a>
                                 <a href="/audio" onclick={() => tallerOpen = false}>{$t('common.nav.audio')}</a>
-                                <span class="taller-coming-soon">{$t('taller.dictation_title')} ✨</span>
+                                <a href="/dictation" onclick={() => tallerOpen = false}>{$t('taller.dictation_title')}</a>
                             </div>
                         {/if}
                     </div>
@@ -382,6 +382,7 @@
                 <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
                 <a href="/refine" onclick={toggleMobileMenu}>{$t('common.nav.refine')}</a>
                 <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
+                <a href="/dictation" onclick={toggleMobileMenu}>{$t('taller.dictation_title')}</a>
                 {:else}
                     <div class="mobile-taller-section">
                         <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>

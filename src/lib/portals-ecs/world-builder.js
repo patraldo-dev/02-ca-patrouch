@@ -779,6 +779,15 @@ async function installIWER() {
 		console.log('[portals] Native WebXR detected — skipping IWER emulation');
 		return;
 	}
+	// Emulation is a DEV tool (the engine's law): on production builds the
+	// manual fallback force-installs a fake Quest 3, which makes
+	// isSessionSupported lie and breaks IWSDK 0.5.3's session probing
+	// (the '.record' TypeError). Prod/staging plays inline.
+	const isDev = !!(import.meta.env && import.meta.env.DEV);
+	if (!isDev) {
+		console.log('[portals] No native WebXR — inline mode (IWER is dev-only)');
+		return;
+	}
 	try {
 		// Import the plugin's virtual module directly. This runs the pre-built
 		// injection bundle (IWER runtime + DevUI + IWSDK input bridge), configured

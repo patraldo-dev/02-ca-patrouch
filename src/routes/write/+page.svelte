@@ -9,6 +9,8 @@
     import WriterOfTheWeek from '#lib/components/WriterOfTheWeek.svelte';
     import OnboardingFlow from '#lib/components/OnboardingFlow.svelte';
     import Image3DManipulator from '#lib/components/Image3DManipulator.svelte';
+    import DictationButton from '#lib/components/DictationButton.svelte';
+    import HandwritingImport from '#lib/components/HandwritingImport.svelte';
     import { browser } from '$app/env';
 
     import { onMount } from 'svelte';
@@ -49,8 +51,8 @@
     let isAccepting = $state(false);
     let editorTitle = $state(data.latestDraft?.title || '');
     let editorContent = $state(data.latestDraft?.content || '');
+    let editorDraftId = $state(data.latestDraft?.id || null);
     let editorWordCount = $derived(editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0);
-    let editorVisibility = $state('public');
     let timedMode = $state(false);
     let timerDuration = $state(15);
     let timerSeconds = $state(0);
@@ -59,54 +61,41 @@
     let timerInterval = null;
     let timerWordsAtStart = $state(0);
     let editorAiAssisted = $state(false);
-    let dictating = $state(false);
     function showToast(msg) { editorMessage = msg; setTimeout(() => editorMessage = '', 3000); }
-    let recognition = $state(null);
-    function toggleDictation() {
-        if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-            showToast('Speech recognition not supported in this browser');
-            return;
-        }
-        if (dictating && recognition) {
-            recognition.stop();
-            dictating = false;
-            return;
-        }
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SR();
-        recognition.lang = data.serverLocale || 'en';
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.onresult = (e) => {
-            const textarea = document.querySelector('textarea[bind:value]');
-            if (!textarea) {
-                // Fallback: append to editorContent
-                let finalText = editorContent;
-                for (let i = e.resultIndex; i < e.results.length; i++) {
-                    if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
-                }
-                editorContent = finalText;
-                return;
-            }
-            // Insert at cursor position
-            const cursorPos = textarea.selectionStart;
-            let insertText = '';
-            for (let i = e.resultIndex; i < e.results.length; i++) {
-                insertText += e.results[i][0].transcript;
-            }
-            const before = editorContent.slice(0, cursorPos);
-            const after = editorContent.slice(cursorPos);
-            editorContent = before + insertText + after;
-            // Restore cursor position
+
+    // ── Hands-free dictation (shared engine + DictationButton) ──
+    let editorTextarea = $state(null);
+    let interimText = $state('');
+    let manuscriptUrl = $state(null);
+
+    function insertAtCursor(text) {
+        if (!text) return;
+        if (editorTextarea) {
+            const pos = editorTextarea.selectionStart ?? editorContent.length;
+            editorContent = editorContent.slice(0, pos) + text + editorContent.slice(pos);
             requestAnimationFrame(() => {
-                textarea.selectionStart = textarea.selectionEnd = cursorPos + insertText.length;
+                editorTextarea.focus();
+                editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + text.length;
             });
-        };
-        recognition.onerror = (e) => { showToast('❌ Voice: ' + (e.error || 'error')); dictating = false; };
-        recognition.onend = () => { dictating = false; };
-        recognition.start();
-        dictating = true;
-        showToast('🎙️ Listening...');
+        } else {
+            editorContent = (editorContent ? editorContent + ' ' : '') + text;
+        }
+    }
+
+    function onDictationFinal(text) {
+        insertAtCursor(text.trim() + ' ');
+    }
+
+    // Editor-stage voice commands: save / publish the writing being dictated.
+    function onEditorCommand(cmd) {
+        if (cmd === 'save') handleSave();
+        else if (cmd === 'publish') handlePublish();
+    }
+
+    // Prompt-stage voice commands: accept the estímulo or pass to the next one.
+    function onPromptCommand(cmd) {
+        if (cmd === 'accept') handleAction('accepted');
+        else if (cmd === 'pass') handleAction('passed');
     }
 
     let editorSaving = $state(false);
@@ -306,9 +295,11 @@
             const res = await fetch('/api/writings/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
+                body: JSON.stringify({ id: editorDraftId, title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, manuscriptUrl, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
             });
             if (res.ok) {
+                const d = await res.json();
+                editorDraftId = d.id;
                 editorMessage = $t('write.editor.saved');
                 setTimeout(() => { editorMessage = ''; }, 3000);
             }
@@ -325,7 +316,7 @@
             const res = await fetch('/api/writings/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, visibility: editorVisibility, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
+                body: JSON.stringify({ id: editorDraftId, title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, status: 'published', manuscriptUrl, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
             });
             if (res.ok) {
                 const d = await res.json();
@@ -470,6 +461,15 @@
                                         <p class="passes-exhausted">{@html $t('write.dashboard.passes_exhausted')}</p>
                                     {/if}
                                 </div>
+                                <!-- Hands-free: accept or pass the estímulo by voice -->
+                                <div class="prompt-dictation">
+                                    <DictationButton
+                                        lang={data.serverLocale || 'es'}
+                                        commands={true}
+                                        onCommand={onPromptCommand}
+                                        onError={() => showToast($t('write.dictation.error'))}
+                                    />
+                                </div>
                             {/if}
                         </div>
                     {/if}
@@ -540,6 +540,7 @@
 
                             <textarea
                                 bind:value={editorContent}
+                                bind:this={editorTextarea}
                                 lang={data.serverLocale || 'en'}
                                 spellcheck="true"
                                 placeholder={$t('write.editor.content_placeholder')}
@@ -547,29 +548,24 @@
                                 required
                             ></textarea>
 
-                            <button
-                                class="mic-btn {dictating ? 'mic-active' : ''}"
-                                onclick={toggleDictation}
-                                title="Dictate"
-                                aria-label="Voice dictation"
-                            >
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <path
-                                        d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"
-                                    ></path>
+                            {#if interimText}
+                                <div class="dictation-interim" aria-live="polite">{interimText}</div>
+                            {/if}
 
-                                    <path d="M19 10v2a7 7 0 01-14 0v-2"></path>
-                                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                                    <line x1="8" y1="23" x2="16" y2="23"></line>
-                                </svg>
-                            </button>
+                            <HandwritingImport
+                                onText={onDictationFinal}
+                                onManuscript={(u) => (manuscriptUrl = u)}
+                            />
+
+                            <DictationButton
+                                lang={data.serverLocale || 'es'}
+                                commands={true}
+                                onFinal={onDictationFinal}
+                                onInterim={(s) => (interimText = s)}
+                                onInterimEnd={() => (interimText = '')}
+                                onCommand={onEditorCommand}
+                                onError={(kind) => showToast($t('write.dictation.error'))}
+                            />
 
                             <button
                                 class="copy-inline"
@@ -593,13 +589,6 @@
                             </button>
                         </div>
                         <div class="editor-options">
-                            <div class="option-group">
-                                <label>{$t('write.editor.visibility')}</label>
-                                <select bind:value={editorVisibility}>
-                                    <option value="private">{$t('write.editor.private')}</option>
-                                    <option value="public">{$t('write.editor.public')}</option>
-                                </select>
-                            </div>
                             <label class="toggle-label">
                                 <input type="checkbox" bind:checked={editorAiAssisted} />
                                 <span>{$t('write.editor.ai_assisted')}</span>
@@ -650,12 +639,10 @@
                         {/if}
                         <div class="editor-actions">
                             <button type="button" class="btn-save" onclick={handleSave} disabled={editorSaving}>{$t('write.editor.save_draft')}</button>
-                            {#if editorVisibility === 'public'}
-                                <label class="disclosure-check">
-                                    <input type="checkbox" checked />
-                                    <span>{$t('disclosure.publish_consent')}</span>
-                                </label>
-                            {/if}
+                            <label class="disclosure-check">
+                                <input type="checkbox" checked />
+                                <span>{$t('disclosure.publish_consent')}</span>
+                            </label>
                             <button type="submit" class="btn-accent" disabled={editorSaving}>{$t('write.editor.publish')}</button>
                         </div>
                     </form>
@@ -818,6 +805,8 @@
 {/if}
 
 <style>
+    .dictation-interim { margin-top: 0.4rem; font-style: italic; color: var(--text-muted, var(--muted)); font-size: 0.85rem; min-height: 1.2em; }
+    .prompt-dictation { margin-top: 0.6rem; }
     .inspiration-tape { background: var(--surface); border-bottom: 1px solid var(--border); overflow: hidden; white-space: nowrap; padding: 0.6rem 0; margin-bottom: 1rem; border-radius: 8px; }
     .ticker-marquee { overflow: hidden; }
     .ticker-track { display: inline-block; animation: marquee 1800s linear infinite; }
