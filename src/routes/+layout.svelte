@@ -380,30 +380,6 @@
     <!-- Mobile Menu (outside header to avoid z-index/blur conflicts) -->
     {#if mobileMenuOpen}
         <div class="mobile-menu" role="dialog" aria-modal="true">
-            <nav class="mobile-nav">
-                <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
-                <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
-                <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
-                <a href="/portals" onclick={toggleMobileMenu}>{$t('common.nav.games')}</a>
-                {#if data?.user?.role === 'admin' || data?.user?.role === 'member'}
-                <span class="mobile-taller-label">{$t('common.nav.taller')}</span>
-                <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
-                <a href="/refine" onclick={toggleMobileMenu}>{$t('common.nav.refine')}</a>
-                <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
-                <a href="/dictation" onclick={toggleMobileMenu}>{$t('taller.dictation_title')}</a>
-                {:else}
-                    <div class="mobile-taller-section">
-                        <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>
-                        <div class="mobile-taller-items">
-                            <span class="mobile-taller-coming">{$t('common.nav.evaluate')} ✦</span>
-                            <span class="mobile-taller-coming">{$t('common.nav.refine')} ✦</span>
-                            <span class="mobile-taller-coming">{$t('common.nav.audio')} ✦</span>
-                        </div>
-                        <span class="mobile-taller-coming mobile-taller-future">{$t('taller.dictation_title')} ✦</span>
-                    </div>
-                {/if}
-                <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
-            </nav>
             <div class="mobile-lang">
                 <button class="theme-toggle mobile-theme-toggle" onclick={toggleTheme} aria-label={currentTheme === 'dark' ? $t('common.theme_light') : $t('common.theme_dark')}>
                     {#if currentTheme === 'dark'}
@@ -450,6 +426,30 @@
                 </button>
                 <LanguageSwitcherMobile serverLocale={data.serverLocale} />
             </div>
+            <nav class="mobile-nav">
+                <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
+                <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
+                <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
+                <a href="/portals" onclick={toggleMobileMenu}>{$t('common.nav.games')}</a>
+                {#if data?.user?.role === 'admin' || data?.user?.role === 'member'}
+                <span class="mobile-taller-label">{$t('common.nav.taller')}</span>
+                <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
+                <a href="/refine" onclick={toggleMobileMenu}>{$t('common.nav.refine')}</a>
+                <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
+                <a href="/dictation" onclick={toggleMobileMenu}>{$t('taller.dictation_title')}</a>
+                {:else}
+                    <div class="mobile-taller-section">
+                        <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>
+                        <div class="mobile-taller-items">
+                            <span class="mobile-taller-coming">{$t('common.nav.evaluate')} ✦</span>
+                            <span class="mobile-taller-coming">{$t('common.nav.refine')} ✦</span>
+                            <span class="mobile-taller-coming">{$t('common.nav.audio')} ✦</span>
+                        </div>
+                        <span class="mobile-taller-coming mobile-taller-future">{$t('taller.dictation_title')} ✦</span>
+                    </div>
+                {/if}
+                <button onclick={() => { mobileMenuOpen = false; searchOpen = true; }} class="mobile-search-trigger">{$t('common.nav.search')}</button>
+            </nav>
             <div class="mobile-auth">
                 {#if data?.user}
                     <a href="/account" onclick={toggleMobileMenu} class="mobile-user-header" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);text-decoration:none;color:inherit">
