@@ -15,6 +15,19 @@
 
     let go = $state(false);
 
+    // After a letter's animation fills forwards it keeps filter: blur(0),
+    // which pins every glyph in its own composited layer — Chromium
+    // rasterizes those tiny adjacent layers with fuzzy/doubled glyphs
+    // (looked like mangled accents in es/fr). Strip the layer once the
+    // entrance is done; the visual end state is identical.
+    function settle(e) {
+        const el = e.currentTarget;
+        el.style.animation = 'none';
+        el.style.filter = 'none';
+        el.style.transform = 'none';
+        el.style.opacity = '1';
+    }
+
     // Words with each one's starting letter index, so the stagger runs
     // continuously across word boundaries.
     let groups = $derived.by(() => {
@@ -47,7 +60,7 @@
         {#each groups as g, wi}
             <span class="word" aria-hidden="true">
                 {#each Array.from(g.word) as ch, i}
-                    <span class="lt" style="--i: {g.offset + i}">{ch}</span>
+                    <span class="lt" style="--i: {g.offset + i}" onanimationend={settle}>{ch}</span>
                 {/each}
             </span>
             {#if wi < groups.length - 1}{' '}{/if}

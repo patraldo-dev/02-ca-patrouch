@@ -57,7 +57,9 @@
     .ink-reveal.visible {
         opacity: 1;
         transform: translateY(0);
-        filter: blur(0);
+        /* none, not blur(0): a residual filter keeps the element in its
+           own compositing layer forever (same glyph mangling as InkText) */
+        filter: none;
         letter-spacing: normal;
     }
     @media (prefers-reduced-motion: reduce) {
