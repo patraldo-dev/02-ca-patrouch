@@ -453,7 +453,7 @@
 
     /* ── Prompt Carousel ── */
     .prompt-teaser {
-        padding: 4rem 0;
+        padding: 3rem 0 1rem;
         text-align: center;
     }
 
@@ -612,6 +612,12 @@
     /* ── Sections ── */
     .section {
         padding: 6rem 0;
+    }
+
+    /* Works follows the prompt teaser directly — pull its top padding
+       in or the two stack to a 10rem void. */
+    .works-section {
+        padding-top: 2.5rem;
     }
 
     .section-desc {
