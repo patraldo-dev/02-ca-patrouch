@@ -1,5 +1,6 @@
-/* Google Fonts - Playfair Display + Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+/* Google Fonts - Playfair Display + Inter (+ Outfit for display text,
+   matches pinchepoutine.digital's hero) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@700;900&family=Playfair+Display:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
 
 /* ═══════════════════════════════════════════════════════════════
    CSS VARIABLES — DARK EDITORIAL THEME
@@ -27,6 +28,8 @@
   --accent-hover: #e0c9a3;
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Display face for hero-scale text (pinchepoutine.digital's hero look) */
+  --font-display: 'Outfit', var(--font-body);
   --radius: 8px;
   --radius-lg: 16px;
   --z-nav: 100;

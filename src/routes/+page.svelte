@@ -418,13 +418,16 @@
     }
 
     .hero-label {
-        font-family: var(--font-body);
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
+        /* pinchepoutine.digital hero text: Outfit 900 at the same clamp,
+           kept in patrouch's gold. Not uppercase — at this scale the
+           letterforms carry the energy (InkText word spans wrap it). */
+        font-family: var(--font-display);
+        font-size: clamp(3rem, 8vw, 6rem);
+        line-height: 0.95;
+        font-weight: 900;
+        text-wrap: balance;
         color: var(--accent);
-        margin-bottom: 1.6rem;
+        margin-bottom: 2rem;
     }
 
 
