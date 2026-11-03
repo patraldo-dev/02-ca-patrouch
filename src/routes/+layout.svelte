@@ -1,7 +1,7 @@
 <script>
     import '../app.css';
     import { browser } from '$app/env';
-    import { t, locale, setLocale } from '#lib/i18n/index.js';
+    import { t, locale, setLocale, locales } from '#lib/i18n/index.js';
     import { beforeNavigate } from '$app/navigation';
     import SearchModal from '#lib/components/SearchModal.svelte';
     import OnboardingFlow from '#lib/components/OnboardingFlow.svelte';
@@ -107,6 +107,14 @@
         setLocale(lang);
         if (browser) localStorage.setItem('preferredLanguage', lang);
     }
+
+    // Keep the client i18n store in sync with whatever the server actually
+    // used (data.serverLocale — the same source the nav switchers display).
+    // Deriving from the server value (not cookie/navigator guesses) means
+    // SSR text and hydrated text can never disagree.
+    onMount(() => {
+        if (locales.includes(data.serverLocale)) setLocale(data.serverLocale);
+    });
 
     async function handleLogout() {
         if (!browser) return;
@@ -544,16 +552,18 @@
                 <NewsletterForm />
             </div>
             <div class="footer-bottom">
-                <p class="footer-tagline">{$t('common.footer.tagline')}</p>
                 <p class="footer-copy">© {new Date().getFullYear()} Christophe R Patraldo — <a href="https://patrouch.ca">patrouch.ca</a></p>
                 <p class="footer-built">{@html $t('common.footer.built_by')}</p>
-                <p class="footer-disclosure">{$t('disclosure.footer')}</p>
                 <p class="footer-links">
                     <a href="/privacy">{$t('common.footer.privacy')}</a>
                     <span class="footer-sep">·</span>
                     <a href="/terms">{$t('common.footer.terms')}</a>
                     <span class="footer-sep">·</span>
                     <a href="mailto:ishmael@patrouch.ca">{$t('common.footer.contact')}</a>
+                    <span class="footer-sep">·</span>
+                    <a href="https://github.com/patraldo-dev/patrouch" rel="noopener" target="_blank">{$t('common.footer.github')}</a>
+                    <span class="footer-sep">·</span>
+                    <a href="/languages">{$t('common.footer.language')}</a>
                 </p>
             </div>
         </div>
@@ -604,7 +614,7 @@
     }
 
     .logo-initials {
-        color: var(--text-dim);
+        color: var(--signature);
         font-weight: 600;
         font-style: italic;
     }
@@ -1110,18 +1120,11 @@
         text-align: center;
     }
 
-    .footer-tagline {
-        font-family: var(--font-heading);
-        font-size: 1rem;
-        font-style: italic;
-        color: var(--text-dim);
-        margin-bottom: 0.5rem;
-    }
 
     .footer-copy {
         color: var(--text-muted);
         font-size: 0.85rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.85rem;
     }
 
     .footer-copy a { color: var(--accent); }
@@ -1129,7 +1132,7 @@
     .footer-built {
         color: var(--text-muted);
         font-size: 0.8rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.85rem;
     }
 
     .footer-built a {
@@ -1137,16 +1140,13 @@
         text-decoration: none;
     }
 
-    .footer-disclosure {
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        font-style: italic;
-        margin-top: 0.25rem;
-    }
-
     .footer-built a:hover {
         text-decoration: underline;
     }
+
+
+
+
 
     .footer-links {
         display: flex;

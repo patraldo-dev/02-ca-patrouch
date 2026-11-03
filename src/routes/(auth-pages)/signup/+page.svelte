@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { t } from '#lib/i18n/index.js';
     import { authClient } from '#lib/auth-client.js';
+    import InkText from '#lib/components/InkText.svelte';
 
     let showPassword = $state(false);
     let isAdult = $state(false);
@@ -118,7 +119,7 @@
         <circle cx="26" cy="28" r="1.5" fill="#c9a87c"/>
         <path d="M26 28 Q30 32 34 26" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
     </svg>
-    <h1>{$t('signup.title')}</h1>
+    <h1><InkText text={$t('signup.title')} step={40} /></h1>
 
     {#if success}
         <div class="success-banner">{success}</div>
@@ -204,6 +205,19 @@
     .signup-icon {
         margin-bottom: 1rem;
         color: var(--accent);
+    }
+
+    /* Unified with the home hero: the display tagline recipe (Outfit 900,
+       signature lavender, ink-written by InkText) at card scale, and the
+       submit button matches the Start Writing pill CTA. */
+    h1 {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 8vw, 2.8rem);
+        line-height: 0.95;
+        font-weight: 900;
+        text-wrap: balance;
+        color: var(--signature);
+        margin-bottom: 1.5rem;
     }
 
     form {
@@ -301,15 +315,26 @@
     }
 
     button[type="submit"] {
-        padding: 0.75rem;
-        font-size: 1rem;
+        padding: 1.15rem 3rem;
+        font-size: 1.35rem;
+        letter-spacing: 0.02em;
         background: var(--accent);
         color: var(--bg);
         border: none;
-        border-radius: 4px;
+        border-radius: 999px;
         cursor: pointer;
         font-weight: 600;
-        transition: filter 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
+        box-shadow: 0 6px 24px rgba(201, 168, 124, 0.25);
+    }
+    button[type="submit"]:hover {
+        filter: brightness(1.06);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(201, 168, 124, 0.45);
+    }
+    button[type="submit"]:active {
+        transform: translateY(0) scale(0.98);
     }
 
     button[type="submit"]:hover {
