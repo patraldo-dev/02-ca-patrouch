@@ -39,6 +39,13 @@
         pileDone = true;
     }
 
+    // Sequence the CTA ink after the tagline's last letter settles:
+    // InkText starts the last letter at (letters-1)*step and runs 500ms,
+    // so the button begins once the tagline has fully written itself.
+    let startDelay = $derived(
+        Array.from(($t('pages.home.hero.label') || '').replace(/\s/g, '')).length * 40 + 250
+    );
+
     function toastToWrite() {
         if (reducedMotion) { goto('/write'); return; }
         inkToast = true;
@@ -165,14 +172,15 @@
 <!-- HERO -->
 <section class="hero">
     <div class="hero-glow"></div>
+    <div class="hero-blob" aria-hidden="true"></div>
     <div class="container hero-content">
         <p class="hero-label"><InkText text={$t('pages.home.hero.label')} step={40} /></p>
         {#if data.user}
-            <button class="hero-cta" onclick={toastToWrite}><InkText text={$t('pages.home.prompt.start_writing')} delay={400} step={50} /></button>
+            <button class="hero-cta" onclick={toastToWrite}><InkText text={$t('pages.home.prompt.start_writing')} delay={startDelay} step={50} /></button>
         {:else}
             <div class="auth-cta-group hero-auth">
-                <a href="/login" class="hero-cta"><InkText text={$t('common.nav.login')} delay={400} step={50} /></a>
-                <a href="/signup" class="hero-cta ghost"><InkText text={$t('common.nav.signup')} delay={700} step={50} /></a>
+                <a href="/login" class="hero-cta"><InkText text={$t('common.nav.login')} delay={startDelay} step={50} /></a>
+                <a href="/signup" class="hero-cta ghost"><InkText text={$t('common.nav.signup')} delay={startDelay + 650} step={50} /></a>
             </div>
         {/if}
     </div>
@@ -359,42 +367,68 @@
         z-index: 1;
     }
 
+    /* Blurred colour field for the glass CTA to refract — the glass
+       recipe needs something behind it. Cranberry into gold, blur(40px)
+       so the button's backdrop-filter has hues to catch. */
+    .hero-blob {
+        position: absolute;
+        width: 480px;
+        height: 300px;
+        left: 50%;
+        bottom: -50px;
+        transform: translateX(-50%);
+        background: radial-gradient(closest-side,
+            rgba(224, 138, 154, 0.3),
+            rgba(201, 168, 124, 0.2) 55%,
+            transparent 75%);
+        filter: blur(40px);
+        pointer-events: none;
+    }
+
     .hero-cta {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        background: var(--accent);
-        color: var(--bg);
-        border: 1px solid var(--accent);
-        border-radius: 999px;
-        padding: 1.15rem 3rem;
-        font-family: var(--font-body);
-        font-size: 1.35rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
+        gap: 0.6rem;
+        padding: 1.3rem 3.2rem;
+        background: var(--glass-bg);
+        color: var(--text);
+        border: 1px solid rgba(224, 138, 154, 0.35);
+        border-radius: 1.25rem;
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
         cursor: pointer;
         text-decoration: none;
-        transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
-        box-shadow: 0 6px 24px rgba(201, 168, 124, 0.25);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 8px 32px rgba(60, 45, 20, 0.12);
         -webkit-tap-highlight-color: transparent;
+        transition: translate 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
     .hero-cta:hover {
-        filter: brightness(1.06);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 32px rgba(201, 168, 124, 0.45);
+        background: var(--glass-hover);
+        border-color: var(--signature);
+        translate: 0 -3px;
+        box-shadow: 0 16px 40px rgba(224, 138, 154, 0.25);
     }
     .hero-cta:active {
-        transform: translateY(0) scale(0.98);
-        box-shadow: 0 4px 16px rgba(201, 168, 124, 0.3);
+        translate: 0 0;
+        box-shadow: 0 6px 20px rgba(224, 138, 154, 0.2);
     }
     .hero-cta:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: 3px;
     }
     .hero-cta.ghost {
-        background: none;
-        color: var(--accent);
+        background: transparent;
+        color: var(--text-dim);
+        border-color: var(--border);
         box-shadow: none;
+    }
+    .hero-cta.ghost:hover {
+        background: var(--glass-bg);
+        border-color: rgba(224, 138, 154, 0.35);
     }
     .hero-auth { justify-content: center; margin-top: 0; }
     .ink-toast {
