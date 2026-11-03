@@ -426,7 +426,7 @@
         line-height: 0.95;
         font-weight: 900;
         text-wrap: balance;
-        color: var(--text);
+        color: var(--text-dim);
         margin-bottom: 2rem;
     }
 
