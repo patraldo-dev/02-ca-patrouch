@@ -172,21 +172,74 @@ a:hover { color: var(--accent-hover); }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   GLASS CARD
+   GLASS CARD + AMBIENT GLOW
+   pinchepoutine.digital's glassmorphism recipe, retuned for the
+   dark editorial theme: blur(20px) surfaces washed with the
+   theme-aware --glass-* vars and gold --accent-border, hover glow +
+   lift. Typography stays in the scoped page rules (cascade is
+   per-property, so they compose).
+
+   Hover uses the independent `translate` property, not `transform`:
+   the home page's entrance animation fills forwards with
+   transform: translateY(0), and animation fill outranks normal
+   author declarations — `translate` sidesteps that without
+   !important.
    ═══════════════════════════════════════════════════════════════ */
 
 .glass-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--accent-border);
   border-radius: var(--radius-lg);
-  padding: 2rem;
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(60, 45, 20, 0.12);
+  transition:
+    translate 0.35s ease,
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
 }
 
 .glass-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--accent-border);
-  box-shadow: 0 12px 40px var(--glass-bg);
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  translate: 0 -8px;
+  box-shadow: 0 20px 40px rgba(212, 185, 143, 0.18);
+}
+
+/* Glass only reads when the blur has colour to catch — layered
+   radial glows behind glass sections. Gradients only: no filter
+   blur, so zero per-pixel GPU cost (unlike real backdrop-filter). */
+.works-section {
+  position: relative;
+}
+
+.works-section::before {
+  content: '';
+  position: absolute;
+  inset: -15% 0;
+  pointer-events: none;
+  background:
+    radial-gradient(640px 420px at 18% 42%, rgba(201, 168, 124, 0.1), transparent 70%),
+    radial-gradient(560px 400px at 82% 58%, rgba(112, 102, 160, 0.09), transparent 70%);
+}
+
+.works-section > .container {
+  position: relative;
+}
+
+/* The lift is decoration — skip it for reduced-motion users. (The
+   entrance animations are handled per-component.) */
+@media (prefers-reduced-motion: reduce) {
+  .glass-card {
+    transition: none;
+  }
+  .glass-card:hover {
+    translate: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
