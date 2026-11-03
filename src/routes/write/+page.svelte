@@ -11,6 +11,7 @@
     import Image3DManipulator from '#lib/components/Image3DManipulator.svelte';
     import DictationButton from '#lib/components/DictationButton.svelte';
     import HandwritingImport from '#lib/components/HandwritingImport.svelte';
+    import ProjectPicker from '#lib/components/ProjectPicker.svelte';
     import { browser } from '$app/env';
 
     import { onMount } from 'svelte';
@@ -52,6 +53,7 @@
     let editorTitle = $state(data.latestDraft?.title || '');
     let editorContent = $state(data.latestDraft?.content || '');
     let editorDraftId = $state(data.latestDraft?.id || null);
+    let editorProjectId = $state(data.latestDraft?.project_id || null);
     let editorWordCount = $derived(editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0);
     let timedMode = $state(false);
     let timerDuration = $state(15);
@@ -62,6 +64,8 @@
     let timerWordsAtStart = $state(0);
     let editorAiAssisted = $state(false);
     function showToast(msg) { editorMessage = msg; setTimeout(() => editorMessage = '', 3000); }
+    let promptToast = $state('');
+    function showPromptToast(msg) { promptToast = msg; setTimeout(() => (promptToast = ''), 3000); }
 
     // ── Hands-free dictation (shared engine + DictationButton) ──
     let editorTextarea = $state(null);
@@ -181,6 +185,7 @@
                     track('pass_prompt', prompt?.id);
                 } else if (action === 'accepted') {
                     userAction = 'accepted';
+                    showPromptToast($t('write.dashboard.accepted'));
                     // If accepting newsletter spark, use its text as the prompt
                     if (sparkFromEmail) {
                         promptId = null; // no DB prompt for newsletter sparks
@@ -292,7 +297,7 @@
             const res = await fetch('/api/writings/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: editorDraftId, title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, manuscriptUrl, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
+                body: JSON.stringify({ id: editorDraftId, title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, manuscriptUrl, projectId: editorProjectId, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
             });
             if (res.ok) {
                 const d = await res.json();
@@ -313,7 +318,7 @@
             const res = await fetch('/api/writings/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: editorDraftId, title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, status: 'published', manuscriptUrl, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
+                body: JSON.stringify({ id: editorDraftId, title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, status: 'published', manuscriptUrl, projectId: editorProjectId, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
             });
             if (res.ok) {
                 const d = await res.json();
@@ -446,6 +451,9 @@
                                 {/if}
                             </div>
                             <p class="prompt-text">{prompt.prompt_text}</p>
+                            {#if promptToast}
+                                <div class="accept-toast" role="status">{promptToast}</div>
+                            {/if}
                             {#if !acceptedToday && !completedToday}
                                 <div class="prompt-actions">
                                 <button class="btn-accept" onclick={() => handleAction('accepted')} disabled={isAccepting}>{isAccepting ? '…' : $t('write.dashboard.accept')}</button>
@@ -510,11 +518,24 @@
                             <span>{$t('write.editor.from_prompt')}:</span> {prompt.prompt_text?.slice(0, 80)}{prompt.prompt_text?.length > 80 ? '…' : ''}
                         </div>
                     {/if}
-                    <form onsubmit={handlePublish}>
+                    <!-- Publish is deliberately button-only: implicit form
+                         submission (Enter in the title) must never publish. -->
+                    <form onsubmit={(e) => e.preventDefault()}>
                         <input type="hidden" name="promptId" value={promptId || ''} />
                         <div class="editor-field">
                             <label>{$t('write.editor.title')}</label>
-                            <input type="text" bind:value={editorTitle} placeholder={$t('write.editor.title_placeholder')} required />
+                            <input
+                                type="text"
+                                bind:value={editorTitle}
+                                onkeydown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        editorTextarea?.focus();
+                                    }
+                                }}
+                                placeholder={$t('write.editor.title_placeholder')}
+                                required
+                            />
                         </div>
 
                         <div
@@ -541,7 +562,10 @@
                             {/if}
 
                             <HandwritingImport
-                                onText={onDictationFinal}
+                                onImport={({ title, text }) => {
+                                    if (text) insertAtCursor(text + '\n\n');
+                                    if (title && !editorTitle.trim()) editorTitle = title;
+                                }}
                                 onManuscript={(u) => (manuscriptUrl = u)}
                             />
 
@@ -577,6 +601,7 @@
                             </button>
                         </div>
                         <div class="editor-options">
+                            <ProjectPicker bind:projectId={editorProjectId} />
                             <label class="toggle-label">
                                 <input type="checkbox" bind:checked={editorAiAssisted} />
                                 <span>{$t('write.editor.ai_assisted')}</span>
@@ -631,7 +656,7 @@
                                 <input type="checkbox" checked />
                                 <span>{$t('disclosure.publish_consent')}</span>
                             </label>
-                            <button type="submit" class="btn-accent" disabled={editorSaving}>{$t('write.editor.publish')}</button>
+                            <button type="button" class="btn-accent" onclick={(e) => handlePublish(e)} disabled={editorSaving}>{$t('write.editor.publish')}</button>
                         </div>
                     </form>
                 </div>
@@ -1011,6 +1036,16 @@
     .accepted-badge {
         color: #4ade80;
         font-weight: 500;
+    }
+
+    .accept-toast {
+        background: rgba(74, 222, 128, 0.1);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+        color: #4ade80;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
     }
 
     .btn-done {

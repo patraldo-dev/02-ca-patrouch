@@ -13,6 +13,7 @@
     // i18n — simple — no get() to avoid SSR crash
     const i18n = {
         en: {
+            read_part: '→ Read part',
             title: 'Notifications',
             mark_all_read: 'Mark all read',
             no_notifications: 'No new notifications',
@@ -21,6 +22,7 @@
             view_comment: '→ View comment'
         },
         es: {
+            read_part: '→ Leer parte',
             title: 'Notificaciones',
             mark_all_read: 'Marcar todo leído',
             no_notifications: 'Sin notificaciones',
@@ -29,6 +31,7 @@
             view_comment: '→ Ver comentario'
         },
         fr: {
+            read_part: '→ Lire la partie',
             title: 'Notifications',
             mark_all_read: 'Tout marquer comme lu',
             no_notifications: 'Pas de notifications',
@@ -87,6 +90,7 @@
     }
 
     function linkLabel(n) {
+        if (n.type === 'project_part') return t('projects.read_part');
         return commentLink(n) ? t('view_comment') : t('enter_portal');
     }
 

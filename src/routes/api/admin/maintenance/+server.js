@@ -91,6 +91,7 @@ const USER_TABLES = [
     ['session', 'userId'],
     ['notifications', 'user_id'],
     ['daily_prompt_log', 'user_id'],
+    ['dictation_attempts', 'user_id'],
     ['user_writing_stats', 'user_id'],
     ['profiles', 'user_id'],
     ['feedback_requests', 'user_id'],

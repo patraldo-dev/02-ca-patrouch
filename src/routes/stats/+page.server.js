@@ -37,10 +37,25 @@ export async function load({ locals }) {
   };
 }
 
+// Accepts epoch seconds/ms, epoch-as-string, or "YYYY-MM-DD HH:MM:SS"
+// (SQLite datetime('now')). Returns null for anything unparseable.
+function toDate(v) {
+  if (v == null) return null;
+  const n = Number(v);
+  if (!isNaN(n) && String(v).trim() === String(n)) {
+    return new Date(n < 1e12 ? n * 1000 : n);
+  }
+  const d = new Date(String(v).replace(" ", "T") + "Z");
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function buildHeatmapData(writings) {
   const map = {};
   for (const w of writings) {
-    const dateStr = new Date(w.created_at * 1000).toISOString().split("T")[0];
+    // created_at mixes epochs and datetime strings across the site's history
+    const d = toDate(w.created_at);
+    if (!d) continue;
+    const dateStr = d.toISOString().split("T")[0];
     if (!map[dateStr]) map[dateStr] = { count: 0, words: 0 };
     map[dateStr].count++;
     map[dateStr].words += w.word_count || 0;

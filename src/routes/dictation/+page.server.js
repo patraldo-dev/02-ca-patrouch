@@ -50,7 +50,6 @@ export async function load({ locals, url }) {
 
     const db = locals.db;
     const locale = ['en', 'es', 'fr'].includes(locals.locale) ? locals.locale : 'es';
-
     // Sappho's latest in the user's locale; fall back to her latest in any
     // language. Some environments' writings tables lack the `locale` column
     // (schema drift) — the unfiltered fallback covers those too.
@@ -85,7 +84,14 @@ export async function load({ locals, url }) {
     usedLocale = writing?.locale || locale;
 
     if (!writing) {
-        return { user: locals.user, serverLocale: locale, writing: null, phrases: [], truncated: false };
+        return {
+            user: locals.user,
+            serverLocale: locale,
+            writing: null,
+            phrases: [],
+            truncated: false,
+            ...(await loadProgress(db, locals.user.id))
+        };
     }
 
     const { phrases, truncated, wordCount } = splitPhrases(writing.content);
@@ -101,6 +107,36 @@ export async function load({ locals, url }) {
         },
         phrases,
         truncated,
-        wordCount
+        wordCount,
+        ...(await loadProgress(db, locals.user.id))
     };
+}
+
+// Attempt history + aggregates for the progress card. Separate so a stats
+// hiccup never blocks the dictée itself.
+async function loadProgress(db, userId) {
+    try {
+        const attempts = await db
+            .prepare(
+                `SELECT id, mode, accuracy, faults, word_count, manuscript_url, created_at
+                 FROM dictation_attempts WHERE user_id = ?
+                 ORDER BY created_at DESC, rowid DESC LIMIT 100`
+            )
+            .bind(userId)
+            .all();
+        const stats = await db
+            .prepare(
+                `SELECT COUNT(*) AS total,
+                        ROUND(AVG(accuracy), 1) AS avg_accuracy,
+                        MAX(accuracy) AS best_accuracy,
+                        SUM(CASE WHEN mode = 'handwritten' THEN 1 ELSE 0 END) AS handwritten
+                 FROM dictation_attempts WHERE user_id = ?`
+            )
+            .bind(userId)
+            .first();
+        return { attempts: attempts.results || [], stats: stats || null };
+    } catch (e) {
+        console.error('[dictation] progress load failed:', e.message);
+        return { attempts: [], stats: null };
+    }
 }

@@ -5,6 +5,7 @@
     import { getLocale } from '#lib/i18n/index.js';
     import DictationButton from '#lib/components/DictationButton.svelte';
     import HandwritingImport from '#lib/components/HandwritingImport.svelte';
+    import ProjectPicker from '#lib/components/ProjectPicker.svelte';
 
     let { data } = $props();
 
@@ -22,6 +23,7 @@
     let contentTextarea = $state(null);
     let interimText = $state('');
     let manuscriptUrl = $state(null);
+    let projectId = $state(null);
 
     function insertAtCursor(text) {
         if (!text) return;
@@ -64,6 +66,7 @@
                     promptId: data.prompt?.id || null,
                     aiAssisted,
                     manuscriptUrl,
+                    projectId,
                     status: publish ? 'published' : 'draft'
                 })
             });
@@ -120,7 +123,10 @@
                 <div class="dictation-interim" aria-live="polite">{interimText}</div>
             {/if}
             <HandwritingImport
-                onText={onDictationFinal}
+                onImport={(imp) => {
+                    if (imp.text) insertAtCursor(imp.text + '\n\n');
+                    if (imp.title && !title.trim()) title = imp.title;
+                }}
                 onManuscript={(u) => (manuscriptUrl = u)}
             />
 
@@ -139,6 +145,7 @@
     </div>
 
     <div class="editor-options">
+        <ProjectPicker bind:projectId={projectId} />
         <label class="toggle-label" title={$t('write.editor.ai_tooltip')}>
             <input type="checkbox" bind:checked={aiAssisted} />
             <span>{$t('write.editor.ai_assisted')} <span class="info-icon" title={$t('write.editor.ai_tooltip')}>ⓘ</span></span>

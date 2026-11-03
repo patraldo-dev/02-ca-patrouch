@@ -3,7 +3,7 @@ import { t, locale } from "#lib/i18n/index.js";
 
 const descriptions = {
   en: {
-    "/": "Get daily creative sparks, write in any language, and share your voice with a community of writers.",
+    "/": "A playful space for serious writing — daily sparks, dictée and manuscripts, in Spanish, English and French.",
     "/agora":
       "Browse writings from the Patrouch community. Discover new voices, read published works, and find inspiration.",
     "/write":
@@ -13,7 +13,7 @@ const descriptions = {
       "Join a playful space for serious writing. Get daily sparks and start writing today.",
   },
   es: {
-    "/": "Recibe chispas creativas diarias, escribe en cualquier idioma y comparte tu voz con una comunidad de escritores.",
+    "/": "Un espacio lúdico para escritura seria — estímulos diarios, dictée y manuscritos, en español, inglés y francés.",
     "/agora":
       "Explora escritos de la comunidad Patrouch. Descubre nuevas voces, lee obras publicadas y encuentra inspiración.",
     "/write":
@@ -23,7 +23,7 @@ const descriptions = {
       "Únete a un espacio lúdico para escritura seria. Recibe chispas diarias y empieza a escribir hoy.",
   },
   fr: {
-    "/": "Recevez des étincelles créatives quotidiennes, écrivez dans n'importe quelle langue et partagez votre voix.",
+    "/": "Un espace ludique pour une écriture sérieuse — stimulus quotidiens, dictée et manuscrits, en espagnol, anglais et français.",
     "/agora":
       "Parcourez les écrits de la communauté Patrouch. Découvrez de nouvelles voix et trouvez l'inspiration.",
     "/write":

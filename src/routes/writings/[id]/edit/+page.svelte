@@ -4,6 +4,7 @@
     import { marked } from 'marked';
     import DictationButton from '#lib/components/DictationButton.svelte';
     import HandwritingImport from '#lib/components/HandwritingImport.svelte';
+    import ProjectPicker from '#lib/components/ProjectPicker.svelte';
     import { browser } from '$app/env';
 
     let { data } = $props();
@@ -21,6 +22,7 @@
     let contentTextarea = $state(null);
     let interimText = $state('');
     let manuscriptUrl = $state(null);
+    let projectId = $state(data.writing?.project_id || null);
 
     function insertAtCursor(text) {
         if (!text) return;
@@ -83,7 +85,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 // Canonical pairs only: publish = published+public, draft = draft+private.
                 // Sending stale visibility alongside a draft save caused drift.
-                body: JSON.stringify({ title, content, status, visibility: status === 'published' ? 'public' : 'private', manuscript_url: manuscriptUrl || undefined })
+                body: JSON.stringify({ title, content, status, visibility: status === 'published' ? 'public' : 'private', manuscript_url: manuscriptUrl || undefined, projectId })
             });
             const result = await res.json();
             if (result.error) {
@@ -152,7 +154,10 @@
             <div class="dictation-interim" aria-live="polite">{interimText}</div>
         {/if}
         <HandwritingImport
-            onText={onDictationFinal}
+            onImport={(imp) => {
+                if (imp.text) insertAtCursor(imp.text + '\n\n');
+                if (imp.title && !title.trim()) title = imp.title;
+            }}
             onManuscript={(u) => (manuscriptUrl = u)}
         />
 
@@ -164,6 +169,10 @@
             onInterimEnd={() => (interimText = '')}
             onCommand={onDictationCommand}
         />
+    </div>
+
+    <div class="project-row">
+        <ProjectPicker bind:projectId={projectId} />
     </div>
 
     <div class="editor-actions">
@@ -372,6 +381,7 @@
         color: var(--accent, #c9a87c);
     }
 
+    .project-row { display: flex; margin: 0.6rem 0; }
     .editor-actions {
         display: flex;
         gap: 0.75rem;

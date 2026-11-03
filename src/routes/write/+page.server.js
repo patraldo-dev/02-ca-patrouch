@@ -77,7 +77,7 @@ export async function load({ locals, url }) {
     if (acceptedId) {
       latestDraft = await db
         .prepare(
-          `SELECT w.id, w.title, w.content, w.visibility FROM writings w 
+          `SELECT w.id, w.title, w.content, w.visibility, w.project_id FROM writings w 
          WHERE w.user_id = ? AND w.status = 'draft' AND w.prompt_id = ?
          ORDER BY w.updated_at DESC, w.created_at DESC LIMIT 1`,
         )

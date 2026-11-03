@@ -1,6 +1,7 @@
 // src/routes/api/writings/save/+server.js
 import { json } from "@sveltejs/kit";
 import { saveDraft, adjustWordCount } from "#lib/server/writing-stats.js";
+import { notify } from "#lib/server/notify.js";
 import { env } from 'cloudflare:workers';
 
 const STOP_WORDS = new Set([
@@ -240,6 +241,7 @@ export async function POST({ request, locals }) {
     visualPromptText,
     visualArtworkUrl,
     manuscriptUrl,
+    projectId,
   } = await request.json();
 
   if (!title?.trim() || !content?.trim()) {
@@ -331,7 +333,52 @@ export async function POST({ request, locals }) {
       }
     }
 
+    // Projects v1: assign to a serial/collection. Order appends when the
+    // writing joins (or switches) projects; re-saving keeps its slot.
+    if (projectId !== undefined) {
+      const pid = typeof projectId === 'string' && projectId ? projectId : null;
+      if (pid) {
+        const proj = await db
+          .prepare('SELECT id, user_id FROM projects WHERE id = ?')
+          .bind(pid)
+          .first();
+        if (!proj || proj.user_id !== user.id) {
+          return json({ error: 'Project not found' }, { status: 400 });
+        }
+      }
+      const cur = await db
+        .prepare('SELECT project_id, project_order FROM writings WHERE id = ?')
+        .bind(result.id)
+        .first();
+      let order = null;
+      if (pid) {
+        if (cur?.project_id === pid && cur.project_order != null) {
+          order = cur.project_order;
+        } else {
+          const mx = await db
+            .prepare('SELECT MAX(project_order) AS m FROM writings WHERE project_id = ?')
+            .bind(pid)
+            .first();
+          order = (mx?.m || 0) + 1;
+        }
+      }
+      await db
+        .prepare('UPDATE writings SET project_id = ?, project_order = ? WHERE id = ? AND user_id = ?')
+        .bind(pid, order, result.id, user.id)
+        .run();
+      if (pid) {
+        await db
+          .prepare("UPDATE projects SET updated_at = datetime('now') WHERE id = ?")
+          .bind(pid)
+          .run();
+      }
+    }
+
     // If publishing, set the canonical pair in a single statement.
+    const prior = await db
+      .prepare('SELECT status, project_id, project_order, title FROM writings WHERE id = ?')
+      .bind(result.id)
+      .first();
     if (wantsPublish) {
       await db
         .prepare(
@@ -339,6 +386,32 @@ export async function POST({ request, locals }) {
         )
         .bind(visualPromptText || null, visualArtworkUrl || null, result.id, user.id)
         .run();
+    }
+
+    // Freshly published part of a project → notify followers (never the author).
+    if (wantsPublish && prior?.status !== 'published' && prior?.project_id) {
+      try {
+        const proj = await db
+          .prepare('SELECT title FROM projects WHERE id = ?')
+          .bind(prior.project_id)
+          .first();
+        const authorName = user.displayUsername || user.name || '';
+        const { results: followers } = await db
+          .prepare('SELECT user_id FROM project_follows WHERE project_id = ? AND user_id != ?')
+          .bind(prior.project_id, user.id)
+          .all();
+        for (const f of followers || []) {
+          await notify(db, {
+            user_id: f.user_id,
+            type: 'project_part',
+            title: `«${proj?.title || ''}» — nueva parte`,
+            body: `${authorName} publicó «${prior.title}» (parte ${prior.project_order})`,
+            meta: { project_id: prior.project_id, writing_id: result.id },
+          });
+        }
+      } catch (e) {
+        console.error('[projects] notify failed:', e.message);
+      }
     }
 
     // Index into Vectorize (both drafts and published)

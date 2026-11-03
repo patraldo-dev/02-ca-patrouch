@@ -23,7 +23,7 @@ export async function PUT({ request, locals, params }) {
     if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { title, content, visibility, status, manuscript_url } = body;
+    const { title, content, visibility, status, manuscript_url, projectId } = body;
 
     // If only updating status/visibility (publish/unpublish), skip title/content validation
     const isStatusUpdate = !title && !content;
@@ -69,6 +69,40 @@ export async function PUT({ request, locals, params }) {
     await locals.db.prepare(
         "UPDATE writings SET title = ?, content = ?, word_count = ?, visibility = ?, status = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?"
     ).bind(title.trim(), content.trim(), wordCount, pair.visibility, pair.status, params.id, locals.user.id).run();
+
+    // Projects v1: assign/reassign (order appends on change, keeps slot otherwise).
+    if (projectId !== undefined) {
+        const pid = typeof projectId === 'string' && projectId ? projectId : null;
+        if (pid) {
+            const proj = await locals.db
+                .prepare('SELECT id, user_id FROM projects WHERE id = ?')
+                .bind(pid)
+                .first();
+            if (!proj || proj.user_id !== locals.user.id) {
+                return json({ error: 'Project not found' }, { status: 400 });
+            }
+        }
+        const cur = await locals.db
+            .prepare('SELECT project_id, project_order FROM writings WHERE id = ?')
+            .bind(params.id)
+            .first();
+        let order = null;
+        if (pid) {
+            if (cur?.project_id === pid && cur.project_order != null) {
+                order = cur.project_order;
+            } else {
+                const mx = await locals.db
+                    .prepare('SELECT MAX(project_order) AS m FROM writings WHERE project_id = ?')
+                    .bind(pid)
+                    .first();
+                order = (mx?.m || 0) + 1;
+            }
+        }
+        await locals.db
+            .prepare('UPDATE writings SET project_id = ?, project_order = ? WHERE id = ? AND user_id = ?')
+            .bind(pid, order, params.id, locals.user.id)
+            .run();
+    }
 
     return json({ success: true, wordCount, status: pair.status, visibility: pair.visibility });
 }
