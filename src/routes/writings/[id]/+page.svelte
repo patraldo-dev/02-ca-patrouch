@@ -5,9 +5,21 @@
     import { page } from '$app/state';
     import { marked } from 'marked';
     import CommentSection from '#lib/components/CommentSection.svelte';
+    import InkReveal from '#lib/components/InkReveal.svelte';
 
     let { data } = $props();
     let w = $state(data.writing);
+    // Manuscript facsimiles: a single URL, or a JSON array when the author
+    // imported a multi-page handwritten piece.
+    let manuscriptUrls = $derived.by(() => {
+        const raw = w?.manuscript_url;
+        if (!raw) return [];
+        try {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) return arr.filter((u) => typeof u === 'string' && u.startsWith('https://'));
+        } catch { /* single URL */ }
+        return [raw];
+    });
     let isEvaluating = $state(false);
     let isAudioLoading = $state(false);
     let keywordSelectMode = $state(false);
@@ -120,7 +132,9 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    keywordMsg = `🔑 "${data.word}" deployed! (+${data.points} pts)`;
+                    keywordMsg = $t('write.view.keyword_reserved')
+                        .replace('{word}', data.word)
+                        .replace('{points}', data.points);
                     keywordOk = true;
                     keywordSelectMode = false;
                 } else {
@@ -179,7 +193,7 @@
 <div class="view-page">
     <a href={gameMode ? '/agora?author=both' : '/write'} class="back-link">← {gameMode ? $t('agora.game.back_to_agora') : $t('write.editor.back')}</a>
 
-    <article class="writing-view">
+    <article class="writing-view ambient-glow">
         {#if w.status === 'published'}
             <CommentSection
                 writingId={w.id}
@@ -191,7 +205,17 @@
             />
         {/if}
         <header class="writing-header">
-            <h1>{w.title}</h1>
+            {#if data.project}
+                <p class="project-crumb">
+                    <a href="/projects/{data.project.id}">«{data.project.title}»</a>
+                    {#if data.project.partNumber}
+                        · {$t('projects.part_of').replace('{n}', data.project.partNumber).replace('{total}', data.project.totalParts)}
+                    {/if}
+                </p>
+            {/if}
+            <InkReveal>
+                <h1>{w.title}</h1>
+            </InkReveal>
             <div class="writing-meta">
                 {#if gameMode && !revealed}
                     <span class="meta-author mystery">?</span>
@@ -258,12 +282,26 @@
             {/if}
         </div>
 
-        {#if w.manuscript_url}
+        {#if manuscriptUrls.length}
             <!-- Phase 3: the author's own hand, kept alongside the typed text -->
-            <figure class="manuscript">
-                <img src={w.manuscript_url} alt={$t('write.view.manuscript')} loading="lazy" />
-                <figcaption>✍️ {$t('write.view.manuscript')}</figcaption>
-            </figure>
+            {#each manuscriptUrls as u, i}
+                <figure class="manuscript">
+                    <img src={u} alt={$t('write.view.manuscript') + (manuscriptUrls.length > 1 ? ` ${i + 1}` : '')} loading="lazy" />
+                    <figcaption>✍️ {$t('write.view.manuscript')}{manuscriptUrls.length > 1 ? ` · ${i + 1}/${manuscriptUrls.length}` : ''}</figcaption>
+                </figure>
+            {/each}
+        {/if}
+
+        {#if data.project && (data.project.prevId || data.project.nextId)}
+            <nav class="project-nav">
+                {#if data.project.prevId}
+                    <a href="/writings/{data.project.prevId}" class="pn prev">← {$t('projects.prev')}</a>
+                {:else}<span></span>{/if}
+                <a href="/projects/{data.project.id}" class="pn toc">📚</a>
+                {#if data.project.nextId}
+                    <a href="/writings/{data.project.nextId}" class="pn next">{$t('projects.next')} →</a>
+                {:else}<span></span>{/if}
+            </nav>
         {/if}
 
         {#if data.user?.id === w.user_id && w.status === 'published'}
@@ -335,6 +373,13 @@
 </div>
 
 <style>
+    .project-crumb { margin: 0 0 0.4rem; font-size: 0.82rem; color: var(--muted, #999); }
+    .project-crumb a { color: var(--accent, #c9a87c); text-decoration: none; }
+    .project-crumb a:hover { text-decoration: underline; }
+    .project-nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin: 1.6rem 0 0; }
+    .pn { color: var(--text-dim, #aaa); text-decoration: none; font-size: 0.88rem; border: 1px solid var(--border, #2a2e39); border-radius: 8px; padding: 0.45rem 0.9rem; }
+    .pn:hover { border-color: var(--accent, #c9a87c); color: var(--accent, #c9a87c); }
+    .pn.toc { font-size: 0.95rem; }
     .manuscript { margin: 2rem 0 1rem; text-align: center; }
     .manuscript img {
         max-width: 100%; max-height: 32rem; border-radius: 10px;

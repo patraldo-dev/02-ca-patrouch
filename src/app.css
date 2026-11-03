@@ -211,13 +211,14 @@ a:hover { color: var(--accent-hover); }
 }
 
 /* Glass only reads when the blur has colour to catch — layered
-   radial glows behind glass sections. Gradients only: no filter
-   blur, so zero per-pixel GPU cost (unlike real backdrop-filter). */
-.works-section {
+   radial glows behind glass sections. Add the class to any section
+   that hosts glass surfaces. Gradients only: no filter blur, so
+   zero per-pixel GPU cost (unlike real backdrop-filter). */
+.ambient-glow {
   position: relative;
 }
 
-.works-section::before {
+.ambient-glow::before {
   content: '';
   position: absolute;
   inset: -15% 0;
@@ -227,8 +228,18 @@ a:hover { color: var(--accent-hover); }
     radial-gradient(560px 400px at 82% 58%, rgba(112, 102, 160, 0.09), transparent 70%);
 }
 
-.works-section > .container {
+.ambient-glow > * {
   position: relative;
+}
+
+/* Surface-only glass (no layout) — composes with page-scoped card
+   classes that keep their own layout, e.g. .writing-card on agora. */
+.glass-surface {
+  background: var(--glass-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* The lift is decoration — skip it for reduced-motion users. (The

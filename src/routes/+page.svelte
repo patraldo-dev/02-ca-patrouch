@@ -1,8 +1,49 @@
 <script>
     import { t } from '#lib/i18n/index.js';
     import { page } from '$app/state';
+    import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+    import InkReveal from '#lib/components/InkReveal.svelte';
+    import InkText from '#lib/components/InkText.svelte';
+    import WordsPile from '#lib/components/WordsPile.svelte';
+    import { browser } from '$app/env';
 
     let { data } = $props();
+
+    // Write CTA: a short toast, then off to the studio. The ink reveal is
+    // an entrance effect (label + button), not a click effect.
+    let inkToast = $state(false);
+    let reducedMotion = !browser || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // STAGING TRIAL — NYT-style pile of words before the sparks appear.
+    // Plays once per session; reduced motion skips straight to the sparks.
+    let pileWords = $derived.by(() => {
+        const seen = new Set();
+        const out = [];
+        for (const p of data.pastPrompts || []) {
+            for (const w of String(p.prompt_text || '').split(/[^\p{L}]+/u)) {
+                const k = w.toLowerCase();
+                if (w.length >= 5 && !seen.has(k)) { seen.add(k); out.push(w); }
+            }
+        }
+        return out;
+    });
+    // Pile renders by default; the client instantly skips it for repeat
+    // visits in the same session (or reduced motion) after hydration.
+    let pileDone = $state(false);
+    onMount(() => {
+        if (reducedMotion || sessionStorage.getItem('pile_played') === '1') pileDone = true;
+    });
+    function finishPile() {
+        try { sessionStorage.setItem('pile_played', '1'); } catch {}
+        pileDone = true;
+    }
+
+    function toastToWrite() {
+        if (reducedMotion) { goto('/write'); return; }
+        inkToast = true;
+        setTimeout(() => goto('/write'), 500);
+    }
 
     let confirmMessage = $state('');
     $effect(() => {
@@ -59,44 +100,6 @@
         ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
         : false;
 
-    // Effect 1: Letter reveal for hero tagline
-    let heroTaglineEl = $state(null);
-    $effect(() => {
-        const el = heroTaglineEl;
-        if (!el || prefersReducedMotion) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (!entry.isIntersecting) return;
-                const text = el.textContent;
-                el.innerHTML = '';
-                // Split by words to preserve word wrapping
-                const words = text.split(' ');
-                words.forEach((word, wordIndex) => {
-                    const wordSpan = document.createElement('span');
-                    wordSpan.style.display = 'inline-block';
-                    wordSpan.style.whiteSpace = 'nowrap';
-                    // Add word-breaking space between words (except last)
-                    if (wordIndex > 0) {
-                        const space = document.createTextNode('\u00A0');
-                        el.appendChild(space);
-                    }
-                    [...word].forEach((char, charIndex) => {
-                        const span = document.createElement('span');
-                        span.textContent = char === ' ' ? '\u00A0' : char;
-                        const totalDelay = (wordIndex * 3 + charIndex) * 30;
-                        span.style.animationDelay = `${totalDelay}ms`;
-                        span.classList.add('letter-reveal');
-                        wordSpan.appendChild(span);
-                    });
-                    el.appendChild(wordSpan);
-                });
-                observer.disconnect();
-            },
-            { threshold: 0.5 }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    });
 
     // Effect 3: Staggered card entrance
     let worksGridEl = $state(null);
@@ -163,20 +166,34 @@
 <section class="hero">
     <div class="hero-glow"></div>
     <div class="container hero-content">
-        <p class="hero-label">{$t('pages.home.hero.label')}</p>
-        <h1 class="hero-name">
-            <span class="hero-first">Christophe R</span>
-            <span class="hero-last">Patraldo</span>
-        </h1>
-        <p class="hero-tagline" bind:this={heroTaglineEl}>{$t('pages.home.hero.tagline')}</p>
-        <a href={data.pastPrompts?.length > 0 ? '#prompt-teaser' : '#portfolio'} class="hero-scroll" aria-label="Scroll to content">
-            <div class="scroll-line"></div>
-        </a>
+        <p class="hero-label"><InkText text={$t('pages.home.hero.label')} step={40} /></p>
+        {#if data.user}
+            <button class="hero-cta" onclick={toastToWrite}><InkText text={$t('pages.home.prompt.start_writing')} delay={400} step={50} /></button>
+        {:else}
+            <div class="auth-cta-group hero-auth">
+                <a href="/login" class="hero-cta"><InkText text={$t('common.nav.login')} delay={400} step={50} /></a>
+                <a href="/signup" class="hero-cta ghost"><InkText text={$t('common.nav.signup')} delay={700} step={50} /></a>
+            </div>
+        {/if}
     </div>
 </section>
 
+{#if inkToast}
+    <div class="ink-toast" role="status">✒️ {$t('pages.home.prompt.ink_toast')}</div>
+{/if}
+
+<!-- STAGING TRIAL: words pile up where the sparks are about to appear -->
+{#if data.pastPrompts?.length > 0 && !pileDone}
+    <section class="prompt-teaser pile-stage">
+        <div class="container">
+            <WordsPile words={pileWords} onDone={finishPile} />
+        </div>
+    </section>
+{/if}
+
 <!-- TODAY'S PROMPT TEASER -->
-{#if data.pastPrompts?.length > 0}
+{#if data.pastPrompts?.length > 0 && pileDone}
+    <InkReveal>
     <section id="prompt-teaser" class="prompt-teaser">
         <div class="container">
             <span class="teaser-label">{$t('pages.home.prompt.label')}</span>
@@ -226,20 +243,13 @@
                 <span class="dot" class:active={i === currentPrompt} onclick={() => { carouselDirection = i > currentPrompt ? 'next' : 'prev'; currentPrompt = i; }}></span>
                 {/each}
             </div>
-            {#if data.user}
-                <a href="/write" class="teaser-cta">{$t('pages.home.prompt.start_writing')}</a>
-            {:else}
-                <div class="auth-cta-group">
-                    <a href="/login" class="teaser-cta">{$t('common.nav.login')}</a>
-                    <a href="/signup" class="teaser-cta secondary">{$t('common.nav.signup')}</a>
-                </div>
-            {/if}
         </div>
     </section>
+    </InkReveal>
 {/if}
 
 <!-- WORKS -->
-<section id="portfolio" class="section works-section">
+<section id="portfolio" class="section works-section ambient-glow">
     <div class="container">
         <div class="section-label fade-in">{$t('pages.home.works.label')}</div>
         <h2 class="fade-in">{$t('pages.home.works.heading')}</h2>
@@ -324,7 +334,8 @@
     /* ── Hero ── */
     .hero {
         position: relative;
-        min-height: 55vh;
+        min-height: 24vh;
+        padding: 3.5rem 0 1.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -348,6 +359,64 @@
         z-index: 1;
     }
 
+    .hero-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--accent);
+        color: var(--bg);
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        padding: 0.95rem 2.4rem;
+        font-family: var(--font-body);
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        text-decoration: none;
+        transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
+        box-shadow: 0 6px 24px rgba(201, 168, 124, 0.25);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .hero-cta:hover {
+        filter: brightness(1.06);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(201, 168, 124, 0.45);
+    }
+    .hero-cta:active {
+        transform: translateY(0) scale(0.98);
+        box-shadow: 0 4px 16px rgba(201, 168, 124, 0.3);
+    }
+    .hero-cta:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+    .hero-cta.ghost {
+        background: none;
+        color: var(--accent);
+        box-shadow: none;
+    }
+    .hero-auth { justify-content: center; margin-top: 0; }
+    .ink-toast {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2000;
+        background: var(--surface, #1b1e27);
+        border: 1px solid var(--accent, #c9a87c);
+        color: var(--accent, #c9a87c);
+        padding: 0.7rem 1.4rem;
+        border-radius: 999px;
+        font-size: 0.95rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+        animation: ink-toast-in 0.35s ease-out;
+    }
+    @keyframes ink-toast-in {
+        from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
     .hero-label {
         font-family: var(--font-body);
         font-size: 0.75rem;
@@ -355,105 +424,24 @@
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: var(--accent);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.6rem;
     }
 
-    .hero-name {
-        margin-bottom: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
 
-    .hero-first {
-        font-size: clamp(2.5rem, 6vw, 5rem);
-        font-weight: 300;
-        color: var(--text);
-        line-height: 1.1;
-    }
 
-    .hero-last {
-        font-size: clamp(3rem, 8vw, 7rem);
-        font-weight: 300;
-        font-style: italic;
-        color: var(--accent);
-        line-height: 1;
-    }
 
-    .hero-tagline {
-        font-size: clamp(1rem, 2vw, 1.25rem);
-        line-height: 1.7;
-        max-width: 600px;
-        margin: 0 auto;
-        color: var(--text-dim);
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        hyphens: none;
-        -webkit-hyphens: none;
-        text-wrap: pretty;
-    }
 
-    :lang(fr) .hero-tagline {
-        line-height: 1.65;
-    }
 
-    :lang(es) .hero-tagline {
-        line-height: 1.7;
-    }
 
-    .hero-scroll {
-        margin-top: 3rem;
-        display: flex;
-        justify-content: center;
-        text-decoration: none;
-        cursor: pointer;
-        padding: 2rem;
-        border-radius: 50%;
-        position: relative;
-        overflow: visible;
-        -webkit-tap-highlight-color: transparent;
-    }
 
-    .hero-scroll::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(201, 168, 124, 0.15);
-        transform: translate(-50%, -50%);
-        transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
-        opacity: 0;
-        pointer-events: none;
-    }
 
-    .hero-scroll:active::after {
-        width: 80px;
-        height: 80px;
-        opacity: 1;
-        transition: none;
-    }
 
-    .scroll-line {
-        width: 2px;
-        height: 72px;
-        background: linear-gradient(to bottom, var(--accent), transparent);
-        transform-origin: top;
-        animation: scrollLineDraw 1.2s ease-out forwards, scrollPulse 2s ease-in-out 1.2s infinite;
-        transform: scaleY(0);
-        transition: height 0.3s ease;
-    }
 
     @keyframes scrollLineDraw {
         from { transform: scaleY(0); }
         to { transform: scaleY(1); }
     }
 
-    .hero-scroll:hover .scroll-line {
-        height: 88px;
-    }
 
     @keyframes scrollPulse {
         0%, 100% { opacity: 0.3; transform: scaleY(1); }
@@ -480,21 +468,22 @@
     }
 
     .carousel-container {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+        position: relative;
         max-width: 650px;
         margin: 0 auto 1.5rem;
     }
 
     .carousel-viewport {
-        flex: 1;
-        min-height: 120px;
+        min-height: 170px;
+        margin: 0 3.75rem;
         display: flex;
         align-items: center;
         justify-content: center;
         position: relative;
-        overflow: hidden;
+    }
+
+    @media (max-width: 640px) {
+        .carousel-viewport { min-height: 220px; margin: 0 3rem; }
     }
 
     .carousel-slide {
@@ -539,6 +528,20 @@
     @keyframes slideFromLeft {
         from { opacity: 0; transform: translateX(-30px); }
         to { opacity: 1; transform: translateX(0); }
+    }
+
+    .carousel-arrow-left,
+    .carousel-arrow-right {
+        position: absolute;
+        top: 85px;
+        transform: translateY(-50%);
+        z-index: 2;
+    }
+    .carousel-arrow-left { left: 0; }
+    .carousel-arrow-right { right: 0; }
+    @media (max-width: 640px) {
+        .carousel-arrow-left,
+        .carousel-arrow-right { top: 110px; }
     }
 
     .carousel-arrow {
@@ -761,10 +764,6 @@
             animation: none !important;
             opacity: 1 !important;
             transform: none !important;
-        }
-        .scroll-line {
-            animation: none !important;
-            transform: scaleY(1) !important;
         }
     }
 </style>
