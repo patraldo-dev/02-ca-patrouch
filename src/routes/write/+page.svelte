@@ -902,7 +902,7 @@
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--accent);
-        background: rgba(201, 168, 124, 0.1);
+        background: rgba(168, 189, 179, 0.1);
         padding: 0.25rem 0.75rem;
         border-radius: 999px;
         margin-bottom: 1rem;
@@ -1465,7 +1465,7 @@
         gap: 0.5rem;
         width: 100%;
         padding: 0.6rem 0.75rem;
-        background: rgba(201, 168, 124, 0.06);
+        background: rgba(168, 189, 179, 0.06);
         border: 1px solid var(--border);
         border-radius: 8px;
         color: var(--text-dim);
@@ -1475,7 +1475,7 @@
     }
 
     .milestones-btn:hover {
-        background: rgba(201, 168, 124, 0.12);
+        background: rgba(168, 189, 179, 0.12);
         border-color: var(--accent);
         color: var(--text);
     }
@@ -1486,7 +1486,7 @@
         gap: 0.5rem;
         width: 100%;
         padding: 0.6rem 0.75rem;
-        background: rgba(201, 168, 124, 0.06);
+        background: rgba(168, 189, 179, 0.06);
         border: 1px solid var(--border);
         border-radius: 8px;
         color: var(--text-dim);
@@ -1497,7 +1497,7 @@
     }
 
     .sidebar-action-btn:hover {
-        background: rgba(201, 168, 124, 0.12);
+        background: rgba(168, 189, 179, 0.12);
         border-color: var(--accent);
         color: var(--text);
     }
@@ -1550,7 +1550,7 @@
     .timer-words { font-size: 0.8rem; color: var(--text-dim); white-space: nowrap; }
     .timer-stop { background: none; border: 1px solid rgba(248,113,113,0.3); color: #f87171; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer; font-family: var(--font-body); }
     .timer-stop:hover { border-color: #f87171; }
-    .timer-done { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(201,168,124,0.1); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 0.95rem; font-weight: 500; }
+    .timer-done { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(168,189,179,0.1); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 0.95rem; font-weight: 500; }
     .timer-dismiss { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 0.2rem 0.4rem; }
     .btn-timer { background: none; border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; font-family: var(--font-body); margin-bottom: 0.75rem; transition: all 0.2s; }
     .btn-timer:hover { border-color: var(--accent); color: var(--accent); }

@@ -368,7 +368,7 @@
   }
   tr:hover { background: rgba(255,255,255,0.02); }
   tr.inactive { opacity: 0.5; }
-  tr.edit-row { background: rgba(201, 168, 124, 0.05); }
+  tr.edit-row { background: rgba(168, 189, 179, 0.05); }
 
   .col-active { width: 50px; text-align: center; }
   .col-order { width: 60px; text-align: center; }

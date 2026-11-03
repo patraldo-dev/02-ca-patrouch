@@ -46,7 +46,7 @@
 
         const coords = result.trajectory.map((p) => [p.lat, p.lon]);
 
-        trajectoryLine = L.polyline(coords, { color: '#c9a87c', weight: 2, opacity: 0.6, dashArray: '6, 4' }).addTo(mapInstance);
+        trajectoryLine = L.polyline(coords, { color: '#a8bdb3', weight: 2, opacity: 0.6, dashArray: '6, 4' }).addTo(mapInstance);
 
         // Start marker
         L.circleMarker([result.launch.lat, result.launch.lon], {
@@ -174,7 +174,7 @@
     .travesia-hero h1 {
         font-family: 'Playfair Display', serif;
         font-size: 2.5rem;
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
         margin-bottom: 0.5rem;
     }
     .travesia-subtitle {
@@ -218,7 +218,7 @@
         min-height: 80px;
     }
     .btn-launch {
-        background: var(--accent, #c9a87c);
+        background: var(--accent, #a8bdb3);
         color: var(--bg, #09090b);
         border: none;
         border-radius: 8px;
@@ -252,7 +252,7 @@
         display: block;
         font-size: 1.5rem;
         font-weight: 700;
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
     }
     .stat-label {
         font-size: 0.8rem;

@@ -20,14 +20,14 @@
             icon: '🏴‍☠️🔭',
             title: 'Modo AR',
             desc: 'Gira para encontrar botellas en tu entorno',
-            accentColor: '#c9a87c',
+            accentColor: '#a8bdb3',
             accentRgb: '201,168,124',
             markerNear: '🏴‍☠️',
             markerRange: '🍾',
             markerFar: '🏴‍☠️',
             captureText: '¡Capturar!',
             emptyText: 'Gira para buscar botellas 🧭',
-            compassColor: '#c9a87c',
+            compassColor: '#a8bdb3',
             modalIcon: '🏴‍☠️',
             captureBtnBg: '#ef4444',
             captureBtnShadow: 'rgba(239,68,68,0.5)',
@@ -45,12 +45,12 @@
             markerFar: '🥂',
             captureText: '¡Abrir!',
             emptyText: 'Gira para buscar sorpresas 🎉',
-            compassColor: '#c9a87c',
+            compassColor: '#a8bdb3',
             modalIcon: '🎉',
             captureBtnBg: '#881337',
             captureBtnShadow: 'rgba(136,19,55,0.5)',
-            rangeStroke: '#c9a87c',
-            rangeFill: 'rgba(201,168,124,0.2)',
+            rangeStroke: '#a8bdb3',
+            rangeFill: 'rgba(168,189,179,0.2)',
         }
     };
 
@@ -989,7 +989,7 @@
     }
     .nick-card {
         background: #141417;
-        border: 1px solid rgba(201,168,124,0.4);
+        border: 1px solid rgba(168,189,179,0.4);
         border-radius: 16px;
         padding: 2rem 1.5rem;
         text-align: center;
@@ -997,7 +997,7 @@
         width: 90%;
     }
     .nick-title {
-        color: #c9a87c;
+        color: #a8bdb3;
         font-family: Playfair Display, serif;
         font-size: 1.3rem;
         margin: 0 0 1rem 0;
@@ -1005,7 +1005,7 @@
     .nick-input {
         width: 100%;
         padding: 0.6rem 0.8rem;
-        border: 2px solid rgba(201,168,124,0.3);
+        border: 2px solid rgba(168,189,179,0.3);
         border-radius: 8px;
         background: rgba(255,255,255,0.05);
         color: #fff;
@@ -1015,7 +1015,7 @@
         margin-bottom: 1rem;
         box-sizing: border-box;
     }
-    .nick-input:focus { border-color: #c9a87c; }
+    .nick-input:focus { border-color: #a8bdb3; }
     .nick-skip {
         background: none;
         border: none;
@@ -1031,14 +1031,14 @@
         max-width: 280px;
     }
     .rules-toggle summary {
-        color: #c9a87c;
+        color: #a8bdb3;
         font-size: 0.85rem;
         cursor: pointer;
         margin-bottom: 0.5rem;
     }
     .rules-card {
         background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(201,168,124,0.2);
+        border: 1px solid rgba(168,189,179,0.2);
         border-radius: 8px;
         padding: 0.75rem;
         font-size: 0.8rem;
@@ -1049,7 +1049,7 @@
     .ar-icon { font-size: 3rem; }
     .ar-title { font-family: Playfair Display, serif; font-size: 1.5rem; margin: 0; text-align: center; }
     .ar-desc { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 0; text-align: center; }
-    .ar-subtitle { color: #c9a87c; font-size: 1.1rem; margin: 0; text-align: center; font-weight: 600; }
+    .ar-subtitle { color: #a8bdb3; font-size: 1.1rem; margin: 0; text-align: center; font-weight: 600; }
     .ar-note { color: rgba(255,255,255,0.4); font-size: 0.75rem; margin: 0; }
     .ar-error-text { color: #fbbf24; font-size: 0.9rem; }
 
@@ -1154,7 +1154,7 @@
 
     .info-nearest {
         background: rgba(0,0,0,0.9);
-        border: 1.5px solid rgba(201,168,124,0.5);
+        border: 1.5px solid rgba(168,189,179,0.5);
     }
 
     .ar-root.event .info-nearest {
@@ -1210,7 +1210,7 @@
         pointer-events: none;
     }
     .pause-badge {
-        color: #c9a87c;
+        color: #a8bdb3;
         font-family: Playfair Display, serif;
         font-size: 1.3rem;
         text-align: center;
@@ -1333,7 +1333,7 @@
 
     .capture-modal-card {
         background: var(--surface, #141417);
-        border: 1px solid rgba(201,168,124,0.3);
+        border: 1px solid rgba(168,189,179,0.3);
         border-radius: 12px;
         padding: 1.5rem;
         max-width: 340px;
@@ -1349,11 +1349,11 @@
         font-family: Playfair Display, serif;
         font-size: 1.2rem;
         margin: 0 0 1rem 0;
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
     }
 
     .capture-modal-card.event h2 {
-        color: #c9a87c;
+        color: #a8bdb3;
     }
 
     .capture-content {
@@ -1370,14 +1370,14 @@
     }
 
     .capture-reward {
-        background: rgba(201,168,124,0.1);
-        border: 1px solid rgba(201,168,124,0.3);
+        background: rgba(168,189,179,0.1);
+        border: 1px solid rgba(168,189,179,0.3);
         border-radius: 8px;
         padding: 0.6rem;
         text-align: center;
         font-weight: 600;
         margin-bottom: 1rem;
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
     }
 
     .capture-modal-card.trap { border-color: rgba(239,68,68,0.6) !important; }
@@ -1397,15 +1397,15 @@
     .vote-btn:active { transform: scale(0.95); }
     .trap-penalty { color: #f87171; font-size: 1.2rem; font-weight: 700; text-align: center; margin: 0.5rem 0; }
     .event-message {
-        background: rgba(201,168,124,0.1);
-        border: 1px solid rgba(201,168,124,0.3);
+        background: rgba(168,189,179,0.1);
+        border: 1px solid rgba(168,189,179,0.3);
         border-radius: 8px;
         padding: 0.8rem;
         text-align: center;
         font-weight: 700;
         font-size: 1.1rem;
         margin-bottom: 1rem;
-        color: #c9a87c;
+        color: #a8bdb3;
     }
 
     .capture-close-btn {

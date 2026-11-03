@@ -636,7 +636,7 @@
         font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
         padding: 0.1rem 0.4rem; border-radius: 999px;
     }
-    .primary-badge { background: rgba(201, 168, 124, 0.15); color: var(--accent); }
+    .primary-badge { background: rgba(168, 189, 179, 0.15); color: var(--accent); }
     .active-badge { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
     .profile-card-bio { color: var(--text-dim); font-size: 0.85rem; margin: 0 0 0.75rem 0; }
     .profile-card-actions { display: flex; gap: 0.75rem; }
@@ -751,7 +751,7 @@
         transition: all 0.2s;
     }
     .tab-btn:hover { border-color: var(--accent); color: var(--text); }
-    .tab-btn.active { background: rgba(201, 168, 124, 0.1); border-color: var(--accent); color: var(--accent); }
+    .tab-btn.active { background: rgba(168, 189, 179, 0.1); border-color: var(--accent); color: var(--accent); }
     .toast {
         position: fixed;
         bottom: 2rem;

@@ -150,7 +150,7 @@
 			? {
 					...data,
 					sceneConfigs: { ...data.sceneConfigs, [materializedId]: materializedConfig },
-					portals: [...(data.portals || []), { id: materializedId, name_es: 'Tu reino', name_en: 'Your realm', icon: '✨', color_primary: '#c9a87c' }],
+					portals: [...(data.portals || []), { id: materializedId, name_es: 'Tu reino', name_en: 'Your realm', icon: '✨', color_primary: '#a8bdb3' }],
 				}
 			: data
 	);
@@ -191,7 +191,7 @@
 					<div class="summary-item">
 						<div class="summary-label">{$t('portals.color') || 'Color'}</div>
 						<div class="summary-value">
-							<span class="color-swatch" style="background: {pal?.primary || '#c9a87c'}"></span>
+							<span class="color-swatch" style="background: {pal?.primary || '#a8bdb3'}"></span>
 							<span class="color-swatch" style="background: {pal?.secondary || '#4fc3f7'}"></span>
 							<span class="color-swatch" style="background: {pal?.accent || '#ce93d8'}"></span>
 						</div>
@@ -299,7 +299,7 @@
 		max-width: 580px;
 		width: 100%;
 		background: rgba(12, 8, 20, 0.85);
-		border: 1px solid rgba(201, 168, 124, 0.2);
+		border: 1px solid rgba(168, 189, 179, 0.2);
 		border-radius: 16px;
 		padding: 2.5rem;
 		backdrop-filter: blur(12px);
@@ -311,7 +311,7 @@
 	.write-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
 	.write-header h1 {
 		font-family: Georgia, serif; font-size: 1.8rem; font-weight: 300;
-		color: #d4b98f; margin: 0 0 0.5rem;
+		color: #a8bdb3; margin: 0 0 0.5rem;
 	}
 	.write-subtitle {
 		font-family: Georgia, serif; font-size: 0.95rem;
@@ -325,17 +325,17 @@
 		font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.7;
 		color: #e5e5e5; resize: vertical; transition: border-color 0.2s;
 	}
-	.write-textarea:focus { outline: none; border-color: rgba(201, 168, 124, 0.5); }
+	.write-textarea:focus { outline: none; border-color: rgba(168, 189, 179, 0.5); }
 	.write-error { color: #ef4444; font-size: 0.85rem; margin: 0.75rem 0; font-family: Georgia, serif; }
 	.write-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
 	.materialize-btn {
 		padding: 0.9rem 2rem;
-		background: linear-gradient(135deg, #c9a87c, #d4b98f);
+		background: linear-gradient(135deg, #a8bdb3, #a8bdb3);
 		color: #05030a; border: none; border-radius: 999px;
 		font-family: Georgia, serif; font-size: 1.1rem; font-weight: 600;
 		cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
 	}
-	.materialize-btn:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(201, 168, 124, 0.3); }
+	.materialize-btn:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(168, 189, 179, 0.3); }
 	.skip-btn {
 		background: none; border: none; color: rgba(255, 255, 255, 0.4);
 		font-family: Georgia, serif; font-size: 0.9rem; cursor: pointer;
@@ -347,13 +347,13 @@
 	.loading-state { text-align: center; padding: 2rem 0; }
 	.orbit-loader {
 		width: 48px; height: 48px; margin: 0 auto 1.5rem;
-		border: 2px solid rgba(201, 168, 124, 0.2);
-		border-top-color: #d4b98f; border-radius: 50%;
+		border: 2px solid rgba(168, 189, 179, 0.2);
+		border-top-color: #a8bdb3; border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
 	@keyframes spin { to { transform: rotate(360deg); } }
 	.loading-text {
-		font-family: Georgia, serif; font-size: 1.1rem; color: #d4b98f; margin: 0 0 0.25rem;
+		font-family: Georgia, serif; font-size: 1.1rem; color: #a8bdb3; margin: 0 0 0.25rem;
 	}
 	.loading-sub {
 		font-family: Georgia, serif; font-size: 0.85rem;
@@ -365,7 +365,7 @@
 	.summary-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
 	.summary-header h1 {
 		font-family: Georgia, serif; font-size: 1.6rem; font-weight: 300;
-		color: #d4b98f; margin: 0 0 0.25rem;
+		color: #a8bdb3; margin: 0 0 0.25rem;
 	}
 	.summary-subtitle {
 		font-family: Georgia, serif; font-size: 0.9rem;
@@ -410,12 +410,12 @@
 	.summary-actions { display: flex; flex-direction: column; gap: 0.75rem; }
 	.enter-btn {
 		padding: 0.9rem 2rem;
-		background: linear-gradient(135deg, #c9a87c, #d4b98f);
+		background: linear-gradient(135deg, #a8bdb3, #a8bdb3);
 		color: #05030a; border: none; border-radius: 999px;
 		font-family: Georgia, serif; font-size: 1.05rem; font-weight: 600;
 		cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
 	}
-	.enter-btn:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(201, 168, 124, 0.3); }
+	.enter-btn:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(168, 189, 179, 0.3); }
 	.rewrite-btn {
 		background: none; border: none; color: rgba(255, 255, 255, 0.4);
 		font-family: Georgia, serif; font-size: 0.9rem; cursor: pointer;
@@ -431,7 +431,7 @@
 		font-family: Georgia, serif; font-size: 0.9rem; cursor: pointer;
 		padding: 0.6rem 1.2rem; transition: all 0.2s; width: 100%;
 	}
-	.save-btn:hover:not(:disabled) { border-color: rgba(201,168,124,0.6); color: #c9a87c; }
+	.save-btn:hover:not(:disabled) { border-color: rgba(168,189,179,0.6); color: #a8bdb3; }
 	.save-btn:disabled { opacity: 0.6; cursor: default; }
 	.save-hint { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 0.5rem; text-align: center; }
 	.save-success {
@@ -445,7 +445,7 @@
 		font-size: 0.8rem; cursor: pointer;
 	}
 	.copy-url-btn:hover { background: rgba(255,255,255,0.15); }
-	.my-realms-link { color: #c9a87c; font-size: 0.85rem; text-decoration: underline; }
+	.my-realms-link { color: #a8bdb3; font-size: 0.85rem; text-decoration: underline; }
 
 	@media (max-width: 600px) {
 		.write-card { padding: 1.5rem; }

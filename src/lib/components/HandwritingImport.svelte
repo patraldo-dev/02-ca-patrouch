@@ -177,18 +177,18 @@
         color: var(--text-dim, #aaa); padding: 0.45rem 0.7rem; font-size: 0.8rem;
         font-family: inherit; cursor: pointer; transition: all 0.2s;
     }
-    .hw-btn:hover:not(:disabled) { border-color: var(--accent, #c9a87c); color: var(--accent, #c9a87c); }
+    .hw-btn:hover:not(:disabled) { border-color: var(--accent, #a8bdb3); color: var(--accent, #a8bdb3); }
     .hw-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-    .hw-btn.primary { background: var(--accent, #c9a87c); border-color: var(--accent, #c9a87c); color: #17130a; font-weight: 600; }
+    .hw-btn.primary { background: var(--accent, #a8bdb3); border-color: var(--accent, #a8bdb3); color: #17130a; font-weight: 600; }
     .hw-btn.primary:hover:not(:disabled) { color: #17130a; filter: brightness(1.05); }
     .hw-spinner {
         width: 0.75rem; height: 0.75rem; border-radius: 50%;
-        border: 2px solid var(--border, #3a3f4d); border-top-color: var(--accent, #c9a87c);
+        border: 2px solid var(--border, #3a3f4d); border-top-color: var(--accent, #a8bdb3);
         animation: hw-spin 0.8s linear infinite;
     }
     @keyframes hw-spin { to { transform: rotate(360deg); } }
     .hw-attach { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--text-dim, #999); cursor: pointer; }
-    .hw-attach input { accent-color: var(--accent, #c9a87c); }
+    .hw-attach input { accent-color: var(--accent, #a8bdb3); }
     .hw-error { width: 100%; color: #e08d6d; font-size: 0.78rem; }
     .hw-tip { width: 100%; color: var(--text-muted, #777); font-size: 0.72rem; }
     .hw-review {
@@ -210,7 +210,7 @@
     }
     .hw-title-input { font-size: 1rem; }
     .hw-text-input { line-height: 1.6; resize: vertical; min-height: 9rem; }
-    .hw-title-input:focus, .hw-text-input:focus { outline: none; border-color: var(--accent, #c9a87c); }
+    .hw-title-input:focus, .hw-text-input:focus { outline: none; border-color: var(--accent, #a8bdb3); }
     .hw-review-actions { display: flex; gap: 0.6rem; justify-content: flex-end; flex-wrap: wrap; }
     .hw-pages { font-size: 0.75rem; color: var(--text-muted, #888); align-self: center; margin-right: auto; }
 </style>

@@ -72,7 +72,7 @@
 	{:else}
 		<div class="realms-grid">
 			{#each realms as realm (realm.id)}
-				<div class="realm-card" style="--realm-color: {realm.color_primary || '#c9a87c'}">
+				<div class="realm-card" style="--realm-color: {realm.color_primary || '#a8bdb3'}">
 					<div class="card-header">
 						<span class="realm-icon">✨</span>
 						<h3>{realm.name_es || 'Untitled'}</h3>
@@ -114,7 +114,7 @@
 	.header { text-align: center; margin-bottom: 3rem; }
 	.header h1 { font-size: 2rem; color: var(--text, #f0f0f5); margin-bottom: 0.5rem; }
 	.subtitle { color: var(--text-dim, #b8b8c5); font-size: 0.95rem; margin-bottom: 1rem; }
-	.create-link { color: var(--accent, #d4b98f); font-size: 0.9rem; text-decoration: underline; }
+	.create-link { color: var(--accent, #a8bdb3); font-size: 0.9rem; text-decoration: underline; }
 
 	.empty {
 		text-align: center;
@@ -125,7 +125,7 @@
 		display: inline-block;
 		margin-top: 1rem;
 		padding: 0.75rem 1.5rem;
-		background: var(--accent, #d4b98f);
+		background: var(--accent, #a8bdb3);
 		color: var(--bg, #0a0a0f);
 		border-radius: 8px;
 		text-decoration: none;

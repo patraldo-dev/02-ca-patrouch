@@ -512,7 +512,7 @@
 				{#each data?.portals || [] as portal (portal.id)}
 					<li>
 						<button class="realm-item" class:active={portal.id === currentRealm} onclick={() => navigateToRealm(portal.id)}>
-							<span class="realm-bullet" style="background: {portal.color_primary || '#c9a87c'}"></span>
+							<span class="realm-bullet" style="background: {portal.color_primary || '#a8bdb3'}"></span>
 							<span class="realm-icon">{portal.icon || '🔮'}</span>
 							<span class="realm-name">{realmName(portal)}</span>
 						</button>
@@ -619,9 +619,9 @@
 		width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
 		display: flex; align-items: center; justify-content: center;
 		overflow: hidden;
-		border: 1.5px solid #d4b98f;  /* editorial gold ring */
+		border: 1.5px solid #a8bdb3;  /* editorial gold ring */
 		font-family: Georgia, serif; font-size: 14px; font-weight: 600;
-		color: #d4b98f; background: rgba(212, 185, 143, 0.1);
+		color: #a8bdb3; background: rgba(168, 189, 179, 0.1);
 	}
 	.drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
 	.drawer-avatar.anon { opacity: 0.5; }
@@ -682,10 +682,10 @@
 	.roster-name {
 		background: none; border: none; cursor: pointer;
 		font-family: Georgia, serif; font-size: 11px;
-		color: rgba(212, 185, 143, 0.8);  /* gold */
+		color: rgba(168, 189, 179, 0.8);  /* gold */
 		padding: 0; text-decoration: underline; text-underline-offset: 2px;
 	}
-	.roster-name:hover { color: #d4b98f; }
+	.roster-name:hover { color: #a8bdb3; }
 
 	/* Floating realm menu — bottom-right (bottom-left is the thumbstick on touch).
 	   Collapsible so it doesn't clutter the scene. */

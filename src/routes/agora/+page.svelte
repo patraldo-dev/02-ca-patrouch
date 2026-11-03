@@ -341,8 +341,8 @@
         gap: 1rem;
         padding: 0.6rem 1.5rem;
         margin-bottom: 1.5rem;
-        background: rgba(201, 168, 124, 0.06);
-        border: 1px solid rgba(201, 168, 124, 0.15);
+        background: rgba(168, 189, 179, 0.06);
+        border: 1px solid rgba(168, 189, 179, 0.15);
         border-radius: 999px;
     }
     .game-banner-text {
@@ -371,7 +371,7 @@
     .filter-tag:hover, .filter-tag.active {
         color: var(--accent);
         border-color: var(--accent);
-        background: rgba(201, 168, 124, 0.08);
+        background: rgba(168, 189, 179, 0.08);
     }
 
     .writings-grid {
@@ -400,7 +400,7 @@
     .writing-card:hover {
         border-color: var(--accent);
         translate: 0 -4px;
-        box-shadow: 0 16px 36px rgba(201, 168, 124, 0.16);
+        box-shadow: 0 16px 36px rgba(168, 189, 179, 0.16);
     }
 
     .writing-card-header {
@@ -466,7 +466,7 @@
     }
     .reveal-human {
         color: var(--accent);
-        background: rgba(201, 168, 124, 0.15);
+        background: rgba(168, 189, 179, 0.15);
     }
     .reveal-spot.revealed .reveal-hint { opacity: 0; }
     .reveal-spot.revealed { border-color: transparent; background: none; width: auto; padding: 0; }
@@ -628,7 +628,7 @@
         transition: background 0.2s;
     }
     .game-leaderboard-btn:hover {
-        background: rgba(201, 168, 124, 0.15);
+        background: rgba(168, 189, 179, 0.15);
     }
 
     .modal-wide {

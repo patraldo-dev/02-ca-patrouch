@@ -419,7 +419,7 @@ import { avatarVariant } from '#lib/utils.js';
         </p>
         {#if passportStatus?.linked}
             <div style="display:flex;gap:1rem;align-items:baseline;margin-bottom:.6rem;">
-                <strong style="color:#c9a87c;font-size:1.25rem;">{passportStatus.passport.rank.name}</strong>
+                <strong style="color:#a8bdb3;font-size:1.25rem;">{passportStatus.passport.rank.name}</strong>
                 <span>{passportStatus.passport.xp} XP</span>
                 {#if passportStatus.passport.rank.next}
                     <span style="opacity:.6;font-size:.85rem;">next: {passportStatus.passport.rank.next.name} at {passportStatus.passport.rank.next.at} XP</span>
@@ -442,7 +442,7 @@ import { avatarVariant } from '#lib/utils.js';
                     bind:value={passportCode}
                     placeholder="e.g. 7T9X95NE"
                     maxlength="8"
-                    style="flex:1;text-transform:uppercase;letter-spacing:.25em;padding:.5rem .8rem;border-radius:8px;border:1px solid rgba(201,168,124,.5);background:transparent;color:inherit;"
+                    style="flex:1;text-transform:uppercase;letter-spacing:.25em;padding:.5rem .8rem;border-radius:8px;border:1px solid rgba(168,189,179,.5);background:transparent;color:inherit;"
                 />
                 <button class="btn" onclick={linkPassport} disabled={passportBusy || passportCode.trim().length < 6}>
                     {passportBusy ? 'Linking…' : 'Link'}
@@ -668,7 +668,7 @@ import { avatarVariant } from '#lib/utils.js';
         white-space: nowrap;
     }
     .tab-btn:hover { border-color: var(--accent); color: var(--text); }
-    .tab-btn.active { background: rgba(201, 168, 124, 0.15); border-color: var(--accent); color: var(--accent); }
+    .tab-btn.active { background: rgba(168, 189, 179, 0.15); border-color: var(--accent); color: var(--accent); }
 
     /* Cards */
     .section-card {

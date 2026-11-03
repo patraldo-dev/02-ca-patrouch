@@ -1,0 +1,15 @@
+-- Rebuild every table whose FKs still referenced the legacy "users_old"
+-- (prod: 19 tables, staging: 12). better-auth users live in `users`, so
+-- every INSERT with a modern user id failed SQLITE_CONSTRAINT_FOREIGNKEY
+-- — the daily-prompt "pass" silently 500'd on prod from the users
+-- migration (late June 2026) until 2026-11-03. Comments were dead since
+-- April for the same reason.
+--
+-- Applied directly to both live DBs on 2026-11-03 (SQLite cannot ALTER a
+-- foreign key): each table copy-rebuilt with REFERENCES "users_old"(id)
+-- rewritten to REFERENCES users(id), auto-dropped indexes recreated
+-- verbatim, PRAGMA defer_foreign_keys around the whole run. Orphan check
+-- (0 rows referencing missing users) passed beforehand; 3,278 prod rows
+-- carried over. Staging additionally needed a temporary users_old stub
+-- (its FKs dangled against a table that never existed there). This file
+-- documents the operation — do not re-run blindly.

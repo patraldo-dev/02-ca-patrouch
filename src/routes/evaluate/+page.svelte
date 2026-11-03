@@ -514,7 +514,7 @@
     .history-locale {
         font-size: 0.7rem;
         padding: 0.15rem 0.4rem;
-        background: var(--accent-bg, rgba(201,168,124,0.15));
+        background: var(--accent-bg, rgba(168,189,179,0.15));
         color: var(--accent);
         border-radius: 4px;
         font-weight: 600;
@@ -620,7 +620,7 @@
     .custom-badge {
         margin-top: 0.75rem;
         padding: 0.4rem 0.75rem;
-        background: rgba(201,168,124,0.1);
+        background: rgba(168,189,179,0.1);
         color: var(--accent);
         border-radius: 6px;
         font-size: 0.8rem;

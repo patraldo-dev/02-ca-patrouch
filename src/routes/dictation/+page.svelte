@@ -735,7 +735,7 @@
     .subtitle { color: var(--muted, #999); font-size: 0.92rem; margin: 0 0 1.2rem; }
     .source-card { background: var(--surface, #1b1e27); border: 1px solid var(--border, #333); border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.2rem; }
     .source-meta { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 0.4rem; }
-    .chip { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent, #c9a87c); border: 1px solid var(--accent, #c9a87c); border-radius: 999px; padding: 0.15rem 0.6rem; }
+    .chip { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent, #a8bdb3); border: 1px solid var(--accent, #a8bdb3); border-radius: 999px; padding: 0.15rem 0.6rem; }
     .date { color: var(--muted, #999); font-size: 0.8rem; }
     .source-card h2 { font-size: 1.05rem; font-weight: 500; margin: 0 0 0.3rem; }
     .note { color: var(--muted, #999); font-size: 0.8rem; margin: 0; }
@@ -746,14 +746,14 @@
     .protocol { color: var(--muted, #aaa); font-size: 0.88rem; line-height: 1.7; padding-left: 1.2rem; margin: 0; }
     .row { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; }
     .btn { background: none; border: 1px solid var(--border, #3a3f4d); color: inherit; border-radius: 8px; padding: 0.55rem 1rem; font-size: 0.88rem; cursor: pointer; font-family: inherit; }
-    .btn:hover:not(:disabled) { border-color: var(--accent, #c9a87c); color: var(--accent, #c9a87c); }
+    .btn:hover:not(:disabled) { border-color: var(--accent, #a8bdb3); color: var(--accent, #a8bdb3); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn.primary { background: var(--accent, #c9a87c); border-color: var(--accent, #c9a87c); color: #17130a; font-weight: 600; }
+    .btn.primary { background: var(--accent, #a8bdb3); border-color: var(--accent, #a8bdb3); color: #17130a; font-weight: 600; }
     .btn.primary:hover:not(:disabled) { color: #17130a; filter: brightness(1.05); }
     .btn.small { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
     .mode-toggle { display: flex; gap: 0.6rem; }
     .mode-btn { flex: 1; background: rgba(0,0,0,0.25); border: 1px solid var(--border, #3a3f4d); border-radius: 8px; color: var(--muted, #999); padding: 0.55rem 0.8rem; font-size: 0.88rem; cursor: pointer; font-family: inherit; }
-    .mode-btn.active { border-color: var(--accent, #c9a87c); color: var(--accent, #c9a87c); background: rgba(201,168,124,0.08); }
+    .mode-btn.active { border-color: var(--accent, #a8bdb3); color: var(--accent, #a8bdb3); background: rgba(168,189,179,0.08); }
     .paper-hint { color: var(--muted, #aaa); font-size: 0.88rem; margin: 0; }
     .ocr-error { color: #e08d6d; font-size: 0.85rem; margin: 0; }
     .toggle.keep { margin-left: auto; }
@@ -761,14 +761,14 @@
     .phrase-n { flex: 1; text-align: center; color: var(--muted, #999); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
     .controls { display: flex; gap: 1.4rem; flex-wrap: wrap; align-items: center; color: var(--muted, #aaa); font-size: 0.82rem; }
     .controls label { display: flex; align-items: center; gap: 0.45rem; }
-    .toggle input { accent-color: var(--accent, #c9a87c); }
+    .toggle input { accent-color: var(--accent, #a8bdb3); }
     textarea { width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--border, #3a3f4d); border-radius: 10px; color: inherit; font-family: var(--font-body, inherit); font-size: 1.02rem; line-height: 1.6; padding: 0.9rem 1rem; resize: vertical; box-sizing: border-box; }
-    textarea:focus { outline: none; border-color: var(--accent, #c9a87c); }
+    textarea:focus { outline: none; border-color: var(--accent, #a8bdb3); }
     .review .hint { color: var(--muted, #aaa); font-size: 0.85rem; margin: 0; }
     .review h3 { margin: 0; font-size: 1rem; }
     .paper-preview { width: 100%; border-radius: 10px; border: 1px solid var(--border, #3a3f4d); }
     .score-row { display: flex; align-items: baseline; gap: 1.4rem; flex-wrap: wrap; }
-    .score.big { font-size: 2.2rem; font-weight: 700; color: var(--accent, #c9a87c); }
+    .score.big { font-size: 2.2rem; font-weight: 700; color: var(--accent, #a8bdb3); }
     .stat { color: var(--muted, #aaa); font-size: 0.9rem; }
     .saved { color: #8fc0ab; font-size: 0.85rem; }
     .corrected h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted, #999); margin: 0.4rem 0 0.3rem; }
@@ -788,14 +788,14 @@
     .progress-card h4 { margin: 0.8rem 0 0.3rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted, #999); }
     .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.7rem; }
     .scard { background: rgba(0,0,0,0.25); border: 1px solid var(--border, #333); border-radius: 10px; padding: 0.7rem 0.8rem; display: flex; flex-direction: column; gap: 0.15rem; }
-    .sc-value { font-size: 1.3rem; font-weight: 700; color: var(--accent, #c9a87c); font-variant-numeric: tabular-nums; }
+    .sc-value { font-size: 1.3rem; font-weight: 700; color: var(--accent, #a8bdb3); font-variant-numeric: tabular-nums; }
     .sc-label { color: var(--muted, #999); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .chart svg { width: 100%; height: auto; }
     .chart .grid { stroke: var(--border, #333); stroke-width: 1; }
     .chart .axis { fill: var(--muted, #777); font-size: 10px; }
-    .chart .trend { fill: none; stroke: var(--accent, #c9a87c); stroke-width: 2; stroke-linejoin: round; }
-    .chart .dot { fill: var(--bg, #14171f); stroke: var(--accent, #c9a87c); stroke-width: 2; }
-    .chart .dot.hand { fill: var(--accent, #c9a87c); }
+    .chart .trend { fill: none; stroke: var(--accent, #a8bdb3); stroke-width: 2; stroke-linejoin: round; }
+    .chart .dot { fill: var(--bg, #14171f); stroke: var(--accent, #a8bdb3); stroke-width: 2; }
+    .chart .dot.hand { fill: var(--accent, #a8bdb3); }
     .chart-title { text-align: center; color: var(--muted, #999); font-size: 0.78rem; margin: 0.3rem 0 0; }
     .history { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
     .history li { display: flex; align-items: center; gap: 0.8rem; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border, #2a2e39); font-size: 0.85rem; }

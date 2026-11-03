@@ -436,7 +436,7 @@ async function birthPortal(action, { db, ai, cfToken, landscape, unmatched }) {
       p.icon || "✦",
       p.color_primary || "#895aff",
       p.color_bg || "rgba(20,10,40,0.9)",
-      p.color_text || "#c9a87c",
+      p.color_text || "#a8bdb3",
       envType,
       p.narrator_tone || "neutral",
       JSON.stringify(p.narrator_vocabulary || []),

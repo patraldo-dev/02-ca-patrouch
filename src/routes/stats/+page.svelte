@@ -85,7 +85,7 @@
         font-family: var(--font-heading);
         font-size: 3rem;
         font-weight: 700;
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
         line-height: 1;
     }
     .stat-label {

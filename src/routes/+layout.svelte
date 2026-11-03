@@ -628,7 +628,7 @@
     }
 
     .logo:hover .logo-name {
-        color: var(--accent-hover, #d4b98f);
+        color: var(--accent-hover, #a8bdb3);
     }
 
     .desktop-nav {
@@ -765,7 +765,7 @@
         padding: 0.6rem 0.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: rgba(201,168,124,0.03);
+        background: rgba(168,189,179,0.03);
     }
     .mobile-taller-teaser { opacity: 0.8 !important; font-size: 1rem; font-weight: 600; }
     .mobile-taller-teaser small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.6; }

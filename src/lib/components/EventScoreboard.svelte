@@ -67,7 +67,7 @@
 <style>
     .scoreboard {
         background: var(--surface, #141417);
-        border: 1px solid rgba(201, 168, 124, 0.3);
+        border: 1px solid rgba(168, 189, 179, 0.3);
         border-radius: 12px;
         padding: 1rem;
         max-width: 400px;
@@ -86,8 +86,8 @@
         font-size: 1.1rem;
     }
     .online-badge {
-        background: rgba(201, 168, 124, 0.15);
-        color: #c9a87c;
+        background: rgba(168, 189, 179, 0.15);
+        color: #a8bdb3;
         padding: 2px 8px;
         border-radius: 12px;
         font-size: 0.8rem;
@@ -111,8 +111,8 @@
         background: rgba(255,255,255,0.03);
     }
     .score-row.first {
-        background: rgba(201, 168, 124, 0.1);
-        border: 1px solid rgba(201, 168, 124, 0.3);
+        background: rgba(168, 189, 179, 0.1);
+        border: 1px solid rgba(168, 189, 179, 0.3);
     }
     .rank {
         font-size: 1.2rem;
@@ -125,7 +125,7 @@
         font-size: 0.95rem;
     }
     .caps {
-        color: #c9a87c;
+        color: #a8bdb3;
         font-weight: 600;
         font-size: 0.9rem;
     }

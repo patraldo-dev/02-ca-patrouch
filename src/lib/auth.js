@@ -168,7 +168,7 @@ export function createAuth(env) {
             <h2 style="font-size:1.2rem;color:#1a1a1a;">${t.title}</h2>
             <p style="color:#666;font-size:0.95rem;">${t.body}</p>
             <div style="text-align:center;margin:2rem 0;">
-              <a href="${resetUrl}" style="display:inline-block;padding:12px 32px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${t.btn}</a>
+              <a href="${resetUrl}" style="display:inline-block;padding:12px 32px;background:#a8bdb3;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${t.btn}</a>
             </div>
             <p style="color:#999;font-size:0.75rem;text-align:center;">${t.footer}</p>
           </div>

@@ -152,7 +152,7 @@
     
     .review-card:hover {
         transform: translateY(-2px);
-        border-color: rgba(201, 168, 124, 0.3);
+        border-color: rgba(168, 189, 179, 0.3);
     }
     
     .review-header {

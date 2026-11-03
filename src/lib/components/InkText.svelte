@@ -37,14 +37,22 @@
 </script>
 
 <span class="ink-text" class:go aria-label={text}>
-    {#each groups as g, wi}
-        <span class="word" aria-hidden="true">
-            {#each Array.from(g.word) as ch, i}
-                <span class="lt" style="--i: {g.offset + i}">{ch}</span>
-            {/each}
-        </span>
-        {#if wi < groups.length - 1}{' '}{/if}
-    {/each}
+    <!-- {#key text}: a locale switch changes the string, but Svelte
+         reconciles the letter spans BY INDEX — surviving spans keep
+         their finished animations while appended ones animate fresh,
+         producing stray late letters ("Playful"'s second L, the tail
+         of "Écriture"). Keying on the text rebuilds every letter so
+         the whole line re-inks as one cascade. -->
+    {#key text}
+        {#each groups as g, wi}
+            <span class="word" aria-hidden="true">
+                {#each Array.from(g.word) as ch, i}
+                    <span class="lt" style="--i: {g.offset + i}">{ch}</span>
+                {/each}
+            </span>
+            {#if wi < groups.length - 1}{' '}{/if}
+        {/each}
+    {/key}
 </span>
 
 <style>

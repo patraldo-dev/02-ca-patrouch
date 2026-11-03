@@ -164,11 +164,11 @@
     transition: all 0.2s;
     font-family: inherit;
   }
-  .theme-btn:hover { border-color: #c9a87c; }
+  .theme-btn:hover { border-color: #a8bdb3; }
   .theme-btn.active {
-    border-color: #c9a87c;
+    border-color: #a8bdb3;
     background: #fdf8f0;
-    box-shadow: 0 2px 8px rgba(201, 168, 124, 0.3);
+    box-shadow: 0 2px 8px rgba(168, 189, 179, 0.3);
   }
   .theme-icon { font-size: 1.8rem; }
   .theme-name { font-weight: 600; font-size: 0.85rem; }
@@ -213,7 +213,7 @@
     font-family: inherit;
   }
   .detect-btn.suggested {
-    border-color: #c9a87c;
+    border-color: #a8bdb3;
     background: #fdf8f0;
     font-weight: 600;
   }
@@ -228,7 +228,7 @@
   .spinner {
     width: 24px; height: 24px;
     border: 2px solid #e0e0e0;
-    border-top-color: #c9a87c;
+    border-top-color: #a8bdb3;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto 0.5rem;

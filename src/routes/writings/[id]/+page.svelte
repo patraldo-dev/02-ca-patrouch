@@ -374,11 +374,11 @@
 
 <style>
     .project-crumb { margin: 0 0 0.4rem; font-size: 0.82rem; color: var(--muted, #999); }
-    .project-crumb a { color: var(--accent, #c9a87c); text-decoration: none; }
+    .project-crumb a { color: var(--accent, #a8bdb3); text-decoration: none; }
     .project-crumb a:hover { text-decoration: underline; }
     .project-nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin: 1.6rem 0 0; }
     .pn { color: var(--text-dim, #aaa); text-decoration: none; font-size: 0.88rem; border: 1px solid var(--border, #2a2e39); border-radius: 8px; padding: 0.45rem 0.9rem; }
-    .pn:hover { border-color: var(--accent, #c9a87c); color: var(--accent, #c9a87c); }
+    .pn:hover { border-color: var(--accent, #a8bdb3); color: var(--accent, #a8bdb3); }
     .pn.toc { font-size: 0.95rem; }
     .manuscript { margin: 2rem 0 1rem; text-align: center; }
     .manuscript img {
@@ -447,11 +447,11 @@
     .meta-author.mystery { color: var(--text-muted); font-style: italic; }
     .ai-badge {
         font-size: 0.72rem;
-        background: linear-gradient(135deg, rgba(201,168,124,0.15), rgba(201,168,124,0.05));
+        background: linear-gradient(135deg, rgba(168,189,179,0.15), rgba(168,189,179,0.05));
         color: var(--accent);
         padding: 0.15rem 0.5rem;
         border-radius: 999px;
-        border: 1px solid rgba(201,168,124,0.2);
+        border: 1px solid rgba(168,189,179,0.2);
         font-style: italic;
     }
     .reveal-spot-view {
@@ -514,7 +514,7 @@
     .prompt-ref {
         margin-top: 1rem;
         padding: 0.75rem 1rem;
-        background: rgba(201, 168, 124, 0.08);
+        background: rgba(168, 189, 179, 0.08);
         border-left: 2px solid var(--accent);
         border-radius: 0 6px 6px 0;
     }
@@ -582,8 +582,8 @@
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        background: rgba(201, 168, 124, 0.1);
-        border: 1px solid rgba(201, 168, 124, 0.3);
+        background: rgba(168, 189, 179, 0.1);
+        border: 1px solid rgba(168, 189, 179, 0.3);
         border-radius: var(--radius);
         padding: 0.5rem 1rem;
         color: var(--accent);
@@ -596,7 +596,7 @@
     }
 
     .btn-share:hover {
-        background: rgba(201, 168, 124, 0.2);
+        background: rgba(168, 189, 179, 0.2);
         border-color: var(--accent);
     }
 
@@ -674,9 +674,9 @@
         border-radius: 8px;
         font-size: 0.85rem;
         z-index: 1000;
-        background: rgba(201, 168, 124, 0.15);
+        background: rgba(168, 189, 179, 0.15);
         color: var(--accent);
-        border: 1px solid rgba(201, 168, 124, 0.3);
+        border: 1px solid rgba(168, 189, 179, 0.3);
         backdrop-filter: blur(10px);
         animation: slideUp 0.3s ease;
     }

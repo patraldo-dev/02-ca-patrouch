@@ -355,7 +355,7 @@
         position: absolute;
         width: 600px;
         height: 600px;
-        background: radial-gradient(circle, rgba(201, 168, 124, 0.08) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(168, 189, 179, 0.08) 0%, transparent 70%);
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
@@ -379,7 +379,7 @@
         transform: translateX(-50%);
         background: radial-gradient(closest-side,
             rgba(224, 138, 154, 0.3),
-            rgba(201, 168, 124, 0.2) 55%,
+            rgba(168, 189, 179, 0.2) 55%,
             transparent 75%);
         filter: blur(40px);
         pointer-events: none;
@@ -438,8 +438,8 @@
         transform: translateX(-50%);
         z-index: 2000;
         background: var(--surface, #1b1e27);
-        border: 1px solid var(--accent, #c9a87c);
-        color: var(--accent, #c9a87c);
+        border: 1px solid var(--accent, #a8bdb3);
+        color: var(--accent, #a8bdb3);
         padding: 0.7rem 1.4rem;
         border-radius: 999px;
         font-size: 0.95rem;

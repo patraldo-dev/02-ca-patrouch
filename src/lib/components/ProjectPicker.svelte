@@ -92,12 +92,12 @@
         background: rgba(0,0,0,0.25); border: 1px solid var(--border, #3a3f4d); border-radius: 8px;
         color: inherit; font-family: inherit; font-size: 0.82rem; padding: 0.4rem 0.55rem;
     }
-    .pp-select:focus, .pp-input:focus { outline: none; border-color: var(--accent, #c9a87c); }
+    .pp-select:focus, .pp-input:focus { outline: none; border-color: var(--accent, #a8bdb3); }
     .pp-input { flex: 1; min-width: 10rem; }
     .pp-btn {
         background: none; border: 1px solid var(--border, #3a3f4d); border-radius: 8px;
         color: var(--text-dim, #aaa); padding: 0.35rem 0.6rem; font-size: 0.85rem; cursor: pointer;
     }
-    .pp-btn:hover:not(:disabled) { border-color: var(--accent, #c9a87c); color: var(--accent, #c9a87c); }
+    .pp-btn:hover:not(:disabled) { border-color: var(--accent, #a8bdb3); color: var(--accent, #a8bdb3); }
     .pp-btn:disabled { opacity: 0.5; cursor: wait; }
 </style>

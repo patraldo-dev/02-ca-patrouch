@@ -78,18 +78,18 @@
     .project-page { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
     .back { color: var(--muted, #999); font-size: 0.85rem; text-decoration: none; }
     header { margin: 1rem 0 1.5rem; }
-    .kind { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #c9a87c); }
+    .kind { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent, #a8bdb3); }
     h1 { font-family: var(--font-heading, serif); font-size: 1.9rem; font-weight: 400; margin: 0.3rem 0 0.5rem; }
     .desc { color: var(--text-dim, #bbb); line-height: 1.6; margin: 0 0 0.6rem; }
     .meta { color: var(--muted, #999); font-size: 0.85rem; margin: 0 0 0.8rem; }
     .author { color: var(--text-dim, #aaa); }
     .follow {
-        background: none; border: 1px solid var(--accent, #c9a87c); border-radius: 999px;
-        color: var(--accent, #c9a87c); padding: 0.4rem 1.1rem; font-size: 0.85rem;
+        background: none; border: 1px solid var(--accent, #a8bdb3); border-radius: 999px;
+        color: var(--accent, #a8bdb3); padding: 0.4rem 1.1rem; font-size: 0.85rem;
         font-family: inherit; cursor: pointer; transition: all 0.2s;
     }
-    .follow.on { background: rgba(201,168,124,0.12); }
-    .follow:hover:not(:disabled) { background: rgba(201,168,124,0.18); }
+    .follow.on { background: rgba(168,189,179,0.12); }
+    .follow:hover:not(:disabled) { background: rgba(168,189,179,0.18); }
     .follow:disabled { opacity: 0.5; cursor: wait; }
     .empty { color: var(--muted, #999); text-align: center; padding: 2rem; }
     .parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
@@ -98,8 +98,8 @@
         background: var(--surface, #1b1e27); border: 1px solid var(--border, #2a2e39);
         border-radius: 10px; padding: 0.8rem 1rem; transition: border-color 0.2s;
     }
-    .part-link:hover { border-color: var(--accent, #c9a87c); }
-    .n { color: var(--accent, #c9a87c); font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+    .part-link:hover { border-color: var(--accent, #a8bdb3); }
+    .n { color: var(--accent, #a8bdb3); font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
     .t { color: var(--text, #eee); flex: 1; font-size: 0.95rem; }
     .m { color: var(--muted, #888); font-size: 0.75rem; white-space: nowrap; }
     .draft { color: #fde047; font-size: 0.65rem; text-transform: uppercase; background: rgba(250,204,21,0.12); padding: 0.1rem 0.4rem; border-radius: 999px; margin-left: 0.3rem; }

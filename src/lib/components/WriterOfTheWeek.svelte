@@ -37,8 +37,8 @@
 
 <style>
     .writer-of-week {
-        background: linear-gradient(135deg, rgba(201, 168, 124, 0.08) 0%, rgba(201, 168, 124, 0.02) 100%);
-        border: 1px solid rgba(201, 168, 124, 0.25);
+        background: linear-gradient(135deg, rgba(168, 189, 179, 0.08) 0%, rgba(168, 189, 179, 0.02) 100%);
+        border: 1px solid rgba(168, 189, 179, 0.25);
         border-radius: 12px;
         padding: 1.5rem;
         position: relative;
@@ -53,7 +53,7 @@
         left: 0;
         right: 0;
         height: 2px;
-        background: linear-gradient(90deg, transparent, #c9a87c, transparent);
+        background: linear-gradient(90deg, transparent, #a8bdb3, transparent);
     }
 
     .wotw-badge {
@@ -62,8 +62,8 @@
         font-weight: 600;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #c9a87c;
-        background: rgba(201, 168, 124, 0.15);
+        color: #a8bdb3;
+        background: rgba(168, 189, 179, 0.15);
         padding: 0.3rem 0.75rem;
         border-radius: 999px;
         margin-bottom: 1rem;

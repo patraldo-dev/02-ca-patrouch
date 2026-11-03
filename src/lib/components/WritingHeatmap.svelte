@@ -206,11 +206,11 @@
         cursor: default;
     }
 
-    .level-0 { background: rgba(201, 168, 124, 0.1); }
-    .level-1 { background: rgba(201, 168, 124, 0.3); }
-    .level-2 { background: rgba(201, 168, 124, 0.5); }
-    .level-3 { background: rgba(201, 168, 124, 0.75); }
-    .level-4 { background: rgba(201, 168, 124, 1); }
+    .level-0 { background: rgba(168, 189, 179, 0.1); }
+    .level-1 { background: rgba(168, 189, 179, 0.3); }
+    .level-2 { background: rgba(168, 189, 179, 0.5); }
+    .level-3 { background: rgba(168, 189, 179, 0.75); }
+    .level-4 { background: rgba(168, 189, 179, 1); }
 
     .cell.active {
         outline: 2px solid var(--accent);
@@ -219,7 +219,7 @@
     .day-tooltip {
         margin-top: 0.5rem;
         padding: 0.4rem 0.6rem;
-        background: rgba(201, 168, 124, 0.1);
+        background: rgba(168, 189, 179, 0.1);
         border-radius: 6px;
         font-size: 0.85rem;
         color: var(--text-dim);

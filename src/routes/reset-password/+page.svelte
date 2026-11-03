@@ -170,7 +170,7 @@
         transition: border-color 0.2s;
     }
     .input-row input:focus {
-        border-color: var(--accent, #c9a87c);
+        border-color: var(--accent, #a8bdb3);
     }
     .toggle-btn, .gen-btn {
         background: var(--bg);
@@ -184,12 +184,12 @@
         transition: border-color 0.2s;
     }
     .toggle-btn:hover, .gen-btn:hover {
-        border-color: var(--accent, #c9a87c);
+        border-color: var(--accent, #a8bdb3);
     }
     button[type="submit"] {
         width: 100%;
         padding: 0.7rem;
-        background: var(--accent, #c9a87c);
+        background: var(--accent, #a8bdb3);
         color: var(--bg);
         border: none;
         border-radius: var(--radius, 8px);

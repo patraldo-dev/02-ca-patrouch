@@ -129,12 +129,12 @@
         transition: border-color 0.2s;
     }
     .input-group input:focus {
-        border-color: var(--accent, #c9a87c);
+        border-color: var(--accent, #a8bdb3);
     }
     button[type="submit"] {
         width: 100%;
         padding: 0.95rem 2.4rem;
-        background: var(--accent, #c9a87c);
+        background: var(--accent, #a8bdb3);
         color: var(--bg);
         border: none;
         border-radius: 999px;
@@ -145,7 +145,7 @@
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
-        box-shadow: 0 6px 24px rgba(201, 168, 124, 0.25);
+        box-shadow: 0 6px 24px rgba(168, 189, 179, 0.25);
     }
     button[type="submit"]:disabled {
         opacity: 0.6;
@@ -154,7 +154,7 @@
     button[type="submit"]:hover:not(:disabled) {
         filter: brightness(1.06);
         transform: translateY(-2px);
-        box-shadow: 0 10px 32px rgba(201, 168, 124, 0.45);
+        box-shadow: 0 10px 32px rgba(168, 189, 179, 0.45);
     }
     .success-banner {
         background: rgba(74, 222, 128, 0.1);
@@ -181,7 +181,7 @@
         font-size: 0.85rem;
     }
     .footer a {
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
         text-decoration: none;
     }
     .footer a:hover {

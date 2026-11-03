@@ -35,7 +35,7 @@ export async function sendVerificationEmail(to, verifyUrl, env) {
     const html = `
         <h2>Welcome to Patrouch!</h2>
         <p>Click below to verify your email:</p>
-        <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">Verify Email</a>
+        <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#a8bdb3;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">Verify Email</a>
         <p style="color:#888;font-size:0.85rem;margin-top:1rem;">Or paste: <code>${verifyUrl}</code></p>
     `;
     return sendMailgunEmail(to, 'Verify your email — Patrouch', html, `Verify your email: ${verifyUrl}`, env);
@@ -96,10 +96,10 @@ export async function sendSundaySparkEmail(to, dualPrompt, locale, env) {
 
             <!-- Sun Door -->
             <div style="background:#fff8f0;border:1px solid #e8d5b8;border-radius:10px;padding:1.25rem;margin:1.25rem 0;">
-                <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;color:#c9a87c;margin-bottom:0.5rem;">☀️ ${c.sun_label}</div>
+                <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;color:#a8bdb3;margin-bottom:0.5rem;">☀️ ${c.sun_label}</div>
                 <p style="font-size:1rem;color:#333;margin:0 0 0.75rem;line-height:1.6;">${sunAct}</p>
                 <p style="font-style:italic;color:#777;font-size:0.9rem;margin:0 0 1rem;line-height:1.5;">${sunSpark}</p>
-                <a href="${sunUrl}" style="display:inline-block;padding:8px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.9rem;">${c.cta} →</a>
+                <a href="${sunUrl}" style="display:inline-block;padding:8px 24px;background:#a8bdb3;color:#09090b;text-decoration:none;border-radius:6px;font-weight:600;font-size:0.9rem;">${c.cta} →</a>
             </div>
 
             <!-- Moon Door -->

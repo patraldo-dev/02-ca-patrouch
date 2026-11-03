@@ -210,7 +210,7 @@
     .back-link {
         background: none;
         border: none;
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
         font-family: var(--font-body);
         font-size: 0.9rem;
         cursor: pointer;
@@ -226,8 +226,8 @@
     }
 
     .from-prompt {
-        background: rgba(201,168,124,0.15);
-        color: var(--accent, #c9a87c);
+        background: rgba(168,189,179,0.15);
+        color: var(--accent, #a8bdb3);
         padding: 0.2rem 0.6rem;
         border-radius: 12px;
         font-size: 0.75rem;
@@ -271,7 +271,7 @@
     }
 
     .editor-field input:focus {
-        border-color: var(--accent, #c9a87c);
+        border-color: var(--accent, #a8bdb3);
     }
 
     .editor-toolbar {
@@ -362,11 +362,11 @@
     }
 
     .preview-content :global(em) {
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
     }
 
     .preview-content :global(blockquote) {
-        border-left: 3px solid var(--accent, #c9a87c);
+        border-left: 3px solid var(--accent, #a8bdb3);
         padding-left: 1rem;
         margin: 1rem 0;
         color: var(--text-dim);
@@ -378,7 +378,7 @@
     }
 
     .preview-content :global(a) {
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
     }
 
     .project-row { display: flex; margin: 0.6rem 0; }
@@ -436,7 +436,7 @@
     }
 
     .btn-publish {
-        background: var(--accent, #c9a87c);
+        background: var(--accent, #a8bdb3);
         color: var(--bg);
     }
 

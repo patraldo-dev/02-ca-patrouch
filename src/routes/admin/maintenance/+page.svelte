@@ -172,7 +172,7 @@
     .card-desc { color: var(--muted, #999); font-size: 0.83rem; flex: 1; }
     .card-desc code { background: rgba(255,255,255,0.06); padding: 0 0.3rem; border-radius: 4px; }
     .btn { align-self: flex-start; background: none; border: 1px solid var(--border, #3a3f4d); color: inherit; border-radius: 8px; padding: 0.5rem 0.9rem; font-size: 0.85rem; cursor: pointer; font-family: inherit; }
-    .btn:hover:not(:disabled) { border-color: var(--accent, #c9a87c); color: var(--accent, #c9a87c); }
+    .btn:hover:not(:disabled) { border-color: var(--accent, #a8bdb3); color: var(--accent, #a8bdb3); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .maint-card.danger .btn:hover:not(:disabled) { border-color: #e08d6d; color: #e08d6d; }
     .row { display: flex; gap: 0.5rem; }

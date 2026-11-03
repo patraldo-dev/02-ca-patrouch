@@ -78,7 +78,7 @@ const PortalTab = {
 	portalId: { type: Types.String, default: '' },
 	portalName: { type: Types.String, default: '' },
 	portalIcon: { type: Types.String, default: '🌐' },
-	colorHex: { type: Types.Float32, default: 0xc9a87c },
+	colorHex: { type: Types.Float32, default: 0xa8bdb3 },
 	angle: { type: Types.Float32, default: 0 },
 	radius: { type: Types.Float32, default: 2.5 },
 	height: { type: Types.Float32, default: 1.2 },
@@ -272,7 +272,7 @@ const PortalTabSystem = createSystem(
 // ═══════════════════════════════════════════════════════════════
 
 const CRYSTAL_COLORS = [
-	0xc9a87c, 0x4fc3f7, 0xb5ead7, 0xce93d8,
+	0xa8bdb3, 0x4fc3f7, 0xb5ead7, 0xce93d8,
 	0xfff59d, 0xffab91, 0x80cbc4, 0xf48fb1,
 ];
 
@@ -533,7 +533,7 @@ function createPortalTabMesh(icon, name, accentColor) {
 // ═══════════════════════════════════════════════════════════════
 
 export async function initBottleAR(container, { bottles, portalConfig, allPortals = [] }) {
-	const accentColor = portalConfig?.color_primary || '#c9a87c';
+	const accentColor = portalConfig?.color_primary || '#a8bdb3';
 	const accentHex = parseInt(accentColor.replace('#', ''), 16);
 	const bgColor = portalConfig?.color_bg || '#1a1a2e';
 	const bgHex = parseInt(bgColor.replace('#', ''), 16);
@@ -809,7 +809,7 @@ export async function initBottleAR(container, { bottles, portalConfig, allPortal
 
 			allPortals.forEach((portal, i) => {
 				const angle = (i / portalCount) * Math.PI * 2;
-				const colorHex = parseInt((portal.color_primary || '#c9a87c').replace('#', ''), 16);
+				const colorHex = parseInt((portal.color_primary || '#a8bdb3').replace('#', ''), 16);
 				const name = locale === 'en' ? portal.name_en : locale === 'fr' ? portal.name_fr : portal.name_es;
 
 				// Simple colored box — no canvas texture

@@ -79,7 +79,7 @@ export async function POST({ request, locals, platform }) {
             text,
             title, title, title,  // same title all locales (user can edit later)
             '✨',
-            palette.primary || '#c9a87c',
+            palette.primary || '#a8bdb3',
             palette.background || '#05030a',
             palette.safe_text_color || '#d6c3b8'
         ).run();

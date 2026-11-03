@@ -217,7 +217,7 @@
         width: 100%;
         max-width: 540px;
         background: linear-gradient(145deg, #1a1a1a 0%, #111 100%);
-        border: 1px solid rgba(201, 168, 124, 0.2);
+        border: 1px solid rgba(168, 189, 179, 0.2);
         border-radius: 16px;
         padding: 2.5rem;
         overflow: hidden;
@@ -230,7 +230,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, transparent, #c9a87c, transparent);
+        background: linear-gradient(90deg, transparent, #a8bdb3, transparent);
     }
 
     .card-header {
@@ -245,8 +245,8 @@
         font-weight: 600;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #c9a87c;
-        background: rgba(201, 168, 124, 0.1);
+        color: #a8bdb3;
+        background: rgba(168, 189, 179, 0.1);
         padding: 0.3rem 0.75rem;
         border-radius: 999px;
     }
@@ -276,12 +276,12 @@
     }
 
     .card-author strong {
-        color: #c9a87c;
+        color: #a8bdb3;
     }
 
     .card-divider {
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(201, 168, 124, 0.3), transparent);
+        background: linear-gradient(90deg, transparent, rgba(168, 189, 179, 0.3), transparent);
         margin: 1.5rem 0;
     }
 
@@ -292,7 +292,7 @@
         color: #d4d4d4;
         margin: 0 0 1.5rem;
         font-style: italic;
-        border-left: 2px solid rgba(201, 168, 124, 0.3);
+        border-left: 2px solid rgba(168, 189, 179, 0.3);
         padding-left: 1rem;
     }
 
@@ -328,10 +328,10 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.6rem 1.25rem;
-        background: rgba(201, 168, 124, 0.15);
-        border: 1px solid rgba(201, 168, 124, 0.3);
+        background: rgba(168, 189, 179, 0.15);
+        border: 1px solid rgba(168, 189, 179, 0.3);
         border-radius: 8px;
-        color: #c9a87c;
+        color: #a8bdb3;
         font-size: 0.85rem;
         font-weight: 500;
         cursor: pointer;
@@ -339,8 +339,8 @@
     }
 
     .btn-copy:hover {
-        background: rgba(201, 168, 124, 0.25);
-        border-color: #c9a87c;
+        background: rgba(168, 189, 179, 0.25);
+        border-color: #a8bdb3;
     }
 
     .btn-copy svg {
@@ -389,13 +389,13 @@
     }
 
     .share-btn.native:hover {
-        background: rgba(201, 168, 124, 0.2);
-        border-color: #c9a87c;
-        color: #c9a87c;
+        background: rgba(168, 189, 179, 0.2);
+        border-color: #a8bdb3;
+        color: #a8bdb3;
     }
 
     .back-link {
-        color: #c9a87c;
+        color: #a8bdb3;
         text-decoration: none;
         font-size: 0.9rem;
         font-weight: 500;

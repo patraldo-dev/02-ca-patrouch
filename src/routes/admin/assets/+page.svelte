@@ -673,8 +673,8 @@
         z-index: 1;
     }
     .preview-close:hover {
-        border-color: var(--accent, #d4b98f);
-        color: var(--accent, #d4b98f);
+        border-color: var(--accent, #a8bdb3);
+        color: var(--accent, #a8bdb3);
     }
     .preview-modal-header h3 {
         margin: 0 0 0.25rem;

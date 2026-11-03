@@ -113,11 +113,11 @@
 
     <!-- Icon + Title -->
     <svg class="signup-icon" width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="28" cy="28" r="26" stroke="#c9a87c" stroke-width="1" opacity="0.3"/>
-        <path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <path d="M22 16 L26 28" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <circle cx="26" cy="28" r="1.5" fill="#c9a87c"/>
-        <path d="M26 28 Q30 32 34 26" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="28" cy="28" r="26" stroke="#a8bdb3" stroke-width="1" opacity="0.3"/>
+        <path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#a8bdb3" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M22 16 L26 28" stroke="#a8bdb3" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="26" cy="28" r="1.5" fill="#a8bdb3"/>
+        <path d="M26 28 Q30 32 34 26" stroke="#a8bdb3" stroke-width="1.5" fill="none" stroke-linecap="round"/>
     </svg>
     <h1><InkText text={$t('signup.title')} step={40} /></h1>
 
@@ -311,7 +311,7 @@
     input:focus {
         outline: none;
         border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(201, 168, 124, 0.15);
+        box-shadow: 0 0 0 2px rgba(168, 189, 179, 0.15);
     }
 
     button[type="submit"] {
@@ -326,12 +326,12 @@
         font-weight: 600;
         -webkit-tap-highlight-color: transparent;
         transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
-        box-shadow: 0 6px 24px rgba(201, 168, 124, 0.25);
+        box-shadow: 0 6px 24px rgba(168, 189, 179, 0.25);
     }
     button[type="submit"]:hover {
         filter: brightness(1.06);
         transform: translateY(-2px);
-        box-shadow: 0 10px 32px rgba(201, 168, 124, 0.45);
+        box-shadow: 0 10px 32px rgba(168, 189, 179, 0.45);
     }
     button[type="submit"]:active {
         transform: translateY(0) scale(0.98);
@@ -383,7 +383,7 @@
         font-family: var(--font-body, 'Inter', sans-serif);
         transition: border-color 0.2s;
     }
-    .btn-oauth:hover { border-color: var(--accent, #c9a87c); }
+    .btn-oauth:hover { border-color: var(--accent, #a8bdb3); }
     .btn-oauth svg { flex-shrink: 0; }
 
     /* Divider */
@@ -417,5 +417,5 @@
         cursor: pointer;
         font-size: 1.1rem;
     }
-    .btn-generate:hover { border-color: var(--accent, #c9a87c); }
+    .btn-generate:hover { border-color: var(--accent, #a8bdb3); }
 </style>

@@ -276,7 +276,7 @@
 
     .coord-input:focus {
         outline: none;
-        border-color: var(--accent, #c9a87c);
+        border-color: var(--accent, #a8bdb3);
     }
 
     .badge {
@@ -319,8 +319,8 @@
     }
 
     .save-btn:hover {
-        border-color: var(--accent, #c9a87c);
-        color: var(--accent, #c9a87c);
+        border-color: var(--accent, #a8bdb3);
+        color: var(--accent, #a8bdb3);
     }
 
     .save-btn:disabled {

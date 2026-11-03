@@ -94,7 +94,7 @@ function reuseOrCreate(id, schema) {
 
 const PortalCube = reuseOrCreate('PortalCube', {
 	portalId:    { type: Types.String, default: '' },
-	color:       { type: Types.String, default: '#c9a87c' },
+	color:       { type: Types.String, default: '#a8bdb3' },
 	floatPhase:  { type: Types.Float32, default: 0 },
 	floatSpeed:  { type: Types.Float32, default: 0.5 },
 	baseY:       { type: Types.Float32, default: 0 },

@@ -31,7 +31,7 @@
 	<title>{nameOf(portal)} — {$t('games.title')}</title>
 </svelte:head>
 
-<div class="portal-fallback" style="--portal-color: {portal?.color_primary || '#c9a87c'}">
+<div class="portal-fallback" style="--portal-color: {portal?.color_primary || '#a8bdb3'}">
 	<a class="back-link" href="/portals">← {$t('games.title')}</a>
 
 	<div class="portal-card">

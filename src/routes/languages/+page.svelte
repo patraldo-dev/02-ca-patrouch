@@ -71,11 +71,11 @@
         border-radius: 12px; padding: 1.1rem 1.3rem; cursor: pointer; text-align: left;
         color: inherit; font-family: inherit; transition: border-color 0.2s;
     }
-    .card:hover { border-color: var(--accent, #c9a87c); }
-    .card.current { border-color: var(--accent, #c9a87c); background: rgba(201,168,124,0.06); }
+    .card:hover { border-color: var(--accent, #a8bdb3); }
+    .card.current { border-color: var(--accent, #a8bdb3); background: rgba(168,189,179,0.06); }
     .flag { font-size: 1.6rem; grid-row: span 2; }
     .name { font-size: 1.15rem; font-weight: 600; }
     .tag { grid-column: 2; color: var(--muted, #999); font-size: 0.85rem; font-style: italic; }
-    .badge { color: var(--accent, #c9a87c); font-weight: 700; grid-row: span 2; }
+    .badge { color: var(--accent, #a8bdb3); font-weight: 700; grid-row: span 2; }
     .note { color: var(--muted, #888); font-size: 0.8rem; margin-top: 1.6rem; text-align: center; }
 </style>
