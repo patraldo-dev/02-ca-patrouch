@@ -554,7 +554,8 @@
         margin-bottom: 0;
     }
 
-    .writing-pipeline { display: flex; gap: 0.75rem; justify-content: center; margin: 2rem 0; }
+    /* flex-wrap: the four pipeline actions overflow a phone row otherwise */
+    .writing-pipeline { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin: 2rem 0; }
     .btn-pipeline { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text-dim); font-family: var(--font-body); font-size: 0.85rem; padding: 0.5rem 1.25rem; cursor: pointer; transition: all 0.2s; }
     .btn-pipeline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
     .btn-pipeline:disabled { opacity: 0.5; cursor: not-allowed; }
