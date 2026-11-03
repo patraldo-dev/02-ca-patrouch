@@ -188,8 +188,8 @@
 <style>
     main {
         max-width: 440px;
-        margin: 2.25rem auto 1.5rem;
-        padding: 1.5rem 1.5rem 1.25rem;
+        margin: 1.5rem auto 1rem;
+        padding: 1.25rem 1.25rem 1rem;
         border: 1px solid var(--border);
         border-radius: 8px;
         background: var(--surface);
@@ -203,12 +203,12 @@
     }
 
     .signup-icon {
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.4rem;
         color: var(--accent);
     }
 
     /* Unified with the home hero: the display tagline recipe (Outfit 900,
-       signature mint, ink-written by InkText) at card scale, and the
+       signature cranberry, ink-written by InkText) at card scale, and the
        submit button matches the Start Writing pill CTA. */
     h1 {
         font-family: var(--font-display);
@@ -217,13 +217,13 @@
         font-weight: 900;
         text-wrap: balance;
         color: var(--signature);
-        margin-bottom: 0.9rem;
+        margin-bottom: 0.7rem;
     }
 
     form {
         display: flex;
         flex-direction: column;
-        gap: 0.8rem;
+        gap: 0.6rem;
     }
 
     .email-heading {
@@ -365,7 +365,7 @@
     }
 
     /* OAuth */
-    .oauth-section { margin-bottom: 0.75rem; }
+    .oauth-section { margin-bottom: 0.5rem; }
     .oauth-buttons { display: flex; gap: 0.75rem; }
     .btn-oauth {
         flex: 1;
@@ -391,7 +391,7 @@
         display: flex;
         align-items: center;
         gap: 1rem;
-        margin: 0.75rem 0;
+        margin: 0.5rem 0;
     }
     .divider::before,
     .divider::after {
