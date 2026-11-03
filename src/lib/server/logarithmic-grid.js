@@ -7,7 +7,7 @@ const CENTER = { lat: 20.65, lon: -105.35 };
 
 // Ring definitions — each ring is 5x wider than the previous
 const RINGS = [
-    { id: 0, cellDeg: 0.001, label: '100m',  costBase: 1,  color: '#c9a87c' },  // ~111m cells
+    { id: 0, cellDeg: 0.001, label: '100m',  costBase: 1,  color: '#a8bdb3' },  // ~111m cells
     { id: 1, cellDeg: 0.005, label: '500m',  costBase: 1,  color: '#a8c9a8' },  // ~555m cells
     { id: 2, cellDeg: 0.025, label: '2.5km', costBase: 1,  color: '#87a8c9' },  // ~2.8km cells
     { id: 3, cellDeg: 0.125, label: '12km',  costBase: 1,  color: '#a887c9' },  // ~14km cells

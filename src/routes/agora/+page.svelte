@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/state';
     import { t, locale, getLocale } from '#lib/i18n/index.js';
+    import InkReveal from '#lib/components/InkReveal.svelte';
 
     let { data } = $props();
 
@@ -106,7 +107,9 @@
 
 <div class="agora-page">
     <header class="agora-header">
-        <h1>{$t('agora.heading')}</h1>
+        <InkReveal>
+            <h1>{$t('agora.heading')}</h1>
+        </InkReveal>
         <p class="agora-subtitle">{$t('agora.subtitle')}</p>
         {#if data.user}
             <a href="/write" class="share-link">{$t('agora.share_cta')} →</a>
@@ -144,7 +147,7 @@
 
     <!-- Writings Grid -->
     {#if data.writings?.length > 0}
-        <div class="writings-grid">
+        <div class="writings-grid ambient-glow">
             {#each shuffledWritings as w}
                 <a href="/writings/{w.id}{showGame ? '?game=1' : ''}" class="writing-card">
                     <div class="writing-card-header">
@@ -338,8 +341,8 @@
         gap: 1rem;
         padding: 0.6rem 1.5rem;
         margin-bottom: 1.5rem;
-        background: rgba(201, 168, 124, 0.06);
-        border: 1px solid rgba(201, 168, 124, 0.15);
+        background: rgba(168, 189, 179, 0.06);
+        border: 1px solid rgba(168, 189, 179, 0.15);
         border-radius: 999px;
     }
     .game-banner-text {
@@ -368,7 +371,7 @@
     .filter-tag:hover, .filter-tag.active {
         color: var(--accent);
         border-color: var(--accent);
-        background: rgba(201, 168, 124, 0.08);
+        background: rgba(168, 189, 179, 0.08);
     }
 
     .writings-grid {
@@ -382,16 +385,23 @@
     }
 
     .writing-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
+        background: var(--glass-bg);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-lg);
         padding: 1.5rem;
-        transition: border-color 0.2s;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 8px 32px rgba(60, 45, 20, 0.12);
+        transition: border-color 0.2s, box-shadow 0.3s ease, translate 0.3s ease;
         text-decoration: none;
         color: inherit;
         display: block;
     }
-    .writing-card:hover { border-color: var(--accent); }
+    .writing-card:hover {
+        border-color: var(--accent);
+        translate: 0 -4px;
+        box-shadow: 0 16px 36px rgba(168, 189, 179, 0.16);
+    }
 
     .writing-card-header {
         display: flex;
@@ -456,7 +466,7 @@
     }
     .reveal-human {
         color: var(--accent);
-        background: rgba(201, 168, 124, 0.15);
+        background: rgba(168, 189, 179, 0.15);
     }
     .reveal-spot.revealed .reveal-hint { opacity: 0; }
     .reveal-spot.revealed { border-color: transparent; background: none; width: auto; padding: 0; }
@@ -618,7 +628,7 @@
         transition: background 0.2s;
     }
     .game-leaderboard-btn:hover {
-        background: rgba(201, 168, 124, 0.15);
+        background: rgba(168, 189, 179, 0.15);
     }
 
     .modal-wide {

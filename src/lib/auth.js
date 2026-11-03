@@ -100,7 +100,10 @@ export function createAuth(env) {
 
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET || "",
-    baseURL: "https://patrouch.ca",
+    // Tier-aware: staging requests keep their own origin (cookies +
+    // trustedOrigins must match the host actually serving them); prod
+    // stays pinned to the canonical domain.
+    baseURL: env.PATROUCH_BASE_URL || "https://patrouch.ca",
     advanced: {
       ipAddress: {
         ipAddressHeaders: ["cf-connecting-ip"],
@@ -119,6 +122,11 @@ export function createAuth(env) {
         verify: ({ hash, password }) => verifyPassword(hash, password),
       },
       sendResetPassword: async ({ user, token, url }, request) => {
+        // Same staging guard as verification: no Mailgun config → skip send.
+        if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN) {
+          console.warn("[sendResetPassword] mailgun not configured — skipping send for", user.email);
+          return;
+        }
         const { sendMailgunEmail } = await import("#lib/server/mailgun.js");
         const acceptLang = request?.headers?.get("accept-language") || "";
         const lang = acceptLang.startsWith("fr")
@@ -126,7 +134,8 @@ export function createAuth(env) {
           : acceptLang.startsWith("en")
             ? "en"
             : "es";
-        const resetUrl = `https://patrouch.ca/reset-password?token=${token}`;
+        const base = env.PATROUCH_BASE_URL || "https://patrouch.ca";
+        const resetUrl = `${base}/reset-password?token=${token}`;
         const t = {
           en: {
             subject: "Reset your password — Patrouch",
@@ -159,7 +168,7 @@ export function createAuth(env) {
             <h2 style="font-size:1.2rem;color:#1a1a1a;">${t.title}</h2>
             <p style="color:#666;font-size:0.95rem;">${t.body}</p>
             <div style="text-align:center;margin:2rem 0;">
-              <a href="${resetUrl}" style="display:inline-block;padding:12px 32px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${t.btn}</a>
+              <a href="${resetUrl}" style="display:inline-block;padding:12px 32px;background:#a8bdb3;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${t.btn}</a>
             </div>
             <p style="color:#999;font-size:0.75rem;text-align:center;">${t.footer}</p>
           </div>
@@ -188,6 +197,12 @@ export function createAuth(env) {
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, url }) => {
         console.log("[sendVerificationEmail] called for:", user.email);
+        // Staging has no Mailgun key — a missing config must never fail
+        // the signup itself; skip the send and log (prod sends normally).
+        if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN) {
+          console.warn("[sendVerificationEmail] mailgun not configured — skipping send for", user.email);
+          return;
+        }
         const { sendVerificationEmail } =
           await import("#lib/server/mailgun.js");
         const verifyUrl = url.replace(
@@ -202,13 +217,16 @@ export function createAuth(env) {
       },
     },
     socialProviders: {
+      // Staging credentials carry an explicit _STAGING_ prefix (the ambientx
+      // pattern) so it's always obvious which environment a var belongs to.
+      // Prod sets the plain names; the fallbacks keep both working.
       google: {
-        clientId: env.GOOGLE_CLIENT_ID || "",
-        clientSecret: env.GOOGLE_CLIENT_SECRET || "",
+        clientId: env.GOOGLE_STAGING_CLIENT_ID || env.GOOGLE_CLIENT_ID || "",
+        clientSecret: env.GOOGLE_STAGING_CLIENT_SECRET || env.GOOGLE_CLIENT_SECRET || "",
       },
       github: {
-        clientId: env.GITHUB_CLIENT_ID || "",
-        clientSecret: env.GITHUB_CLIENT_SECRET || "",
+        clientId: env.GITHUB_STAGING_CLIENT_ID || env.GITHUB_CLIENT_ID || "",
+        clientSecret: env.GITHUB_STAGING_CLIENT_SECRET || env.GITHUB_CLIENT_SECRET || "",
       },
     },
     session: {
@@ -217,6 +235,13 @@ export function createAuth(env) {
       cookieCache: {
         enabled: false,
         maxAge: 5 * 60,
+      },
+    },
+    user: {
+      additionalFields: {
+        // Everyone who registers is a member until the community is large
+        // enough to need a gate; input:false keeps roles out of client reach.
+        role: { type: 'string', defaultValue: 'member', input: false },
       },
     },
     databaseHooks: {
@@ -246,6 +271,7 @@ export function createAuth(env) {
     },
     trustedOrigins: [
       "https://patrouch.ca",
+      "https://staging.patrouch.ca",
       "https://*.chef-tech.workers.dev",
       "http://localhost:5173",
     ],

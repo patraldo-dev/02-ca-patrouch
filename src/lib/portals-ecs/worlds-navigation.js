@@ -378,7 +378,7 @@ export function installNavigation({ scene, world, allConfigs, config, track, tap
 		.map((id) => ({
 			id,
 			names: allConfigs[id].portal?.names || { es: id },
-			color: allConfigs[id].palette?.primary || '#c9a87c',
+			color: allConfigs[id].palette?.primary || '#a8bdb3',
 		}));
 
 	const compass = buildWorldsCompass({ scene, world, portals, onNavigate, lang });

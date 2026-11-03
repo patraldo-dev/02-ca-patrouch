@@ -205,7 +205,7 @@
     .msg-author {
         font-size: 0.75rem;
         font-weight: 600;
-        color: #c9a87c;
+        color: #a8bdb3;
     }
     .msg-author.narrator { color: #ef4444; }
     .msg-author.system { color: #666; }

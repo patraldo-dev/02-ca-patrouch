@@ -1,5 +1,6 @@
-/* Google Fonts - Playfair Display + Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+/* Google Fonts - Playfair Display + Inter (+ Outfit for display text,
+   matches pinchepoutine.digital's hero) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@700;900&family=Playfair+Display:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
 
 /* ═══════════════════════════════════════════════════════════════
    CSS VARIABLES — DARK EDITORIAL THEME
@@ -10,7 +11,7 @@
 
    --bg #09090b      Deep black background
    --surface #141417  Slightly lighter panels
-   --accent #c9a87c   Editorial gold
+   --accent #a8bdb3   Editorial sage
    --font-heading     Playfair Display (serif)
    --font-body        Inter (sans-serif)
    ═══════════════════════════════════════════════════════════════ */
@@ -23,19 +24,24 @@
   --text: #f0f0f5;
   --text-dim: #b8b8c5;
   --text-muted: #8e8e9a;
-  --accent: #d4b98f;
-  --accent-hover: #e0c9a3;
+  --accent: #a8bdb3;
+  --accent-hover: #c0d2c8;
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Display face for hero-scale text (pinchepoutine.digital's hero look) */
+  --font-display: 'Outfit', var(--font-body);
   --radius: 8px;
   --radius-lg: 16px;
   --z-nav: 100;
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-hover: rgba(255, 255, 255, 0.1);
-  --accent-bg: rgba(212, 185, 143, 0.1);
-  --accent-border: rgba(212, 185, 143, 0.35);
+  --accent-bg: rgba(168, 189, 179, 0.1);
+  --accent-border: rgba(168, 189, 179, 0.35);
   --navbar-bg: rgba(10, 10, 15, 0.85);
-  --selection-bg: rgba(212, 185, 143, 0.3);
+  --selection-bg: rgba(168, 189, 179, 0.3);
+  /* Signature cranberry — the shared voice color: header C. R initials,
+     hero tagline, signup display title. Light cranberry, AAA on dark. */
+  --signature: #e08a9a;
 }
 
 html[data-theme="light"] {
@@ -47,14 +53,16 @@ html[data-theme="light"] {
   --text: #1a1a1a;
   --text-dim: #3d3d3d;
   --text-muted: #6a6a6a;
-  --accent: #85693e;
-  --accent-hover: #735830;
+  --accent: #5a6e65;
+  --accent-hover: #48584f;
   --glass-bg: rgba(0, 0, 0, 0.04);
   --glass-hover: rgba(0, 0, 0, 0.07);
-  --accent-bg: rgba(133, 105, 62, 0.1);
-  --accent-border: rgba(133, 105, 62, 0.3);
+  --accent-bg: rgba(90, 110, 101, 0.1);
+  --accent-border: rgba(90, 110, 101, 0.3);
   --navbar-bg: rgba(250, 249, 247, 0.85);
-  --selection-bg: rgba(133, 105, 62, 0.25);
+  --selection-bg: rgba(90, 110, 101, 0.25);
+  /* Dark-mode cranberry deepened for the paper bg — ~5.5:1, AA. */
+  --signature: #9e4757;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -172,21 +180,85 @@ a:hover { color: var(--accent-hover); }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   GLASS CARD
+   GLASS CARD + AMBIENT GLOW
+   pinchepoutine.digital's glassmorphism recipe, retuned for the
+   dark editorial theme: blur(20px) surfaces washed with the
+   theme-aware --glass-* vars and sage --accent-border, hover glow +
+   lift. Typography stays in the scoped page rules (cascade is
+   per-property, so they compose).
+
+   Hover uses the independent `translate` property, not `transform`:
+   the home page's entrance animation fills forwards with
+   transform: translateY(0), and animation fill outranks normal
+   author declarations — `translate` sidesteps that without
+   !important.
    ═══════════════════════════════════════════════════════════════ */
 
 .glass-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--accent-border);
   border-radius: var(--radius-lg);
-  padding: 2rem;
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(60, 45, 20, 0.12);
+  transition:
+    translate 0.35s ease,
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
 }
 
 .glass-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--accent-border);
-  box-shadow: 0 12px 40px var(--glass-bg);
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  translate: 0 -8px;
+  box-shadow: 0 20px 40px rgba(168, 189, 179, 0.18);
+}
+
+/* Glass only reads when the blur has colour to catch — layered
+   radial glows behind glass sections. Add the class to any section
+   that hosts glass surfaces. Gradients only: no filter blur, so
+   zero per-pixel GPU cost (unlike real backdrop-filter). */
+.ambient-glow {
+  position: relative;
+}
+
+.ambient-glow::before {
+  content: '';
+  position: absolute;
+  inset: -15% 0;
+  pointer-events: none;
+  background:
+    radial-gradient(640px 420px at 18% 42%, rgba(168, 189, 179, 0.1), transparent 70%),
+    radial-gradient(560px 400px at 82% 58%, rgba(112, 102, 160, 0.09), transparent 70%);
+}
+
+.ambient-glow > * {
+  position: relative;
+}
+
+/* Surface-only glass (no layout) — composes with page-scoped card
+   classes that keep their own layout, e.g. .writing-card on agora. */
+.glass-surface {
+  background: var(--glass-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* The lift is decoration — skip it for reduced-motion users. (The
+   entrance animations are handled per-component.) */
+@media (prefers-reduced-motion: reduce) {
+  .glass-card {
+    transition: none;
+  }
+  .glass-card:hover {
+    translate: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -492,7 +564,7 @@ html.lang-switching::before {
   height: 28px;
   margin: -14px 0 0 -14px;
   border: 3px solid var(--border, rgba(255,255,255,0.1));
-  border-top-color: var(--accent, #c9a87c);
+  border-top-color: var(--accent, #a8bdb3);
   border-radius: 50%;
   z-index: 100000;
   animation: spinnerRotate 0.6s linear infinite;

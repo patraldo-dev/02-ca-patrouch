@@ -55,7 +55,7 @@
         const key = new THREE.DirectionalLight(0xffffff, 1.0);
         key.position.set(3, 5, 2);
         scene.add(key);
-        const rim = new THREE.DirectionalLight(0xc9a87c, 0.4);
+        const rim = new THREE.DirectionalLight(0xa8bdb3, 0.4);
         rim.position.set(-3, 2, -2);
         scene.add(rim);
 
@@ -183,8 +183,8 @@
     .spinner {
         width: 28px;
         height: 28px;
-        border: 3px solid rgba(201, 168, 124, 0.2);
-        border-top-color: var(--accent, #d4b98f);
+        border: 3px solid rgba(168, 189, 179, 0.2);
+        border-top-color: var(--accent, #a8bdb3);
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
     }

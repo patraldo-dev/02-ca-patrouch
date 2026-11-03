@@ -306,7 +306,7 @@ export async function bootGrabDemo(container, onCollect, options = {}) {
 
 	// Lighting
 	scene.add(new THREE.AmbientLight(0x8888aa, 0.6));
-	const keyLight = new THREE.DirectionalLight(0xc9a87c, 0.8);
+	const keyLight = new THREE.DirectionalLight(0xa8bdb3, 0.8);
 	keyLight.position.set(5, 10, 5);
 	scene.add(keyLight);
 	const rimLight = new THREE.DirectionalLight(0x4fc3f7, 0.3);

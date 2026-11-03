@@ -10,6 +10,8 @@ export const user = sqliteTable('users', {
   emailVerified: integer('emailVerified', { mode: 'boolean' }),
   image: text('image'),
   username: text('username').notNull(),
+  displayUsername: text('displayUsername'),
+  role: text('role'),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 });

@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { t } from '#lib/i18n/index.js';
     import { authClient } from '#lib/auth-client.js';
+    import InkText from '#lib/components/InkText.svelte';
 
     let showPassword = $state(false);
     let isAdult = $state(false);
@@ -111,14 +112,14 @@
     </div>
 
     <!-- Icon + Title -->
-    <svg class="signup-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="28" cy="28" r="26" stroke="#c9a87c" stroke-width="1" opacity="0.3"/>
-        <path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <path d="M22 16 L26 28" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <circle cx="26" cy="28" r="1.5" fill="#c9a87c"/>
-        <path d="M26 28 Q30 32 34 26" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <svg class="signup-icon" width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="26" stroke="#a8bdb3" stroke-width="1" opacity="0.3"/>
+        <path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#a8bdb3" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M22 16 L26 28" stroke="#a8bdb3" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="26" cy="28" r="1.5" fill="#a8bdb3"/>
+        <path d="M26 28 Q30 32 34 26" stroke="#a8bdb3" stroke-width="1.5" fill="none" stroke-linecap="round"/>
     </svg>
-    <h1>{$t('signup.title')}</h1>
+    <h1><InkText text={$t('signup.title')} step={40} /></h1>
 
     {#if success}
         <div class="success-banner">{success}</div>
@@ -186,9 +187,9 @@
 
 <style>
     main {
-        max-width: 400px;
-        margin: 4rem auto 2rem;
-        padding: 2rem 2rem 1.5rem;
+        max-width: 440px;
+        margin: 1.5rem auto 1rem;
+        padding: 1.25rem 1.25rem 1rem;
         border: 1px solid var(--border);
         border-radius: 8px;
         background: var(--surface);
@@ -202,14 +203,27 @@
     }
 
     .signup-icon {
-        margin-bottom: 1rem;
+        margin-bottom: 0.4rem;
         color: var(--accent);
+    }
+
+    /* Unified with the home hero: the display tagline recipe (Outfit 900,
+       signature cranberry, ink-written by InkText) at card scale, and the
+       submit button matches the Start Writing pill CTA. */
+    h1 {
+        font-family: var(--font-display);
+        font-size: clamp(1.9rem, 8vw, 2.5rem);
+        line-height: 0.95;
+        font-weight: 900;
+        text-wrap: balance;
+        color: var(--signature);
+        margin-bottom: 0.7rem;
     }
 
     form {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.6rem;
     }
 
     .email-heading {
@@ -297,19 +311,30 @@
     input:focus {
         outline: none;
         border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(201, 168, 124, 0.15);
+        box-shadow: 0 0 0 2px rgba(168, 189, 179, 0.15);
     }
 
     button[type="submit"] {
-        padding: 0.75rem;
-        font-size: 1rem;
+        padding: 0.95rem 2.4rem;
+        font-size: 1.2rem;
+        letter-spacing: 0.02em;
         background: var(--accent);
         color: var(--bg);
         border: none;
-        border-radius: 4px;
+        border-radius: 999px;
         cursor: pointer;
         font-weight: 600;
-        transition: filter 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
+        box-shadow: 0 6px 24px rgba(168, 189, 179, 0.25);
+    }
+    button[type="submit"]:hover {
+        filter: brightness(1.06);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(168, 189, 179, 0.45);
+    }
+    button[type="submit"]:active {
+        transform: translateY(0) scale(0.98);
     }
 
     button[type="submit"]:hover {
@@ -340,7 +365,7 @@
     }
 
     /* OAuth */
-    .oauth-section { margin-bottom: 1.25rem; }
+    .oauth-section { margin-bottom: 0.5rem; }
     .oauth-buttons { display: flex; gap: 0.75rem; }
     .btn-oauth {
         flex: 1;
@@ -358,7 +383,7 @@
         font-family: var(--font-body, 'Inter', sans-serif);
         transition: border-color 0.2s;
     }
-    .btn-oauth:hover { border-color: var(--accent, #c9a87c); }
+    .btn-oauth:hover { border-color: var(--accent, #a8bdb3); }
     .btn-oauth svg { flex-shrink: 0; }
 
     /* Divider */
@@ -366,7 +391,7 @@
         display: flex;
         align-items: center;
         gap: 1rem;
-        margin: 1rem 0;
+        margin: 0.5rem 0;
     }
     .divider::before,
     .divider::after {
@@ -392,5 +417,5 @@
         cursor: pointer;
         font-size: 1.1rem;
     }
-    .btn-generate:hover { border-color: var(--accent, #c9a87c); }
+    .btn-generate:hover { border-color: var(--accent, #a8bdb3); }
 </style>

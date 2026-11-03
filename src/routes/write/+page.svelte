@@ -9,6 +9,9 @@
     import WriterOfTheWeek from '#lib/components/WriterOfTheWeek.svelte';
     import OnboardingFlow from '#lib/components/OnboardingFlow.svelte';
     import Image3DManipulator from '#lib/components/Image3DManipulator.svelte';
+    import DictationButton from '#lib/components/DictationButton.svelte';
+    import HandwritingImport from '#lib/components/HandwritingImport.svelte';
+    import ProjectPicker from '#lib/components/ProjectPicker.svelte';
     import { browser } from '$app/env';
 
     import { onMount } from 'svelte';
@@ -49,8 +52,9 @@
     let isAccepting = $state(false);
     let editorTitle = $state(data.latestDraft?.title || '');
     let editorContent = $state(data.latestDraft?.content || '');
+    let editorDraftId = $state(data.latestDraft?.id || null);
+    let editorProjectId = $state(data.latestDraft?.project_id || null);
     let editorWordCount = $derived(editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0);
-    let editorVisibility = $state('public');
     let timedMode = $state(false);
     let timerDuration = $state(15);
     let timerSeconds = $state(0);
@@ -59,54 +63,40 @@
     let timerInterval = null;
     let timerWordsAtStart = $state(0);
     let editorAiAssisted = $state(false);
-    let dictating = $state(false);
     function showToast(msg) { editorMessage = msg; setTimeout(() => editorMessage = '', 3000); }
-    let recognition = $state(null);
-    function toggleDictation() {
-        if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-            showToast('Speech recognition not supported in this browser');
-            return;
-        }
-        if (dictating && recognition) {
-            recognition.stop();
-            dictating = false;
-            return;
-        }
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SR();
-        recognition.lang = data.serverLocale || 'en';
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.onresult = (e) => {
-            const textarea = document.querySelector('textarea[bind:value]');
-            if (!textarea) {
-                // Fallback: append to editorContent
-                let finalText = editorContent;
-                for (let i = e.resultIndex; i < e.results.length; i++) {
-                    if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
-                }
-                editorContent = finalText;
-                return;
-            }
-            // Insert at cursor position
-            const cursorPos = textarea.selectionStart;
-            let insertText = '';
-            for (let i = e.resultIndex; i < e.results.length; i++) {
-                insertText += e.results[i][0].transcript;
-            }
-            const before = editorContent.slice(0, cursorPos);
-            const after = editorContent.slice(cursorPos);
-            editorContent = before + insertText + after;
-            // Restore cursor position
+    let promptToast = $state('');
+    function showPromptToast(msg) { promptToast = msg; setTimeout(() => (promptToast = ''), 3000); }
+
+    // ── Hands-free dictation (shared engine + DictationButton) ──
+    let editorTextarea = $state(null);
+    let interimText = $state('');
+    let manuscriptUrl = $state(null);
+
+    function insertAtCursor(text) {
+        if (!text) return;
+        if (editorTextarea) {
+            const pos = editorTextarea.selectionStart ?? editorContent.length;
+            editorContent = editorContent.slice(0, pos) + text + editorContent.slice(pos);
             requestAnimationFrame(() => {
-                textarea.selectionStart = textarea.selectionEnd = cursorPos + insertText.length;
+                editorTextarea.focus();
+                editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + text.length;
             });
-        };
-        recognition.onerror = (e) => { showToast('❌ Voice: ' + (e.error || 'error')); dictating = false; };
-        recognition.onend = () => { dictating = false; };
-        recognition.start();
-        dictating = true;
-        showToast('🎙️ Listening...');
+        } else {
+            editorContent = (editorContent ? editorContent + ' ' : '') + text;
+        }
+    }
+
+    function onDictationFinal(text) {
+        insertAtCursor(text.trim() + ' ');
+    }
+
+    // Single-mic voice commands: editor actions plus prompt accept/pass
+    // while the daily estímulo is still undecided.
+    function onDictationCommand(cmd) {
+        if (cmd === 'save') handleSave();
+        else if (cmd === 'publish') handlePublish();
+        else if (cmd === 'accept' && !acceptedToday && !completedToday) handleAction('accepted');
+        else if (cmd === 'pass' && !acceptedToday && !completedToday) handleAction('passed');
     }
 
     let editorSaving = $state(false);
@@ -195,6 +185,7 @@
                     track('pass_prompt', prompt?.id);
                 } else if (action === 'accepted') {
                     userAction = 'accepted';
+                    showPromptToast($t('write.dashboard.accepted'));
                     // If accepting newsletter spark, use its text as the prompt
                     if (sparkFromEmail) {
                         promptId = null; // no DB prompt for newsletter sparks
@@ -306,9 +297,11 @@
             const res = await fetch('/api/writings/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
+                body: JSON.stringify({ id: editorDraftId, title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, manuscriptUrl, projectId: editorProjectId, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
             });
             if (res.ok) {
+                const d = await res.json();
+                editorDraftId = d.id;
                 editorMessage = $t('write.editor.saved');
                 setTimeout(() => { editorMessage = ''; }, 3000);
             }
@@ -317,7 +310,7 @@
     }
 
     async function handlePublish(e) {
-        e.preventDefault();
+        e?.preventDefault();
         if (!editorTitle.trim() || !editorContent.trim()) return;
         editorSaving = true;
         editorMessage = '';
@@ -325,7 +318,7 @@
             const res = await fetch('/api/writings/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, visibility: editorVisibility, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
+                body: JSON.stringify({ id: editorDraftId, title: editorTitle, content: editorContent, promptId: promptId || null, aiAssisted: editorAiAssisted, status: 'published', manuscriptUrl, projectId: editorProjectId, visualPromptText: promptMode === 'visual' ? visualPrompt?.prompt : null, visualArtworkUrl: promptMode === 'visual' ? visualPrompt?.artwork?.imageUrl : null })
             });
             if (res.ok) {
                 const d = await res.json();
@@ -458,6 +451,9 @@
                                 {/if}
                             </div>
                             <p class="prompt-text">{prompt.prompt_text}</p>
+                            {#if promptToast}
+                                <div class="accept-toast" role="status">{promptToast}</div>
+                            {/if}
                             {#if !acceptedToday && !completedToday}
                                 <div class="prompt-actions">
                                 <button class="btn-accept" onclick={() => handleAction('accepted')} disabled={isAccepting}>{isAccepting ? '…' : $t('write.dashboard.accept')}</button>
@@ -522,11 +518,24 @@
                             <span>{$t('write.editor.from_prompt')}:</span> {prompt.prompt_text?.slice(0, 80)}{prompt.prompt_text?.length > 80 ? '…' : ''}
                         </div>
                     {/if}
-                    <form onsubmit={handlePublish}>
+                    <!-- Publish is deliberately button-only: implicit form
+                         submission (Enter in the title) must never publish. -->
+                    <form onsubmit={(e) => e.preventDefault()}>
                         <input type="hidden" name="promptId" value={promptId || ''} />
                         <div class="editor-field">
                             <label>{$t('write.editor.title')}</label>
-                            <input type="text" bind:value={editorTitle} placeholder={$t('write.editor.title_placeholder')} required />
+                            <input
+                                type="text"
+                                bind:value={editorTitle}
+                                onkeydown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        editorTextarea?.focus();
+                                    }
+                                }}
+                                placeholder={$t('write.editor.title_placeholder')}
+                                required
+                            />
                         </div>
 
                         <div
@@ -540,6 +549,7 @@
 
                             <textarea
                                 bind:value={editorContent}
+                                bind:this={editorTextarea}
                                 lang={data.serverLocale || 'en'}
                                 spellcheck="true"
                                 placeholder={$t('write.editor.content_placeholder')}
@@ -547,29 +557,27 @@
                                 required
                             ></textarea>
 
-                            <button
-                                class="mic-btn {dictating ? 'mic-active' : ''}"
-                                onclick={toggleDictation}
-                                title="Dictate"
-                                aria-label="Voice dictation"
-                            >
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <path
-                                        d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"
-                                    ></path>
+                            {#if interimText}
+                                <div class="dictation-interim" aria-live="polite">{interimText}</div>
+                            {/if}
 
-                                    <path d="M19 10v2a7 7 0 01-14 0v-2"></path>
-                                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                                    <line x1="8" y1="23" x2="16" y2="23"></line>
-                                </svg>
-                            </button>
+                            <HandwritingImport
+                                onImport={({ title, text }) => {
+                                    if (text) insertAtCursor(text + '\n\n');
+                                    if (title && !editorTitle.trim()) editorTitle = title;
+                                }}
+                                onManuscript={(u) => (manuscriptUrl = u)}
+                            />
+
+                            <DictationButton
+                                lang={data.serverLocale || 'es'}
+                                commands={true}
+                                onFinal={onDictationFinal}
+                                onInterim={(s) => (interimText = s)}
+                                onInterimEnd={() => (interimText = '')}
+                                onCommand={onDictationCommand}
+                                onError={(kind) => showToast($t('write.dictation.error'))}
+                            />
 
                             <button
                                 class="copy-inline"
@@ -593,13 +601,7 @@
                             </button>
                         </div>
                         <div class="editor-options">
-                            <div class="option-group">
-                                <label>{$t('write.editor.visibility')}</label>
-                                <select bind:value={editorVisibility}>
-                                    <option value="private">{$t('write.editor.private')}</option>
-                                    <option value="public">{$t('write.editor.public')}</option>
-                                </select>
-                            </div>
+                            <ProjectPicker bind:projectId={editorProjectId} />
                             <label class="toggle-label">
                                 <input type="checkbox" bind:checked={editorAiAssisted} />
                                 <span>{$t('write.editor.ai_assisted')}</span>
@@ -650,13 +652,11 @@
                         {/if}
                         <div class="editor-actions">
                             <button type="button" class="btn-save" onclick={handleSave} disabled={editorSaving}>{$t('write.editor.save_draft')}</button>
-                            {#if editorVisibility === 'public'}
-                                <label class="disclosure-check">
-                                    <input type="checkbox" checked />
-                                    <span>{$t('disclosure.publish_consent')}</span>
-                                </label>
-                            {/if}
-                            <button type="submit" class="btn-accent" disabled={editorSaving}>{$t('write.editor.publish')}</button>
+                            <label class="disclosure-check">
+                                <input type="checkbox" checked />
+                                <span>{$t('disclosure.publish_consent')}</span>
+                            </label>
+                            <button type="button" class="btn-accent" onclick={(e) => handlePublish(e)} disabled={editorSaving}>{$t('write.editor.publish')}</button>
                         </div>
                     </form>
                 </div>
@@ -818,6 +818,7 @@
 {/if}
 
 <style>
+    .dictation-interim { margin-top: 0.4rem; font-style: italic; color: var(--text-muted, var(--muted)); font-size: 0.85rem; min-height: 1.2em; }
     .inspiration-tape { background: var(--surface); border-bottom: 1px solid var(--border); overflow: hidden; white-space: nowrap; padding: 0.6rem 0; margin-bottom: 1rem; border-radius: 8px; }
     .ticker-marquee { overflow: hidden; }
     .ticker-track { display: inline-block; animation: marquee 1800s linear infinite; }
@@ -901,7 +902,7 @@
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--accent);
-        background: rgba(201, 168, 124, 0.1);
+        background: rgba(168, 189, 179, 0.1);
         padding: 0.25rem 0.75rem;
         border-radius: 999px;
         margin-bottom: 1rem;
@@ -1035,6 +1036,16 @@
     .accepted-badge {
         color: #4ade80;
         font-weight: 500;
+    }
+
+    .accept-toast {
+        background: rgba(74, 222, 128, 0.1);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+        color: #4ade80;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
     }
 
     .btn-done {
@@ -1454,7 +1465,7 @@
         gap: 0.5rem;
         width: 100%;
         padding: 0.6rem 0.75rem;
-        background: rgba(201, 168, 124, 0.06);
+        background: rgba(168, 189, 179, 0.06);
         border: 1px solid var(--border);
         border-radius: 8px;
         color: var(--text-dim);
@@ -1464,7 +1475,7 @@
     }
 
     .milestones-btn:hover {
-        background: rgba(201, 168, 124, 0.12);
+        background: rgba(168, 189, 179, 0.12);
         border-color: var(--accent);
         color: var(--text);
     }
@@ -1475,7 +1486,7 @@
         gap: 0.5rem;
         width: 100%;
         padding: 0.6rem 0.75rem;
-        background: rgba(201, 168, 124, 0.06);
+        background: rgba(168, 189, 179, 0.06);
         border: 1px solid var(--border);
         border-radius: 8px;
         color: var(--text-dim);
@@ -1486,7 +1497,7 @@
     }
 
     .sidebar-action-btn:hover {
-        background: rgba(201, 168, 124, 0.12);
+        background: rgba(168, 189, 179, 0.12);
         border-color: var(--accent);
         color: var(--text);
     }
@@ -1539,7 +1550,7 @@
     .timer-words { font-size: 0.8rem; color: var(--text-dim); white-space: nowrap; }
     .timer-stop { background: none; border: 1px solid rgba(248,113,113,0.3); color: #f87171; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer; font-family: var(--font-body); }
     .timer-stop:hover { border-color: #f87171; }
-    .timer-done { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(201,168,124,0.1); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 0.95rem; font-weight: 500; }
+    .timer-done { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(168,189,179,0.1); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 0.95rem; font-weight: 500; }
     .timer-dismiss { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 0.2rem 0.4rem; }
     .btn-timer { background: none; border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; font-family: var(--font-body); margin-bottom: 0.75rem; transition: all 0.2s; }
     .btn-timer:hover { border-color: var(--accent); color: var(--accent); }

@@ -94,7 +94,7 @@ function reuseOrCreate(id, schema) {
 
 const PortalCube = reuseOrCreate('PortalCube', {
 	portalId:    { type: Types.String, default: '' },
-	color:       { type: Types.String, default: '#c9a87c' },
+	color:       { type: Types.String, default: '#a8bdb3' },
 	floatPhase:  { type: Types.Float32, default: 0 },
 	floatSpeed:  { type: Types.Float32, default: 0.5 },
 	baseY:       { type: Types.Float32, default: 0 },
@@ -777,6 +777,15 @@ async function installIWER() {
 	} catch {}
 	if (nativeVR) {
 		console.log('[portals] Native WebXR detected — skipping IWER emulation');
+		return;
+	}
+	// Emulation is a DEV tool (the engine's law): on production builds the
+	// manual fallback force-installs a fake Quest 3, which makes
+	// isSessionSupported lie and breaks IWSDK 0.5.3's session probing
+	// (the '.record' TypeError). Prod/staging plays inline.
+	const isDev = !!(import.meta.env && import.meta.env.DEV);
+	if (!isDev) {
+		console.log('[portals] No native WebXR — inline mode (IWER is dev-only)');
 		return;
 	}
 	try {

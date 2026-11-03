@@ -17,7 +17,7 @@ function isValidHex(color) {
     return typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color);
 }
 
-function safeHex(color, fallback = '#c9a87c') {
+function safeHex(color, fallback = '#a8bdb3') {
     return isValidHex(color) ? color : fallback;
 }
 
@@ -164,7 +164,7 @@ function detectQuality(decorations) {
 
 // ── Main normalizer ──
 export function normalizeSceneConfig(raw, portalDefaults = {}) {
-    const fallbackPrimary = portalDefaults.color_primary || '#c9a87c';
+    const fallbackPrimary = portalDefaults.color_primary || '#a8bdb3';
     const fallbackBg = portalDefaults.color_bg || '#1a1a2e';
 
     // Start with safe defaults

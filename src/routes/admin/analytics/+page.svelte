@@ -279,7 +279,7 @@
     td { padding: 0.6rem 0.75rem; color: var(--text-dim); border-bottom: 1px solid rgba(39,39,42,0.5); font-size: 0.85rem; }
     td a { color: var(--accent); text-decoration: none; }
     td a:hover { text-decoration: underline; }
-    code { color: var(--accent); background: rgba(201,168,124,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.8rem; }
+    code { color: var(--accent); background: rgba(168,189,179,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.8rem; }
 
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
     @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }

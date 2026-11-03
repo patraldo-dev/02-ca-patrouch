@@ -377,20 +377,6 @@ export async function getUserWritings(db, userId, options = {}) {
   };
 }
 
-export async function publishWriting(db, userId, { title, content, promptId, aiAssisted, visibility }) {
-  const id = crypto.randomUUID();
-  const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
-
-  await db.prepare(
-    `INSERT INTO writings (id, user_id, prompt_id, title, content, word_count, ai_assisted, visibility, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))`
-  ).bind(id, userId, promptId || null, title, content, wordCount, aiAssisted ? 1 : 0, visibility || 'private').run();
-
-  await updateStats(db, userId, 'written', wordCount);
-
-  return { id, wordCount };
-}
-
 export async function saveDraft(db, userId, { title, content, promptId, aiAssisted, visualPromptText, visualArtworkUrl }) {
   const id = crypto.randomUUID();
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
@@ -403,6 +389,15 @@ export async function saveDraft(db, userId, { title, content, promptId, aiAssist
   await updateStats(db, userId, 'written', wordCount);
 
   return { id, wordCount };
+}
+
+// Saving an edit is not a new writing: keep total_words accurate by applying
+// only the delta (can be negative), never bump total_writings or the streak.
+export async function adjustWordCount(db, userId, delta) {
+  if (!delta) return;
+  await db.prepare(
+    `UPDATE user_writing_stats SET total_words = MAX(0, total_words + ?), updated_at = datetime('now') WHERE user_id = ?`
+  ).bind(delta, userId).run();
 }
 
 // ── Agora: public writing queries ──

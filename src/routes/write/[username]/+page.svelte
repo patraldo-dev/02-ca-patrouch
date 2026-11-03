@@ -194,7 +194,7 @@
         padding: 1.25rem 1.5rem;
         transition: border-color 0.2s;
     }
-    .writing-item:hover { border-color: rgba(201, 168, 124, 0.3); }
+    .writing-item:hover { border-color: rgba(168, 189, 179, 0.3); }
 
     .writing-item-header {
         display: flex;

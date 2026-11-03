@@ -79,7 +79,7 @@ export async function POST({ request, platform }) {
           await sendMailgunEmail(
             email,
             m.subject,
-            `<a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${m.subject}</a>`,
+            `<a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#a8bdb3;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${m.subject}</a>`,
             m.body,
             env,
           );
@@ -126,7 +126,7 @@ export async function POST({ request, platform }) {
       await sendMailgunEmail(
         email,
         m.subject,
-        `<a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#c9a87c;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${m.subject}</a>`,
+        `<a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#a8bdb3;color:#09090b;text-decoration:none;border-radius:8px;font-weight:600;">${m.subject}</a>`,
         m.body,
         env,
       );

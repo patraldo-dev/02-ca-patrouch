@@ -35,7 +35,7 @@ export async function GET({ locals, platform }) {
                 name: r.name_es || 'Untitled realm',
                 excerpt: excerpt.length < (r.source_text || '').length ? excerpt + '…' : excerpt,
                 visibility: r.visibility || 'private',
-                color_primary: r.color_primary || '#c9a87c',
+                color_primary: r.color_primary || '#a8bdb3',
                 created_at: r.discovered_at,
             };
         });

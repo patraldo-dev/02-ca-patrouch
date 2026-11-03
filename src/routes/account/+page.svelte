@@ -300,7 +300,40 @@ import { avatarVariant } from '#lib/utils.js';
         { id: 'notifications', label: () => $t('account.tab_notifications') },
         { id: 'privacy', label: () => $t('account.tab_privacy') },
         { id: 'security', label: () => $t('account.tab_security') },
+        { id: 'passport', label: () => 'Passport' },
     ];
+
+    // --- AmbientX Passport (the Stage ↔ Writers' Room link) ---
+    let passportStatus = $state(null);
+    let passportCode = $state('');
+    let passportBusy = $state(false);
+    let passportError = $state('');
+    $effect(() => {
+        if (activeTab === 'passport' && !passportStatus) {
+            fetch('/api/passport/status').then(r => r.json()).then(d => { passportStatus = d; }).catch(() => {});
+        }
+    });
+    async function linkPassport() {
+        passportBusy = true; passportError = '';
+        try {
+            const r = await fetch('/api/passport/link', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ code: passportCode.trim().toUpperCase() }),
+            });
+            const d = await r.json();
+            if (d.ok) {
+                passportStatus = { linked: true, passport: d.passport };
+                passportCode = '';
+                toastMessage = 'Passport linked — your rank travels with you.';
+            } else {
+                passportError = d.error === 'invalid-or-expired-code'
+                    ? 'That code is invalid or expired — mint a fresh one at ambientx.dev/passport.'
+                    : (d.error || 'link-failed');
+            }
+        } catch (e) { passportError = String(e?.message || e); }
+        passportBusy = false;
+    }
 </script>
 
 <svelte:head>
@@ -352,7 +385,7 @@ import { avatarVariant } from '#lib/utils.js';
                     {generatingAvatar ? '⏳' : '✨'} {generatingAvatar ? $t('crop.cancel') : $t('account.ai_avatar_title')}
                 </button>
                 {#if avatarUrl && !avatarUrl.startsWith('data:')}
-                    <a href={avatarUrl} download="avatar.png" class="btn-outline" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px">💾</a>
+                    <a href="/api/user/avatar/download" download="avatar.png" class="btn-outline" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px" aria-label={$t('profile.user.avatar_download')} title={$t('profile.user.avatar_download')}>💾</a>
                 {/if}
                 <input bind:this={avatarInput} type="file" accept="image/jpeg,image/png,image/webp" onchange={handleAvatarSelect} class="hidden-input" />
             </div>
@@ -377,6 +410,49 @@ import { avatarVariant } from '#lib/utils.js';
     {/if}
 
     <!-- TAB: Notifications -->
+    {#if activeTab === 'passport'}
+    <section class="section-card">
+        <h2 class="section-title">AmbientX Passport</h2>
+        <p style="opacity:.75;font-size:.9rem;margin:.2rem 0 1rem;">
+            One identity across both platforms: write here (patrouch.ca, the Writers' Room),
+            take the stage at ambientx.dev. XP and rank are shared.
+        </p>
+        {#if passportStatus?.linked}
+            <div style="display:flex;gap:1rem;align-items:baseline;margin-bottom:.6rem;">
+                <strong style="color:#a8bdb3;font-size:1.25rem;">{passportStatus.passport.rank.name}</strong>
+                <span>{passportStatus.passport.xp} XP</span>
+                {#if passportStatus.passport.rank.next}
+                    <span style="opacity:.6;font-size:.85rem;">next: {passportStatus.passport.rank.next.name} at {passportStatus.passport.rank.next.at} XP</span>
+                {/if}
+            </div>
+            <ul style="margin:0;padding-left:1.1rem;opacity:.85;">
+                {#each passportStatus.passport.links as l}
+                    <li>{l.platform === 'patrouch' ? '✍️ patrouch.ca' : l.platform} — {l.platform_username || l.platform_user_id}</li>
+                {/each}
+            </ul>
+            <p style="opacity:.6;font-size:.85rem;margin-top:.8rem;">Mint a new code at
+                <a href="https://ambientx.dev/passport" target="_blank" rel="noopener">ambientx.dev/passport</a>
+                to link another platform account.
+            </p>
+        {:else}
+            <p style="margin:.4rem 0;">Paste the link code from
+                <a href="https://ambientx.dev/passport" target="_blank" rel="noopener">ambientx.dev/passport</a>:</p>
+            <div style="display:flex;gap:.6rem;">
+                <input
+                    bind:value={passportCode}
+                    placeholder="e.g. 7T9X95NE"
+                    maxlength="8"
+                    style="flex:1;text-transform:uppercase;letter-spacing:.25em;padding:.5rem .8rem;border-radius:8px;border:1px solid rgba(168,189,179,.5);background:transparent;color:inherit;"
+                />
+                <button class="btn" onclick={linkPassport} disabled={passportBusy || passportCode.trim().length < 6}>
+                    {passportBusy ? 'Linking…' : 'Link'}
+                </button>
+            </div>
+            {#if passportError}<p style="color:#e08a6a;font-size:.85rem;margin-top:.5rem;">{passportError}</p>{/if}
+        {/if}
+    </section>
+    {/if}
+
     {#if activeTab === 'notifications'}
     <section class="section-card">
         {#if data.isBQPlayer}
@@ -592,7 +668,7 @@ import { avatarVariant } from '#lib/utils.js';
         white-space: nowrap;
     }
     .tab-btn:hover { border-color: var(--accent); color: var(--text); }
-    .tab-btn.active { background: rgba(201, 168, 124, 0.15); border-color: var(--accent); color: var(--accent); }
+    .tab-btn.active { background: rgba(168, 189, 179, 0.15); border-color: var(--accent); color: var(--accent); }
 
     /* Cards */
     .section-card {

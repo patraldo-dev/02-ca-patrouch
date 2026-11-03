@@ -822,13 +822,13 @@ export function buildSceneElements(config, scene, track) {
 	if (!elements.length) return { update() {}, grabbables: [] };
 
 	const palette = config.palette || {};
-	const crystalColors = palette.crystal_colors || ['#c9a87c', '#4fc3f7', '#b5ead7', '#ce93d8'];
+	const crystalColors = palette.crystal_colors || ['#a8bdb3', '#4fc3f7', '#b5ead7', '#ce93d8'];
 	const animated = [];
 	const grabbables = [];  // meshes tagged userData.grabbable, for the grab system
 
 	for (let ei = 0; ei < elements.length; ei++) {
 		const el = elements[ei];
-		const color = new THREE.Color(crystalColors[ei % crystalColors.length] || palette.primary || '#c9a87c');
+		const color = new THREE.Color(crystalColors[ei % crystalColors.length] || palette.primary || '#a8bdb3');
 		const depthMap = { foreground: { z: 1.5, y: -0.8 }, midground: { z: -2, y: -0.5 }, background: { z: -8, y: 0 } };
 		const dp = depthMap[el.position] || depthMap.midground;
 		const s = el.scale || 1.0;

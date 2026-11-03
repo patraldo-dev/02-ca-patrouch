@@ -80,9 +80,13 @@ export async function POST({ request, locals }) {
 
     const points = weightKeyword(clean);
 
+    // Oulipo: the reservation hobbles Sappho in the language the member is
+    // playing in (stamped here — writings.locale is NULL on human writings).
+    const locale = ['en', 'es', 'fr'].includes(locals.locale) ? locals.locale : 'es';
+
     await db.prepare(
-      `INSERT INTO bq_keyword_proposals (player_id, word, source_writing_id, points_earned) VALUES (?, ?, ?, ?)`
-    ).bind(locals.user.id, clean, writing_id, points).run();
+      `INSERT INTO bq_keyword_proposals (player_id, word, source_writing_id, points_earned, locale) VALUES (?, ?, ?, ?, ?)`
+    ).bind(locals.user.id, clean, writing_id, points, locale).run();
 
     return json({
       message: 'Keyword deployed!',

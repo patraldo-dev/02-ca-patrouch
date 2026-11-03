@@ -121,7 +121,7 @@
     .filter-tag:hover, .filter-tag.active {
         color: var(--accent);
         border-color: var(--accent);
-        background: rgba(201, 168, 124, 0.08);
+        background: rgba(168, 189, 179, 0.08);
     }
 
     .day-group {
@@ -177,7 +177,7 @@
         padding: 1.25rem 1.5rem;
         transition: border-color 0.2s;
     }
-    .response-card:hover { border-color: rgba(201, 168, 124, 0.3); }
+    .response-card:hover { border-color: rgba(168, 189, 179, 0.3); }
 
     .response-header {
         display: flex;

@@ -120,8 +120,8 @@ async function dissolve(color) {
  * @param {{ color: string, originX?: number, originY?: number }} opts
  * @returns {Promise<void>} resolves when the reveal is complete
  */
-export async function playTransition({ color = '#c9a87c', originX, originY } = {}) {
-	const safe = /^#[0-9a-fA-F]{6}$/.test(color) ? color : '#c9a87c';
+export async function playTransition({ color = '#a8bdb3', originX, originY } = {}) {
+	const safe = /^#[0-9a-fA-F]{6}$/.test(color) ? color : '#a8bdb3';
 	const kind = TRANSITIONS[Math.floor(Math.random() * TRANSITIONS.length)];
 	try {
 		switch (kind) {
@@ -139,7 +139,7 @@ export async function playTransition({ color = '#c9a87c', originX, originY } = {
  * Play a specific transition (for testing or deliberate choreography).
  */
 export async function playTransitionByName(name, opts = {}) {
-	const safe = /^#[0-9a-fA-F]{6}$/.test(opts.color || '') ? opts.color : '#c9a87c';
+	const safe = /^#[0-9a-fA-F]{6}$/.test(opts.color || '') ? opts.color : '#a8bdb3';
 	switch (name) {
 		case 'iris':     return await iris(safe, opts.originX, opts.originY);
 		case 'whip':     return await whip(safe, opts.originX);

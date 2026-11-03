@@ -10,28 +10,34 @@
     let inFlight = false;          // guards against overlapping polls
     let failureStreak = 0;          // drives exponential backoff on network blips
 
-    // Simple i18n — no get() to avoid SSR crash
+    // i18n — simple — no get() to avoid SSR crash
     const i18n = {
         en: {
+            read_part: '→ Read part',
             title: 'Notifications',
             mark_all_read: 'Mark all read',
             no_notifications: 'No new notifications',
             empty: 'All caught up!',
-            enter_portal: '→ Enter portal'
+            enter_portal: '→ Enter portal',
+            view_comment: '→ View comment'
         },
         es: {
+            read_part: '→ Leer parte',
             title: 'Notificaciones',
             mark_all_read: 'Marcar todo leído',
             no_notifications: 'Sin notificaciones',
             empty: '¡Todo al día!',
-            enter_portal: '→ Entrar al portal'
+            enter_portal: '→ Entrar al portal',
+            view_comment: '→ Ver comentario'
         },
         fr: {
+            read_part: '→ Lire la partie',
             title: 'Notifications',
             mark_all_read: 'Tout marquer comme lu',
             no_notifications: 'Pas de notifications',
             empty: 'Tout est lu !',
-            enter_portal: '→ Entrer dans le portail'
+            enter_portal: '→ Entrer dans le portail',
+            view_comment: '→ Voir le commentaire'
         }
     };
 
@@ -69,6 +75,34 @@
         if (!meta) return null;
         const pid = meta.portal_id || meta.portal_ids?.[0];
         return pid ? `/portals/${pid}` : null;
+    }
+
+    // Comment/reply notifications carry { writing_id, comment_id } — deep-link
+    // straight into the thread.
+    function commentLink(n) {
+        const meta = parseMeta(n);
+        if (!meta?.writing_id) return null;
+        return `/writings/${meta.writing_id}${meta.comment_id ? `#comment-${meta.comment_id}` : ''}`;
+    }
+
+    function linkFor(n) {
+        return commentLink(n) || portalLink(n);
+    }
+
+    function linkLabel(n) {
+        if (n.type === 'project_part') return t('projects.read_part');
+        return commentLink(n) ? t('view_comment') : t('enter_portal');
+    }
+
+    // Follow the notification's deep link, marking it read on the way.
+    async function openNotification(n) {
+        const href = linkFor(n);
+        if (href) {
+            markRead(n.id);
+            window.location.href = href;
+        } else {
+            markRead(n.id);
+        }
     }
 
     async function fetchNotifications() {
@@ -170,11 +204,11 @@
                         <div class="empty-state">{t('empty')}</div>
                     {:else}
                         {#each notifications as n (n.id)}
-                        <button class="notification-item" onclick={() => markRead(n.id)}>
+                        <button class="notification-item" onclick={() => openNotification(n)}>
                                 <div class="notification-title">{n.title}</div>
                                 <div class="notification-body">{n.body || ''}</div>
-                                {#if portalLink(n)}
-                                <a class="notification-link" href={portalLink(n)} onclick={(e) => e.stopPropagation()}>{t('enter_portal')}</a>
+                                {#if linkFor(n)}
+                                <span class="notification-link">{linkLabel(n)}</span>
                                 {/if}
                                 <div class="notification-time">{timeAgo(n.created_at)}</div>
                             </button>

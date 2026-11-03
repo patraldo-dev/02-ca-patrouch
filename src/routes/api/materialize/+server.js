@@ -59,7 +59,7 @@ export async function POST({ request, platform }) {
     name_es: "Tu reino",
     name_en: "Your realm",
     icon: "✨",
-    color_primary: "#c9a87c",
+    color_primary: "#a8bdb3",
     color_bg: "#05030a",
   };
 

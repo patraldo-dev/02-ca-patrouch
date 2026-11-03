@@ -193,7 +193,7 @@
     width: 24px;
     height: 24px;
     border: 2px solid #e0e0e0;
-    border-top-color: #c9a87c;
+    border-top-color: #a8bdb3;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto 0.5rem;

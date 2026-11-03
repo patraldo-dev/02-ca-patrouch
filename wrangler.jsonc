@@ -4,7 +4,7 @@
  */
 {
 	"build": {
-		"command": "vite build && node scripts/append-do-exports.mjs . GrabDemoRoom=src/do/grab-demo-room.js OzRoom=src/do/oz-room.js"
+		"command": "node node_modules/vite/bin/vite.js build && node scripts/append-do-exports.mjs . GrabDemoRoom=src/do/grab-demo-room.js OzRoom=src/do/oz-room.js && node scripts/append-cron.mjs ."
 	},
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "02-ca-patrouch",
@@ -22,6 +22,11 @@
 	"observability": {
 		"enabled": true
 	},
+	// Weekly bridge export: Monday 06:00 — patrouch's top human writings
+	// enter ambientx's operator review queue (Phase 2 content bridge).
+	"triggers": {
+		"crons": ["0 6 * * 1"]
+	},
 	"secrets_store_secrets": [
 	  {
 	    "binding": "CLOUDFLARE_API_TOKEN",
@@ -36,11 +41,12 @@
 	],
 
 	"vars": {
+		"PASSPORT_SITE": "https://ambientx.dev",
                 "MAILGUN_DOMAIN": "patrouch.ca",
 	       	"CONTACT_EMAIL": "contact@patrouch.ca",
 	       	"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca",
 		"GOOGLE_CLIENT_ID": "935787532460-ontb8nl83lvk1uce52tige0ceidnm62d.apps.googleusercontent.com",
-                "GITHUB_CLIENT_ID": "Ov23liTXqoPm2WmALAWR"
+                "GITHUB_CLIENT_ID": "Ov23liiPv6DX5DfTr9tN"
         },
 
         "d1_databases": [
@@ -97,7 +103,72 @@
 			"tag": "v2",
 			"new_sqlite_classes": ["OzRoom"]
 		}
-	]
+	],
+
+	// --- Staging environment --- isolated D1 (fresh schema), staging
+	// Passport target; R2/Images/AI/Vectorize shared with prod for now
+	// (the greenroom-staging precedent). Deploys as 02-ca-patrouch-staging.
+	"env": {
+		"staging": {
+			"workers_dev": true,
+			"routes": [{ "pattern": "staging.patrouch.ca", "custom_domain": true }],
+			// Not inherited by environments — mirror the top-level bindings
+			// (CLOUDFLARE_API_TOKEN backs avatar uploads; CRON_SECRET guards
+			// cron endpoints).
+			"secrets_store_secrets": [
+				{
+					"binding": "CLOUDFLARE_API_TOKEN",
+					"store_id": "1da7c182b2d345e9bc6a8f83421d23a7",
+					"secret_name": "CLOUDFLARE_API_TOKEN"
+				},
+				{
+					"binding": "CRON_SECRET",
+					"store_id": "1da7c182b2d345e9bc6a8f83421d23a7",
+					"secret_name": "CRON_SECRET"
+				}
+			],
+			"vars": {
+				"PATROUCH_BASE_URL": "https://staging.patrouch.ca",
+				"PASSPORT_SITE": "https://staging-site.ambientx.dev",
+				"MAILGUN_DOMAIN": "patrouch.ca",
+				"CONTACT_EMAIL": "contact@patrouch.ca",
+				"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca",
+				// wrangler environments replace top-level vars wholesale — the
+				// OAuth client IDs must be repeated here or social sign-in
+				// breaks on staging. Staging uses the explicit _STAGING_
+				// prefix (ambientx pattern); secrets likewise live on this
+				// worker as GITHUB_STAGING_CLIENT_SECRET etc.
+				"GOOGLE_STAGING_CLIENT_ID": "935787532460-ontb8nl83lvk1uce52tige0ceidnm62d.apps.googleusercontent.com",
+				"GITHUB_STAGING_CLIENT_ID": "Ov23liirTTr9AOxH0LMl"
+			},
+			"d1_databases": [
+				{
+					"binding": "DB_book",
+					"database_name": "patrouch-ca-staging",
+					"database_id": "eb0c3f26-ad9f-4f4f-923b-152fb3e4a17d"
+				}
+			],
+			"r2_buckets": [
+				{ "binding": "R2_ASSETS", "bucket_name": "patrouch-ca-assets" },
+				{ "binding": "BOOTY_CONTENT", "bucket_name": "booty-content" }
+			],
+			"images": { "binding": "IMAGES" },
+			"ai": { "binding": "AI" },
+			"vectorize": [
+				{ "binding": "VECTORIZE", "index_name": "patrouch-writings" }
+			],
+			"durable_objects": {
+				"bindings": [
+					{ "name": "GRAB_DEMO_ROOM", "class_name": "GrabDemoRoom" },
+					{ "name": "OZ_ROOM", "class_name": "OzRoom" }
+				]
+			},
+			"migrations": [
+				{ "tag": "v1", "new_sqlite_classes": ["GrabDemoRoom"] },
+				{ "tag": "v2", "new_sqlite_classes": ["OzRoom"] }
+			]
+		}
+	}
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

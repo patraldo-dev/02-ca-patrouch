@@ -164,7 +164,7 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: rgba(201, 168, 124, 0.1);
+        background: rgba(168, 189, 179, 0.1);
         border: 1px solid var(--border);
         display: flex;
         align-items: center;
@@ -186,7 +186,7 @@
 
     .progress-bar {
         height: 4px;
-        background: rgba(201, 168, 124, 0.1);
+        background: rgba(168, 189, 179, 0.1);
         border-radius: 2px;
         margin-bottom: 0.3rem;
         overflow: hidden;

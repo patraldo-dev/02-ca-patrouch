@@ -314,9 +314,9 @@
         border-radius: 8px;
         font-size: 0.85rem;
         z-index: 1000;
-        background: rgba(201, 168, 124, 0.15);
+        background: rgba(168, 189, 179, 0.15);
         color: var(--accent);
-        border: 1px solid rgba(201, 168, 124, 0.3);
+        border: 1px solid rgba(168, 189, 179, 0.3);
         backdrop-filter: blur(10px);
         animation: slideUp 0.3s ease;
     }
@@ -505,7 +505,7 @@
     .history-locale {
         font-size: 0.7rem;
         padding: 0.15rem 0.4rem;
-        background: var(--accent-bg, rgba(201,168,124,0.15));
+        background: var(--accent-bg, rgba(168,189,179,0.15));
         color: var(--accent);
         border-radius: 4px;
         font-weight: 600;

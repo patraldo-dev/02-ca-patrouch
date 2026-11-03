@@ -2,19 +2,48 @@
     import { t, getLocale } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
     import { marked } from 'marked';
+    import DictationButton from '#lib/components/DictationButton.svelte';
+    import HandwritingImport from '#lib/components/HandwritingImport.svelte';
+    import ProjectPicker from '#lib/components/ProjectPicker.svelte';
     import { browser } from '$app/env';
 
     let { data } = $props();
     let title = $state(data.writing.title);
     let content = $state(data.writing.content);
     let isPublished = $state(data.writing.status === 'published');
-    let visibility = $state(data.writing.visibility || 'public');
     let wordCount = $state(data.writing.word_count || 0);
     let showPreview = $state(false);
     let previewHtml = $state('');
     let saving = $state(false);
     let toast = $state(null);
     let toastTimer = null;
+
+    // Hands-free dictation into the content box
+    let contentTextarea = $state(null);
+    let interimText = $state('');
+    let manuscriptUrl = $state(null);
+    let projectId = $state(data.writing?.project_id || null);
+
+    function insertAtCursor(text) {
+        if (!text) return;
+        if (contentTextarea) {
+            const pos = contentTextarea.selectionStart ?? content.length;
+            content = content.slice(0, pos) + text + content.slice(pos);
+            requestAnimationFrame(() => {
+                contentTextarea.focus();
+                contentTextarea.selectionStart = contentTextarea.selectionEnd = pos + text.length;
+            });
+        } else {
+            content = (content ? content + ' ' : '') + text;
+        }
+    }
+
+    function onDictationFinal(text) { insertAtCursor(text.trim() + ' '); }
+
+    function onDictationCommand(cmd) {
+        if (cmd === 'save') save('draft');
+        else if (cmd === 'publish') save('published');
+    }
 
     function showToast(type, message) {
         toast = { type, message };
@@ -54,7 +83,9 @@
             const res = await fetch(`/api/writings/${data.writing.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content, visibility, status })
+                // Canonical pairs only: publish = published+public, draft = draft+private.
+                // Sending stale visibility alongside a draft save caused drift.
+                body: JSON.stringify({ title, content, status, visibility: status === 'published' ? 'public' : 'private', manuscript_url: manuscriptUrl || undefined, projectId })
             });
             const result = await res.json();
             if (result.error) {
@@ -102,11 +133,6 @@
             {showPreview ? '✏️ Edit' : '👁 Preview'}
         </button>
         <div class="toolbar-spacer"></div>
-        <span class="visibility-label">{$t('write.editor.visibility')}:</span>
-        <select bind:value={visibility}>
-            <option value="public">{$t('write.editor.public')}</option>
-            <option value="private">{$t('write.editor.private')}</option>
-        </select>
     </div>
 
     <div class="editor-body">
@@ -119,10 +145,34 @@
         {:else}
             <textarea
                 bind:value={content}
+                bind:this={contentTextarea}
                 placeholder={$t("write.start_placeholder")}
                 class="editor-textarea"
             ></textarea>
         {/if}
+        {#if interimText}
+            <div class="dictation-interim" aria-live="polite">{interimText}</div>
+        {/if}
+        <HandwritingImport
+            onImport={(imp) => {
+                if (imp.text) insertAtCursor(imp.text + '\n\n');
+                if (imp.title && !title.trim()) title = imp.title;
+            }}
+            onManuscript={(u) => (manuscriptUrl = u)}
+        />
+
+        <DictationButton
+            lang={getLocale() || 'es'}
+            commands={true}
+            onFinal={onDictationFinal}
+            onInterim={(s) => (interimText = s)}
+            onInterimEnd={() => (interimText = '')}
+            onCommand={onDictationCommand}
+        />
+    </div>
+
+    <div class="project-row">
+        <ProjectPicker bind:projectId={projectId} />
     </div>
 
     <div class="editor-actions">
@@ -141,6 +191,7 @@
 </div>
 
 <style>
+    .dictation-interim { margin: 0.4rem 0; font-style: italic; color: var(--muted, #999); font-size: 0.85rem; min-height: 1.2em; }
     .edit-page {
         max-width: 820px;
         margin: 0 auto;
@@ -159,7 +210,7 @@
     .back-link {
         background: none;
         border: none;
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
         font-family: var(--font-body);
         font-size: 0.9rem;
         cursor: pointer;
@@ -175,8 +226,8 @@
     }
 
     .from-prompt {
-        background: rgba(201,168,124,0.15);
-        color: var(--accent, #c9a87c);
+        background: rgba(168,189,179,0.15);
+        color: var(--accent, #a8bdb3);
         padding: 0.2rem 0.6rem;
         border-radius: 12px;
         font-size: 0.75rem;
@@ -220,7 +271,7 @@
     }
 
     .editor-field input:focus {
-        border-color: var(--accent, #c9a87c);
+        border-color: var(--accent, #a8bdb3);
     }
 
     .editor-toolbar {
@@ -311,11 +362,11 @@
     }
 
     .preview-content :global(em) {
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
     }
 
     .preview-content :global(blockquote) {
-        border-left: 3px solid var(--accent, #c9a87c);
+        border-left: 3px solid var(--accent, #a8bdb3);
         padding-left: 1rem;
         margin: 1rem 0;
         color: var(--text-dim);
@@ -327,9 +378,10 @@
     }
 
     .preview-content :global(a) {
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
     }
 
+    .project-row { display: flex; margin: 0.6rem 0; }
     .editor-actions {
         display: flex;
         gap: 0.75rem;
@@ -384,7 +436,7 @@
     }
 
     .btn-publish {
-        background: var(--accent, #c9a87c);
+        background: var(--accent, #a8bdb3);
         color: var(--bg);
     }
 

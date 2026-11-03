@@ -2,6 +2,7 @@
     import { browser } from '$app/env';
     import { t } from '#lib/i18n/index.js';
     import { authClient } from '#lib/auth-client.js';
+    import InkText from '#lib/components/InkText.svelte';
     
     let { data } = $props();
     
@@ -60,7 +61,7 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <h1>{$t('auth.login.title')}</h1>
+                <h1><InkText text={$t('auth.login.title')} step={40} /></h1>
                 <p>{$t('auth.login.subtitle')}</p>
             </div>
             
@@ -271,11 +272,16 @@
         margin-bottom: 32px;
     }
     
+    /* Same display recipe as the signup card: Outfit 900, signature
+       cranberry, ink-written. */
     .login-header h1 {
-        font-size: 31px;
-        font-weight: 700;
-        color: var(--text);
-        margin: 0 0 8px 0;
+        font-family: var(--font-display);
+        font-size: clamp(1.9rem, 8vw, 2.5rem);
+        line-height: 0.95;
+        font-weight: 900;
+        text-wrap: balance;
+        color: var(--signature);
+        margin: 0 0 0.7rem 0;
     }
     
     .login-header p {
@@ -297,11 +303,11 @@
         border: 1px solid var(--border);
     }
 
-    .info-message { display: flex; align-items: center; gap: 8px; background: rgba(201,168,124,0.1); border: 1px solid rgba(201,168,124,0.3); color: var(--accent); padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; }
+    .info-message { display: flex; align-items: center; gap: 8px; background: rgba(168,189,179,0.1); border: 1px solid rgba(168,189,179,0.3); color: var(--accent); padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; }
     /* OAuth buttons */
     .oauth-section { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
     .btn-oauth { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1rem; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; cursor: pointer; background: var(--surface, #141417); color: var(--text); font-family: var(--font-body, 'Inter', sans-serif); transition: border-color 0.2s; }
-    .btn-oauth:hover { border-color: var(--accent, #c9a87c); }
+    .btn-oauth:hover { border-color: var(--accent, #a8bdb3); }
     .btn-github { color: var(--text); }
 
     /* Divider */
@@ -354,7 +360,7 @@
     .form-group input:focus {
         outline: none;
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(201, 168, 124, 0.15);
+        box-shadow: 0 0 0 3px rgba(168, 189, 179, 0.15);
     }
     
     .form-group input:disabled {
@@ -413,18 +419,29 @@
     
     .login-button {
         width: 100%;
-        padding: 14px;
+        padding: 0.95rem 2.4rem;
         background: var(--accent);
         color: var(--bg);
         border: none;
-        border-radius: 8px;
-        font-size: 16px;
+        border-radius: 999px;
+        font-size: 1.2rem;
         font-weight: 600;
+        letter-spacing: 0.02em;
         cursor: pointer;
-        transition: background-color 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
+        box-shadow: 0 6px 24px rgba(168, 189, 179, 0.25);
     }
-    
-    .login-button:hover { background: var(--accent-bg); }
+
+    .login-button:hover {
+        filter: brightness(1.06);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(168, 189, 179, 0.45);
+    }
+
+    .login-button:active {
+        transform: translateY(0) scale(0.98);
+    }
     
     .login-button:disabled {
         opacity: 0.6;
@@ -450,6 +467,5 @@
     @media (max-width: 768px) {
         .login-container { max-width: 400px; }
         .login-card { padding: 30px 20px; }
-        .login-header h1 { font-size: 24px; }
     }
 </style>

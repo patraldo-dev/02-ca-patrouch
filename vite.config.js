@@ -4,6 +4,22 @@ import { iwsdkDev } from "@iwsdk/vite-plugin-dev";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+	// IWSDK 0.5.3 externalizes elics; the app ALSO imports elics. Vite's
+	// chunk splitting can put core's module-level component definitions in
+	// a chunk that initializes before the elics chunk assigns its registry
+	// class (the '.record of undefined' boot crash). Pin them to ONE chunk.
+	resolve: {
+		dedupe: ['elics', '@iwsdk/core'],
+	},
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (id.includes('node_modules/elics') || id.includes('@iwsdk/core')) return 'iwsdk-ecs';
+				},
+			},
+		},
+	},
   plugins: [
     sveltekit({
       // adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.

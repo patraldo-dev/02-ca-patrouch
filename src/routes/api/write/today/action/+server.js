@@ -30,7 +30,18 @@ export async function POST(event) {
 
   const db = event.locals.db;
   const ai = env?.AI;
-  const result = await handleAction(db, ai, user.id, action, locale);
+  let result;
+  try {
+    result = await handleAction(db, ai, user.id, action, locale);
+  } catch (err) {
+    // Surface the real failure — this endpoint had been silently 500ing
+    // (pass button did nothing, nothing logged) for months.
+    console.error("POST /api/write/today/action error:", err);
+    return json(
+      { error: "Action failed", detail: err?.message || String(err) },
+      { status: 500 },
+    );
+  }
 
   if (result.error) return json(result, { status: 429 });
   return json(result);

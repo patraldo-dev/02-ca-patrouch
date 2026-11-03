@@ -312,7 +312,7 @@ export function buildTheaterScene(world, config = {}, allConfigs = {}, onNavigat
 
 	// Palette-driven stage haze so two theaters look distinct.
 	const thPalette = config.palette || {};
-	const thPrimary = new THREE.Color(thPalette.primary || '#c9a87c');
+	const thPrimary = new THREE.Color(thPalette.primary || '#a8bdb3');
 	const { h: thHue } = thPrimary.getHSL({});
 	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(thHue, 0.4, 0.04), thPalette.fog_density ?? 0.03);
 	const oldBg = scene.background;

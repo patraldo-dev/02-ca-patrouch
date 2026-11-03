@@ -133,10 +133,10 @@ export const THEMES = {
     descriptionFr: 'Méta-narration, philosophie',
 
     colors: {
-      reticle: 0xc9a87c,
+      reticle: 0xa8bdb3,
       ambient: 0xfff8e1,
       directional: 0xffffff,
-      uiPrimary: '#c9a87c',
+      uiPrimary: '#a8bdb3',
       uiBackground: 'rgba(255, 248, 225, 0.9)',
       uiText: '#3e2723',
     },

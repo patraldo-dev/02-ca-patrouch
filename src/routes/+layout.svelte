@@ -1,7 +1,7 @@
 <script>
     import '../app.css';
     import { browser } from '$app/env';
-    import { t, locale, setLocale } from '#lib/i18n/index.js';
+    import { t, locale, setLocale, locales } from '#lib/i18n/index.js';
     import { beforeNavigate } from '$app/navigation';
     import SearchModal from '#lib/components/SearchModal.svelte';
     import OnboardingFlow from '#lib/components/OnboardingFlow.svelte';
@@ -108,6 +108,14 @@
         if (browser) localStorage.setItem('preferredLanguage', lang);
     }
 
+    // Keep the client i18n store in sync with whatever the server actually
+    // used (data.serverLocale — the same source the nav switchers display).
+    // Deriving from the server value (not cookie/navigator guesses) means
+    // SSR text and hydrated text can never disagree.
+    onMount(() => {
+        if (locales.includes(data.serverLocale)) setLocale(data.serverLocale);
+    });
+
     async function handleLogout() {
         if (!browser) return;
         const { error } = await authClient.signOut();
@@ -210,7 +218,7 @@
                         <a href="/evaluate" onclick={() => tallerOpen = false}>{$t('common.nav.evaluate')}</a>
                                 <a href="/refine" onclick={() => tallerOpen = false}>{$t('common.nav.refine')}</a>
                                 <a href="/audio" onclick={() => tallerOpen = false}>{$t('common.nav.audio')}</a>
-                                <span class="taller-coming-soon">{$t('taller.dictation_title')} ✨</span>
+                                <a href="/dictation" onclick={() => tallerOpen = false}>{$t('taller.dictation_title')}</a>
                             </div>
                         {/if}
                     </div>
@@ -382,6 +390,7 @@
                 <a href="/evaluate" onclick={toggleMobileMenu}>{$t('common.nav.evaluate')}</a>
                 <a href="/refine" onclick={toggleMobileMenu}>{$t('common.nav.refine')}</a>
                 <a href="/audio" onclick={toggleMobileMenu}>{$t('common.nav.audio')}</a>
+                <a href="/dictation" onclick={toggleMobileMenu}>{$t('taller.dictation_title')}</a>
                 {:else}
                     <div class="mobile-taller-section">
                         <span class="mobile-taller-label mobile-taller-teaser">{$t('common.nav.taller')} <small>Members</small></span>
@@ -543,16 +552,18 @@
                 <NewsletterForm />
             </div>
             <div class="footer-bottom">
-                <p class="footer-tagline">{$t('common.footer.tagline')}</p>
                 <p class="footer-copy">© {new Date().getFullYear()} Christophe R Patraldo — <a href="https://patrouch.ca">patrouch.ca</a></p>
                 <p class="footer-built">{@html $t('common.footer.built_by')}</p>
-                <p class="footer-disclosure">{$t('disclosure.footer')}</p>
                 <p class="footer-links">
                     <a href="/privacy">{$t('common.footer.privacy')}</a>
                     <span class="footer-sep">·</span>
                     <a href="/terms">{$t('common.footer.terms')}</a>
                     <span class="footer-sep">·</span>
                     <a href="mailto:ishmael@patrouch.ca">{$t('common.footer.contact')}</a>
+                    <span class="footer-sep">·</span>
+                    <a href="https://github.com/patraldo-dev/patrouch" rel="noopener" target="_blank">{$t('common.footer.github')}</a>
+                    <span class="footer-sep">·</span>
+                    <a href="/languages">{$t('common.footer.language')}</a>
                 </p>
             </div>
         </div>
@@ -603,7 +614,7 @@
     }
 
     .logo-initials {
-        color: var(--text-dim);
+        color: var(--signature);
         font-weight: 600;
         font-style: italic;
     }
@@ -617,7 +628,7 @@
     }
 
     .logo:hover .logo-name {
-        color: var(--accent-hover, #d4b98f);
+        color: var(--accent-hover, #a8bdb3);
     }
 
     .desktop-nav {
@@ -754,7 +765,7 @@
         padding: 0.6rem 0.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: rgba(201,168,124,0.03);
+        background: rgba(168,189,179,0.03);
     }
     .mobile-taller-teaser { opacity: 0.8 !important; font-size: 1rem; font-weight: 600; }
     .mobile-taller-teaser small { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.6; }
@@ -1109,18 +1120,11 @@
         text-align: center;
     }
 
-    .footer-tagline {
-        font-family: var(--font-heading);
-        font-size: 1rem;
-        font-style: italic;
-        color: var(--text-dim);
-        margin-bottom: 0.5rem;
-    }
 
     .footer-copy {
         color: var(--text-muted);
         font-size: 0.85rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.85rem;
     }
 
     .footer-copy a { color: var(--accent); }
@@ -1128,7 +1132,7 @@
     .footer-built {
         color: var(--text-muted);
         font-size: 0.8rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.85rem;
     }
 
     .footer-built a {
@@ -1136,16 +1140,13 @@
         text-decoration: none;
     }
 
-    .footer-disclosure {
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        font-style: italic;
-        margin-top: 0.25rem;
-    }
-
     .footer-built a:hover {
         text-decoration: underline;
     }
+
+
+
+
 
     .footer-links {
         display: flex;

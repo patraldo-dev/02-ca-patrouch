@@ -2,18 +2,49 @@
 <script>
     import { t } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
+    import { getLocale } from '#lib/i18n/index.js';
+    import DictationButton from '#lib/components/DictationButton.svelte';
+    import HandwritingImport from '#lib/components/HandwritingImport.svelte';
+    import ProjectPicker from '#lib/components/ProjectPicker.svelte';
 
     let { data } = $props();
 
     let title = $state('');
     let content = $state('');
-    let visibility = $state('public');
+    let draftId = $state(null);
     let aiAssisted = $state(false);
     let saving = $state(false);
     let saved = $state(false);
     let error = $state('');
 
     let wordCount = $derived(content.trim() ? content.trim().split(/\s+/).length : 0);
+
+    // Hands-free dictation into the content box
+    let contentTextarea = $state(null);
+    let interimText = $state('');
+    let manuscriptUrl = $state(null);
+    let projectId = $state(null);
+
+    function insertAtCursor(text) {
+        if (!text) return;
+        if (contentTextarea) {
+            const pos = contentTextarea.selectionStart ?? content.length;
+            content = content.slice(0, pos) + text + content.slice(pos);
+            requestAnimationFrame(() => {
+                contentTextarea.focus();
+                contentTextarea.selectionStart = contentTextarea.selectionEnd = pos + text.length;
+            });
+        } else {
+            content = (content ? content + ' ' : '') + text;
+        }
+    }
+
+    function onDictationFinal(text) { insertAtCursor(text.trim() + ' '); }
+
+    function onDictationCommand(cmd) {
+        if (cmd === 'save') handleSave(false);
+        else if (cmd === 'publish') handleSave(true);
+    }
 
     function catLabel(key) {
         return `write.category.${key}`;
@@ -28,15 +59,20 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    id: draftId,
+                    newDraft: true,
                     title: title.trim(),
                     content: content.trim(),
                     promptId: data.prompt?.id || null,
                     aiAssisted,
-                    visibility,
+                    manuscriptUrl,
+                    projectId,
                     status: publish ? 'published' : 'draft'
                 })
             });
             if (res.ok) {
+                const d = await res.json();
+                draftId = d.id;
                 saved = true;
                 error = '';
             } else {
@@ -82,7 +118,26 @@
     <div class="editor-field full">
         <label>{$t('write.editor.content')} <span class="word-count">{wordCount} {$t('write.editor.words')}</span></label>
         <div style="position:relative;">
-            <textarea bind:value={content} placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
+            <textarea bind:value={content} bind:this={contentTextarea} placeholder={$t('write.editor.content_placeholder')} rows="16" required></textarea>
+            {#if interimText}
+                <div class="dictation-interim" aria-live="polite">{interimText}</div>
+            {/if}
+            <HandwritingImport
+                onImport={(imp) => {
+                    if (imp.text) insertAtCursor(imp.text + '\n\n');
+                    if (imp.title && !title.trim()) title = imp.title;
+                }}
+                onManuscript={(u) => (manuscriptUrl = u)}
+            />
+
+            <DictationButton
+                lang={getLocale() || 'es'}
+                commands={true}
+                onFinal={onDictationFinal}
+                onInterim={(s) => (interimText = s)}
+                onInterimEnd={() => (interimText = '')}
+                onCommand={onDictationCommand}
+            />
             <button class="copy-inline" onclick={() => navigator.clipboard.writeText(content)} title="Copy">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             </button>
@@ -90,13 +145,7 @@
     </div>
 
     <div class="editor-options">
-        <div class="option-group">
-            <label>{$t('write.editor.visibility')}</label>
-            <select bind:value={visibility}>
-                <option value="private">{$t('write.editor.private')}</option>
-                <option value="public">{$t('write.editor.public')}</option>
-            </select>
-        </div>
+        <ProjectPicker bind:projectId={projectId} />
         <label class="toggle-label" title={$t('write.editor.ai_tooltip')}>
             <input type="checkbox" bind:checked={aiAssisted} />
             <span>{$t('write.editor.ai_assisted')} <span class="info-icon" title={$t('write.editor.ai_tooltip')}>ⓘ</span></span>
@@ -107,12 +156,10 @@
         <button class="btn-glass" onclick={() => handleSave(false)} disabled={saving || !title.trim() || !content.trim()}>
             {saving ? $t('write.editor.saving') : $t('write.editor.save_draft')}
         </button>
-        {#if visibility === 'public'}
-            <label class="disclosure-check">
-                <input type="checkbox" checked />
-                <span>{$t('disclosure.publish_consent')}</span>
-            </label>
-        {/if}
+        <label class="disclosure-check">
+            <input type="checkbox" checked />
+            <span>{$t('disclosure.publish_consent')}</span>
+        </label>
         <button class="btn-accent" onclick={() => handleSave(true)} disabled={saving || !title.trim() || !content.trim()}>
             {$t('write.editor.publish')}
         </button>
@@ -120,6 +167,7 @@
 </div>
 
 <style>
+    .dictation-interim { margin: 0.4rem 0; font-style: italic; color: var(--muted, #999); font-size: 0.85rem; min-height: 1.2em; }
     .editor-page {
         max-width: 780px;
         margin: 0 auto;

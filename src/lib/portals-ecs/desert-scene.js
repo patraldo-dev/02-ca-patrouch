@@ -305,7 +305,7 @@ export function buildDesertScene(world, config = {}, allConfigs = {}, onNavigate
 
 	// Palette-driven sky/fog so two deserts with different portals look distinct.
 	const dPalette = config.palette || {};
-	const dPrimary = new THREE.Color(dPalette.primary || '#c9a87c');
+	const dPrimary = new THREE.Color(dPalette.primary || '#a8bdb3');
 	const { h: dHue } = dPrimary.getHSL({});
 	scene.fog = new THREE.FogExp2(new THREE.Color().setHSL(dHue, 0.5, 0.33), dPalette.fog_density ?? 0.02);
 	const oldBg = scene.background;

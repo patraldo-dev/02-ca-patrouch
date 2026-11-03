@@ -315,7 +315,7 @@
 		gap: 0.75rem;
 		background: rgba(10, 10, 20, 0.85);
 		backdrop-filter: blur(12px);
-		border: 1px solid rgba(201, 168, 124, 0.2);
+		border: 1px solid rgba(168, 189, 179, 0.2);
 		border-radius: 16px;
 		padding: 0.6rem 1.2rem;
 		flex-wrap: wrap;
@@ -328,8 +328,8 @@
 		align-items: center;
 		min-width: 60px;
 	}
-	.score-card.me .score-label { color: #c9a87c; }
-	.score-card.me .score-value { color: #c9a87c; }
+	.score-card.me .score-label { color: #a8bdb3; }
+	.score-card.me .score-value { color: #a8bdb3; }
 	.score-card.leading .score-value { color: #8fbc8f; }
 	.score-label {
 		font-size: 0.65rem;
@@ -354,9 +354,9 @@
 		margin-bottom: 0.4rem;
 	}
 	.level-badge {
-		background: rgba(201, 168, 124, 0.2);
-		border: 1px solid rgba(201, 168, 124, 0.4);
-		color: #c9a87c;
+		background: rgba(168, 189, 179, 0.2);
+		border: 1px solid rgba(168, 189, 179, 0.4);
+		color: #a8bdb3;
 		font-size: 0.75rem;
 		font-weight: 700;
 		padding: 0.2rem 0.7rem;
@@ -414,7 +414,7 @@
 		color: rgba(255, 255, 255, 0.7);
 		padding: 0.2rem 0.8rem;
 	}
-	.result-score-row.me { color: #c9a87c; font-weight: 700; }
+	.result-score-row.me { color: #a8bdb3; font-weight: 700; }
 	@keyframes pulse {
 		from { opacity: 0.7; }
 		to { opacity: 1; }
@@ -471,7 +471,7 @@
 		width: 120px;
 		height: 120px;
 		border-radius: 50%;
-		border: 2px solid rgba(201, 168, 124, 0.3);
+		border: 2px solid rgba(168, 189, 179, 0.3);
 		background: rgba(10, 10, 20, 0.35);
 		backdrop-filter: blur(6px);
 		position: relative;
@@ -481,7 +481,7 @@
 	}
 	.thumbstick-base.active {
 		opacity: 1;
-		border-color: rgba(201, 168, 124, 0.6);
+		border-color: rgba(168, 189, 179, 0.6);
 	}
 	.thumbstick-knob {
 		position: absolute;
@@ -491,8 +491,8 @@
 		height: 48px;
 		margin: -24px 0 0 -24px;
 		border-radius: 50%;
-		background: radial-gradient(circle at 35% 35%, rgba(201, 168, 124, 0.9), rgba(201, 168, 124, 0.4));
-		border: 1px solid rgba(201, 168, 124, 0.6);
+		background: radial-gradient(circle at 35% 35%, rgba(168, 189, 179, 0.9), rgba(168, 189, 179, 0.4));
+		border: 1px solid rgba(168, 189, 179, 0.6);
 		transition: transform 0.05s linear; /* snappy but smooths sub-pixel jitter */
 	}
 </style>

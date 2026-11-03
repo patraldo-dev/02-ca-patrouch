@@ -60,7 +60,7 @@
     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
 
     // Point lights for depth
-    const pointLight1 = new THREE.PointLight(0xc9a87c, 1.5, 15);
+    const pointLight1 = new THREE.PointLight(0xa8bdb3, 1.5, 15);
     pointLight1.position.set(3, 3, 3);
     scene.add(pointLight1);
 

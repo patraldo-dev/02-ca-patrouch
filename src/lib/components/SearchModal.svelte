@@ -157,7 +157,7 @@
         height: 52px;
         border-radius: 50%;
         background: var(--surface);
-        color: var(--accent, #c9a87c);
+        color: var(--accent, #a8bdb3);
         border: 1px solid var(--border);
         cursor: pointer;
         display: flex;
