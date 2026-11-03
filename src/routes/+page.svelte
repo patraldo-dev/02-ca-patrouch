@@ -378,8 +378,8 @@
         bottom: -50px;
         transform: translateX(-50%);
         background: radial-gradient(closest-side,
-            rgba(224, 138, 154, 0.3),
-            rgba(168, 189, 179, 0.2) 55%,
+            rgba(224, 138, 154, 0.38),
+            rgba(90, 110, 101, 0.26) 55%,
             transparent 75%);
         filter: blur(40px);
         pointer-events: none;

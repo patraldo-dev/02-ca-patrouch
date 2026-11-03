@@ -1,6 +1,6 @@
 export function getTheme() {
-  if (typeof document === 'undefined') return 'dark';
-  return document.documentElement.getAttribute('data-theme') || 'dark';
+  if (typeof document === 'undefined') return 'light';
+  return document.documentElement.getAttribute('data-theme') || 'light';
 }
 
 export function setTheme(theme) {
