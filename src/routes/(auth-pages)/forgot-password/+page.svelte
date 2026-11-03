@@ -1,6 +1,7 @@
 <!-- src/routes/(auth-pages)/forgot-password/+page.svelte -->
 <script>
     import { t } from '#lib/i18n/index.js';
+    import InkText from '#lib/components/InkText.svelte';
 
     let email = $state('');
     let error = $state('');
@@ -42,7 +43,7 @@
 
 <div class="auth-container">
     <div class="auth-card">
-        <h1>{$t('forgot.title')}</h1>
+        <h1><InkText text={$t('forgot.title')} step={40} /></h1>
         <p>{$t('forgot.subtitle')}</p>
 
         {#if success}
@@ -93,10 +94,13 @@
         width: 100%;
     }
     .auth-card h1 {
-        font-family: var(--font-heading, 'Playfair Display', serif);
-        font-size: 1.5rem;
-        color: var(--text);
-        margin-bottom: 0.5rem;
+        font-family: var(--font-display);
+        font-size: clamp(1.9rem, 8vw, 2.5rem);
+        line-height: 0.95;
+        font-weight: 900;
+        text-wrap: balance;
+        color: var(--signature);
+        margin-bottom: 0.6rem;
     }
     .auth-card > p {
         color: var(--text-dim, #a1a1aa);
@@ -129,23 +133,28 @@
     }
     button[type="submit"] {
         width: 100%;
-        padding: 0.7rem;
+        padding: 0.95rem 2.4rem;
         background: var(--accent, #c9a87c);
         color: var(--bg);
         border: none;
-        border-radius: var(--radius, 8px);
+        border-radius: 999px;
         font-family: var(--font-body, 'Inter', sans-serif);
-        font-size: 0.95rem;
+        font-size: 1.2rem;
         font-weight: 600;
+        letter-spacing: 0.02em;
         cursor: pointer;
-        transition: opacity 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
+        box-shadow: 0 6px 24px rgba(201, 168, 124, 0.25);
     }
     button[type="submit"]:disabled {
         opacity: 0.6;
         cursor: not-allowed;
     }
     button[type="submit"]:hover:not(:disabled) {
-        opacity: 0.9;
+        filter: brightness(1.06);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(201, 168, 124, 0.45);
     }
     .success-banner {
         background: rgba(74, 222, 128, 0.1);

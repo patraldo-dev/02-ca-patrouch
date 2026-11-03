@@ -2,6 +2,7 @@
     import { browser } from '$app/env';
     import { t } from '#lib/i18n/index.js';
     import { authClient } from '#lib/auth-client.js';
+    import InkText from '#lib/components/InkText.svelte';
     
     let { data } = $props();
     
@@ -60,7 +61,7 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <h1>{$t('auth.login.title')}</h1>
+                <h1><InkText text={$t('auth.login.title')} step={40} /></h1>
                 <p>{$t('auth.login.subtitle')}</p>
             </div>
             
@@ -271,11 +272,16 @@
         margin-bottom: 32px;
     }
     
+    /* Same display recipe as the signup card: Outfit 900, signature
+       cranberry, ink-written. */
     .login-header h1 {
-        font-size: 31px;
-        font-weight: 700;
-        color: var(--text);
-        margin: 0 0 8px 0;
+        font-family: var(--font-display);
+        font-size: clamp(1.9rem, 8vw, 2.5rem);
+        line-height: 0.95;
+        font-weight: 900;
+        text-wrap: balance;
+        color: var(--signature);
+        margin: 0 0 0.7rem 0;
     }
     
     .login-header p {
@@ -413,18 +419,29 @@
     
     .login-button {
         width: 100%;
-        padding: 14px;
+        padding: 0.95rem 2.4rem;
         background: var(--accent);
         color: var(--bg);
         border: none;
-        border-radius: 8px;
-        font-size: 16px;
+        border-radius: 999px;
+        font-size: 1.2rem;
         font-weight: 600;
+        letter-spacing: 0.02em;
         cursor: pointer;
-        transition: background-color 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        transition: filter 0.2s, box-shadow 0.2s, transform 0.15s;
+        box-shadow: 0 6px 24px rgba(201, 168, 124, 0.25);
     }
-    
-    .login-button:hover { background: var(--accent-bg); }
+
+    .login-button:hover {
+        filter: brightness(1.06);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(201, 168, 124, 0.45);
+    }
+
+    .login-button:active {
+        transform: translateY(0) scale(0.98);
+    }
     
     .login-button:disabled {
         opacity: 0.6;
@@ -450,6 +467,5 @@
     @media (max-width: 768px) {
         .login-container { max-width: 400px; }
         .login-card { padding: 30px 20px; }
-        .login-header h1 { font-size: 24px; }
     }
 </style>
