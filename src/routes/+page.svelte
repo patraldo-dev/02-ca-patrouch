@@ -367,9 +367,9 @@
         color: var(--bg);
         border: 1px solid var(--accent);
         border-radius: 999px;
-        padding: 0.95rem 2.4rem;
+        padding: 1.15rem 3rem;
         font-family: var(--font-body);
-        font-size: 1.05rem;
+        font-size: 1.35rem;
         font-weight: 600;
         letter-spacing: 0.02em;
         cursor: pointer;
@@ -426,7 +426,7 @@
         line-height: 0.95;
         font-weight: 900;
         text-wrap: balance;
-        color: var(--accent);
+        color: var(--text);
         margin-bottom: 2rem;
     }
 
@@ -455,8 +455,6 @@
     .prompt-teaser {
         padding: 4rem 0;
         text-align: center;
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
     }
 
     .teaser-label {
