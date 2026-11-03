@@ -383,6 +383,10 @@
             transparent 75%);
         filter: blur(40px);
         pointer-events: none;
+        /* dissolve before the hero's overflow clip — a blurred field cut
+           mid-glow reads as a hard seam against the next section */
+        mask-image: linear-gradient(to bottom, #000 55%, transparent 95%);
+        -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 95%);
     }
 
     .hero-cta {
@@ -489,6 +493,30 @@
     .prompt-teaser {
         padding: 3rem 0 1rem;
         text-align: center;
+        position: relative;
+    }
+
+    /* The hero's colour field continues faintly into the teaser — the
+       two sections share one wash instead of meeting at a seam. */
+    .prompt-teaser::before {
+        content: '';
+        position: absolute;
+        top: -18%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 720px;
+        max-width: 140vw;
+        height: 320px;
+        background: radial-gradient(closest-side,
+            rgba(224, 138, 154, 0.14),
+            rgba(90, 110, 101, 0.1) 55%,
+            transparent 78%);
+        filter: blur(30px);
+        pointer-events: none;
+    }
+
+    .prompt-teaser > * {
+        position: relative;
     }
 
     .teaser-label {
