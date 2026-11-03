@@ -119,7 +119,7 @@
     .input-group input {
         width: 100%;
         padding: 0.65rem 0.75rem;
-        background: var(--bg, #09090b);
+        background: var(--bg, #101915);
         border: 2px solid var(--border, rgba(255,255,255,0.1));
         border-radius: var(--radius, 8px);
         color: var(--text, #e4e4e7);

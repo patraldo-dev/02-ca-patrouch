@@ -126,7 +126,7 @@
 		margin-top: 1rem;
 		padding: 0.75rem 1.5rem;
 		background: var(--accent, #a8bdb3);
-		color: var(--bg, #0a0a0f);
+		color: var(--bg, #101915);
 		border-radius: 8px;
 		text-decoration: none;
 		font-weight: 600;

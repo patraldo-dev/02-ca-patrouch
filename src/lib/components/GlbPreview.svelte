@@ -172,7 +172,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: rgba(10, 10, 15, 0.85);
+        background: rgba(16, 25, 21, 0.85);
         color: #b8b8c5;
         font-size: 0.85rem;
         gap: 0.5rem;

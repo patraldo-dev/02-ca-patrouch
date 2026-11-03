@@ -45,8 +45,8 @@
     scene = new THREE.Scene();
 
     // Dark space background
-    scene.background = new THREE.Color(0x09090b);
-    scene.fog = new THREE.Fog(0x09090b, 12, 25);
+    scene.background = new THREE.Color(0x101915);
+    scene.fog = new THREE.Fog(0x101915, 12, 25);
 
     camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 100);
     camera.position.set(0, 0.5, 8);
@@ -193,7 +193,7 @@
     top: 0;
     left: 0;
     overflow: hidden;
-    background: #09090b;
+    background: #101915;
   }
 
   .canvas-wrap {

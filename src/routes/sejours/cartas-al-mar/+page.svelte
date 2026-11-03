@@ -219,7 +219,7 @@
     }
     .btn-launch {
         background: var(--accent, #a8bdb3);
-        color: var(--bg, #09090b);
+        color: var(--bg, #101915);
         border: none;
         border-radius: 8px;
         padding: 0.8rem;

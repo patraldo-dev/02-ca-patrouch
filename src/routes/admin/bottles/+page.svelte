@@ -265,7 +265,7 @@
 
     .coord-input {
         width: 110px;
-        background: #09090b;
+        background: #101915;
         border: 1px solid #334155;
         color: #e2e8f0;
         padding: 0.3rem 0.4rem;

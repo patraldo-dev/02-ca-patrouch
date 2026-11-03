@@ -1411,7 +1411,7 @@
     .capture-close-btn {
         width: 100%;
         padding: 0.7rem;
-        color: var(--bg, #09090b);
+        color: var(--bg, #101915);
         border: none;
         border-radius: 8px;
         font-weight: 700;

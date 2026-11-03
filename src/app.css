@@ -9,7 +9,7 @@
    (AI agent "Max" — MiniMax M2 + OpenClaw)
    Also referenced: https://blog.95-216-124-247.sslip.io/ (offline)
 
-   --bg #09090b      Deep black background
+   --bg #101915      Deep black background
    --surface #141417  Slightly lighter panels
    --accent #a8bdb3   Editorial sage
    --font-heading     Playfair Display (serif)
@@ -17,10 +17,10 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --bg: #0a0a0f;
-  --surface: #1a1a22;
-  --surface-raised: #25252f;
-  --border: #3a3a45;
+  --bg: #101915;
+  --surface: #1a2420;
+  --surface-raised: #253129;
+  --border: #3a473f;
   --text: #f0f0f5;
   --text-dim: #b8b8c5;
   --text-muted: #8e8e9a;
@@ -37,7 +37,7 @@
   --glass-hover: rgba(255, 255, 255, 0.1);
   --accent-bg: rgba(168, 189, 179, 0.1);
   --accent-border: rgba(168, 189, 179, 0.35);
-  --navbar-bg: rgba(10, 10, 15, 0.85);
+  --navbar-bg: rgba(16, 25, 21, 0.85);
   --selection-bg: rgba(168, 189, 179, 0.3);
   /* Signature cranberry — the shared voice color: header C. R initials,
      hero tagline, signup display title. Light cranberry, AAA on dark. */
@@ -73,7 +73,7 @@ html[data-theme="light"] {
 
 html {
   font-size: 16px;
-  background-color: #0a0a0f;
+  background-color: #101915;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -542,7 +542,7 @@ html.lang-switching::after {
   content: '';
   position: fixed;
   inset: 0;
-  background: #09090b;
+  background: #101915;
   z-index: 99999;
   animation: langSpin 0.3s ease forwards;
 }
@@ -572,4 +572,4 @@ html.lang-switching::before {
 @keyframes spinnerRotate {
   to { transform: rotate(360deg); }
 }
-\n.player-label{background:rgba(9,9,11,.8)!important;color:#fff!important;border:none!important;border-radius:4px!important;padding:2px 6px!important;font-size:11px!important;font-family:Inter,sans-serif!important;font-weight:600!important;box-shadow:0 1px 3px rgba(0,0,0,.4)!important}.player-label::before{display:none!important}
+\n.player-label{background:rgba(16,25,21,.8)!important;color:#fff!important;border:none!important;border-radius:4px!important;padding:2px 6px!important;font-size:11px!important;font-family:Inter,sans-serif!important;font-weight:600!important;box-shadow:0 1px 3px rgba(0,0,0,.4)!important}.player-label::before{display:none!important}
