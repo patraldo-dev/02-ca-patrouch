@@ -39,10 +39,9 @@
   --accent-border: rgba(212, 185, 143, 0.35);
   --navbar-bg: rgba(10, 10, 15, 0.85);
   --selection-bg: rgba(212, 185, 143, 0.3);
-  /* Signature lavender — the shared voice color: header C. R initials,
-     hero tagline, signup display title. Pure lavender (was the muted
-     lavender-grey of --text-dim); AAA on the dark bg. */
-  --signature: #b9b3e6;
+  /* Signature mint — the shared voice color: header C. R initials,
+     hero tagline, signup display title. AAA on the dark bg. */
+  --signature: #9fd8bd;
 }
 
 html[data-theme="light"] {
@@ -62,8 +61,8 @@ html[data-theme="light"] {
   --accent-border: rgba(133, 105, 62, 0.3);
   --navbar-bg: rgba(250, 249, 247, 0.85);
   --selection-bg: rgba(133, 105, 62, 0.25);
-  /* Dark-mode lavender flipped for the paper bg — 5.8:1, AA. */
-  --signature: #635a9e;
+  /* Dark-mode mint flipped for the paper bg — ~5:1, AA. */
+  --signature: #2a7458;
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -112,7 +112,7 @@
     </div>
 
     <!-- Icon + Title -->
-    <svg class="signup-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg class="signup-icon" width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="28" cy="28" r="26" stroke="#c9a87c" stroke-width="1" opacity="0.3"/>
         <path d="M18 38 C18 30 22 22 28 22 C34 22 38 30 38 38" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         <path d="M22 16 L26 28" stroke="#c9a87c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
@@ -187,9 +187,9 @@
 
 <style>
     main {
-        max-width: 400px;
-        margin: 4rem auto 2rem;
-        padding: 2rem 2rem 1.5rem;
+        max-width: 440px;
+        margin: 2.25rem auto 1.5rem;
+        padding: 1.5rem 1.5rem 1.25rem;
         border: 1px solid var(--border);
         border-radius: 8px;
         background: var(--surface);
@@ -203,27 +203,27 @@
     }
 
     .signup-icon {
-        margin-bottom: 1rem;
+        margin-bottom: 0.6rem;
         color: var(--accent);
     }
 
     /* Unified with the home hero: the display tagline recipe (Outfit 900,
-       signature lavender, ink-written by InkText) at card scale, and the
+       signature mint, ink-written by InkText) at card scale, and the
        submit button matches the Start Writing pill CTA. */
     h1 {
         font-family: var(--font-display);
-        font-size: clamp(2rem, 8vw, 2.8rem);
+        font-size: clamp(1.9rem, 8vw, 2.5rem);
         line-height: 0.95;
         font-weight: 900;
         text-wrap: balance;
         color: var(--signature);
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.9rem;
     }
 
     form {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.8rem;
     }
 
     .email-heading {
@@ -315,8 +315,8 @@
     }
 
     button[type="submit"] {
-        padding: 1.15rem 3rem;
-        font-size: 1.35rem;
+        padding: 0.95rem 2.4rem;
+        font-size: 1.2rem;
         letter-spacing: 0.02em;
         background: var(--accent);
         color: var(--bg);
@@ -365,7 +365,7 @@
     }
 
     /* OAuth */
-    .oauth-section { margin-bottom: 1.25rem; }
+    .oauth-section { margin-bottom: 0.75rem; }
     .oauth-buttons { display: flex; gap: 0.75rem; }
     .btn-oauth {
         flex: 1;
@@ -391,7 +391,7 @@
         display: flex;
         align-items: center;
         gap: 1rem;
-        margin: 1rem 0;
+        margin: 0.75rem 0;
     }
     .divider::before,
     .divider::after {
