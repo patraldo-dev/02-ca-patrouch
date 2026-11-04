@@ -504,8 +504,10 @@
         top: -18%;
         left: 50%;
         transform: translateX(-50%);
-        width: 720px;
-        max-width: 140vw;
+        /* min(720px, 100vw): 140vw overflowed phones sideways — the glow's
+           edges are transparent by 78% anyway, so capping at the viewport
+           is visually identical but creates no horizontal scroll play. */
+        width: min(720px, 100vw);
         height: 320px;
         background: radial-gradient(closest-side,
             rgba(224, 138, 154, 0.14),
