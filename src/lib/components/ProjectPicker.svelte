@@ -12,6 +12,9 @@
     let creating = $state(false);
     let newTitle = $state('');
     let busy = $state(false);
+    // Feedback after creating: name it saved + where to find it.
+    let saved = $state(null);   // { id, title }
+    let createError = $state('');
 
     async function load() {
         try {
@@ -43,8 +46,14 @@
                 onPick?.(d.id);
                 creating = false;
                 newTitle = '';
+                saved = { id: d.id, title: d.title };
+                createError = '';
+            } else {
+                createError = $t('projects.create_failed');
             }
-        } catch {}
+        } catch {
+            createError = $t('projects.create_failed');
+        }
         busy = false;
     }
 </script>
@@ -65,6 +74,15 @@
         </button>
         <button class="pp-btn" onclick={() => (creating = false)}>×</button>
     {:else}
+        {#if saved}
+            <span class="pp-note">
+                ✓ {$t('projects.created')} «{saved.title}» —
+                <a href="/projects/{saved.id}">{$t('projects.open')}</a>
+            </span>
+        {/if}
+        {#if createError}
+            <span class="pp-note pp-err">{createError}</span>
+        {/if}
         <select
             id="pp-select"
             class="pp-select"
@@ -89,9 +107,12 @@
     .pp { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .pp-label { font-size: 0.8rem; color: var(--text-dim, #aaa); }
     .pp-select, .pp-input {
-        background: rgba(0,0,0,0.25); border: 1px solid var(--border, #3a3f4d); border-radius: 8px;
+        background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
         color: inherit; font-family: inherit; font-size: 0.82rem; padding: 0.4rem 0.55rem;
     }
+    .pp-note { font-size: 0.78rem; color: var(--text-dim); }
+    .pp-note a { color: var(--accent); font-weight: 600; text-decoration: underline; }
+    .pp-err { color: #e07a7a; }
     .pp-select:focus, .pp-input:focus { outline: none; border-color: var(--accent, #a8bdb3); }
     .pp-input { flex: 1; min-width: 10rem; }
     .pp-btn {

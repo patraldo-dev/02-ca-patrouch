@@ -57,7 +57,13 @@
         } catch { /* silent */ }
     }
 
-    // Render markdown
+    // Render markdown. displayContent feeds ONE {@html} — swapping
+    // between two {@html} branches (keyword mode on/off) leaked the
+    // outgoing branch's DOM in Svelte 5 and duplicated the piece.
+    let displayContent = $derived(
+        keywordSelectMode ? makeWordsClickable(renderedContent) : renderedContent
+    );
+
     $effect(() => {
         if (w.content) {
             renderedContent = marked.parse(w.content, { async: false });
@@ -310,11 +316,7 @@
         </header>
 
         <div class="writing-content">
-            {#if keywordSelectMode}
-                {@html makeWordsClickable(renderedContent)}
-            {:else}
-                {@html renderedContent}
-            {/if}
+            {@html displayContent}
         </div>
 
         {#if manuscriptUrls.length}
