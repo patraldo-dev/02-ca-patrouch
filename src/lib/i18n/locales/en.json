@@ -1237,5 +1237,10 @@
   "pages.oulipo.how_2": "Below your published piece, choose “Select word” and pick one word to reserve.",
   "pages.oulipo.how_3": "The word joins the hidden pool. Watch the cords tighten on the scoreboard.",
   "pages.oulipo.more_title": "More to play",
-  "pages.oulipo.more_body": "Find the AI among the writers in the Agora, step through the Portals, and more games, puzzles and challenges are in the works."
+  "pages.oulipo.more_body": "Find the AI among the writers in the Agora, step through the Portals, and more games, puzzles and challenges are in the works.",
+  "write.view.continue_prompt": "Continue this prompt",
+  "pages.prompt.title": "Prompt",
+  "pages.prompt.responses": "Pieces for this stimulus",
+  "pages.prompt.write_cta": "Write from this prompt",
+  "pages.prompt.empty": "No pieces yet for this stimulus — be the first."
 }

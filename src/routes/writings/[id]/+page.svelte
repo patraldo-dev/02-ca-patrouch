@@ -115,6 +115,14 @@
         goto('/refine');
     }
 
+    function continuePrompt() {
+        // Hand the stimulus to /write — new draft, same prompt family.
+        sessionStorage.setItem('continue_prompt', JSON.stringify({
+            id: w.prompt_id, text: w.prompt_text, category: w.prompt_category
+        }));
+        goto('/write');
+    }
+
     function startKeywordSelect() {
         keywordSelectMode = true;
         keywordMsg = '';
@@ -297,10 +305,10 @@
                 {/if}
             </div>
             {#if w.prompt_text}
-                <div class="prompt-ref">
+                <a class="prompt-ref" href="/prompt/{w.prompt_id}">
                     <span class="prompt-tag">{$t('write.view.from_prompt')}</span>
                     <p>{w.prompt_text}</p>
-                </div>
+                </a>
             {/if}
             {#if w.visual_prompt_text}
                 <div class="prompt-ref visual-prompt-ref">
@@ -355,6 +363,11 @@
                 {#if !keywordSelectMode}
                     <button class="btn-pipeline btn-keyword" onclick={startKeywordSelect}>
                         🔑 {$t('write.view.choose_keyword')}
+                    </button>
+                {/if}
+                {#if w.prompt_id && w.prompt_text}
+                    <button class="btn-pipeline" onclick={continuePrompt}>
+                        ↻ {$t('write.view.continue_prompt')}
                     </button>
                 {/if}
             </div>
@@ -555,6 +568,8 @@
         border-left: 2px solid var(--accent);
         border-radius: 0 6px 6px 0;
     }
+    a.prompt-ref { text-decoration: none; color: inherit; }
+    a.prompt-ref:hover .prompt-tag { border-color: var(--accent); color: var(--accent); }
 
     .prompt-tag {
         font-size: 0.65rem;

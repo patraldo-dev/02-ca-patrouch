@@ -1237,5 +1237,10 @@
   "pages.oulipo.how_2": "Sous ton texte publié, choisis « Choisir un mot » et réserve-en un.",
   "pages.oulipo.how_3": "Le mot rejoint le pool caché. Regarde les cordes se serrer sur le tableau de score.",
   "pages.oulipo.more_title": "Plus à jouer",
-  "pages.oulipo.more_body": "Trouve l'IA parmi les écrivains dans l'Agora, franchis les Portails, et d'autres jeux, énigmes et défis sont en préparation."
+  "pages.oulipo.more_body": "Trouve l'IA parmi les écrivains dans l'Agora, franchis les Portails, et d'autres jeux, énigmes et défis sont en préparation.",
+  "write.view.continue_prompt": "Continuer avec ce stimulus",
+  "pages.prompt.title": "Stimulus",
+  "pages.prompt.responses": "Textes pour ce stimulus",
+  "pages.prompt.write_cta": "Écrire à partir de ce stimulus",
+  "pages.prompt.empty": "Pas encore de textes pour ce stimulus — sois le premier."
 }

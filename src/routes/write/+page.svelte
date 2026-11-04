@@ -26,6 +26,23 @@
     let quotes = $state(data.tickerQuotes || []);
     onMount(() => {
         invalidateAll();
+        // Continuation handoff (same pattern as refine/evaluate): a piece
+        // view or /prompt/[id] drops the stimulus here, then sends the
+        // writer to the editor with promptId already wired so the new
+        // piece joins the same prompt's family.
+        try {
+            const raw = sessionStorage.getItem('continue_prompt');
+            if (raw) {
+                const c = JSON.parse(raw);
+                if (c?.id && c?.text) {
+                    prompt = { id: c.id, prompt_text: c.text, category: c.category || 'daily-community' };
+                    promptId = c.id;
+                    promptSource = 'continuation';
+                    userAction = null;
+                }
+                sessionStorage.removeItem('continue_prompt');
+            }
+        } catch {}
     });
 
     // Onboarding is handled by layout

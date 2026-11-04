@@ -1237,5 +1237,10 @@
   "pages.oulipo.how_2": "Debajo de tu texto publicado, elige “Elegir palabra” y reserva una.",
   "pages.oulipo.how_3": "La palabra entra al conjunto oculto. Mira cómo se aprietan las cuerdas en el marcador.",
   "pages.oulipo.more_title": "Más para jugar",
-  "pages.oulipo.more_body": "Encuentra a la IA entre los escritores en el Ágora, cruza los Portales, y más juegos, acertijos y desafíos están en camino."
+  "pages.oulipo.more_body": "Encuentra a la IA entre los escritores en el Ágora, cruza los Portales, y más juegos, acertijos y desafíos están en camino.",
+  "write.view.continue_prompt": "Continuar con este estímulo",
+  "pages.prompt.title": "Estímulo",
+  "pages.prompt.responses": "Textos para este estímulo",
+  "pages.prompt.write_cta": "Escribir desde este estímulo",
+  "pages.prompt.empty": "Aún no hay textos para este estímulo — sé el primero."
 }
