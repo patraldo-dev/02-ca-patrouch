@@ -43,8 +43,8 @@ export async function POST({ request, locals }) {
     if (!word || !writing_id) return json({ error: 'word and writing_id required' }, { status: 400 });
 
     const clean = word.trim().toLowerCase().replace(/[^\p{L}]/gu, '');
-    if (clean.length < 4) return json({ error: 'Too short — minimum 4 letters' }, { status: 400 });
-    if (STOP_WORDS.has(clean)) return json({ error: 'Common word — not accepted' }, { status: 400 });
+    if (clean.length < 4) return json({ error: 'Too short — minimum 4 letters', code: 'too_short' }, { status: 400 });
+    if (STOP_WORDS.has(clean)) return json({ error: 'Common word — not accepted', code: 'stop_word' }, { status: 400 });
 
     // Verify writing exists, is published, and belongs to this user
     const writing = await db.prepare(
@@ -52,31 +52,31 @@ export async function POST({ request, locals }) {
     ).bind(writing_id).first();
 
     if (!writing) return json({ error: 'Writing not found or not published' }, { status: 404 });
-    if (writing.user_id !== locals.user.id) return json({ error: 'Not your writing' }, { status: 403 });
+    if (writing.user_id !== locals.user.id) return json({ error: 'Not your writing', code: 'not_owner' }, { status: 403 });
 
     // Verify word exists in the writing
     const text = ((writing.title || '') + ' ' + (writing.content || '')).toLowerCase();
     const textWords = new Set(text.match(/\p{L}{4,}/gu) || []);
-    if (!textWords.has(clean)) return json({ error: 'Word not found in this writing' }, { status: 400 });
+    if (!textWords.has(clean)) return json({ error: 'Word not found in this writing', code: 'not_in_text' }, { status: 400 });
 
     // Check: one keyword per writing
     const existingForWriting = await db.prepare(
       `SELECT id FROM bq_keyword_proposals WHERE source_writing_id = ?`
     ).bind(writing_id).first();
-    if (existingForWriting) return json({ error: 'This writing already contributed a keyword' }, { status: 409 });
+    if (existingForWriting) return json({ error: 'This writing already contributed a keyword', code: 'already_writing' }, { status: 409 });
 
     // Check: one keyword per player per day
     const today = new Date().toISOString().split('T')[0];
     const todayCount = await db.prepare(
       `SELECT COUNT(*) as c FROM bq_keyword_proposals WHERE player_id = ? AND proposal_date = ?`
     ).bind(locals.user.id, today).first();
-    if (todayCount?.c > 0) return json({ error: 'You already chose a keyword today' }, { status: 429 });
+    if (todayCount?.c > 0) return json({ error: 'You already chose a keyword today', code: 'already_today' }, { status: 429 });
 
     // Check: word not already active
     const wordActive = await db.prepare(
       `SELECT id FROM bq_keyword_proposals WHERE word = ? AND status = 'pending'`
     ).bind(clean).first();
-    if (wordActive) return json({ error: 'Word already in the hidden pool' }, { status: 409 });
+    if (wordActive) return json({ error: 'Word already in the hidden pool', code: 'word_active' }, { status: 409 });
 
     const points = weightKeyword(clean);
 

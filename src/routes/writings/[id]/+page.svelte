@@ -115,9 +115,34 @@
     }
 
     function makeWordsClickable(html) {
-        return html.replace(/\b(\p{L}{4,})\b/gu, (match) => {
-            return `<span class="kw-clickable" onclick="window.__selectKeyword('${match}')" role="button" tabindex="0">${match}</span>`;
-        });
+        // Wrap words in TEXT NODES only. The old regex ran over the whole
+        // HTML string and happily wrapped the "quot" inside &quot; entities,
+        // breaking them into literal "&quot;" on screen.
+        const doc = new DOMParser().parseFromString(`<div id="__kwroot">${html}</div>`, 'text/html');
+        const root = doc.getElementById('__kwroot');
+        const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const texts = [];
+        while (walker.nextNode()) {
+            if (/\p{L}{4,}/u.test(walker.currentNode.nodeValue)) texts.push(walker.currentNode);
+        }
+        for (const node of texts) {
+            const frag = doc.createDocumentFragment();
+            let last = 0;
+            for (const m of node.nodeValue.matchAll(/\p{L}{4,}/gu)) {
+                if (m.index > last) frag.append(node.nodeValue.slice(last, m.index));
+                const span = doc.createElement('span');
+                span.className = 'kw-clickable';
+                span.setAttribute('onclick', `window.__selectKeyword('${m[0]}')`);
+                span.setAttribute('role', 'button');
+                span.setAttribute('tabindex', '0');
+                span.textContent = m[0];
+                frag.append(span);
+                last = m.index + m[0].length;
+            }
+            frag.append(node.nodeValue.slice(last));
+            node.replaceWith(frag);
+        }
+        return root.innerHTML;
     }
 
     // Global click handler for keyword selection
@@ -138,11 +163,21 @@
                     keywordOk = true;
                     keywordSelectMode = false;
                 } else {
-                    keywordMsg = data.error;
+                    // Server errors carry a code; localize what we know.
+                    const KEYS = {
+                        too_short: 'write.view.keyword_err_too_short',
+                        stop_word: 'write.view.keyword_err_stop_word',
+                        not_in_text: 'write.view.keyword_err_not_in_text',
+                        not_owner: 'write.view.keyword_err_not_owner',
+                        already_writing: 'write.view.keyword_err_already_writing',
+                        already_today: 'write.view.keyword_err_already_today',
+                        word_active: 'write.view.keyword_err_word_active'
+                    };
+                    keywordMsg = (data.code && KEYS[data.code] && $t(KEYS[data.code])) || data.error;
                     keywordOk = false;
                 }
             } catch {
-                keywordMsg = 'Error submitting keyword';
+                keywordMsg = $t('write.view.keyword_err_generic');
                 keywordOk = false;
             }
         };
