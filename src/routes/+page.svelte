@@ -264,24 +264,24 @@
         <p class="section-desc fade-in">{$t('pages.home.works.description')}</p>
         <div class="works-grid" bind:this={worksGridEl}>
             <a href="/write" class="glass-card">
-                <span class="card-icon">✨</span>
                 <h3>{$t('pages.home.works.prompts')}</h3>
                 <p>{$t('pages.home.works.prompts.desc')}</p>
             </a>
             <a href="/agora" class="glass-card">
-                <span class="card-icon">🏛️</span>
                 <h3>{$t('pages.home.works.agora')}</h3>
                 <p>{$t('pages.home.works.agora.desc')}</p>
             </a>
             <a href="/stats" class="glass-card">
-                <span class="card-icon">📊</span>
                 <h3>{$t('pages.home.works.stats')}</h3>
                 <p>{$t('pages.home.works.stats.desc')}</p>
             </a>
             <a href="/portals" class="glass-card">
-                <span class="card-icon">🎮</span>
                 <h3>{$t('pages.home.works.games')}</h3>
                 <p>{$t('pages.home.works.games.desc')}</p>
+            </a>
+            <a href="/oulipo" class="glass-card">
+                <h3>{$t('pages.home.works.oulipo')}</h3>
+                <p>{$t('pages.home.works.oulipo.desc')}</p>
             </a>
         </div>
     </div>
@@ -491,7 +491,7 @@
 
     /* ── Prompt Carousel ── */
     .prompt-teaser {
-        padding: 3rem 0 1rem;
+        padding: 2.5rem 0 0.5rem;
         text-align: center;
         position: relative;
     }
@@ -679,7 +679,7 @@
     /* Works follows the prompt teaser directly — pull its top padding
        in or the two stack to a 10rem void. */
     .works-section {
-        padding-top: 2.5rem;
+        padding-top: 2rem;
     }
 
     .section-desc {
@@ -703,12 +703,6 @@
 
     @media (min-width: 900px) {
         .works-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    .card-icon {
-        font-size: 2rem;
-        display: block;
-        margin-bottom: 1rem;
     }
 
     .glass-card h3 {

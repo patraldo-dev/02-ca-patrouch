@@ -2,6 +2,7 @@
   "common.nav.home": "Accueil",
   "common.nav.about": "À propos",
   "common.nav.write": "Écrire",
+  "common.nav.oulipo": "Oulipo",
   "common.nav.search": "Rechercher",
   "common.nav.manage_profiles": "Gérer les Profils",
   "common.nav.agora": "Agora",
@@ -411,6 +412,8 @@
   "pages.home.works.prompts.desc": "De nouvelles stimulations quotidiennes en anglais, espagnol et français pour éveiller votre créativité.",
   "pages.home.works.agora": "L'Agora",
   "pages.home.works.agora.desc": "Partagez vos textes et découvrez l'écriture des autres dans la communauté.",
+  "pages.home.works.oulipo": "Oulipo",
+  "pages.home.works.oulipo.desc": "Publie un texte et réserve un mot. Chaque mot réservé disparaît du monde de l'histoire — une autre corde autour de Gulliver.",
   "pages.home.works.stats": "Votre Progression",
   "pages.home.works.stats.desc": "Suivez vos séries d'écriture, vos comptes de mots et votre évolution.",
   "write.editor.saved": "Brouillon enregistré avec succès",
@@ -1226,5 +1229,13 @@
   "common.footer.github": "GitHub",
   "common.footer.language": "Langue",
   "account.security.password_mismatch": "Les mots de passe ne correspondent pas",
-  "account.security.password_too_short": "Le mot de passe doit contenir au moins 8 caractères"
+  "account.security.password_too_short": "Le mot de passe doit contenir au moins 8 caractères",
+  "pages.oulipo.title": "Oulipo",
+  "pages.oulipo.intro": "Un jeu de contraintes pour toute la communauté. Publie un texte et tu peux réserver un seul mot — un mot par écrivain, par jour. Dès lors, ce mot disparaît du monde de l'histoire : Sappho ne peut plus l'utiliser, et chaque nouvelle corde rend son monde un peu plus petit.",
+  "pages.oulipo.how_title": "Comment ça marche",
+  "pages.oulipo.how_1": "Écris et publie un texte.",
+  "pages.oulipo.how_2": "Sous ton texte publié, choisis « Choisir un mot » et réserve-en un.",
+  "pages.oulipo.how_3": "Le mot rejoint le pool caché. Regarde les cordes se serrer sur le tableau de score.",
+  "pages.oulipo.more_title": "Plus à jouer",
+  "pages.oulipo.more_body": "Trouve l'IA parmi les écrivains dans l'Agora, franchis les Portails, et d'autres jeux, énigmes et défis sont en préparation."
 }

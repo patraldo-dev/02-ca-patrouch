@@ -2,6 +2,7 @@
   "common.nav.home": "Home",
   "common.nav.about": "About",
   "common.nav.write": "Write",
+  "common.nav.oulipo": "Oulipo",
   "common.nav.search": "Search",
   "common.nav.manage_profiles": "Manage Profiles",
   "common.nav.agora": "Agora",
@@ -417,6 +418,8 @@
   "pages.home.works.prompts.desc": "Fresh daily stimuli in English, Spanish, and French to spark your creativity.",
   "pages.home.works.agora": "The Agora",
   "pages.home.works.agora.desc": "Share your work and discover writing from others in the community.",
+  "pages.home.works.oulipo": "Oulipo",
+  "pages.home.works.oulipo.desc": "Publish a piece, reserve one word from it. Every reserved word disappears from the story world — another cord around Gulliver.",
   "pages.home.works.stats": "Your Progress",
   "pages.home.works.stats.desc": "Track your writing streaks, word counts, and growth over time.",
   "write.editor.saved": "Draft saved successfully",
@@ -1226,5 +1229,13 @@
   "common.footer.github": "GitHub",
   "common.footer.language": "Language",
   "account.security.password_mismatch": "Passwords do not match",
-  "account.security.password_too_short": "Password must be at least 8 characters"
+  "account.security.password_too_short": "Password must be at least 8 characters",
+  "pages.oulipo.title": "Oulipo",
+  "pages.oulipo.intro": "A game of constraint for the whole community. Publish a piece, and you may reserve a single word from it — one word per writer, per day. From then on, that word vanishes from the story world: Sappho cannot use it again, and every new cord makes her world a little smaller.",
+  "pages.oulipo.how_title": "How it works",
+  "pages.oulipo.how_1": "Write and publish a piece.",
+  "pages.oulipo.how_2": "Below your published piece, choose “Select word” and pick one word to reserve.",
+  "pages.oulipo.how_3": "The word joins the hidden pool. Watch the cords tighten on the scoreboard.",
+  "pages.oulipo.more_title": "More to play",
+  "pages.oulipo.more_body": "Find the AI among the writers in the Agora, step through the Portals, and more games, puzzles and challenges are in the works."
 }

@@ -206,6 +206,11 @@
                 >{$t('common.nav.write')}</a>
 
                 <a
+                    href="/oulipo"
+                    class:active={page.url.pathname.startsWith('/oulipo')}
+                >{$t('common.nav.oulipo')}</a>
+
+                <a
                     href="/portals"
                     class:active={page.url.pathname.startsWith('/portals')}
                 >{$t('common.nav.games')}</a>
@@ -430,6 +435,7 @@
                 <a href="/" onclick={toggleMobileMenu}>{$t('common.nav.home')}</a>
                 <a href="/agora" onclick={toggleMobileMenu}>{$t('common.nav.agora')}</a>
                 <a href="/write" onclick={toggleMobileMenu}>{$t('common.nav.write')}</a>
+                <a href="/oulipo" onclick={toggleMobileMenu}>{$t('common.nav.oulipo')}</a>
                 <a href="/portals" onclick={toggleMobileMenu}>{$t('common.nav.games')}</a>
                 {#if data?.user?.role === 'admin' || data?.user?.role === 'member'}
                 <span class="mobile-taller-label">{$t('common.nav.taller')}</span>

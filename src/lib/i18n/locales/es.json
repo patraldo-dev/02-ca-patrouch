@@ -2,6 +2,7 @@
   "common.nav.home": "Inicio",
   "common.nav.about": "Acerca de",
   "common.nav.write": "Escribir",
+  "common.nav.oulipo": "Oulipo",
   "common.nav.search": "Buscar",
   "common.nav.manage_profiles": "Gestionar Perfiles",
   "common.nav.agora": "Ágora",
@@ -417,6 +418,8 @@
   "pages.home.works.prompts.desc": "Nuevos estímulos diarios en inglés, español y francés para inspirarte.",
   "pages.home.works.agora": "El Ágora",
   "pages.home.works.agora.desc": "Comparte tu trabajo y descubre la escritura de otros en la comunidad.",
+  "pages.home.works.oulipo": "Oulipo",
+  "pages.home.works.oulipo.desc": "Publica un texto y reserva una palabra. Cada palabra reservada desaparece del mundo de la historia — otra cuerda alrededor de Gulliver.",
   "pages.home.works.stats": "Tu Progreso",
   "pages.home.works.stats.desc": "Sigue tus rachas de escritura, conteos de palabras y crecimiento.",
   "write.editor.saved": "Borrador guardado exitosamente",
@@ -1226,5 +1229,13 @@
   "booty.physical.no_geolocation": "Geolocalización no soportada",
   "booty.physical.treasure_title": "El Tesoro del Capitán",
   "account.security.password_mismatch": "Las contraseñas no coinciden",
-  "account.security.password_too_short": "La contraseña debe tener al menos 8 caracteres"
+  "account.security.password_too_short": "La contraseña debe tener al menos 8 caracteres",
+  "pages.oulipo.title": "Oulipo",
+  "pages.oulipo.intro": "Un juego de restricciones para toda la comunidad. Publica un texto y puedes reservar una sola palabra de él — una palabra por escritor, por día. Desde entonces, esa palabra desaparece del mundo de la historia: Sappho no puede volver a usarla, y cada cuerda nueva hace su mundo un poco más pequeño.",
+  "pages.oulipo.how_title": "Cómo funciona",
+  "pages.oulipo.how_1": "Escribe y publica un texto.",
+  "pages.oulipo.how_2": "Debajo de tu texto publicado, elige “Elegir palabra” y reserva una.",
+  "pages.oulipo.how_3": "La palabra entra al conjunto oculto. Mira cómo se aprietan las cuerdas en el marcador.",
+  "pages.oulipo.more_title": "Más para jugar",
+  "pages.oulipo.more_body": "Encuentra a la IA entre los escritores en el Ágora, cruza los Portales, y más juegos, acertijos y desafíos están en camino."
 }
