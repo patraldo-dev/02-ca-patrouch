@@ -275,6 +275,11 @@
                 {/if}
                 <span class="meta-date">{formatDate(w.created_at)}</span>
                 <span class="meta-words">{wordCountDisplay(w.word_count)} {$t('write.dashboard.words_word')}</span>
+                {#if data.project}
+                    <a class="meta-project" href="/projects/{data.project.id}">
+                        📚 {data.project.kind === 'collection' ? $t('projects.kind_collection') : $t('projects.kind_serial')}: {data.project.title}
+                    </a>
+                {/if}
                 {#if w.role === 'agent'}
                     <span class="ai-badge">{$t('disclosure.ai_written')}</span>
                 {/if}
@@ -597,6 +602,9 @@
         line-height: 1.8;
         color: var(--text);
     }
+    a.meta-project { color: var(--accent); text-decoration: none; font-weight: 600; }
+    a.meta-project:hover { text-decoration: underline; }
+
 
     .writing-content :global(p) {
         margin: 0 0 1rem 0;

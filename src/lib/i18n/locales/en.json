@@ -1263,5 +1263,6 @@
   "pages.prompt.gather_hint": "You have {n} pieces from this stimulus.",
   "pages.prompt.gather_button": "Gather into a collection",
   "pages.prompt.gather_placeholder": "Collection title",
-  "pages.prompt.gather_created": "Collection created"
+  "pages.prompt.gather_created": "Collection created",
+  "pages.prompt.gather_suggesting": "Suggesting a title…"
 }

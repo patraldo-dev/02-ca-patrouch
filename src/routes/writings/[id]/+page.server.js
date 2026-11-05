@@ -19,7 +19,7 @@ export async function load({ locals, params }) {
         if (writing.project_id) {
             try {
                 const proj = await locals.db
-                    .prepare('SELECT id, title FROM projects WHERE id = ?')
+                    .prepare('SELECT id, title, kind FROM projects WHERE id = ?')
                     .bind(writing.project_id)
                     .first();
                 if (proj) {
@@ -34,6 +34,7 @@ export async function load({ locals, params }) {
                     project = {
                         id: proj.id,
                         title: proj.title,
+                        kind: proj.kind || 'serial',
                         partNumber: idx >= 0 ? idx + 1 : null,
                         totalParts: parts.length,
                         prevId: idx > 0 ? parts[idx - 1].id : null,

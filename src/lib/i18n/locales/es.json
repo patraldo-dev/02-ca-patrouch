@@ -1263,5 +1263,6 @@
   "pages.prompt.gather_hint": "Tienes {n} textos de este estímulo.",
   "pages.prompt.gather_button": "Reunir en una colección",
   "pages.prompt.gather_placeholder": "Título de la colección",
-  "pages.prompt.gather_created": "Colección creada"
+  "pages.prompt.gather_created": "Colección creada",
+  "pages.prompt.gather_suggesting": "Sugiriendo un título…"
 }

@@ -12,6 +12,28 @@
     let gatherBusy = $state(false);
     let gatherError = $state('');
     let gathered = $state(null);   // { id, title }
+    let titleSuggested = $state(false);
+    let suggestingTitle = $state(false);
+    let gatherTouched = $state(false);
+
+    async function openGather() {
+        gatherOpen = true;
+        // Ask the AI for a title once — never overwrite what the writer types.
+        if (!titleSuggested && data.prompt.id) {
+            titleSuggested = true;
+            suggestingTitle = true;
+            try {
+                const res = await fetch('/api/projects/suggest-title', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt_id: data.prompt.id })
+                });
+                const d = await res.json();
+                if (res.ok && d.title && !gatherTouched) gatherTitle = d.title;
+            } catch {}
+            suggestingTitle = false;
+        }
+    }
 
     async function gatherCollection() {
         const title = gatherTitle.trim();
@@ -91,7 +113,8 @@
                         type="text"
                         bind:value={gatherTitle}
                         maxlength="120"
-                        placeholder={$t('pages.prompt.gather_placeholder')}
+                        placeholder={suggestingTitle ? $t('pages.prompt.gather_suggesting') : $t('pages.prompt.gather_placeholder')}
+                        oninput={() => (gatherTouched = true)}
                         onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); gatherCollection(); } }}
                     />
                     <button class="gather-btn" onclick={gatherCollection} disabled={gatherBusy || !gatherTitle.trim()}>
@@ -104,7 +127,7 @@
                 <span class="gather-hint">
                     📚 {$t('pages.prompt.gather_hint').replace('{n}', data.myPieces.length)}
                 </span>
-                <button class="gather-btn" onclick={() => (gatherOpen = true)}>
+                <button class="gather-btn" onclick={openGather}>
                     {$t('pages.prompt.gather_button')}
                 </button>
             {/if}
