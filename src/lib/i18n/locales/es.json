@@ -1259,5 +1259,9 @@
   "projects.ai_none": "Aún no se detectan patrones — escribe algunos textos más.",
   "projects.ai_few": "Aún no hay suficientes textos — escribe algunos más primero.",
   "projects.ai_failed": "La sugerencia falló — inténtalo de nuevo en un momento.",
-  "projects.ai_create": "Crear colección"
+  "projects.ai_create": "Crear colección",
+  "pages.prompt.gather_hint": "Tienes {n} textos de este estímulo.",
+  "pages.prompt.gather_button": "Reunir en una colección",
+  "pages.prompt.gather_placeholder": "Título de la colección",
+  "pages.prompt.gather_created": "Colección creada"
 }

@@ -19,8 +19,21 @@ export async function load({ locals, params }) {
          ORDER BY w.created_at ASC`
     ).bind(params.id).all();
 
+    // The author's own pieces against this stimulus (published + drafts) —
+    // powers the "gather into a collection" affordance.
+    let myPieces = [];
+    if (locals.user) {
+        const mine = await locals.db.prepare(
+            `SELECT id, title, status FROM writings
+             WHERE prompt_id = ? AND user_id = ? AND status IN ('published', 'draft')
+             ORDER BY created_at ASC`
+        ).bind(params.id, locals.user.id).all();
+        myPieces = mine.results || [];
+    }
+
     return {
         prompt,
-        writings: writings.results || []
+        writings: writings.results || [],
+        myPieces
     };
 }

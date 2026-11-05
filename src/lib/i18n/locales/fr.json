@@ -1259,5 +1259,9 @@
   "projects.ai_none": "Aucun motif détecté — écris encore quelques textes.",
   "projects.ai_few": "Pas encore assez de textes — écris-en quelques autres d'abord.",
   "projects.ai_failed": "La suggestion a échoué — réessaie dans un instant.",
-  "projects.ai_create": "Créer la collection"
+  "projects.ai_create": "Créer la collection",
+  "pages.prompt.gather_hint": "Tu as {n} textes de ce stimulus.",
+  "pages.prompt.gather_button": "Rassembler en une collection",
+  "pages.prompt.gather_placeholder": "Titre de la collection",
+  "pages.prompt.gather_created": "Collection créée"
 }

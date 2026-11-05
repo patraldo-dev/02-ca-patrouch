@@ -1259,5 +1259,9 @@
   "projects.ai_none": "No patterns found yet — write a few more pieces.",
   "projects.ai_few": "Not enough pieces yet — write a few more first.",
   "projects.ai_failed": "The suggestion failed — try again shortly.",
-  "projects.ai_create": "Create collection"
+  "projects.ai_create": "Create collection",
+  "pages.prompt.gather_hint": "You have {n} pieces from this stimulus.",
+  "pages.prompt.gather_button": "Gather into a collection",
+  "pages.prompt.gather_placeholder": "Collection title",
+  "pages.prompt.gather_created": "Collection created"
 }

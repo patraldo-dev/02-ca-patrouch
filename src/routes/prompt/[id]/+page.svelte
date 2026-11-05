@@ -4,6 +4,43 @@
 <script>
     import { t } from '#lib/i18n/index.js';
     import { goto } from '$app/navigation';
+    import { invalidateAll } from '$app/navigation';
+
+    // Gather-your-pieces state
+    let gatherOpen = $state(false);
+    let gatherTitle = $state('');
+    let gatherBusy = $state(false);
+    let gatherError = $state('');
+    let gathered = $state(null);   // { id, title }
+
+    async function gatherCollection() {
+        const title = gatherTitle.trim();
+        if (!title || gatherBusy) return;
+        gatherBusy = true;
+        gatherError = '';
+        try {
+            const res = await fetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    kind: 'collection',
+                    writing_ids: data.myPieces.map((p) => p.id)
+                })
+            });
+            if (res.ok) {
+                const d = await res.json();
+                gathered = { id: d.id, title: d.title };
+                gatherOpen = false;
+                await invalidateAll();
+            } else {
+                gatherError = $t('projects.create_failed');
+            }
+        } catch {
+            gatherError = $t('projects.create_failed');
+        }
+        gatherBusy = false;
+    }
 
     let { data } = $props();
 
@@ -40,6 +77,39 @@
             ✍️ {$t('pages.prompt.write_cta')}
         </button>
     </div>
+
+    {#if data.myPieces.length >= 2}
+        <div class="gather glass-surface">
+            {#if gathered}
+                <span class="gather-done">
+                    ✓ {$t('pages.prompt.gather_created')} «{gathered.title}» —
+                    <a href="/projects/{gathered.id}">{$t('projects.open')}</a>
+                </span>
+            {:else if gatherOpen}
+                <div class="gather-row">
+                    <input
+                        type="text"
+                        bind:value={gatherTitle}
+                        maxlength="120"
+                        placeholder={$t('pages.prompt.gather_placeholder')}
+                        onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); gatherCollection(); } }}
+                    />
+                    <button class="gather-btn" onclick={gatherCollection} disabled={gatherBusy || !gatherTitle.trim()}>
+                        {gatherBusy ? '…' : '✓ ' + $t('projects.ai_create')}
+                    </button>
+                    <button class="gather-btn" onclick={() => (gatherOpen = false)}>✕</button>
+                </div>
+                {#if gatherError}<span class="gather-err">{gatherError}</span>{/if}
+            {:else}
+                <span class="gather-hint">
+                    📚 {$t('pages.prompt.gather_hint').replace('{n}', data.myPieces.length)}
+                </span>
+                <button class="gather-btn" onclick={() => (gatherOpen = true)}>
+                    {$t('pages.prompt.gather_button')}
+                </button>
+            {/if}
+        </div>
+    {/if}
 
     <h2>{$t('pages.prompt.responses')}</h2>
     {#if data.writings.length === 0}
@@ -122,6 +192,24 @@
         color: var(--text);
         margin: 0 0 1.25rem;
     }
+
+    .gather { padding: 1rem 1.2rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+    .gather-hint { color: var(--text-dim); font-size: 0.9rem; flex: 1; }
+    .gather-done { color: var(--accent); font-size: 0.9rem; }
+    .gather-done a { color: var(--accent); font-weight: 700; text-decoration: underline; }
+    .gather-row { display: flex; gap: 0.5rem; flex: 1 1 100%; }
+    .gather-row input {
+        flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+        color: inherit; font-family: inherit; font-size: 0.9rem; padding: 0.5rem 0.7rem;
+    }
+    .gather-btn {
+        background: var(--glass-bg); border: 1px solid var(--border); border-radius: 999px;
+        color: var(--text); font-size: 0.85rem; font-weight: 600; padding: 0.45rem 1rem; cursor: pointer;
+        transition: all 0.2s;
+    }
+    .gather-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .gather-btn:disabled { opacity: 0.6; cursor: wait; }
+    .gather-err { color: #e07a7a; font-size: 0.82rem; flex: 1 1 100%; }
 
     .prompt-empty {
         color: var(--text-muted);
