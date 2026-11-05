@@ -1242,5 +1242,22 @@
   "pages.prompt.title": "Stimulus",
   "pages.prompt.responses": "Textes pour ce stimulus",
   "pages.prompt.write_cta": "Écrire à partir de ce stimulus",
-  "pages.prompt.empty": "Pas encore de textes pour ce stimulus — sois le premier."
+  "pages.prompt.empty": "Pas encore de textes pour ce stimulus — sois le premier.",
+  "projects.page_title": "Projets",
+  "projects.kind_serial": "Série",
+  "projects.kind_collection": "Collection",
+  "projects.my_serials": "Tes séries",
+  "projects.my_collections": "Tes collections",
+  "projects.new_serial": "Nouvelle série",
+  "projects.new_collection": "Nouvelle collection",
+  "projects.empty": "Rien pour l'instant.",
+  "projects.count_parts": "{n} parties",
+  "projects.count_pieces": "{n} textes",
+  "projects.ai_button": "Suggérer des collections (IA)",
+  "projects.ai_working": "Lecture de tes textes…",
+  "projects.ai_title": "Collections suggérées",
+  "projects.ai_none": "Aucun motif détecté — écris encore quelques textes.",
+  "projects.ai_few": "Pas encore assez de textes — écris-en quelques autres d'abord.",
+  "projects.ai_failed": "La suggestion a échoué — réessaie dans un instant.",
+  "projects.ai_create": "Créer la collection"
 }

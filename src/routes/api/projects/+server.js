@@ -15,7 +15,7 @@ export async function GET({ locals }) {
     try {
         const { results } = await locals.db
             .prepare(
-                `SELECT p.id, p.title, p.description, p.locale,
+                `SELECT p.id, p.title, p.description, p.locale, p.kind,
                         (SELECT COUNT(*) FROM writings w WHERE w.project_id = p.id) AS part_count
                  FROM projects p WHERE p.user_id = ?
                  ORDER BY p.updated_at DESC`
@@ -43,16 +43,30 @@ export async function POST({ locals, request }) {
     if (!title) return json({ error: 'Title required' }, { status: 400 });
     const description = String(body.description || '').trim().slice(0, 500) || null;
     const locale = ['en', 'es', 'fr'].includes(body.locale) ? body.locale : 'es';
+    const kind = body.kind === 'collection' ? 'collection' : 'serial';
+    // Optional seed pieces (AI gather uses this): ids must belong to the
+    // author — enforced in the UPDATE's WHERE, not trusted from the client.
+    const writingIds = Array.isArray(body.writing_ids)
+        ? body.writing_ids.filter((w) => typeof w === 'string').slice(0, 80)
+        : [];
 
     const id = crypto.randomUUID();
     try {
         await locals.db
-            .prepare('INSERT INTO projects (id, user_id, title, description, locale) VALUES (?, ?, ?, ?, ?)')
-            .bind(id, locals.user.id, title, description, locale)
+            .prepare('INSERT INTO projects (id, user_id, title, description, locale, kind) VALUES (?, ?, ?, ?, ?, ?)')
+            .bind(id, locals.user.id, title, description, locale, kind)
             .run();
+        if (writingIds.length) {
+            for (let i = 0; i < writingIds.length; i++) {
+                await locals.db
+                    .prepare('UPDATE writings SET project_id = ?, project_order = ? WHERE id = ? AND user_id = ?')
+                    .bind(id, kind === 'serial' ? i + 1 : null, writingIds[i], locals.user.id)
+                    .run();
+            }
+        }
     } catch (e) {
         console.error('[projects] create failed:', e.message);
         return json({ error: 'Could not create project' }, { status: 500 });
     }
-    return json({ id, title });
+    return json({ id, title, kind });
 }

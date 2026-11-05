@@ -1242,5 +1242,22 @@
   "pages.prompt.title": "Estímulo",
   "pages.prompt.responses": "Textos para este estímulo",
   "pages.prompt.write_cta": "Escribir desde este estímulo",
-  "pages.prompt.empty": "Aún no hay textos para este estímulo — sé el primero."
+  "pages.prompt.empty": "Aún no hay textos para este estímulo — sé el primero.",
+  "projects.page_title": "Proyectos",
+  "projects.kind_serial": "Serial",
+  "projects.kind_collection": "Colección",
+  "projects.my_serials": "Tus seriales",
+  "projects.my_collections": "Tus colecciones",
+  "projects.new_serial": "Nuevo serial",
+  "projects.new_collection": "Nueva colección",
+  "projects.empty": "Aún no hay nada.",
+  "projects.count_parts": "{n} partes",
+  "projects.count_pieces": "{n} textos",
+  "projects.ai_button": "Sugerir colecciones (IA)",
+  "projects.ai_working": "Leyendo tus textos…",
+  "projects.ai_title": "Colecciones sugeridas",
+  "projects.ai_none": "Aún no se detectan patrones — escribe algunos textos más.",
+  "projects.ai_few": "Aún no hay suficientes textos — escribe algunos más primero.",
+  "projects.ai_failed": "La sugerencia falló — inténtalo de nuevo en un momento.",
+  "projects.ai_create": "Crear colección"
 }

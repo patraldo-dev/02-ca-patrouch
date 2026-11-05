@@ -60,7 +60,9 @@
             {#each data.parts as part, i}
                 <li>
                     <a href="/writings/{part.id}" class="part-link">
+                        {#if data.project.kind !== 'collection'}
                         <span class="n">{$t('projects.part_short').replace('{n}', part.project_order ?? i + 1)}</span>
+                    {/if}
                         <span class="t">{part.title}</span>
                         <span class="m">
                             {part.word_count} {$t('write.editor.words')}

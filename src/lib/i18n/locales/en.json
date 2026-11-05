@@ -1242,5 +1242,22 @@
   "pages.prompt.title": "Prompt",
   "pages.prompt.responses": "Pieces for this stimulus",
   "pages.prompt.write_cta": "Write from this prompt",
-  "pages.prompt.empty": "No pieces yet for this stimulus — be the first."
+  "pages.prompt.empty": "No pieces yet for this stimulus — be the first.",
+  "projects.page_title": "Projects",
+  "projects.kind_serial": "Serial",
+  "projects.kind_collection": "Collection",
+  "projects.my_serials": "Your serials",
+  "projects.my_collections": "Your collections",
+  "projects.new_serial": "New serial",
+  "projects.new_collection": "New collection",
+  "projects.empty": "Nothing here yet.",
+  "projects.count_parts": "{n} parts",
+  "projects.count_pieces": "{n} pieces",
+  "projects.ai_button": "Suggest collections (AI)",
+  "projects.ai_working": "Reading your pieces…",
+  "projects.ai_title": "Suggested collections",
+  "projects.ai_none": "No patterns found yet — write a few more pieces.",
+  "projects.ai_few": "Not enough pieces yet — write a few more first.",
+  "projects.ai_failed": "The suggestion failed — try again shortly.",
+  "projects.ai_create": "Create collection"
 }

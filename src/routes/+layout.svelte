@@ -620,13 +620,13 @@
     }
 
     .logo-initials {
-        color: var(--signature);
+        color: var(--accent);
         font-weight: 600;
         font-style: italic;
     }
 
     .logo-name {
-        color: var(--accent);
+        color: var(--signature);
     }
 
     .logo:hover .logo-initials {

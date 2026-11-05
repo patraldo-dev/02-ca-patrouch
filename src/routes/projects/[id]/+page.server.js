@@ -7,7 +7,7 @@ export async function load({ locals, params }) {
 
     const project = await db
         .prepare(
-            `SELECT p.id, p.title, p.description, p.locale, p.created_at, p.user_id,
+            `SELECT p.id, p.title, p.description, p.locale, p.kind, p.created_at, p.user_id,
                     u.displayUsername AS author_name
              FROM projects p LEFT JOIN users u ON u.id = p.user_id
              WHERE p.id = ?`
@@ -18,12 +18,14 @@ export async function load({ locals, params }) {
     if (!project) throw error(404, 'Project not found');
 
     const isOwner = locals.user?.id === project.user_id;
+    // Serials read in project_order; collections are unordered — by date.
+    const order = project.kind === 'collection' ? 'created_at ASC' : 'project_order ASC';
     const partsRes = await db
         .prepare(
             `SELECT id, title, word_count, status, created_at, project_order
              FROM writings WHERE project_id = ?
              ${isOwner ? '' : "AND status = 'published' AND visibility = 'public'"}
-             ORDER BY project_order ASC`
+             ORDER BY ${order}`
         )
         .bind(params.id)
         .all();

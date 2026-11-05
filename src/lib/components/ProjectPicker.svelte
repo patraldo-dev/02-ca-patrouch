@@ -29,6 +29,8 @@
 
     if (browser) load();
 
+    let newKind = $state('serial');   // 'serial' | 'collection'
+
     async function createProject() {
         const title = newTitle.trim();
         if (!title || busy) return;
@@ -37,7 +39,7 @@
             const res = await fetch('/api/projects', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title })
+                body: JSON.stringify({ title, kind: newKind })
             });
             if (res.ok) {
                 const d = await res.json();
@@ -61,12 +63,14 @@
 <div class="pp">
     <label class="pp-label" for="pp-select">📚 {$t('projects.label')}</label>
     {#if creating}
+        <button class="pp-kind" class:on={newKind === 'serial'} onclick={() => (newKind = 'serial')}>{$t('projects.kind_serial')}</button>
+        <button class="pp-kind" class:on={newKind === 'collection'} onclick={() => (newKind = 'collection')}>{$t('projects.kind_collection')}</button>
         <input
             class="pp-input"
             type="text"
             bind:value={newTitle}
             maxlength="120"
-            placeholder={$t('projects.new_placeholder')}
+            placeholder={newKind === 'serial' ? $t('projects.new_serial') : $t('projects.new_collection')}
             onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); createProject(); } }}
         />
         <button class="pp-btn" onclick={createProject} disabled={busy || !newTitle.trim()}>
@@ -120,5 +124,10 @@
         color: var(--text-dim, #aaa); padding: 0.35rem 0.6rem; font-size: 0.85rem; cursor: pointer;
     }
     .pp-btn:hover:not(:disabled) { border-color: var(--accent, #a8bdb3); color: var(--accent, #a8bdb3); }
+    .pp-kind {
+        background: none; border: 1px solid var(--border); border-radius: 999px;
+        color: var(--text-muted); font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.7rem; cursor: pointer;
+    }
+    .pp-kind.on { border-color: var(--accent); color: var(--accent); }
     .pp-btn:disabled { opacity: 0.5; cursor: wait; }
 </style>
