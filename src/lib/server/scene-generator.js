@@ -145,7 +145,7 @@ Generate the scene JSON for this portal based on these writings.`;
  * Run Mistral, strip markdown fences, parse JSON (with a fallback extraction).
  * Returns the parsed object or throws with context.
  */
-async function callMistral(ai, userPrompt) {
+async function callMistral(ai, userPrompt, attempt = 1) {
   const aiResponse = await ai.run(MISTRAL_MODEL, {
     messages: [
       { role: "system", content: SCENE_SYSTEM_PROMPT },
@@ -155,7 +155,14 @@ async function callMistral(ai, userPrompt) {
     max_tokens: 1800,
   });
 
-  let sceneText = aiResponse.response || aiResponse.result?.response || "";
+  // The gateway intermittently returns response as a non-string (chunk
+  // list / object) — coerce before touching string methods. A raw
+  // non-string used to throw here and surface as the user-facing
+  // "Failed to materialize".
+  let sceneText = aiResponse.response ?? aiResponse.result?.response ?? "";
+  if (typeof sceneText !== "string") {
+    sceneText = JSON.stringify(sceneText);
+  }
   sceneText = sceneText
     .replace(/```json\n?/g, "")
     .replace(/```\n?/g, "")
@@ -166,7 +173,14 @@ async function callMistral(ai, userPrompt) {
   } catch {
     // Last resort: pull the first {...} block out of the text.
     const jsonMatch = sceneText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch {}
+    }
+    // One retry on garbage — a single flaky generation shouldn't kill
+    // the user's materialization.
+    if (attempt < 2) return callMistral(ai, userPrompt, attempt + 1);
     throw new Error(
       `Mistral returned unparseable JSON (first 120 chars: "${sceneText.slice(0, 120)}")`,
     );
