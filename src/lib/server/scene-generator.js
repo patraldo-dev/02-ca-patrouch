@@ -146,14 +146,22 @@ Generate the scene JSON for this portal based on these writings.`;
  * Returns the parsed object or throws with context.
  */
 async function callMistral(ai, userPrompt, attempt = 1) {
-  const aiResponse = await ai.run(MISTRAL_MODEL, {
-    messages: [
-      { role: "system", content: SCENE_SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
-    ],
-    temperature: 0.7,
-    max_tokens: 1800,
-  });
+  let aiResponse;
+  try {
+    aiResponse = await ai.run(MISTRAL_MODEL, {
+      messages: [
+        { role: "system", content: SCENE_SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 1800,
+    });
+  } catch (e) {
+    // Gateway/network errors retry too — a bad first draw stays silent
+    // behind the client's spinner; only a double failure surfaces.
+    if (attempt < 2) return callMistral(ai, userPrompt, attempt + 1);
+    throw e;
+  }
 
   // The gateway intermittently returns response as a non-string (chunk
   // list / object) — coerce before touching string methods. A raw
