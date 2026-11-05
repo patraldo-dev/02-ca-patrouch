@@ -621,12 +621,13 @@
 
     .logo-initials {
         color: var(--accent);
-        font-weight: 600;
+        font-weight: 400;
         font-style: italic;
     }
 
     .logo-name {
         color: var(--signature);
+        font-weight: 700;
     }
 
     .logo:hover .logo-initials {
