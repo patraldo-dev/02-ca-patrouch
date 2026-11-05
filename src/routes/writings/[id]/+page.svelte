@@ -116,9 +116,12 @@
     }
 
     function continuePrompt() {
-        // Hand the stimulus to /write — new draft, same prompt family.
+        // Continuation, not a fresh start: carry the stimulus AND the
+        // piece's own text so the author keeps writing from where they
+        // stopped. Saved as a NEW piece (draft id left null).
         sessionStorage.setItem('continue_prompt', JSON.stringify({
-            id: w.prompt_id, text: w.prompt_text, category: w.prompt_category
+            id: w.prompt_id, text: w.prompt_text, category: w.prompt_category,
+            content: w.content, title: w.title
         }));
         goto('/write');
     }

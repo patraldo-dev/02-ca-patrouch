@@ -751,6 +751,7 @@
   "comments.member_reply": "Upgrade to member to reply",
   "comments.comments_off": "Comments are off",
   "comments.toggle_comments": "Turn off comments",
+  "comments.disable_comments": "Disable comments",
   "comments.max_chars": "1500",
   "comments.loading": "Loading comments…",
   "comments.no_comments": "No comments yet. Be the first to share your thoughts.",

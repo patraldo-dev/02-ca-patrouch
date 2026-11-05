@@ -143,7 +143,7 @@
             </select>
             {#if isAuthor || isAdmin}
                 <button class="toggle-btn" onclick={toggleComments}>
-                    {commentsEnabled ? $t('comments.comments_off') : $t('comments.toggle_comments')}
+                    {commentsEnabled ? $t('comments.disable_comments') : $t('comments.toggle_comments')}
                 </button>
             {/if}
         </div>

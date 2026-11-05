@@ -737,6 +737,7 @@
   "comments.member_reply": "Devenez membre pour répondre",
   "comments.comments_off": "Les commentaires sont désactivés",
   "comments.toggle_comments": "Désactiver les commentaires",
+  "comments.disable_comments": "Désactiver les commentaires",
   "comments.max_chars": "1500",
   "comments.loading": "Chargement des commentaires…",
   "comments.no_comments": "Pas encore de commentaires. Soyez le premier à partager vos pensées.",

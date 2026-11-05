@@ -22,7 +22,8 @@ export async function POST({ request, platform, locals }) {
             return json({ error: 'Text must be at least 50 characters' }, { status: 400 });
         }
 
-        const system = 'You are a skilled literary editor. Refine and improve the following text while preserving the author\'s voice, style, and intent. Focus on: rhythm, word choice, imagery, emotional impact. Do NOT change the meaning or tone. Output only the refined text, no explanations.';
+        const LANG = { en: 'English', es: 'Spanish', fr: 'French' }[locale] || 'the text\'s original language';
+        const system = `You are a skilled literary editor. Refine and improve the following text while preserving the author's voice, style, and intent. Focus on: rhythm, word choice, imagery, emotional impact. Do NOT change the meaning or tone. You MUST write the refined text in ${LANG} — the same language as the original, never translate. Output only the refined text, no explanations.`;
 
         const response = await env.AI.run(
             '@cf/mistralai/mistral-small-3.1-24b-instruct',

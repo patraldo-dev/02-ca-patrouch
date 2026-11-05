@@ -39,6 +39,14 @@
                     promptId = c.id;
                     promptSource = 'continuation';
                     userAction = null;
+                    // Continuation of an existing response: seed the editor
+                    // with that text (and title), and force a NEW piece —
+                    // never overwrite the source via a reused draft id.
+                    if (c.content) {
+                        editorContent = c.content;
+                        editorTitle = c.title || editorTitle;
+                        editorDraftId = null;
+                    }
                 }
                 sessionStorage.removeItem('continue_prompt');
             }
