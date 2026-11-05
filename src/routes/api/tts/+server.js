@@ -11,6 +11,30 @@ function decryptUserKey(hex, userId) {
     return new TextDecoder().decode(decrypted);
 }
 
+
+function bytesToBase64(buf) {
+    const b = new Uint8Array(buf);
+    let bin = '';
+    const CHUNK = 0x8000;
+    for (let i = 0; i < b.length; i += CHUNK) bin += String.fromCharCode(...b.subarray(i, i + CHUNK));
+    return btoa(bin);
+}
+
+// Gemini returns raw PCM (24kHz s16le) — wrap in a WAV header so the
+// browser can play it.
+function pcmToWavBase64(pcm) {
+    const sampleRate = 24000;
+    const header = new ArrayBuffer(44);
+    const v = new DataView(header);
+    const ws = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    ws(0, 'RIFF'); v.setUint32(4, 36 + pcm.length, true); ws(8, 'WAVE');
+    ws(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+    v.setUint16(22, 1, true); v.setUint32(24, sampleRate, true);
+    v.setUint32(28, sampleRate * 2, true); v.setUint16(32, 2, true);
+    v.setUint16(34, 16, true); ws(36, 'data'); v.setUint32(40, pcm.length, true);
+    return bytesToBase64(new Blob([header, pcm]).arrayBuffer ? new Uint8Array([...new Uint8Array(header), ...new Uint8Array(pcm)]).buffer : pcm);
+}
+
 export async function POST({ request, locals, platform }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -65,6 +89,104 @@ export async function POST({ request, locals, platform }) {
             const audioBuffer = await resp.arrayBuffer();
             const base64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
             return json({ audio: base64, format: 'wav', provider: 'kokoro' });
+        }
+
+        // ── Aura-2 (Deepgram) on the USER's own Cloudflare account — BYOK so
+        // the site never pays. Locale picks the dedicated Spanish model.
+        if (provider === 'aura2') {
+            const row = await locals.db.prepare('SELECT cf_api_key_encrypted, cf_account_id FROM users WHERE id = ?').bind(user.id).first();
+            if (!row?.cf_api_key_encrypted || !row?.cf_account_id) {
+                return json({ error: 'no_cf_key' }, { status: 503 });
+            }
+            const cfKey = decryptUserKey(row.cf_api_key_encrypted, user.id);
+            const model = locale?.startsWith('fr') ? '@cf/myshell-ai/melotts'
+                : locale?.startsWith('en') ? '@cf/deepgram/aura-2-en'
+                : '@cf/deepgram/aura-2-es';
+            const resp = await fetch(
+                `https://api.cloudflare.com/client/v4/accounts/${row.cf_account_id}/ai/run/${model}`,
+                {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${cfKey}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: text.trim().slice(0, 4000) })
+                }
+            );
+            const d = await resp.json().catch(() => ({}));
+            const audio = d?.result?.audio || d?.audio;
+            if (!resp.ok || !audio) {
+                return json({ error: d?.errors?.[0]?.message || `Aura-2 failed (${resp.status})` }, { status: resp.status === 200 ? 500 : resp.status });
+            }
+            return json({ audio, format: 'mp3', provider: 'aura2' });
+        }
+
+        // ── Cartesia Sonic — BYOK ──
+        if (provider === 'cartesia') {
+            const row = await locals.db.prepare('SELECT cartesia_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
+            if (!row?.cartesia_key_encrypted) return json({ error: 'no_key' }, { status: 503 });
+            const key = decryptUserKey(row.cartesia_key_encrypted, user.id);
+            const resp = await fetch('https://api.cartesia.ai/tts/speech/direct', {
+                method: 'POST',
+                headers: { 'X-API-Key': key, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model_id: 'sonic-3',
+                    transcript: text.trim().slice(0, 5000),
+                    voice: { mode: 'name', name: voiceId || 'reader' },
+                    output_format: { container: 'mp3', encoding: 'mp3', sample_rate: 22050 }
+                })
+            });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                return json({ error: err?.error?.message || `Cartesia failed (${resp.status})` }, { status: resp.status });
+            }
+            return json({ audio: bytesToBase64(await resp.arrayBuffer()), format: 'mp3', provider: 'cartesia' });
+        }
+
+        // ── Gemini TTS — BYOK ──
+        if (provider === 'gemini') {
+            const row = await locals.db.prepare('SELECT gemini_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
+            if (!row?.gemini_key_encrypted) return json({ error: 'no_key' }, { status: 503 });
+            const key = decryptUserKey(row.gemini_key_encrypted, user.id);
+            const voiceMap = { es: 'Fenrir', fr: 'Charon', en: 'Kore' };
+            const resp = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${key}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Read this aloud with warmth: ${text.trim().slice(0, 5000)}` }] }],
+                        generationConfig: {
+                            responseModalities: ['AUDIO'],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceId || voiceMap[locale?.slice(0, 2)] || 'Kore' } } }
+                        }
+                    })
+                }
+            );
+            const d = await resp.json().catch(() => ({}));
+            const b64 = d?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+            if (!resp.ok || !b64) {
+                return json({ error: d?.error?.message || `Gemini TTS failed (${resp.status})` }, { status: resp.status === 200 ? 500 : resp.status });
+            }
+            return json({ audio: pcmToWavBase64(Uint8Array.from(atob(b64), c => c.charCodeAt(0))), format: 'wav', provider: 'gemini' });
+        }
+
+        // ── OpenAI TTS — BYOK ──
+        if (provider === 'openai') {
+            const row = await locals.db.prepare('SELECT openai_key_encrypted FROM users WHERE id = ?').bind(user.id).first();
+            if (!row?.openai_key_encrypted) return json({ error: 'no_key' }, { status: 503 });
+            const key = decryptUserKey(row.openai_key_encrypted, user.id);
+            const resp = await fetch('https://api.openai.com/v1/audio/speech', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini-tts',
+                    voice: ['alloy', 'verse', 'sage', 'coral'].includes(voiceId) ? voiceId : 'coral',
+                    input: text.trim().slice(0, 5000)
+                })
+            });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                return json({ error: err?.error?.message || `OpenAI TTS failed (${resp.status})` }, { status: resp.status });
+            }
+            return json({ audio: bytesToBase64(await resp.arrayBuffer()), format: 'mp3', provider: 'openai' });
         }
 
         // ElevenLabs TTS — use user's own key

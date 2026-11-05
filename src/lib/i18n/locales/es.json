@@ -1264,5 +1264,7 @@
   "pages.prompt.gather_button": "Reunir en una colección",
   "pages.prompt.gather_placeholder": "Título de la colección",
   "pages.prompt.gather_created": "Colección creada",
-  "pages.prompt.gather_suggesting": "Sugiriendo un título…"
+  "pages.prompt.gather_suggesting": "Sugiriendo un título…",
+  "audio.byok_desc": "Funciona con tu propia clave API — el uso se factura a ti, nunca a este sitio.",
+  "audio.byok_ready": "tu clave de Cloudflare está configurada"
 }

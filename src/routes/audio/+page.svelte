@@ -24,12 +24,24 @@
         }
     });
     let provider = $state('cloudflare');
+    const BYOK_ENGINES = {
+        cartesia: { has: () => hasCartesiaKey, setup: (v) => (showCartesiaSetup = v) },
+        gemini: { has: () => hasGeminiKey, setup: (v) => (showGeminiSetup = v) },
+        openai: { has: () => hasOpenAIKey, setup: (v) => (showOpenAISetup = v) }
+    };
     $effect(() => {
-        showCfKeySetup = provider === 'cloudflare' && !hasCfKey;
+        showCfKeySetup = provider === 'aura2' && !hasCfKey;   // Aura-2 rides the user's CF key
         showKeySetup = provider === 'elevenlabs' && !hasKey;
         showHfKeySetup = provider === 'kokoro' && !hasHfKey;
+        for (const [name, eng] of Object.entries(BYOK_ENGINES)) {
+            if (provider === name) eng.setup(!eng.has());
+        }
         if (provider === 'cloudflare') voiceId = 'default';
         else if (provider === 'kokoro') voiceId = 'af_heart';
+        else if (provider === 'aura2') voiceId = 'default';
+        else if (provider === 'cartesia') voiceId = 'reader';
+        else if (provider === 'gemini') voiceId = 'Kore';
+        else if (provider === 'openai') voiceId = 'coral';
         else voiceId = 'pNInz6obpgDQGcFmaJgB';
     });
     let useAiDevelop = $state(false);
@@ -49,6 +61,16 @@
     let cfApiKeyInput = $state('');
     let cfAccountIdInput = $state('');
     let hasHfKey = $state(false);
+    let hasCartesiaKey = $state(false);
+    let hasGeminiKey = $state(false);
+    let hasOpenAIKey = $state(false);
+    let showCartesiaSetup = $state(false);
+    let showGeminiSetup = $state(false);
+    let showOpenAISetup = $state(false);
+    let cartesiaKeyInput = $state('');
+    let geminiKeyInput = $state('');
+    let openaiKeyInput = $state('');
+    let byokBusy = $state(false);
     let showHfKeySetup = $state(false);
     let hfApiKeyInput = $state('');
     let cfKeyLoading = $state(false);
@@ -88,7 +110,30 @@
         { id: 'bm_lewis', name: 'Lewis (UK)' },
     ];
 
-    let voices = $derived(provider === 'kokoro' ? kokoroVoices : provider === 'elevenlabs' ? elevenlabsVoices : cfVoices);
+    const aura2Voices = [
+        { id: 'default', name: 'Aura-2 (auto ES/EN)' }
+    ];
+    const cartesiaVoices = [
+        { id: 'reader', name: 'Reader' }, { id: 'narrator', name: 'Narrator' },
+        { id: 'helpful woman', name: 'Helpful Woman' }, { id: 'storyteller', name: 'Storyteller' }
+    ];
+    const geminiVoices = [
+        { id: 'Kore', name: 'Kore' }, { id: 'Puck', name: 'Puck' },
+        { id: 'Charon', name: 'Charon' }, { id: 'Fenrir', name: 'Fenrir' }
+    ];
+    const openaiVoices = [
+        { id: 'coral', name: 'Coral' }, { id: 'alloy', name: 'Alloy' },
+        { id: 'verse', name: 'Verse' }, { id: 'sage', name: 'Sage' }
+    ];
+    let voices = $derived(
+        provider === 'kokoro' ? kokoroVoices
+        : provider === 'elevenlabs' ? elevenlabsVoices
+        : provider === 'cartesia' ? cartesiaVoices
+        : provider === 'gemini' ? geminiVoices
+        : provider === 'openai' ? openaiVoices
+        : provider === 'aura2' ? aura2Voices
+        : cfVoices
+    );
 
     // Check if user has an API key on mount
     async function checkKey() {
@@ -159,6 +204,9 @@
         } catch (e) { /* ignore */ }
     }
     checkHfKey();
+    for (const [eng, setter] of [['cartesia-api-key', (v) => (hasCartesiaKey = v)], ['gemini-api-key', (v) => (hasGeminiKey = v)], ['openai-api-key', (v) => (hasOpenAIKey = v)]]) {
+        fetch(`/api/tts/${eng}`).then(r => r.json()).then(d => setter(!!d.hasKey)).catch(() => {});
+    }
 
     async function saveCfApiKey() {
         cfKeyError = '';
@@ -196,6 +244,26 @@
         } catch (e) { /* ignore */ }
     }
 
+
+    async function saveByokKey(engine, which) {
+        const inputs = { cartesia: cartesiaKeyInput, gemini: geminiKeyInput, openai: openaiKeyInput };
+        const val = (inputs[which] || '').trim();
+        if (!val || byokBusy) return;
+        byokBusy = true;
+        try {
+            const res = await fetch(`/api/tts/${engine}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey: val })
+            });
+            if (res.ok) {
+                if (which === 'cartesia') { hasCartesiaKey = true; showCartesiaSetup = false; cartesiaKeyInput = ''; }
+                if (which === 'gemini') { hasGeminiKey = true; showGeminiSetup = false; geminiKeyInput = ''; }
+                if (which === 'openai') { hasOpenAIKey = true; showOpenAISetup = false; openaiKeyInput = ''; }
+            }
+        } catch {}
+        byokBusy = false;
+    }
     async function saveHfApiKey() {
         if (!hfApiKeyInput.trim()) return;
         try {
@@ -348,14 +416,55 @@
             </div>
         {/if}
 
+        {#if provider === 'aura2' && hasCfKey}
+            <div class="key-status"><span>Aura-2: {$t('audio.byok_ready')}</span></div>
+        {/if}
+        {#if showCartesiaSetup && provider === 'cartesia'}
+            <div class="key-config">
+                <h2>Cartesia</h2>
+                <p>{$t('audio.byok_desc')}</p>
+                <a href="https://cartesia.ai" target="_blank" rel="noopener">cartesia.ai</a>
+                <div class="key-form">
+                    <input type="password" bind:value={cartesiaKeyInput} placeholder="X-API-Key" />
+                    <button onclick={() => saveByokKey('cartesia-api-key', 'cartesia')} disabled={byokBusy || cartesiaKeyInput.length < 10}>{$t('audio.key_save')}</button>
+                </div>
+            </div>
+        {/if}
+        {#if showGeminiSetup && provider === 'gemini'}
+            <div class="key-config">
+                <h2>Google Gemini</h2>
+                <p>{$t('audio.byok_desc')}</p>
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+                <div class="key-form">
+                    <input type="password" bind:value={geminiKeyInput} placeholder="AIza…" />
+                    <button onclick={() => saveByokKey('gemini-api-key', 'gemini')} disabled={byokBusy || geminiKeyInput.length < 10}>{$t('audio.key_save')}</button>
+                </div>
+            </div>
+        {/if}
+        {#if showOpenAISetup && provider === 'openai'}
+            <div class="key-config">
+                <h2>OpenAI</h2>
+                <p>{$t('audio.byok_desc')}</p>
+                <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>
+                <div class="key-form">
+                    <input type="password" bind:value={openaiKeyInput} placeholder="sk-…" />
+                    <button onclick={() => saveByokKey('openai-api-key', 'openai')} disabled={byokBusy || openaiKeyInput.length < 10}>{$t('audio.key_save')}</button>
+                </div>
+            </div>
+        {/if}
+
         <div class="audio-form">
             <div class="row">
                 <div class="field">
                     <label>{$t('audio.provider')}</label>
                     <select bind:value={provider} disabled={isLoading}>
-                        <option value="elevenlabs">ElevenLabs</option>
-                        <option value="kokoro">Kokoro</option>
                         <option value="cloudflare">{$t("audio.provider_free_limited")}</option>
+                        <option value="aura2">Cloudflare Aura-2 (BYOK)</option>
+                        <option value="elevenlabs">ElevenLabs (BYOK)</option>
+                        <option value="kokoro">Kokoro / DeepInfra (BYOK)</option>
+                        <option value="cartesia">Cartesia Sonic (BYOK)</option>
+                        <option value="gemini">Gemini TTS (BYOK)</option>
+                        <option value="openai">OpenAI TTS (BYOK)</option>
                     </select>
                 </div>
                 <div class="field">
