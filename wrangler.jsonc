@@ -40,6 +40,13 @@
 	  }
 	],
 
+	"kv_namespaces": [
+		{
+			"binding": "CONTACT_KV",
+			"id": "46f04b24d94c472f8e718f14562a17ae"
+		}
+	],
+
 	"vars": {
 		"PASSPORT_SITE": "https://ambientx.dev",
                 "MAILGUN_DOMAIN": "patrouch.ca",
@@ -125,6 +132,12 @@
 					"binding": "CRON_SECRET",
 					"store_id": "1da7c182b2d345e9bc6a8f83421d23a7",
 					"secret_name": "CRON_SECRET"
+				}
+			],
+			"kv_namespaces": [
+				{
+					"binding": "CONTACT_KV",
+					"id": "856673f643a24c1baf6aff8ece4d7a64"
 				}
 			],
 			"vars": {

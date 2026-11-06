@@ -16,7 +16,9 @@ import { env } from 'cloudflare:workers';
  */
 
 const MISTRAL_MODEL = '@cf/mistralai/mistral-small-3.1-24b-instruct';
-const MELOTTS_MODEL = '@cf/myshell-ai/melotts';
+// melotts deprecated 2026-11-20 — Aura-2 replaces it (es/en; no CF French voice)
+const TTS_MODEL_ES = '@cf/deepgram/aura-2-es';
+const TTS_MODEL_EN = '@cf/deepgram/aura-2-en';
 const MAX_PASSAGE_CHARS = 1500;
 
 /**
@@ -100,15 +102,16 @@ Solo el JSON, sin markdown ni explicación. Cada pasada debe ser una traducción
  * Render a text passage to audio via melotts (Workers AI, free).
  * @returns {Promise<string|null>} base64 mp3, or null on failure
  */
-export async function renderNarrationAudio(ai, text) {
+export async function renderNarrationAudio(ai, text, locale = 'es') {
 	if (!ai || !text || text.trim().length < 10) return null;
 	try {
-		const result = await ai.run(MELOTTS_MODEL, { prompt: text.trim().slice(0, 2000) });
+		const model = locale === 'en' ? TTS_MODEL_EN : TTS_MODEL_ES;
+		const result = await ai.run(model, { text: text.trim().slice(0, 2000) });
 		if (result?.audio) return result.audio;
-		console.warn('[narration] melotts returned no audio');
+		console.warn('[narration] tts returned no audio');
 		return null;
 	} catch (err) {
-		console.error('[narration] melotts failed:', err.message);
+		console.error('[narration] tts failed:', err.message);
 		return null;
 	}
 }

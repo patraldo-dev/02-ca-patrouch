@@ -12,6 +12,29 @@ function decryptUserKey(hex, userId) {
 }
 
 
+async function audioResultToBase64(result) {
+    // Aura-2 bindings return a ReadableStream of MPEG bytes (not the
+    // {audio} JSON envelope melotts used). Handle stream, blob or bytes.
+    if (!result) return null;
+    if (result instanceof ReadableStream) {
+        const reader = result.getReader();
+        const chunks = [];
+        let len = 0;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            len += value.length;
+        }
+        const out = new Uint8Array(len);
+        let off = 0;
+        for (const c of chunks) { out.set(c, off); off += c.length; }
+        return bytesToBase64(out.buffer);
+    }
+    if (result.audio) return result.audio; // melotts-style envelope
+    return null;
+}
+
 function bytesToBase64(buf) {
     const b = new Uint8Array(buf);
     let bin = '';
@@ -47,20 +70,49 @@ export async function POST({ request, locals, platform }) {
         }
 
         if (provider === 'cloudflare' || provider === 'cf') {
-        // Use CF Workers AI binding directly — no user token needed
+        // melotts (free) deprecated 2026-11-20; the free voice is now Aura-2
+        // on the site binding — strictly capped so it can never become a
+        // bill: members only, 3 generations/day, 2500 chars, es/en only.
+        if (!['member', 'admin'].includes(user.role || '')) {
+            return json({ error: 'member_only', code: 'member_only' }, { status: 403 });
+        }
+        if (locale?.startsWith('fr')) {
+            return json({ error: 'no_free_fr', code: 'no_free_fr' }, { status: 501 });
+        }
+        if (text.trim().length > 2500) {
+            return json({ error: 'Text must be under 2500 characters for the free voice', code: 'too_long' }, { status: 400 });
+        }
+        const kv = env?.CONTACT_KV;
+        let used = 0;
+        if (kv) {
+            const day = new Date().toISOString().slice(0, 10);
+            const k = `ttsfree:${user.id}:${day}`;
+            used = parseInt((await kv.get(k)) || '0', 10);
+            if (used >= 3) {
+                return json({ error: 'daily_cap', code: 'daily_cap' }, { status: 429 });
+            }
+        }
         const ai = env?.AI;
         if (!ai) {
             return json({ error: 'AI binding not available' }, { status: 503 });
         }
 
-        const result = await ai.run('@cf/myshell-ai/melotts', {
-            prompt: text.trim()
-        });
+        const esVoices = ['sirio','nestor','carina','celeste','alvaro','diana','aquila','selena','estrella','javier'];
+        const model = locale?.startsWith('en') ? '@cf/deepgram/aura-2-en' : '@cf/deepgram/aura-2-es';
+        const payload = { text: text.trim() };
+        if (model.endsWith('aura-2-es') && esVoices.includes(voiceId)) payload.speaker = voiceId;
+        const result = await ai.run(model, payload);
 
-        if (result?.audio) {
-            return json({ audio: result.audio, format: 'mp3', provider: 'cloudflare' });
+        const audio = await audioResultToBase64(result);
+        if (audio) {
+            if (kv) {
+                const day = new Date().toISOString().slice(0, 10);
+                const k = `ttsfree:${user.id}:${day}`;
+                await kv.put(k, String(used + 1), { expirationTtl: 172800 });
+            }
+            return json({ audio, format: 'mp3', provider: 'cloudflare' });
         }
-        console.log('CF TTS unexpected response:', JSON.stringify(result).slice(0, 500));
+        console.log('CF TTS unexpected response:', typeof result, JSON.stringify(result).slice(0, 300));
         return json({ error: 'No audio generated' }, { status: 500 });
         }
 
@@ -98,28 +150,45 @@ export async function POST({ request, locals, platform }) {
             if (!row?.cf_api_key_encrypted || !row?.cf_account_id) {
                 return json({ error: 'no_cf_key' }, { status: 503 });
             }
+            if (!model) {
+                return json({ error: 'no_cf_fr', code: 'no_cf_fr' }, { status: 501 });
+            }
             const cfKey = decryptUserKey(row.cf_api_key_encrypted, user.id);
-            const model = locale?.startsWith('fr') ? '@cf/myshell-ai/melotts'
+            const model = locale?.startsWith('fr') ? null
                 : locale?.startsWith('en') ? '@cf/deepgram/aura-2-en'
                 : '@cf/deepgram/aura-2-es';
+            const esVoices = ['sirio','nestor','carina','celeste','alvaro','diana','aquila','selena','estrella','javier'];
+            const payload = { text: text.trim().slice(0, 4000) };
+            if (model.endsWith('aura-2-es') && esVoices.includes(voiceId)) payload.speaker = voiceId;
             const resp = await fetch(
                 `https://api.cloudflare.com/client/v4/accounts/${row.cf_account_id}/ai/run/${model}`,
                 {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${cfKey}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: text.trim().slice(0, 4000) })
+                    body: JSON.stringify(payload)
                 }
             );
-            const d = await resp.json().catch(() => ({}));
-            const audio = d?.result?.audio || d?.audio;
+            // REST answers either a JSON envelope or raw audio bytes
+            let audio = null;
+            const ctype = resp.headers.get('content-type') || '';
+            if (resp.ok && !ctype.includes('json')) {
+                audio = bytesToBase64(await resp.arrayBuffer());
+            } else {
+                const d = await resp.json().catch(() => ({}));
+                audio = d?.result || d?.result?.audio || d?.audio;
+                if (audio && typeof audio !== 'string') audio = null;
+            }
             if (!resp.ok || !audio) {
                 // 400/403 from the CF API almost always means the stored key
                 // is a Global API Key (unsupported) or a token without the
                 // Workers AI permission — give the client a code to localize.
                 if (resp.status === 400 || resp.status === 401 || resp.status === 403) {
-                    return json({ error: 'cf_auth', detail: d?.errors?.[0]?.message || '' }, { status: resp.status });
+                    const errText = await resp.text().catch(() => '');
+                    let msg = '';
+                    try { msg = JSON.parse(errText)?.errors?.[0]?.message || ''; } catch {}
+                    return json({ error: 'cf_auth', detail: msg }, { status: resp.status });
                 }
-                return json({ error: d?.errors?.[0]?.message || `Aura-2 failed (${resp.status})` }, { status: resp.status === 200 ? 500 : resp.status });
+                return json({ error: `Aura-2 failed (${resp.status})` }, { status: resp.status });
             }
             return json({ audio, format: 'mp3', provider: 'aura2' });
         }

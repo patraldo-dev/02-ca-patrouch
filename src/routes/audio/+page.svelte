@@ -311,6 +311,12 @@
                 if (data.error === 'no_api_key') {
                     showKeySetup = true;
                     error = $t('audio.key_required');
+                } else if (data.code === 'daily_cap') {
+                    error = $t('audio.free_cap');
+                } else if (data.code === 'no_free_fr' || data.error === 'no_cf_fr') {
+                    error = $t('audio.no_free_fr');
+                } else if (data.code === 'member_only') {
+                    error = $t('audio.member_only');
                 } else if (data.error === 'no_cf_key') {
                     showCfKeySetup = true;
                     error = $t('audio.byok_ready_missing');
