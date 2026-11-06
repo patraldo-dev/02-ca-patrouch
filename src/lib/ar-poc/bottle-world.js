@@ -12,6 +12,7 @@
  * Browser-only. Dynamically imported by ArbootyAR.svelte.
  */
 
+import 'elics';
 import {
 	World,
 	SessionMode,
@@ -22,6 +23,8 @@ import {
 	XRAnchor,
 } from '@iwsdk/core';
 import { Types, createSystem } from 'elics';
+// elics side-effect first: core's chunk may load before elics's otherwise
+// ('.record of undefined' boot crash) — see world-builder.js.
 import * as THREE from 'three';
 
 // ═══════════════════════════════════════════════════════════════

@@ -12,10 +12,28 @@ export default defineConfig({
 		dedupe: ['elics', '@iwsdk/core'],
 	},
 	build: {
-		rollupOptions: {
+		rolldownOptions: {
 			output: {
-				manualChunks(id) {
-					if (id.includes('node_modules/elics') || id.includes('@iwsdk/core')) return 'iwsdk-ecs';
+				// vite 8: bundling knobs live under build.rolldownOptions (the
+				// rollupOptions shim is overridden by SvelteKit's codeSplitting).
+				// manualChunks was silently ignored here before, which un-pinned
+				// elics+core and brought back the '.record of undefined' boot
+				// crash on /portals.
+				codeSplitting: {
+					groups: [
+						{
+							name: 'iwsdk-ecs',
+							// exactly elics + @iwsdk/core — the two whose init
+							// order races. Matching all @iwsdk/* swallows 6.7MB.
+							test(id) {
+								return (
+									/node_modules[/\\](?:\.pnpm[/\\][^/\\]+[/\\]node_modules[/\\])?elics[/\\]/.test(id) ||
+									id.includes('@iwsdk+core@') ||
+									/node_modules[/\\]@iwsdk[/\\]core[/\\]/.test(id)
+								);
+							},
+						},
+					],
 				},
 			},
 		},

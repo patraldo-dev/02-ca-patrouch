@@ -3,8 +3,8 @@
 //  world-builder.js — Config-driven ECS world builder
 //  Reads scene config JSON, builds IWSDK world with ECS
 // ═══════════════════════════════════════════════════════════
-import { World, Transform } from '@iwsdk/core';
 import { createComponent, createSystem, Types, ComponentRegistry } from 'elics';
+import { World, Transform } from '@iwsdk/core';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
