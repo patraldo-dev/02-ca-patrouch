@@ -69,51 +69,9 @@ export async function POST({ request, locals, platform }) {
             return json({ error: 'Text must be at least 10 characters' }, { status: 400 });
         }
 
+        // No free voice — every engine is BYOK by explicit product decision.
         if (provider === 'cloudflare' || provider === 'cf') {
-        // melotts (free) deprecated 2026-11-20; the free voice is now Aura-2
-        // on the site binding — strictly capped so it can never become a
-        // bill: members only, 3 generations/day, 2500 chars, es/en only.
-        if (!['member', 'admin'].includes(user.role || '')) {
-            return json({ error: 'member_only', code: 'member_only' }, { status: 403 });
-        }
-        if (locale?.startsWith('fr')) {
-            return json({ error: 'no_free_fr', code: 'no_free_fr' }, { status: 501 });
-        }
-        if (text.trim().length > 2500) {
-            return json({ error: 'Text must be under 2500 characters for the free voice', code: 'too_long' }, { status: 400 });
-        }
-        const kv = env?.CONTACT_KV;
-        let used = 0;
-        if (kv) {
-            const day = new Date().toISOString().slice(0, 10);
-            const k = `ttsfree:${user.id}:${day}`;
-            used = parseInt((await kv.get(k)) || '0', 10);
-            if (used >= 3) {
-                return json({ error: 'daily_cap', code: 'daily_cap' }, { status: 429 });
-            }
-        }
-        const ai = env?.AI;
-        if (!ai) {
-            return json({ error: 'AI binding not available' }, { status: 503 });
-        }
-
-        const esVoices = ['sirio','nestor','carina','celeste','alvaro','diana','aquila','selena','estrella','javier'];
-        const model = locale?.startsWith('en') ? '@cf/deepgram/aura-2-en' : '@cf/deepgram/aura-2-es';
-        const payload = { text: text.trim() };
-        if (model.endsWith('aura-2-es') && esVoices.includes(voiceId)) payload.speaker = voiceId;
-        const result = await ai.run(model, payload);
-
-        const audio = await audioResultToBase64(result);
-        if (audio) {
-            if (kv) {
-                const day = new Date().toISOString().slice(0, 10);
-                const k = `ttsfree:${user.id}:${day}`;
-                await kv.put(k, String(used + 1), { expirationTtl: 172800 });
-            }
-            return json({ audio, format: 'mp3', provider: 'cloudflare' });
-        }
-        console.log('CF TTS unexpected response:', typeof result, JSON.stringify(result).slice(0, 300));
-        return json({ error: 'No audio generated' }, { status: 500 });
+            return json({ error: 'no_free_voice', code: 'no_free_voice' }, { status: 403 });
         }
 
         // Kokoro TTS — via DeepInfra Inference API

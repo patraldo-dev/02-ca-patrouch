@@ -23,7 +23,7 @@
             }
         }
     });
-    let provider = $state('cloudflare');
+    let provider = $state('aura2');
     const BYOK_ENGINES = {
         cartesia: { has: () => hasCartesiaKey, setup: (v) => (showCartesiaSetup = v) },
         gemini: { has: () => hasGeminiKey, setup: (v) => (showGeminiSetup = v) },
@@ -36,8 +36,7 @@
         for (const [name, eng] of Object.entries(BYOK_ENGINES)) {
             if (provider === name) eng.setup(!eng.has());
         }
-        if (provider === 'cloudflare') voiceId = 'default';
-        else if (provider === 'kokoro') voiceId = 'af_heart';
+        if (provider === 'kokoro') voiceId = 'af_heart';
         else if (provider === 'aura2') voiceId = 'default';
         else if (provider === 'cartesia') voiceId = 'reader';
         else if (provider === 'gemini') voiceId = 'Kore';
@@ -111,7 +110,13 @@
     ];
 
     const aura2Voices = [
-        { id: 'default', name: 'Aura-2 (auto ES/EN)' }
+        { id: 'default', name: 'Aura-2 (auto)' },
+        { id: 'diana', name: 'Diana (ES)' },
+        { id: 'javier', name: 'Javier (ES)' },
+        { id: 'selena', name: 'Selena (ES)' },
+        { id: 'alvaro', name: 'Álvaro (ES)' },
+        { id: 'carina', name: 'Carina (ES)' },
+        { id: 'estrella', name: 'Estrella (ES)' }
     ];
     const cartesiaVoices = [
         { id: 'reader', name: 'Reader' }, { id: 'narrator', name: 'Narrator' },
@@ -473,7 +478,6 @@
                 <div class="field">
                     <label>{$t('audio.provider')}</label>
                     <select bind:value={provider} disabled={isLoading}>
-                        <option value="cloudflare">{$t("audio.provider_free_limited")}</option>
                         <option value="aura2">Cloudflare Aura-2 (BYOK)</option>
                         <option value="elevenlabs">ElevenLabs (BYOK)</option>
                         <option value="kokoro">Kokoro / DeepInfra (BYOK)</option>

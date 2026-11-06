@@ -698,7 +698,7 @@
   "help.evaluate_title": "Evaluate",
   "help.evaluate_desc": "Get AI-powered writing feedback. Craft analysis focused on voice, originality, and emotional impact — not grammar. Private and stays on Cloudflare infrastructure.",
   "help.audio_title": "Audio",
-  "help.audio_desc": "Convert your writing to speech. Free voice (members, 3/day) via Aura-2, or bring your own key: ElevenLabs, Kokoro, Cartesia, Gemini, OpenAI.",
+  "help.audio_desc": "Convert your writing to speech — every engine runs on your own API key: Cloudflare Aura-2, ElevenLabs, Kokoro, Cartesia, Gemini, OpenAI.",
   "help.findai_title": "Find the AI",
   "help.findai_desc": "Read writings in the Agora and guess which ones were written by humans and which by AI. Test your instincts!",
   "help.agora_title": "Agora",
@@ -1270,7 +1270,7 @@
   "portals.hud_fullscreen": "Fullscreen",
   "audio.cf_auth_hint": "Aura-2 needs an API Token (not the Global API Key) with the Workers AI permission, plus your account ID.",
   "audio.byok_ready_missing": "Add your Cloudflare API token + account ID first.",
-  "audio.free_cap": "Daily limit of the free voice reached (3) — bring your own key for unlimited use.",
+  "audio.free_cap": "Daily limit of the free voice reached (30) — bring your own key for unlimited use.",
   "audio.no_free_fr": "No free French voice — use a BYOK engine (ElevenLabs, Kokoro, Cartesia…) for French.",
   "audio.member_only": "The free voice is for members — sign up, or use a BYOK engine."
 }

@@ -684,7 +684,7 @@
   "help.evaluate_title": "Evaluar",
   "help.evaluate_desc": "Recibe retroalimentación de escritura con IA. Análisis enfocado en voz, originalidad e impacto emocional — no gramática. Privado, se queda en infraestructura de Cloudflare.",
   "help.audio_title": "Audio",
-  "help.audio_desc": "Convierte tu escritura a voz. Voz gratuita (miembros, 3/día) con Aura-2, o usa tu propia clave: ElevenLabs, Kokoro, Cartesia, Gemini, OpenAI.",
+  "help.audio_desc": "Convierte tu escritura a voz — cada motor funciona con tu propia clave API: Cloudflare Aura-2, ElevenLabs, Kokoro, Cartesia, Gemini, OpenAI.",
   "help.findai_title": "Encuentra la IA",
   "help.findai_desc": "Lee escritos en la Agora y adivina cuáles fueron escritos por humanos y cuáles por IA. Pon a prueba tus instintos.",
   "help.agora_title": "Agora",
@@ -1270,7 +1270,7 @@
   "portals.hud_fullscreen": "Pantalla completa",
   "audio.cf_auth_hint": "Aura-2 necesita un API Token (no la Global API Key) con permiso Workers AI, y tu ID de cuenta.",
   "audio.byok_ready_missing": "Primero agrega tu token de Cloudflare + ID de cuenta.",
-  "audio.free_cap": "Límite diario de la voz gratuita alcanzado (3) — usa tu propia clave para ilimitado.",
+  "audio.free_cap": "Límite diario de la voz gratuita alcanzado (30) — usa tu propia clave para ilimitado.",
   "audio.no_free_fr": "No hay voz gratuita en francés — usa un motor BYOK (ElevenLabs, Kokoro, Cartesia…).",
   "audio.member_only": "La voz gratuita es para miembros — regístrate, o usa un motor BYOK."
 }
