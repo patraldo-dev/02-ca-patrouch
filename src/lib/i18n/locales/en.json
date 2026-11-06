@@ -690,7 +690,6 @@
   "audio.copy": "Copy",
   "audio.delete": "Delete",
   "audio.chars": "characters",
-  "audio.provider_free_limited": "Cloudflare (Free, limited)",
   "common.help": "Help",
   "help.title": "How Patrouch.ca Works",
   "help.write_title": "Write",
@@ -1269,10 +1268,9 @@
   "audio.byok_ready": "Your key — billed to your Cloudflare account",
   "portals.hud_fullscreen": "Fullscreen",
   "audio.cf_auth_hint": "Aura-2 needs an API Token (not the Global API Key) with the Workers AI permission, plus your account ID.",
-  "audio.byok_ready_missing": "Add your Cloudflare API token + account ID first.",
-  "audio.free_cap": "Daily limit of the free voice reached (30) — bring your own key for unlimited use.",
-  "audio.no_free_fr": "No free French voice — use a BYOK engine (ElevenLabs, Kokoro, Cartesia…) for French.",
-  "audio.member_only": "The free voice is for members — sign up, or use a BYOK engine.",
   "audio.rate_limited": "Safeguard reached — 30 generations/hour, 200/day. This protects your own API key from runaway use; it resets automatically.",
-  "audio.too_long": "Keep it under 5,000 characters per generation."
+  "audio.too_long": "Keep it under 5,000 characters per generation.",
+  "audio.no_free_voice": "There is no free voice anymore — pick an engine and add your own API key (the page may need one refresh).",
+  "audio.no_cf_fr": "Cloudflare hosts no French voice — use ElevenLabs, Kokoro, Cartesia or Gemini for French.",
+  "audio.no_cf_key_msg": "Aura-2 needs your Cloudflare API token + account ID."
 }

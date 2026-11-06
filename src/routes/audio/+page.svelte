@@ -326,19 +326,17 @@
                 if (data.error === 'no_api_key') {
                     showKeySetup = true;
                     error = $t('audio.key_required');
+                } else if (data.error === 'no_free_voice') {
+                    error = $t('audio.no_free_voice');
                 } else if (data.code === 'rate_limited') {
                     error = $t('audio.rate_limited');
                 } else if (data.code === 'too_long') {
                     error = $t('audio.too_long');
-                } else if (data.code === 'daily_cap') {
-                    error = $t('audio.free_cap');
-                } else if (data.code === 'no_free_fr' || data.error === 'no_cf_fr') {
-                    error = $t('audio.no_free_fr');
-                } else if (data.code === 'member_only') {
-                    error = $t('audio.member_only');
+                } else if (data.error === 'no_cf_fr' || data.code === 'no_cf_fr') {
+                    error = $t('audio.no_cf_fr');
                 } else if (data.error === 'no_cf_key') {
                     showCfKeySetup = true;
-                    error = $t('audio.byok_ready_missing');
+                    error = $t('audio.no_cf_key_msg');
                 } else if (data.error === 'cf_auth') {
                     showCfKeySetup = true;
                     error = $t('audio.cf_auth_hint');
