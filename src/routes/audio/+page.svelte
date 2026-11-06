@@ -299,6 +299,16 @@
         goto('/refine');
     }
 
+    // Indicative USD per 1k characters — enough to make cost visible
+    // BEFORE spending the writer's key. Not billing, just a guardrail.
+    const ENGINE_RATES = {
+        aura2: 0.03, elevenlabs: 0.05, kokoro: 0.001,
+        cartesia: 0.065, gemini: 0.02, openai: 0.015
+    };
+    function estimateCost() {
+        return (text.trim().length / 1000) * (ENGINE_RATES[provider] ?? 0.03);
+    }
+
     async function handleGenerate() {
         error = '';
         audioUrl = '';
@@ -316,6 +326,10 @@
                 if (data.error === 'no_api_key') {
                     showKeySetup = true;
                     error = $t('audio.key_required');
+                } else if (data.code === 'rate_limited') {
+                    error = $t('audio.rate_limited');
+                } else if (data.code === 'too_long') {
+                    error = $t('audio.too_long');
                 } else if (data.code === 'daily_cap') {
                     error = $t('audio.free_cap');
                 } else if (data.code === 'no_free_fr' || data.error === 'no_cf_fr') {
@@ -506,6 +520,10 @@
                     rows="14"
                     disabled={isLoading || isAiLoading}
                 ></textarea>
+
+                <p class="tts-meta">
+                    {text.trim().length.toLocaleString()} / 5,000 · ≈ ${(estimateCost()).toFixed(3)}
+                </p>
 
                 <button
                     class="copy-inline"
@@ -833,6 +851,7 @@
         flex-wrap: wrap;
         gap: 0.75rem;
     }
+    .tts-meta { font-size: 0.78rem; color: var(--text-muted); margin: 0.35rem 0 0; }
     .cf-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; flex: 1 1 100%; }
 
     .key-form input {

@@ -1272,5 +1272,7 @@
   "audio.byok_ready_missing": "Add your Cloudflare API token + account ID first.",
   "audio.free_cap": "Daily limit of the free voice reached (30) — bring your own key for unlimited use.",
   "audio.no_free_fr": "No free French voice — use a BYOK engine (ElevenLabs, Kokoro, Cartesia…) for French.",
-  "audio.member_only": "The free voice is for members — sign up, or use a BYOK engine."
+  "audio.member_only": "The free voice is for members — sign up, or use a BYOK engine.",
+  "audio.rate_limited": "Safeguard reached — 30 generations/hour, 200/day. This protects your own API key from runaway use; it resets automatically.",
+  "audio.too_long": "Keep it under 5,000 characters per generation."
 }

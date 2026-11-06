@@ -1272,5 +1272,7 @@
   "audio.byok_ready_missing": "Primero agrega tu token de Cloudflare + ID de cuenta.",
   "audio.free_cap": "Límite diario de la voz gratuita alcanzado (30) — usa tu propia clave para ilimitado.",
   "audio.no_free_fr": "No hay voz gratuita en francés — usa un motor BYOK (ElevenLabs, Kokoro, Cartesia…).",
-  "audio.member_only": "La voz gratuita es para miembros — regístrate, o usa un motor BYOK."
+  "audio.member_only": "La voz gratuita es para miembros — regístrate, o usa un motor BYOK.",
+  "audio.rate_limited": "Límite de seguridad alcanzado — 30 generaciones/hora, 200/día. Protege tu propia clave API de un uso desbocado; se restablece solo.",
+  "audio.too_long": "Mantén el texto bajo 5.000 caracteres por generación."
 }

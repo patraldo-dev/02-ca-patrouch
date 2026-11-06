@@ -58,6 +58,15 @@ function pcmToWavBase64(pcm) {
     return bytesToBase64(new Blob([header, pcm]).arrayBuffer ? new Uint8Array([...new Uint8Array(header), ...new Uint8Array(pcm)]).buffer : pcm);
 }
 
+
+async function recordTtsUsage(u) {
+    if (!u) return;
+    try {
+        await u.kv.put(u.hourKey, String(u.h + 1), { expirationTtl: 3600 });
+        await u.kv.put(u.dayKey, String(u.d + 1), { expirationTtl: 86400 });
+    } catch {}
+}
+
 export async function POST({ request, locals, platform }) {
     const user = locals.user;
     if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -67,6 +76,25 @@ export async function POST({ request, locals, platform }) {
 
         if (!text || text.trim().length < 10) {
             return json({ error: 'Text must be at least 10 characters' }, { status: 400 });
+        }
+        if (text.trim().length > 5000) {
+            return json({ error: 'too_long', code: 'too_long' }, { status: 400 });
+        }
+
+        // Overuse safeguards — these protect the WRITER'S OWN key from
+        // runaway use (stuck loops, re-submits): 30 generations/hour and
+        // 200/day per account, counted on success. The site pays nothing;
+        // these caps keep an accident from draining the user's quota.
+        const kv = env?.CONTACT_KV;
+        if (kv) {
+            const hourKey = `ttsrl-h:${user.id}`;
+            const dayKey = `ttsrl-d:${user.id}`;
+            const h = parseInt((await kv.get(hourKey)) || '0', 10);
+            const d = parseInt((await kv.get(dayKey)) || '0', 10);
+            if (h >= 30 || d >= 200) {
+                return json({ error: 'rate_limited', code: 'rate_limited' }, { status: 429 });
+            }
+            var __ttsUsage = { kv, hourKey, dayKey, h, d };
         }
 
         // No free voice — every engine is BYOK by explicit product decision.
@@ -98,6 +126,7 @@ export async function POST({ request, locals, platform }) {
 
             const audioBuffer = await resp.arrayBuffer();
             const base64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+            await recordTtsUsage(__ttsUsage);
             return json({ audio: base64, format: 'wav', provider: 'kokoro' });
         }
 
@@ -170,6 +199,7 @@ export async function POST({ request, locals, platform }) {
                 const err = await resp.json().catch(() => ({}));
                 return json({ error: err?.error?.message || `Cartesia failed (${resp.status})` }, { status: resp.status });
             }
+            await recordTtsUsage(__ttsUsage);
             return json({ audio: bytesToBase64(await resp.arrayBuffer()), format: 'mp3', provider: 'cartesia' });
         }
 
@@ -198,6 +228,7 @@ export async function POST({ request, locals, platform }) {
             if (!resp.ok || !b64) {
                 return json({ error: d?.error?.message || `Gemini TTS failed (${resp.status})` }, { status: resp.status === 200 ? 500 : resp.status });
             }
+            await recordTtsUsage(__ttsUsage);
             return json({ audio: pcmToWavBase64(Uint8Array.from(atob(b64), c => c.charCodeAt(0))), format: 'wav', provider: 'gemini' });
         }
 
@@ -219,6 +250,7 @@ export async function POST({ request, locals, platform }) {
                 const err = await resp.json().catch(() => ({}));
                 return json({ error: err?.error?.message || `OpenAI TTS failed (${resp.status})` }, { status: resp.status });
             }
+            await recordTtsUsage(__ttsUsage);
             return json({ audio: bytesToBase64(await resp.arrayBuffer()), format: 'mp3', provider: 'openai' });
         }
 
@@ -246,7 +278,8 @@ export async function POST({ request, locals, platform }) {
 
         const audioBuffer = await response.arrayBuffer();
         const base64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
-        return json({ audio: base64, format: 'mp3', provider: 'elevenlabs' });
+        await recordTtsUsage(__ttsUsage);
+            return json({ audio: base64, format: 'mp3', provider: 'elevenlabs' });
     } catch (err) {
         console.error('TTS error:', err);
         return json({ error: 'TTS generation failed' }, { status: 500 });
