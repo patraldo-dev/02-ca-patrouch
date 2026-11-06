@@ -302,7 +302,7 @@
             const res = await fetch('/api/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, voiceId, provider })
+                body: JSON.stringify({ text, voiceId, provider, locale: $locale || 'es' })
             });
             const data = await res.json();
             if (res.ok) {
@@ -313,7 +313,15 @@
                     error = $t('audio.key_required');
                 } else if (data.error === 'no_cf_key') {
                     showCfKeySetup = true;
-                    error = 'CF key required';
+                    error = $t('audio.byok_ready_missing');
+                } else if (data.error === 'cf_auth') {
+                    showCfKeySetup = true;
+                    error = $t('audio.cf_auth_hint');
+                } else if (data.error === 'no_key') {
+                    if (provider === 'cartesia') showCartesiaSetup = true;
+                    if (provider === 'gemini') showGeminiSetup = true;
+                    if (provider === 'openai') showOpenAISetup = true;
+                    error = $t('audio.key_required');
                 } else {
                     error = data.error || 'Audio generation failed';
                 }
@@ -393,7 +401,8 @@
                 {#if cfKeyError}
                     <p class="key-error">{cfKeyError}</p>
                 {/if}
-            </div>
+            
+                    <p class="cf-hint">{$t('audio.cf_auth_hint')}</p></div>
         {/if}
 
         {#if showHfKeySetup}
@@ -814,6 +823,7 @@
         flex-wrap: wrap;
         gap: 0.75rem;
     }
+    .cf-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; flex: 1 1 100%; }
 
     .key-form input {
         flex: 1;

@@ -1267,5 +1267,8 @@
   "pages.prompt.gather_created": "Collection created",
   "pages.prompt.gather_suggesting": "Suggesting a title…",
   "audio.byok_desc": "Runs on your own API key — usage bills to you, never to this site.",
-  "audio.byok_ready": "your Cloudflare key is configured"
+  "audio.byok_ready": "your Cloudflare key is configured",
+  "portals.hud_fullscreen": "Fullscreen",
+  "audio.cf_auth_hint": "Aura-2 needs an API Token (not the Global API Key) with the Workers AI permission, plus your account ID.",
+  "audio.byok_ready_missing": "Add your Cloudflare API token + account ID first."
 }

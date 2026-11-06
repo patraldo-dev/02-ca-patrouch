@@ -59,6 +59,16 @@
 	}
 
 	// Recenter the scene (same as Esc — works on mobile where there's no Esc key).
+	function toggleFullscreen() {
+		// Hides the browser bar on phones — the 3D world gets the whole
+		// screen. Back gesture / re-tap exits.
+		if (document.fullscreenElement) {
+			document.exitFullscreen?.();
+		} else {
+			document.documentElement.requestFullscreen?.();
+		}
+	}
+
 	async function recenterScene() {
 		const mod = await import('#lib/portals-ecs/locomotion-system.js');
 		mod.recenter();

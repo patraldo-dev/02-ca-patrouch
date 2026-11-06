@@ -93,7 +93,12 @@ export async function generatePromptWithAI(ai, category, locale = 'en') {
       temperature: 0.7
     });
 
-    let text = response.response?.trim() || getFallback(category, locale);
+    // gateway intermittently returns response as a non-string — coerce
+    // (this was throwing .trim on an object and silently falling to the
+    // English catch-all fallback for non-EN locales)
+    let text = response.response;
+    if (typeof text !== 'string') text = text == null ? '' : JSON.stringify(text);
+    text = text.trim() || getFallback(category, locale);
     // Strip parenthetical translations (any language)
     text = text.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
     // Strip quotes wrapping the entire text
@@ -127,6 +132,7 @@ function isValidScript(text, locale) {
 function getFallback(category, locale = 'en') {
   const fallbacks = {
     en: {
+      'daily-community': 'Describe a conversation you almost had — the one that still visits you at night.',
       fiction: 'A letter arrives at your door, written in your own handwriting, dated ten years from now.',
       poetry: 'Describe the sound of a color no one else can see.',
       memoir: 'The meal that changed your understanding of home.',
@@ -137,6 +143,7 @@ function getFallback(category, locale = 'en') {
       'creative non-fiction': 'Write about a place that exists differently in memory than in reality.'
     },
     es: {
+      'daily-community': 'Describe la conversación que casi tuviste — la que todavía te visita de noche.',
       fiction: 'Una carta llega a tu puerta, escrita con tu propia letra, fechada diez años en el futuro.',
       poetry: 'Describe el sonido de un color que nadie más puede ver.',
       memoir: 'La comida que cambió tu comprensión del hogar.',
@@ -147,6 +154,7 @@ function getFallback(category, locale = 'en') {
       'creative non-fiction': 'Escribe sobre un lugar que existe diferente en la memoria que en la realidad.'
     },
     fr: {
+      'daily-community': 'Décris la conversation que tu as presque eue — celle qui te revisite encore la nuit.',
       fiction: 'Une lettre arrive à votre porte, écrite de votre propre main, datée de dix ans dans le futur.',
       poetry: 'Décrivez le son d\'une couleur que personne d\'autre ne peut voir.',
       memoir: 'Le repas qui a changé votre compréhension du foyer.',

@@ -113,6 +113,12 @@ export async function POST({ request, locals, platform }) {
             const d = await resp.json().catch(() => ({}));
             const audio = d?.result?.audio || d?.audio;
             if (!resp.ok || !audio) {
+                // 400/403 from the CF API almost always means the stored key
+                // is a Global API Key (unsupported) or a token without the
+                // Workers AI permission — give the client a code to localize.
+                if (resp.status === 400 || resp.status === 401 || resp.status === 403) {
+                    return json({ error: 'cf_auth', detail: d?.errors?.[0]?.message || '' }, { status: resp.status });
+                }
                 return json({ error: d?.errors?.[0]?.message || `Aura-2 failed (${resp.status})` }, { status: resp.status === 200 ? 500 : resp.status });
             }
             return json({ audio, format: 'mp3', provider: 'aura2' });

@@ -1267,5 +1267,8 @@
   "pages.prompt.gather_created": "Collection créée",
   "pages.prompt.gather_suggesting": "Suggestion du titre…",
   "audio.byok_desc": "Fonctionne avec ta propre clé API — l'usage te est facturé, jamais à ce site.",
-  "audio.byok_ready": "ta clé Cloudflare est configurée"
+  "audio.byok_ready": "ta clé Cloudflare est configurée",
+  "portals.hud_fullscreen": "Plein écran",
+  "audio.cf_auth_hint": "Aura-2 nécessite un API Token (pas la clé globale) avec la permission Workers AI, et ton ID de compte.",
+  "audio.byok_ready_missing": "Ajoute d'abord ton token Cloudflare + ID de compte."
 }
