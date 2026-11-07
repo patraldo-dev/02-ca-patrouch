@@ -326,8 +326,6 @@
                 if (data.error === 'no_api_key') {
                     showKeySetup = true;
                     error = $t('audio.key_required');
-                } else if (data.error === 'no_free_voice') {
-                    error = $t('audio.no_free_voice');
                 } else if (data.code === 'rate_limited') {
                     error = $t('audio.rate_limited');
                 } else if (data.code === 'too_long') {
