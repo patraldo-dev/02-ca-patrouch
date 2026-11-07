@@ -195,7 +195,6 @@
             const res = await fetch('/api/tts/cf-api-key');
             const data = await res.json();
             hasCfKey = data.hasKey;
-            if (provider === 'cloudflare' && !data.hasKey) showCfKeySetup = true;
         } catch (e) { /* ignore */ }
     }
     checkCfKey();
@@ -411,7 +410,7 @@
         {#if showCfKeySetup}
             <div class="key-setup">
                 <h2>Cloudflare Workers AI</h2>
-                <p>Requires a Cloudflare paid plan. Enter your CF API token and Account ID.</p>
+                <p>{$t('audio.cf_key_intro')}</p>
                 <div class="key-form" style="flex-direction:column;gap:0.5rem;">
                     <input type="text" bind:value={cfAccountIdInput} placeholder="CF Account ID" disabled={cfKeyLoading} />
                     <input type="password" bind:value={cfApiKeyInput} placeholder="CF API Token" disabled={cfKeyLoading} />
@@ -488,12 +487,12 @@
                 <div class="field">
                     <label>{$t('audio.provider')}</label>
                     <select bind:value={provider} disabled={isLoading}>
-                        <option value="aura2">Cloudflare Aura-2 (BYOK)</option>
-                        <option value="elevenlabs">ElevenLabs (BYOK)</option>
-                        <option value="kokoro">Kokoro / DeepInfra (BYOK)</option>
-                        <option value="cartesia">Cartesia Sonic (BYOK)</option>
-                        <option value="gemini">Gemini TTS (BYOK)</option>
-                        <option value="openai">OpenAI TTS (BYOK)</option>
+                        <option value="aura2">Cloudflare Aura-2</option>
+                        <option value="elevenlabs">ElevenLabs</option>
+                        <option value="kokoro">Kokoro (DeepInfra)</option>
+                        <option value="cartesia">Cartesia Sonic</option>
+                        <option value="gemini">Gemini TTS</option>
+                        <option value="openai">OpenAI TTS</option>
                     </select>
                 </div>
                 <div class="field">

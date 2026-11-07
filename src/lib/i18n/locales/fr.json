@@ -1271,5 +1271,6 @@
   "audio.rate_limited": "Limite de sécurité atteinte — 30 générations/heure, 200/jour. Cela protège ta propre clé API d'un usage déréglé ; ça se réinitialise tout seul.",
   "audio.too_long": "Reste sous 5 000 caractères par génération.",
   "audio.no_cf_fr": "Cloudflare n'offre pas de voix française — utilise ElevenLabs, Kokoro, Cartesia ou Gemini pour le français.",
-  "audio.no_cf_key_msg": "Aura-2 nécessite ton token Cloudflare + ID de compte."
+  "audio.no_cf_key_msg": "Aura-2 nécessite ton token Cloudflare + ID de compte.",
+  "audio.cf_key_intro": "Crée un API Token sur dash.cloudflare.com/profile/api-tokens (modèle « Workers AI » — PAS la clé globale), et ajoute ton Account ID (barre latérale du dashboard)."
 }

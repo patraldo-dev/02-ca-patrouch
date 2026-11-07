@@ -1271,5 +1271,6 @@
   "audio.rate_limited": "Safeguard reached — 30 generations/hour, 200/day. This protects your own API key from runaway use; it resets automatically.",
   "audio.too_long": "Keep it under 5,000 characters per generation.",
   "audio.no_cf_fr": "Cloudflare hosts no French voice — use ElevenLabs, Kokoro, Cartesia or Gemini for French.",
-  "audio.no_cf_key_msg": "Aura-2 needs your Cloudflare API token + account ID."
+  "audio.no_cf_key_msg": "Aura-2 needs your Cloudflare API token + account ID.",
+  "audio.cf_key_intro": "Create an API Token at dash.cloudflare.com/profile/api-tokens (template \"Workers AI\" — NOT the Global API Key), plus your Account ID (workers dashboard right sidebar)."
 }
