@@ -95,6 +95,8 @@
     // ── Hands-free dictation (shared engine + DictationButton) ──
     let editorTextarea = $state(null);
     let interimText = $state('');
+    // one handwriting import per session — greys the import options after use
+    let handwritingUsed = $state(false);
     let manuscriptUrl = $state(null);
 
     function insertAtCursor(text) {
@@ -587,11 +589,14 @@
                             {/if}
 
                             <HandwritingImport
+                                locked={handwritingUsed}
                                 onImport={({ title, text }) => {
                                     if (text) insertAtCursor(text + '\n\n');
                                     if (title && !editorTitle.trim()) editorTitle = title;
+                                    handwritingUsed = true;
                                 }}
                                 onManuscript={(u) => (manuscriptUrl = u)}
+                                onExistingManuscripts={() => manuscriptUrl}
                             />
 
                             <DictationButton

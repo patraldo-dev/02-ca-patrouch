@@ -9,9 +9,10 @@
     // confirmed, not cancelled).
     import { t } from '#lib/i18n/index.js';
 
-    let { onImport, onManuscript } = $props();
+    let { onImport, onManuscript, locked = false, onExistingManuscripts } = $props();
 
     let fileInput = $state(null);
+    let archiveInput = $state(null);
     let busy = $state(false);
     let error = $state('');
     let attach = $state(false);
@@ -37,6 +38,46 @@
             out.push(w);
         }
         return (out.join(' ') || clean.slice(0, 57)) + '…';
+    }
+
+    // Archive-only path: upload page images as the manuscript WITHOUT
+    // touching the editor's text. Independent of imports — works even
+    // when the import options are locked after a transcript import, and
+    // repeatable (merges with pages already attached).
+    let archiveBusy = $state(false);
+
+    async function attachOnly(e) {
+        const files = [...(e.target.files || [])];
+        e.target.value = '';
+        if (!files.length || archiveBusy) return;
+        const urls = [];
+        archiveBusy = true;
+        error = '';
+        for (const file of files) {
+            if (!file.type.startsWith('image/')) continue;
+            try {
+                const fd = new FormData();
+                fd.append('image', file);
+                fd.append('keep', 'true');
+                const res = await fetch('/api/write/handwriting', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (res.ok && d.manuscriptUrl) urls.push(d.manuscriptUrl);
+                else if (!res.ok) error = d.error || $t('handwriting.error_generic');
+            } catch {
+                error = $t('handwriting.error_generic');
+            }
+        }
+        archiveBusy = false;
+        if (urls.length) {
+            let existing = [];
+            try {
+                const raw = onExistingManuscripts?.();
+                existing = raw ? (JSON.parse(raw) || []) : [];
+            } catch { existing = []; }
+            if (!Array.isArray(existing)) existing = [];
+            const all = existing.concat(urls);
+            onManuscript?.(all.length === 1 ? all[0] : JSON.stringify(all));
+        }
     }
 
     function startPaste() {
@@ -137,9 +178,9 @@
         <button
             class="hw-btn"
             onclick={() => fileInput?.click()}
-            disabled={busy}
+            disabled={busy || locked}
             aria-label={$t('handwriting.import')}
-            title={$t('handwriting.import')}
+            title={locked ? $t('handwriting.locked_hint') : $t('handwriting.import')}
         >
             {#if busy}
                 <span class="hw-spinner" aria-hidden="true"></span> {$t('handwriting.busy')}
@@ -147,9 +188,28 @@
                 ✍️ {$t('handwriting.import')}
             {/if}
         </button>
-        <button class="hw-btn" onclick={startPaste} title={$t('handwriting.paste_hint')}>
+        <button class="hw-btn" onclick={startPaste} disabled={locked} title={locked ? $t('handwriting.locked_hint') : $t('handwriting.paste_hint')}>
             📋 {$t('handwriting.paste')}
         </button>
+        <button class="hw-btn" onclick={() => archiveInput?.click()} disabled={archiveBusy} title={$t('handwriting.attach_only_hint')}>
+            {#if archiveBusy}
+                <span class="hw-spinner" aria-hidden="true"></span>
+            {:else}
+                📎
+            {/if}
+            {$t('handwriting.attach_only')}
+        </button>
+        <input
+            bind:this={archiveInput}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            onchange={attachOnly}
+            hidden
+        />
+        {#if locked}
+            <span class="hw-locked">🔒 {$t('handwriting.locked_hint')}</span>
+        {/if}
         <label class="hw-attach" title={$t('handwriting.attach_hint')}>
             <input type="checkbox" bind:checked={attach} />
             {$t('handwriting.attach')}
@@ -191,6 +251,7 @@
     .hw-attach input { accent-color: var(--accent, #a8bdb3); }
     .hw-error { width: 100%; color: #e08d6d; font-size: 0.78rem; }
     .hw-tip { width: 100%; color: var(--text-muted, #777); font-size: 0.72rem; }
+    .hw-locked { font-size: 0.72rem; color: var(--text-muted, #888); }
     .hw-review {
         width: 100%; display: grid; gap: 0.45rem;
         background: rgba(0,0,0,0.25); border: 1px solid var(--border, #3a3f4d);

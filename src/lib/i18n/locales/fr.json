@@ -1272,5 +1272,8 @@
   "audio.too_long": "Reste sous 5 000 caractères par génération.",
   "audio.no_cf_fr": "Cloudflare n'offre pas de voix française — utilise ElevenLabs, Kokoro, Cartesia ou Gemini pour le français.",
   "audio.no_cf_key_msg": "Aura-2 nécessite ton token Cloudflare + ID de compte.",
-  "audio.cf_key_intro": "Crée un API Token sur dash.cloudflare.com/profile/api-tokens (modèle « Workers AI » — PAS la clé globale), et ajoute ton Account ID (barre latérale du dashboard)."
+  "audio.cf_key_intro": "Crée un API Token sur dash.cloudflare.com/profile/api-tokens (modèle « Workers AI » — PAS la clé globale), et ajoute ton Account ID (barre latérale du dashboard).",
+  "handwriting.locked_hint": "Transcription déjà importée — la zone de texte est protégée. Avec 📎 tu peux encore archiver des pages manuscrites.",
+  "handwriting.attach_only": "Archiver le manuscrit",
+  "handwriting.attach_only_hint": "Joint les images des pages comme original manuscrit — sans toucher au texte."
 }

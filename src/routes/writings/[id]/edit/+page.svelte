@@ -21,6 +21,7 @@
     // Hands-free dictation into the content box
     let contentTextarea = $state(null);
     let interimText = $state('');
+    let handwritingUsed = $state(false);
     let manuscriptUrl = $state(null);
     let projectId = $state(data.writing?.project_id || null);
 
@@ -154,11 +155,14 @@
             <div class="dictation-interim" aria-live="polite">{interimText}</div>
         {/if}
         <HandwritingImport
+            locked={handwritingUsed}
             onImport={(imp) => {
                 if (imp.text) insertAtCursor(imp.text + '\n\n');
                 if (imp.title && !title.trim()) title = imp.title;
+                handwritingUsed = true;
             }}
             onManuscript={(u) => (manuscriptUrl = u)}
+            onExistingManuscripts={() => manuscriptUrl}
         />
 
         <DictationButton

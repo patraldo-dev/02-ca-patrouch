@@ -1272,5 +1272,8 @@
   "audio.too_long": "Keep it under 5,000 characters per generation.",
   "audio.no_cf_fr": "Cloudflare hosts no French voice — use ElevenLabs, Kokoro, Cartesia or Gemini for French.",
   "audio.no_cf_key_msg": "Aura-2 needs your Cloudflare API token + account ID.",
-  "audio.cf_key_intro": "Create an API Token at dash.cloudflare.com/profile/api-tokens (template \"Workers AI\" — NOT the Global API Key), plus your Account ID (workers dashboard right sidebar)."
+  "audio.cf_key_intro": "Create an API Token at dash.cloudflare.com/profile/api-tokens (template \"Workers AI\" — NOT the Global API Key), plus your Account ID (workers dashboard right sidebar).",
+  "handwriting.locked_hint": "Transcript already imported — the text box is protected. 📎 can still archive more manuscript pages.",
+  "handwriting.attach_only": "Archive manuscript",
+  "handwriting.attach_only_hint": "Attach page images to the piece as the handwritten original — no text changes."
 }
