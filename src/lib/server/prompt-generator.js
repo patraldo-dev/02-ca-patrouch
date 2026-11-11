@@ -23,6 +23,13 @@ export async function getOrCreateDailyPrompt(db, ai, dateStr, categoryOverride, 
   if (existing) return existing;
 
   const promptText = await generatePromptWithAI(ai, category, locale);
+
+  // Same guard as the community prompt: a fallback is a transient
+  // umbrella for THIS request — never persisted as the day's prompt.
+  if (promptText === getFallback(category, locale)) {
+    return { id: `transient-${crypto.randomUUID()}`, prompt_text: promptText, category };
+  }
+
   const id = crypto.randomUUID();
   await db.prepare(
     'INSERT INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
@@ -56,6 +63,15 @@ export async function getOrCreateCommunityPrompt(db, ai, dateStr, locale = 'en')
   if (existing) return existing;
 
   const promptText = await generatePromptWithAI(ai, 'daily-community', locale);
+
+  // The fallback must NEVER be persisted as the day's prompt — if the AI
+  // hiccuped, the next visitor should get a fresh generation attempt, not
+  // a static text fossilized for the whole day. Serve it for THIS request
+  // only, with a transient id so downstream FK logic still works.
+  if (promptText === getFallback('daily-community', locale)) {
+    return { id: `transient-${crypto.randomUUID()}`, prompt_text: promptText, category: 'daily-community' };
+  }
+
   const id = crypto.randomUUID();
   await db.prepare(
     'INSERT INTO writing_prompts (id, prompt_text, prompt_date, category, locale) VALUES (?, ?, ?, ?, ?)'
