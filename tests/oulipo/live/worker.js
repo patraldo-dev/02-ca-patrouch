@@ -102,7 +102,7 @@ function score(human, draft, lang) {
     const under = (policy) => {
         const keys = analyze(human, lang, policy).types.map((type) => type.key);
         const verdict = judge(human, draft, lang, policy, keys);
-        return { sent: keys.length, bites: verdict.bites, muzzlePct: verdict.muzzlePct };
+        return { sent: keys.length, hits: verdict.hits, muzzlePct: verdict.muzzlePct };
     };
     return { words: draft.trim().split(/\s+/).length, strict: under(defaultPolicy(lang)), families: under({ verbs: 'families' }) };
 }

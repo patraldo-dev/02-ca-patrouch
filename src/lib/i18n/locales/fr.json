@@ -1302,7 +1302,7 @@
   "duel.lock_hint": "Un duel par jour. Verrouiller est sans retour.",
   "duel.locked_notice": "Verrouillé. Reviens demain pour un nouveau duel.",
   "duel.score": "Score",
-  "duel.bites": "Touches",
+  "duel.hits": "Touches",
   "duel.misses": "Ratés",
   "duel.muzzle": "Muselière",
   "duel.muzzle_line": "Muselière : {pct} % de ce qu'elle voulait dire lui est désormais interdit.",

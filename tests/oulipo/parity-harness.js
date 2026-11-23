@@ -26,9 +26,9 @@ const pct = (part, whole) => (whole ? `${((100 * part) / whole).toFixed(0).padSt
 function compare(human, draft, lang, policy) {
     const h = analyze(human, lang, policy);
     const d = analyze(draft, lang, policy);
-    // Sending every word of the human piece: how many bite, how much is forbidden.
+    // Sending every word of the human piece: how many hit, how much is forbidden.
     const everything = judge(human, draft, lang, policy, h.types.map((type) => type.key));
-    return { h, d, bites: everything.bites, muzzle: everything.muzzlePct };
+    return { h, d, hits: everything.hits, muzzle: everything.muzzlePct };
 }
 
 function verbShare(text, lang) {
@@ -49,14 +49,14 @@ function row(label, human, draft, lang) {
         `${pct(strict.h.functionTokens, strict.h.totalTokens)}/${pct(strict.d.functionTokens, strict.d.totalTokens)}`,
         `${pct(strict.h.shortTokens, strict.h.totalTokens)}/${pct(strict.d.shortTokens, strict.d.totalTokens)}`,
         `${String(strict.h.vocabSize).padStart(3)}/${String(strict.d.vocabSize).padStart(3)}`,
-        `${pct(strict.bites, strict.h.vocabSize)} /${pct(families.bites, families.h.vocabSize)}`,
+        `${pct(strict.hits, strict.h.vocabSize)} /${pct(families.hits, families.h.vocabSize)}`,
         `${String(strict.muzzle).padStart(3)}%/${String(families.muzzle).padStart(3)}%`,
         pct(verbs, content)
     ];
 }
 
 const header = [
-    'piece', 'words', 'fn-share', 'short', 'types', 'bite', 'muzzle', 'verb-fam'
+    'piece', 'words', 'fn-share', 'short', 'types', 'hit', 'muzzle', 'verb-fam'
 ];
 
 console.log('Parity harness — one scene, three languages (human / narrator)');
@@ -64,7 +64,7 @@ console.log('  words      letter runs in the human piece / in the narrator piece
 console.log('  fn-share   share of runs that are function words and never count');
 console.log('  short      share of runs under 4 letters that are not function words');
 console.log('  types      distinct word families available to send / in the draft');
-console.log('  bite       share of the human families the draft also uses, strict / families');
+console.log('  hit       share of the human families the draft also uses, strict / families');
 console.log('  muzzle     share of the draft forbidden if the human sends everything, strict / families');
 console.log('  verb-fam   share of the draft that the families policy folds into an irregular verb');
 console.log('');

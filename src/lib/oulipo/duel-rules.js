@@ -25,5 +25,5 @@ export const DUEL = Object.freeze({
 });
 
 /** Scoring: a word the draft used earns +1, a word it did not costs 1. */
-export const BITE = 1;
+export const HIT = 1;
 export const MISS = -1;

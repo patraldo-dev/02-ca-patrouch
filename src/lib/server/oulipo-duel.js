@@ -211,7 +211,7 @@ export function roundView(row, draft) {
         ropes,
         ropeCount: row.rope_count,
         storyTypes: row.story_types,
-        bites: row.bites,
+        hits: row.hits,
         misses: row.misses,
         score: row.score,
         muzzlePct: row.muzzle_pct,
@@ -279,7 +279,7 @@ export async function lockDuel(db, ai, { userId, locale, day, story, ropes }) {
         ropes: JSON.stringify(verdict.ropes),
         rope_count: verdict.ropes.length,
         story_types: verdict.storyTypes,
-        bites: verdict.bites,
+        hits: verdict.hits,
         misses: verdict.misses,
         score: verdict.score,
         muzzle_pct: verdict.muzzlePct,
@@ -290,12 +290,12 @@ export async function lockDuel(db, ai, { userId, locale, day, story, ropes }) {
             .prepare(
                 `INSERT INTO oulipo_duel_rounds
                    (id, user_id, locale, duel_date, draft_id, story, policy, ropes, rope_count,
-                    story_types, bites, misses, score, muzzle_pct, draft_tokens)
+                    story_types, hits, misses, score, muzzle_pct, draft_tokens)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
             )
             .bind(
                 row.id, row.user_id, row.locale, row.duel_date, row.draft_id, row.story, row.policy,
-                row.ropes, row.rope_count, row.story_types, row.bites, row.misses, row.score,
+                row.ropes, row.rope_count, row.story_types, row.hits, row.misses, row.score,
                 row.muzzle_pct, row.draft_tokens
             )
             .run();
@@ -433,7 +433,7 @@ export async function getBoard(db, locale, day, { userId } = {}) {
     try {
         ({ results: rows } = await db
             .prepare(
-                `SELECT r.id, r.user_id, r.score, r.muzzle_pct, r.bites, r.misses, r.rope_count,
+                `SELECT r.id, r.user_id, r.score, r.muzzle_pct, r.hits, r.misses, r.rope_count,
                         u.username, u.show_profile, p.display_name
                    FROM oulipo_duel_rounds r
                    JOIN users u ON u.id = r.user_id
@@ -458,7 +458,7 @@ export async function getBoard(db, locale, day, { userId } = {}) {
                 name: row.show_profile ? row.display_name || row.username : null,
                 score: row.score,
                 muzzlePct: row.muzzle_pct,
-                bites: row.bites,
+                hits: row.hits,
                 misses: row.misses,
                 ropeCount: row.rope_count
             })

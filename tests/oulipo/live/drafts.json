@@ -55,12 +55,12 @@
         "words": 139,
         "strict": {
           "sent": 59,
-          "bites": 6,
+          "hits": 6,
           "muzzlePct": 12
         },
         "families": {
           "sent": 59,
-          "bites": 6,
+          "hits": 6,
           "muzzlePct": 12
         },
         "ms": 19906
@@ -70,12 +70,12 @@
         "words": 146,
         "strict": {
           "sent": 59,
-          "bites": 11,
+          "hits": 11,
           "muzzlePct": 19
         },
         "families": {
           "sent": 59,
-          "bites": 11,
+          "hits": 11,
           "muzzlePct": 19
         },
         "ms": 21023
@@ -85,12 +85,12 @@
         "words": 138,
         "strict": {
           "sent": 59,
-          "bites": 5,
+          "hits": 5,
           "muzzlePct": 10
         },
         "families": {
           "sent": 59,
-          "bites": 5,
+          "hits": 5,
           "muzzlePct": 10
         },
         "ms": 16212
@@ -100,12 +100,12 @@
         "words": 137,
         "strict": {
           "sent": 59,
-          "bites": 10,
+          "hits": 10,
           "muzzlePct": 21
         },
         "families": {
           "sent": 59,
-          "bites": 10,
+          "hits": 10,
           "muzzlePct": 21
         },
         "ms": 16111
@@ -115,12 +115,12 @@
         "words": 137,
         "strict": {
           "sent": 59,
-          "bites": 10,
+          "hits": 10,
           "muzzlePct": 22
         },
         "families": {
           "sent": 59,
-          "bites": 10,
+          "hits": 10,
           "muzzlePct": 22
         },
         "ms": 13293
@@ -181,12 +181,12 @@
         "words": 142,
         "strict": {
           "sent": 53,
-          "bites": 11,
+          "hits": 11,
           "muzzlePct": 18
         },
         "families": {
           "sent": 53,
-          "bites": 11,
+          "hits": 11,
           "muzzlePct": 18
         },
         "ms": 13649
@@ -196,12 +196,12 @@
         "words": 139,
         "strict": {
           "sent": 53,
-          "bites": 9,
+          "hits": 9,
           "muzzlePct": 16
         },
         "families": {
           "sent": 53,
-          "bites": 9,
+          "hits": 9,
           "muzzlePct": 16
         },
         "ms": 13973
@@ -211,12 +211,12 @@
         "words": 147,
         "strict": {
           "sent": 53,
-          "bites": 7,
+          "hits": 7,
           "muzzlePct": 13
         },
         "families": {
           "sent": 53,
-          "bites": 8,
+          "hits": 8,
           "muzzlePct": 14
         },
         "ms": 11853
@@ -226,12 +226,12 @@
         "words": 140,
         "strict": {
           "sent": 53,
-          "bites": 10,
+          "hits": 10,
           "muzzlePct": 17
         },
         "families": {
           "sent": 53,
-          "bites": 10,
+          "hits": 10,
           "muzzlePct": 17
         },
         "ms": 9309
@@ -241,12 +241,12 @@
         "words": 144,
         "strict": {
           "sent": 53,
-          "bites": 8,
+          "hits": 8,
           "muzzlePct": 13
         },
         "families": {
           "sent": 53,
-          "bites": 8,
+          "hits": 8,
           "muzzlePct": 13
         },
         "ms": 10451
@@ -321,12 +321,12 @@
         "words": 136,
         "strict": {
           "sent": 49,
-          "bites": 9,
+          "hits": 9,
           "muzzlePct": 19
         },
         "families": {
           "sent": 49,
-          "bites": 10,
+          "hits": 10,
           "muzzlePct": 21
         },
         "ms": 13986
@@ -336,12 +336,12 @@
         "words": 146,
         "strict": {
           "sent": 49,
-          "bites": 10,
+          "hits": 10,
           "muzzlePct": 24
         },
         "families": {
           "sent": 49,
-          "bites": 11,
+          "hits": 11,
           "muzzlePct": 27
         },
         "ms": 10985
@@ -351,12 +351,12 @@
         "words": 134,
         "strict": {
           "sent": 49,
-          "bites": 7,
+          "hits": 7,
           "muzzlePct": 16
         },
         "families": {
           "sent": 49,
-          "bites": 8,
+          "hits": 8,
           "muzzlePct": 20
         },
         "ms": 33051
@@ -366,12 +366,12 @@
         "words": 132,
         "strict": {
           "sent": 49,
-          "bites": 7,
+          "hits": 7,
           "muzzlePct": 13
         },
         "families": {
           "sent": 49,
-          "bites": 8,
+          "hits": 8,
           "muzzlePct": 14
         },
         "ms": 12500
@@ -381,12 +381,12 @@
         "words": 136,
         "strict": {
           "sent": 49,
-          "bites": 7,
+          "hits": 7,
           "muzzlePct": 16
         },
         "families": {
           "sent": 49,
-          "bites": 8,
+          "hits": 8,
           "muzzlePct": 18
         },
         "ms": 12134

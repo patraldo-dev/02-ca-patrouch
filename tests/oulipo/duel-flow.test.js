@@ -135,11 +135,11 @@ test('lock and rewrite run the same way in fr, en and es', async () => {
         assert.equal(view.policy.verbs, 'strict', lang);
         // lighthouse / gulls / lamp / father and their equivalents: three are in the draft, the gulls are not.
         assert.deepEqual(
-            view.ropes.map((rope) => rope.bite),
+            view.ropes.map((rope) => rope.hit),
             [true, false, true, true],
             lang
         );
-        assert.equal(view.bites, 3, lang);
+        assert.equal(view.hits, 3, lang);
         assert.equal(view.misses, 1, lang);
         assert.equal(view.score, 2, lang);
         assert.equal(view.ropeCount, 4, lang);
@@ -569,7 +569,7 @@ test('the board ranks by score, hides private names and honours the scoreboard o
         name: 'Pluma',
         score: 2,
         muzzlePct: board[0].muzzlePct,
-        bites: 3,
+        hits: 3,
         misses: 1,
         ropeCount: 4
     });

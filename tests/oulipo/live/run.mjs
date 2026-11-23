@@ -95,25 +95,25 @@ try {
             const calls = [...drawn.calls, ...rewrites.calls];
 
             console.log('');
-            const bites = (key) => drawn.drafts.map((draft) => pct(draft[key].bites, draft[key].sent));
+            const hits = (key) => drawn.drafts.map((draft) => pct(draft[key].hits, draft[key].sent));
             const muzzle = (key) => drawn.drafts.map((draft) => draft[key].muzzlePct);
             console.log(`  draft length         ${spread(drawn.drafts.map((draft) => draft.words))} words`);
             console.log(`  words sent           ${drawn.drafts[0].strict.sent} of the human piece`);
-            console.log(`  bite rate, strict    ${mean(bites('strict')).toFixed(0)}% of the words sent (${spread(bites('strict'))}%)`);
-            console.log(`  bite rate, families  ${mean(bites('families')).toFixed(0)}% (${spread(bites('families'))}%)`);
+            console.log(`  hit rate, strict    ${mean(hits('strict')).toFixed(0)}% of the words sent (${spread(hits('strict'))}%)`);
+            console.log(`  hit rate, families  ${mean(hits('families')).toFixed(0)}% (${spread(hits('families'))}%)`);
             console.log(`  muzzle, strict       ${mean(muzzle('strict')).toFixed(0)}% of her draft forbidden (${spread(muzzle('strict'))}%)`);
             console.log(`  muzzle, families     ${mean(muzzle('families')).toFixed(0)}% (${spread(muzzle('families'))}%)`);
             for (const [label, run] of [['rewrite, all    ', rewrites.rewriteAll], ['rewrite, top 10', rewrites.rewriteTop10]]) {
                 console.log(`  ${label}     ${run.forbidden} words forbidden → ${run.passes} pass(es), ${run.violations.length} left${run.violations.length ? `: ${run.violations.slice(0, 8).join(', ')}` : ''}`);
             }
             console.log(`  model calls          ${calls.length}, slowest ${seconds(Math.max(...calls.map((call) => call.ms)))}, whole run ${seconds(calls.reduce((sum, call) => sum + call.ms, 0))}`);
-            summary.push({ lang, strict: mean(bites('strict')), families: mean(bites('families')), muzzle: mean(muzzle('strict')) });
+            summary.push({ lang, strict: mean(hits('strict')), families: mean(hits('families')), muzzle: mean(muzzle('strict')) });
         }
         writeFileSync(join(here, 'drafts.json'), JSON.stringify(saved, null, 2) + '\n');
         if (summary.length === LANGS.length) {
-            console.log('\nParity at a glance (mean over the drafts; bite rate = share of the human piece the draft also uses):');
+            console.log('\nParity at a glance (mean over the drafts; hit rate = share of the human piece the draft also uses):');
             for (const { lang, strict, families, muzzle } of summary) {
-                console.log(`  ${lang}   bite ${strict.toFixed(0).padStart(3)}% strict / ${families.toFixed(0).padStart(3)}% families   muzzle ${muzzle.toFixed(0).padStart(3)}%`);
+                console.log(`  ${lang}   hit ${strict.toFixed(0).padStart(3)}% strict / ${families.toFixed(0).padStart(3)}% families   muzzle ${muzzle.toFixed(0).padStart(3)}%`);
             }
         }
         console.log('\nSaved to tests/oulipo/live/drafts.json — "npm run test:parity" scores the fixture pieces against these drafts.');

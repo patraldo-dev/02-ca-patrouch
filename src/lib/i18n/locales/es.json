@@ -1302,7 +1302,7 @@
   "duel.lock_hint": "Un duelo al día. Bloquear no se puede deshacer.",
   "duel.locked_notice": "Bloqueado. Vuelve mañana para un duelo nuevo.",
   "duel.score": "Puntuación",
-  "duel.bites": "Aciertos",
+  "duel.hits": "Aciertos",
   "duel.misses": "Fallos",
   "duel.muzzle": "Mordaza",
   "duel.muzzle_line": "Mordaza: el {pct}% de lo que quería decir le está prohibido.",

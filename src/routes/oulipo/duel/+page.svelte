@@ -221,11 +221,11 @@
 
     async function share() {
         if (!round) return;
-        const marks = round.ropes.map((rope) => (rope.bite ? '🟢' : '🔴')).join('');
+        const marks = round.ropes.map((rope) => (rope.hit ? '🟢' : '🔴')).join('');
         const text = [
             `${$t('duel.title')} · ${round.date}`,
             marks,
-            `🟢 ${round.bites}  🔴 ${round.misses}  ⛔ ${round.muzzlePct}%`,
+            `🟢 ${round.hits}  🔴 ${round.misses}  ⛔ ${round.muzzlePct}%`,
             `${location.origin}${HERE}`
         ].join('\n');
         try {
@@ -364,8 +364,8 @@
                     <dd>{round.score > 0 ? '+' : ''}{round.score}</dd>
                 </div>
                 <div class="tile">
-                    <dt>{$t('duel.bites')}</dt>
-                    <dd class="bite">{round.bites}</dd>
+                    <dt>{$t('duel.hits')}</dt>
+                    <dd class="hit">{round.hits}</dd>
                 </div>
                 <div class="tile">
                     <dt>{$t('duel.misses')}</dt>
@@ -388,7 +388,7 @@
             <h3>{$t('duel.your_words')}</h3>
             <div class="chips">
                 {#each round.ropes as rope (rope.key)}
-                    <span class="chip static" class:bite={rope.bite} class:miss={!rope.bite}>{rope.forms[0]}</span>
+                    <span class="chip static" class:hit={rope.hit} class:miss={!rope.hit}>{rope.forms[0]}</span>
                 {/each}
             </div>
         </section>
@@ -396,7 +396,7 @@
         <section class="glass-surface card">
             <h2>{$t('duel.she_wrote')}</h2>
             <p class="note">{$t('duel.she_wrote_note')}</p>
-            <p class="piece">{#each segments(round.draft.text, round.draft.spans) as part, i (i)}{#if part.hit}<mark class="bite">{part.text}</mark>{:else}{part.text}{/if}{/each}</p>
+            <p class="piece">{#each segments(round.draft.text, round.draft.spans) as part, i (i)}{#if part.hit}<mark class="hit">{part.text}</mark>{:else}{part.text}{/if}{/each}</p>
         </section>
 
         <section class="glass-surface card">
@@ -442,7 +442,7 @@
                                 {row.name ?? '·'}
                                 {#if row.mine}<small> · {$t('duel.you')}</small>{/if}
                             </span>
-                            <span class="marks">🟢 {row.bites} · 🔴 {row.misses}</span>
+                            <span class="marks">🟢 {row.hits} · 🔴 {row.misses}</span>
                             <span class="pts">{row.score > 0 ? '+' : ''}{row.score}</span>
                         </li>
                     {/each}
@@ -453,10 +453,10 @@
 </div>
 
 <style>
-    /* Bites and misses need a colour of their own in both themes. */
+    /* Hits and misses need a colour of their own in both themes. */
     .duel-page {
-        --bite: #2f7d5b;
-        --bite-bg: rgba(47, 125, 91, 0.14);
+        --hit: #2f7d5b;
+        --hit-bg: rgba(47, 125, 91, 0.14);
         --miss: #a33a48;
         --miss-bg: rgba(163, 58, 72, 0.12);
         max-width: 760px;
@@ -464,8 +464,8 @@
         padding: 2.5rem 1.25rem 4rem;
     }
     :global(html[data-theme='dark']) .duel-page {
-        --bite: #7fd1a8;
-        --bite-bg: rgba(127, 209, 168, 0.16);
+        --hit: #7fd1a8;
+        --hit-bg: rgba(127, 209, 168, 0.16);
         --miss: #f0959f;
         --miss-bg: rgba(240, 149, 159, 0.16);
     }
@@ -622,10 +622,10 @@
     .chip.static {
         cursor: default;
     }
-    .chip.bite {
-        background: var(--bite-bg);
-        border-color: var(--bite);
-        color: var(--bite);
+    .chip.hit {
+        background: var(--hit-bg);
+        border-color: var(--hit);
+        color: var(--hit);
         font-weight: 600;
     }
     .chip.miss {
@@ -690,8 +690,8 @@
     .tile.score dd {
         color: var(--signature);
     }
-    .bite {
-        color: var(--bite);
+    .hit {
+        color: var(--hit);
     }
     .miss {
         color: var(--miss);
@@ -705,8 +705,8 @@
         overflow-wrap: anywhere;
     }
     mark {
-        background: var(--bite-bg);
-        color: var(--bite);
+        background: var(--hit-bg);
+        color: var(--hit);
         border-radius: 3px;
         padding: 0 0.1em;
         font-weight: 600;

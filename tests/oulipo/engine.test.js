@@ -420,23 +420,23 @@ test('violations carry the word, its line and its position', () => {
 
 // ── judge ──────────────────────────────────────────────────────────────
 
-test('judge scores bites and misses and rejects ropes that are not in the story', () => {
+test('judge scores hits and misses and rejects ropes that are not in the story', () => {
     const story = 'Luna luna casa noche puertas niebla mar';
     const draft = 'La luna sobre la casa. La noche cerró sus puertas.';
     const result = judge(story, draft, 'es', null, ['luna', 'casa', 'noche', 'puerta', 'niebla', 'mar']);
     assert.deepEqual(
-        result.ropes.map((rope) => [rope.key, rope.bite, rope.draftCount]),
+        result.ropes.map((rope) => [rope.key, rope.hit, rope.draftCount]),
         [
             ['luna', true, 1], ['casa', true, 1], ['noche', true, 1],
             ['puerta', true, 1], ['niebla', false, 0]
         ]
     );
     assert.deepEqual(result.invalid, ['mar']); // three letters: never a word
-    assert.equal(result.bites, 4);
+    assert.equal(result.hits, 4);
     assert.equal(result.misses, 1);
     assert.equal(result.score, 3);
     assert.deepEqual(result.ropes[3], {
-        key: 'puerta', forms: ['puertas'], bite: true, draftCount: 1, draftForms: ['puertas']
+        key: 'puerta', forms: ['puertas'], hit: true, draftCount: 1, draftForms: ['puertas']
     });
     assert.equal(result.draftTokens, 5);
 });
@@ -452,7 +452,7 @@ test('judge: the muzzle is the share of the draft that is now off-limits', () =>
 test('judge: duplicate ropes count once, junk is ignored', () => {
     const result = judge('luna casa noche', 'La luna.', 'es', null, ['luna', 'luna', 'casa']);
     assert.deepEqual(result.ropes.map((rope) => rope.key), ['luna', 'casa']);
-    assert.equal(result.bites, 1);
+    assert.equal(result.hits, 1);
     assert.equal(result.misses, 1);
     assert.equal(result.score, 0);
     const junk = judge('luna casa', 'La luna.', 'es', null, [null, 7, '', 'luna']);
@@ -464,20 +464,20 @@ test('judge: duplicate ropes count once, junk is ignored', () => {
 test('judge: an empty draft scores nothing and never divides by zero', () => {
     const result = judge('luna casa noche', '', 'es', null, ['luna']);
     assert.equal(result.muzzlePct, 0);
-    assert.equal(result.ropes[0].bite, false);
+    assert.equal(result.ropes[0].hit, false);
     assert.equal(result.draftTokens, 0);
 });
 
-test('judge: a bite can come through a plural, the other gender, or a verb family', () => {
+test('judge: a hit can come through a plural, the other gender, or a verb family', () => {
     sameKey('es', FAMILIES, 'querida', 'querer');
     const story = 'historias pequeñas vengo';
     const draft = 'Una historia pequeña, y ella vino.';
     assert.deepEqual(
-        judge(story, draft, 'es', null, keysOf(story, 'es')).ropes.map((rope) => rope.bite),
+        judge(story, draft, 'es', null, keysOf(story, 'es')).ropes.map((rope) => rope.hit),
         [true, true, false]
     );
     assert.deepEqual(
-        judge(story, draft, 'es', FAMILIES, keysOf(story, 'es', FAMILIES)).ropes.map((rope) => rope.bite),
+        judge(story, draft, 'es', FAMILIES, keysOf(story, 'es', FAMILIES)).ropes.map((rope) => rope.hit),
         [true, true, true]
     );
 });

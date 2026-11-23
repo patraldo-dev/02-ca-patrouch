@@ -281,7 +281,7 @@ export function findViolations(text, bannedKeys, lang, policy) {
 /**
  * Score a locked duel.
  *  - Every rope must be a content word of the player's story.
- *  - A rope is a bite when the hidden draft used the same family.
+ *  - A rope is a hit when the hidden draft used the same family.
  *  - The muzzle is the share of the draft's content tokens now forbidden.
  * `ropeKeys` may repeat; duplicates are scored once.
  * @param {unknown} story
@@ -315,29 +315,29 @@ export function judge(story, draft, lang, policy, ropeKeys) {
         ropes.push({
             key,
             forms: Object.keys(sent?.forms ?? {}),
-            bite: Boolean(hit),
+            hit: Boolean(hit),
             draftCount: hit ? hit.count : 0,
             draftForms: hit ? Object.keys(hit.forms) : []
         });
     }
 
-    let bites = 0;
-    let bittenTokens = 0;
+    let hits = 0;
+    let muzzledTokens = 0;
     for (const rope of ropes) {
-        if (rope.bite) {
-            bites++;
-            bittenTokens += rope.draftCount;
+        if (rope.hit) {
+            hits++;
+            muzzledTokens += rope.draftCount;
         }
     }
-    const misses = ropes.length - bites;
+    const misses = ropes.length - hits;
     return {
         ropes,
         invalid,
-        bites,
+        hits,
         misses,
-        score: bites - misses,
+        score: hits - misses,
         muzzlePct: draftAnalysis.contentTokens
-            ? Math.round((100 * bittenTokens) / draftAnalysis.contentTokens)
+            ? Math.round((100 * muzzledTokens) / draftAnalysis.contentTokens)
             : 0,
         draftTokens: draftAnalysis.contentTokens,
         draftTypes: draftAnalysis.vocabSize,

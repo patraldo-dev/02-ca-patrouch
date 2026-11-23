@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS oulipo_duel_rounds (
   ropes TEXT NOT NULL,
   rope_count INTEGER NOT NULL,
   story_types INTEGER NOT NULL,
-  bites INTEGER NOT NULL,
+  hits INTEGER NOT NULL,
   misses INTEGER NOT NULL,
   score INTEGER NOT NULL,
   muzzle_pct INTEGER NOT NULL,

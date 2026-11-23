@@ -56,7 +56,7 @@ export interface Span {
 export interface Rope {
     key: string;
     forms: string[];
-    bite: boolean;
+    hit: boolean;
     draftCount: number;
     draftForms: string[];
 }
@@ -64,7 +64,7 @@ export interface Rope {
 export interface Verdict {
     ropes: Rope[];
     invalid: string[];
-    bites: number;
+    hits: number;
     misses: number;
     score: number;
     muzzlePct: number;
@@ -131,7 +131,7 @@ export interface RoundView {
     ropes: Rope[];
     ropeCount: number;
     storyTypes: number;
-    bites: number;
+    hits: number;
     misses: number;
     score: number;
     muzzlePct: number;
@@ -146,7 +146,7 @@ export interface BoardRow {
     name: string | null;
     score: number;
     muzzlePct: number;
-    bites: number;
+    hits: number;
     misses: number;
     ropeCount: number;
 }
