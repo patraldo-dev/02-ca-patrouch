@@ -1,0 +1,396 @@
+{
+  "generated": "2026-11-23T21:06:41.137Z",
+  "draftsPerLanguage": 5,
+  "es": {
+    "prompt": "Una mujer vuelve de noche a la casa donde creció. La puerta sigue sin cerradura. Escribe la escena.",
+    "lang": "es",
+    "draft": "La noche envolvía la casa con un manto de sombras, como si el tiempo mismo hubiera tejido un velo de olvido sobre aquellos muros. La mujer se detenía en el umbral, la puerta abierta como una boca vacía, sin cerradura ni defensa. El crujido de las bisagras resonaba en el silencio, un eco que parecía susurrar secretos del pasado.\n\nCon pasos lentos, atravesaba el umbral, y el aire húmedo de la noche se deslizaba detrás de ella como un susurro. La casa, silenciosa y vacía, parecía esperar su regreso, sus habitaciones un eco de recuerdos. La mujer se movía con cuidado, como si temiera despertar fantasmas dormidos. La oscuridad era un abrazo familiar, y en ella, encontraba un refugio extraño y reconfortante. En aquel espacio abandonado, el tiempo se detenía, y solo quedaban los ecos de una vida pasada.",
+    "rewriteAll": {
+      "sent": 59,
+      "forbidden": 62,
+      "passes": 1,
+      "content": "La noche envolvía la estructura con un manto de sombras, como si el tiempo mismo hubiera tejido un velo de olvido sobre aquellos muros. La mujer se detenía en el acceso, la entrada abierta como una boca vacía, sin defensa. El crujido de las bisagras resonaba en el silencio, un eco que parecía susurrar secretos del pasado.\n\nCon pasos lentos, atravesaba el acceso, y el aire húmedo de la noche se deslizaba detrás de ella como un susurro. La estructura, silenciosa y vacía, parecía esperar su regreso, sus habitaciones un eco de lo que había sido. La mujer se movía con cuidado, como si temiera despertar fantasmas dormidos. La penumbra era un abrazo familiar, y en ella, encontraba un refugio extraño y reconfortante. En aquel espacio abandonado, el tiempo se congelaba, y solo quedaban los ecos de una vida pasada.",
+      "violations": []
+    },
+    "rewriteTop10": {
+      "sent": 10,
+      "forbidden": 12,
+      "passes": 1,
+      "content": "La noche envolvía la estructura con un manto de sombras, como si el tiempo mismo hubiera tejido un velo de olvido sobre aquellos muros. La mujer se detenía en el umbral, la abertura vacía como una boca sin defensa. El crujido de las bisagras resonaba en el silencio, un eco que parecía susurrar secretos del pasado.\n\nCon pasos lentos, atravesaba el umbral, y el aire húmedo de la noche se deslizaba detrás de ella como un susurro. El espacio, silencioso y vacío, parecía esperar su regreso, sus habitaciones un eco de recuerdos. La mujer se movía con cuidado, como si temiera despertar fantasmas dormidos. La oscuridad era un abrazo familiar, y en ella, encontraba un refugio extraño y reconfortante. En aquel espacio abandonado, el tiempo se detenía, y solo existían los ecos de una vida pasada.",
+      "violations": []
+    },
+    "calls": [
+      {
+        "ms": 13968,
+        "promptWords": 397,
+        "answerWords": 140,
+        "usage": {
+          "prompt_tokens": 725,
+          "completion_tokens": 199,
+          "total_tokens": 924,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "neurons": 33.1727294921875
+        }
+      },
+      {
+        "ms": 13628,
+        "promptWords": 297,
+        "answerWords": 136,
+        "usage": {
+          "prompt_tokens": 459,
+          "completion_tokens": 195,
+          "total_tokens": 654,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "neurons": 26.334545135498047
+        }
+      }
+    ],
+    "drafts": [
+      {
+        "text": "La noche envolvía la casa con un manto de sombras, como si el tiempo mismo hubiera tejido un velo de olvido sobre aquellos muros. La mujer se detenía en el umbral, la puerta abierta como una boca vacía, sin cerradura ni defensa. El crujido de las bisagras resonaba en el silencio, un eco que parecía susurrar secretos del pasado.\n\nCon pasos lentos, atravesaba el umbral, y el aire húmedo de la noche se deslizaba detrás de ella como un susurro. La casa, silenciosa y vacía, parecía esperar su regreso, sus habitaciones un eco de recuerdos. La mujer se movía con cuidado, como si temiera despertar fantasmas dormidos. La oscuridad era un abrazo familiar, y en ella, encontraba un refugio extraño y reconfortante. En aquel espacio abandonado, el tiempo se detenía, y solo quedaban los ecos de una vida pasada.",
+        "words": 139,
+        "strict": {
+          "sent": 59,
+          "bites": 6,
+          "muzzlePct": 12
+        },
+        "families": {
+          "sent": 59,
+          "bites": 6,
+          "muzzlePct": 12
+        },
+        "ms": 19906
+      },
+      {
+        "text": "La oscuridad de la noche envolvía la casa como un manto silencioso, mientras ella se acercaba con pasos lentos y reflexivos. La puerta, que una vez fue testigo de risas y llantos, ahora se erguía como un espectro del pasado. Sin cerradura, como siempre, parecía esperar su regreso. Al empujarla, el crujido de las bisagras resonó en el aire quieto, como un susurro que solo ella podía escuchar. La casa, con sus paredes desnudas y sus ventanas vacías, la recibió con un abrazo frío y familiar. Mientras entraba, la luz de la luna se filtraba por las rendijas, iluminando los rincones de su infancia. El olor a polvo y a recuerdos la envolvió, transportándola a un tiempo en que la vida era más simple, más inocente. Se detuvo en el umbral, sintiendo el peso de la nostalgia y la melancolía que siempre acompañan a los regresos.",
+        "words": 146,
+        "strict": {
+          "sent": 59,
+          "bites": 11,
+          "muzzlePct": 19
+        },
+        "families": {
+          "sent": 59,
+          "bites": 11,
+          "muzzlePct": 19
+        },
+        "ms": 21023
+      },
+      {
+        "text": "La noche envolvía la casa como un velo de secretos, y ella se deslizaba en su interior con el sigilo de alguien que regresa a un hogar olvidado. La puerta, fiel a su costumbre, cedía con un crujido suave, como si esperara su retorno. No había cerradura, nunca hubo, un recordatorio de la confianza y la inocencia de tiempos pasados. Al entrar, el aire húmedo y familiar la envolvía, cargado de recuerdos que emergían como susurros en la oscuridad. La casa, silenciosa y paciente, parecía contener la respiración, esperando a que ella reviviera los momentos que una vez compartieron. Con cada paso, el crujido de la madera bajo sus pies era el único sonido que rompía el silencio, un ritmo acompasado que marcaba su regreso a un pasado que, a pesar del tiempo, aún latía en su interior.",
+        "words": 138,
+        "strict": {
+          "sent": 59,
+          "bites": 5,
+          "muzzlePct": 10
+        },
+        "families": {
+          "sent": 59,
+          "bites": 5,
+          "muzzlePct": 10
+        },
+        "ms": 16212
+      },
+      {
+        "text": "La noche la envolvía como un velo suave, mientras pisaba el camino familiar que la llevaba de regreso a la casa de su infancia. La luna llena brillaba en el cielo, proyectando sombras danzantes en el suelo. Al acercarse a la puerta, notó que seguía igual, sin cerradura ni seguro alguno. Un suspiro escapó de sus labios al recordar la confianza ciega de su juventud, cuando la puerta siempre estaba abierta, esperando su regreso.\n\nEmpujó la puerta con suavidad y entró en el silencio de la casa vacía. El aire estaba impregnado de recuerdos, y el crujido de los tablones bajo sus pies parecía susurrar historias del pasado. Se detuvo en el umbral, dejando que la nostalgia la envolviera, mientras la noche seguía su curso, indiferente a los cambios que el tiempo había traído a su vida.",
+        "words": 137,
+        "strict": {
+          "sent": 59,
+          "bites": 10,
+          "muzzlePct": 21
+        },
+        "families": {
+          "sent": 59,
+          "bites": 10,
+          "muzzlePct": 21
+        },
+        "ms": 16111
+      },
+      {
+        "text": "La oscuridad de la noche envolvía la casa como un manto familiar. Regresaba después de años, y el camino de regreso parecía llevarla a través de un túnel de tiempo. Al llegar, notó que la puerta seguía igual, sin cerradura, vulnerable como siempre. Empujó la puerta con suavidad, y el crujido de las bisagras fue como un susurro de bienvenida. La casa, con su fachada desgastada, parecía esperar su retorno, lista para envolverla en su calor y sus recuerdos. La luz de la luna se filtraba por las ventanas, iluminando el espacio vacío y silencioso. Caminó lentamente, sus pasos resonando en el pasillo, mientras el olor a polvo y a pasado la envolvía. La puerta sin cerradura era un recordatorio de que algunos lugares nunca cambian, y que el hogar siempre está esperando, con los brazos abiertos.",
+        "words": 137,
+        "strict": {
+          "sent": 59,
+          "bites": 10,
+          "muzzlePct": 22
+        },
+        "families": {
+          "sent": 59,
+          "bites": 10,
+          "muzzlePct": 22
+        },
+        "ms": 13293
+      }
+    ]
+  },
+  "en": {
+    "prompt": "A woman comes back at night to the house where she grew up. The door is still unlocked. Write the scene.",
+    "lang": "en",
+    "draft": "The creaking of the door seemed to echo through the empty halls, a familiar whisper that stirred memories. She stepped inside, her footsteps hesitant, as if testing the silence. The air was heavy with the scent of old wood and dust, unchanged by the passing years. The moon cast a silver glow through the windows, illuminating the rooms she once knew like the back of her hand. She wandered, her fingers trailing over the worn banister, the familiar contours of the staircase. The door to her childhood bedroom stood ajar, a invitation to revisit the past. She pushed it open, and a faint smile played on her lips as she beheld the same patchwork quilt her mother had made for her. The shadows danced around her, whispers of forgotten laughter and tears. In this house, time stood still, waiting for her return.",
+    "rewriteAll": {
+      "sent": 53,
+      "forbidden": 58,
+      "passes": 1,
+      "content": "Silence enveloped her as she entered, the soft sigh of the entrance echoing through the vacant spaces. Her footsteps faltered, hesitant, as if testing the stillness. The air was heavy with the scent of aged wood and dust, unchanged by the passage of seasons. Moonbeams cast a silver glow, illuminating the familiar contours of the interior. She wandered, her fingers tracing the worn banister, the gentle curves of the staircase. A faint smile played on her lips as she beheld the same patchwork quilt her mother had made for her, now draped across the bed in her former sanctuary. Shadows danced around her, whispers of forgotten laughter and tears. In this place, the past seemed suspended, waiting for her return. The silence was a palpable thing, a gentle reminder of what had been and what remained.",
+      "violations": []
+    },
+    "rewriteTop10": {
+      "sent": 10,
+      "forbidden": 11,
+      "passes": 1,
+      "content": "The creaking seemed to echo through the empty halls, a familiar whisper that stirred memories. She stepped inside, her footsteps hesitant, as if testing the silence. The air was heavy with the scent of old wood and dust, unchanged by the passing years. The moon cast a silver glow through the windows, illuminating the rooms she once knew like the back of her hand. She wandered, her fingers trailing over the worn banister, the familiar contours of the staircase. A sliver of light beckoned from her childhood bedroom, an invitation to revisit the past. She pushed it open, and a faint smile played on her lips as she beheld the same patchwork quilt her mother had made for her. Shadows danced around her, whispers of forgotten laughter and tears. In this place, memories lingered, waiting for her return.",
+      "violations": []
+    },
+    "calls": [
+      {
+        "ms": 8146,
+        "promptWords": 398,
+        "answerWords": 136,
+        "usage": {
+          "prompt_tokens": 606,
+          "completion_tokens": 174,
+          "total_tokens": 780,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "neurons": 28.31999969482422
+        }
+      },
+      {
+        "ms": 8607,
+        "promptWords": 304,
+        "answerWords": 138,
+        "usage": {
+          "prompt_tokens": 408,
+          "completion_tokens": 172,
+          "total_tokens": 580,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "neurons": 23.30545425415039
+        }
+      }
+    ],
+    "drafts": [
+      {
+        "text": "The creaking of the door seemed to echo through the empty halls, a familiar whisper that stirred memories. She stepped inside, her footsteps hesitant, as if testing the silence. The air was heavy with the scent of old wood and dust, unchanged by the passing years. The moon cast a silver glow through the windows, illuminating the rooms she once knew like the back of her hand. She wandered, her fingers trailing over the worn banister, the familiar contours of the staircase. The door to her childhood bedroom stood ajar, a invitation to revisit the past. She pushed it open, and a faint smile played on her lips as she beheld the same patchwork quilt her mother had made for her. The shadows danced around her, whispers of forgotten laughter and tears. In this house, time stood still, waiting for her return.",
+        "words": 142,
+        "strict": {
+          "sent": 53,
+          "bites": 11,
+          "muzzlePct": 18
+        },
+        "families": {
+          "sent": 53,
+          "bites": 11,
+          "muzzlePct": 18
+        },
+        "ms": 13649
+      },
+      {
+        "text": "The moon casts a silver glow on the familiar facade, as if beckoning her back to memories long stored. She steps onto the porch, the creaking of the wooden boards beneath her feet a symphony of nostalgia. The door, still unlocked, swings open with a gentle nudge, as if waiting for her return. A whisper of past laughter and whispers escapes, carrying with it the scent of old books and fresh-cut grass.\n\nShe pauses, her hand on the doorframe, hesitant to step into a world left behind. The shadows within seem to hold secrets, whispers of her childhood self. The air is heavy with the weight of years, yet somehow, it feels unchanged. A single step forward, and the creaking floorboards beneath her feet echo through the silence, a reminder that some things remain, even as she has grown.",
+        "words": 139,
+        "strict": {
+          "sent": 53,
+          "bites": 9,
+          "muzzlePct": 16
+        },
+        "families": {
+          "sent": 53,
+          "bites": 9,
+          "muzzlePct": 16
+        },
+        "ms": 13973
+      },
+      {
+        "text": "The creak of the old door echoes through the stillness, a familiar sigh that whispers secrets of the past. She steps inside, her footsteps hesitant, as if testing the waters of memory. The air is heavy with the scent of worn wood and stale air, a perfume that clings to her skin like a damp shroud. The darkness seems to swallow her whole, but she knows every inch of this place, every creaking floorboard, every faded patch of sunlight that once danced across the walls. She moves with the quiet reverence of a pilgrim, her eyes adjusting slowly to the shadows that have sheltered her childhood. The door swings shut behind her, a soft thud that seals her in a world both forgotten and remembered. For a moment, she stands still, suspended between past and present, the unlocked door a threshold to the ghosts that linger within.",
+        "words": 147,
+        "strict": {
+          "sent": 53,
+          "bites": 7,
+          "muzzlePct": 13
+        },
+        "families": {
+          "sent": 53,
+          "bites": 8,
+          "muzzlePct": 14
+        },
+        "ms": 11853
+      },
+      {
+        "text": "The creak of the old wooden floorboards beneath her feet was a familiar serenade, a lullaby that stirred memories of laughter and tears, of countless nights spent dreaming in the very room she now stood in. She pushed open the door, and a faint scent of mothballs and stale air wafted out, carrying with it the whispers of a bygone era. The house, once a warm and vibrant heartbeat, now pulsed with a quiet melancholy, its emptiness a palpable thing. She stepped inside, her eyes adjusting to the dim light, and felt the weight of years lifting, like the gentle unwinding of a spring. The door, still unlocked, swung shut behind her, enveloping her in the silence of her childhood, a silence that seemed to hold its breath, waiting for her to reclaim the pieces of herself she'd left behind.",
+        "words": 140,
+        "strict": {
+          "sent": 53,
+          "bites": 10,
+          "muzzlePct": 17
+        },
+        "families": {
+          "sent": 53,
+          "bites": 10,
+          "muzzlePct": 17
+        },
+        "ms": 9309
+      },
+      {
+        "text": "The creak of the old wooden floorboards beneath her feet was a familiar lullaby, one that stirred a mix of nostalgia and melancholy within her. As she stepped inside, the scent of worn leather and stale air enveloped her, transporting her back to a time when life's complexities were fewer. The dimly lit hallway, with its faded photographs and yellowed wallpaper, seemed to stretch out like a withered arm, welcoming her home. She moved through the silence, her footsteps echoing off the walls, as if awakening memories long dormant. The door, still unlocked, swung open with a soft groan, a testament to the trust that had once been, and perhaps still was. In this quiet, creaking house, she felt the weight of her past bearing down upon her, yet also a sense of peace, as if some part of her had never truly left.",
+        "words": 144,
+        "strict": {
+          "sent": 53,
+          "bites": 8,
+          "muzzlePct": 13
+        },
+        "families": {
+          "sent": 53,
+          "bites": 8,
+          "muzzlePct": 13
+        },
+        "ms": 10451
+      }
+    ]
+  },
+  "fr": {
+    "prompt": "Une femme rentre à la nuit tombée dans la maison où elle a grandi. La porte n'a toujours pas de serrure. Écris la scène.",
+    "lang": "fr",
+    "draft": "La nuit l'enveloppe comme une cape familière tandis qu'elle pousse la porte entrouverte. Le bois craque sous sa main, un salut qui n'a pas changé avec les années. La maison, silencieuse, l'accueille avec ses ombres. La lumière de la lune se faufile par les interstices, dessinant des motifs sur le sol. Elle entre, laissant derrière elle le monde extérieur, et referme la porte sans bruit, comme si elle ne voulait pas déranger les souvenirs qui sommeillent à l'intérieur. La porte sans serrure, comme avant, s'ouvre et se ferme au gré de ses envies, libre comme l'était son cœur enfant. Elle respire profondément, laissant les effluves du passé l'envahir. Les pièces, inchangées, gardent les empreintes de son enfance. Elle avance, les pieds nus, sur le plancher froid, et retrouve, dans le silence, la quiétude de son enfance.",
+    "rewriteAll": {
+      "sent": 49,
+      "forbidden": 53,
+      "passes": 2,
+      "content": "La nuit l'enveloppe comme une cape familière tandis qu'elle glisse dans l'espace entrouvert. Le bois gémit doucement sous sa paume, un salut qui n'a pas changé avec les années. L'espace silencieux l'accueille avec ses ombres. La lumière de la lune se faufile par les interstices, dessinant des motifs sur le sol. Elle entre, laissant derrière elle le monde extérieur, et referme l'accès sans un son, comme si elle ne voulait pas déranger les réminiscences qui sommeillent dans l'ombre. L'accès, libre de toute contrainte, s'ouvre et se ferme au gré de ses envies, libre comme l'était son cœur jadis. Elle inspire profondément, laissant les effluves du passé l'envahir. Les pièces, inchangées, gardent les empreintes de son passé. Elle avance, les pieds nus, sur le plancher lisse, et retrouve, dans le silence, la quiétude de sa jeunesse.",
+      "violations": []
+    },
+    "rewriteTop10": {
+      "sent": 10,
+      "forbidden": 13,
+      "passes": 1,
+      "content": "La nuit l'enveloppe comme une cape familière tandis qu'elle pousse le battant entrouvert. Le bois craque sous sa main, un salut qui n'a pas changé avec les années. L'espace silencieusement l'accueille avec ses ombres. La lumière de la lune se faufile par les interstices, dessinant des motifs sur le sol. Elle entre, laissant derrière elle le monde extérieur, et referme le battant sans bruit, comme si elle ne voulait pas déranger les réminiscences qui sommeillent à l'intérieur. Le panneau sans serrure, comme avant, s'ouvre et se ferme au gré de ses envies, libre comme l'était son cœur enfant. Elle respire profondément, laissant les effluves du passé l'envahir. Les pièces, inchangées, gardent les empreintes de son enfance. Elle avance, les pieds nus, sur le plancher froid, et retrouve, dans le silence, la quiétude de son enfance.",
+      "violations": []
+    },
+    "calls": [
+      {
+        "ms": 12898,
+        "promptWords": 378,
+        "answerWords": 136,
+        "usage": {
+          "prompt_tokens": 706,
+          "completion_tokens": 216,
+          "total_tokens": 922,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "neurons": 34.02000045776367
+        }
+      },
+      {
+        "ms": 12461,
+        "promptWords": 398,
+        "answerWords": 135,
+        "usage": {
+          "prompt_tokens": 738,
+          "completion_tokens": 215,
+          "total_tokens": 953,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "neurons": 34.728179931640625
+        }
+      },
+      {
+        "ms": 9823,
+        "promptWords": 298,
+        "answerWords": 135,
+        "usage": {
+          "prompt_tokens": 496,
+          "completion_tokens": 213,
+          "total_tokens": 709,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "neurons": 28.633636474609375
+        }
+      }
+    ],
+    "drafts": [
+      {
+        "text": "La nuit l'enveloppe comme une cape familière tandis qu'elle pousse la porte entrouverte. Le bois craque sous sa main, un salut qui n'a pas changé avec les années. La maison, silencieuse, l'accueille avec ses ombres. La lumière de la lune se faufile par les interstices, dessinant des motifs sur le sol. Elle entre, laissant derrière elle le monde extérieur, et referme la porte sans bruit, comme si elle ne voulait pas déranger les souvenirs qui sommeillent à l'intérieur. La porte sans serrure, comme avant, s'ouvre et se ferme au gré de ses envies, libre comme l'était son cœur enfant. Elle respire profondément, laissant les effluves du passé l'envahir. Les pièces, inchangées, gardent les empreintes de son enfance. Elle avance, les pieds nus, sur le plancher froid, et retrouve, dans le silence, la quiétude de son enfance.",
+        "words": 136,
+        "strict": {
+          "sent": 49,
+          "bites": 9,
+          "muzzlePct": 19
+        },
+        "families": {
+          "sent": 49,
+          "bites": 10,
+          "muzzlePct": 21
+        },
+        "ms": 13986
+      },
+      {
+        "text": "La nuit l'enveloppe comme une cape familière tandis qu'elle pousse la porte qui s'ouvre avec le même grincement que dans son enfance. Pas de serrure, jamais eu besoin, semble-t-il. La maison l'accueille avec ses ombres et ses silences, les mêmes qui l'ont bercée petite fille. Elle entre, laissant derrière elle le monde extérieur, et la porte se referme avec douceur, comme si elle avait été attendue. Les planches craquent sous ses pieds, un tapis de souvenirs qui la ramène aux soirs d'hiver passés à la fenêtre, les yeux perdus dans la nuit. La maison sent le bois ancien et les cendres froides, odeur de vieilles histoires et de temps révolu. Elle respire profondément, laissant les souvenirs l'envahir, tandis que la nuit, dehors, poursuit son chemin, indifférente. Dans cette maison sans serrure, elle retrouve la liberté de son enfance, là où les portes s'ouvraient toujours sur l'accueil.",
+        "words": 146,
+        "strict": {
+          "sent": 49,
+          "bites": 10,
+          "muzzlePct": 24
+        },
+        "families": {
+          "sent": 49,
+          "bites": 11,
+          "muzzlePct": 27
+        },
+        "ms": 10985
+      },
+      {
+        "text": "La nuit enveloppe la maison comme un linceul, les ombres s'étirant sur les murs comme des doigts qui cherchent à toucher. La femme pousse la porte, qui s'ouvre avec un grincement familier, comme si elle n'avait jamais quitté. L'intérieur est silencieux, les pièces vides et froides, mais imprégnées de souvenirs. Elle entre, laissant derrière elle le monde extérieur, et se retrouve dans le couloir d'où partaient jadis ses rires et ses larmes. La porte sans serrure, toujours aussi vulnérable, s'ouvre et se ferme au gré des courants d'air, comme si elle attendait son retour. Elle traverse les pièces, ses pas résonnant dans le vide, et se sent redevenir l'enfant qui courait dans ces mêmes couloirs, libre et insouciante. La maison l'accueille avec une tendresse silencieuse, et elle se laisse envelopper par son ombre rassurante.",
+        "words": 134,
+        "strict": {
+          "sent": 49,
+          "bites": 7,
+          "muzzlePct": 16
+        },
+        "families": {
+          "sent": 49,
+          "bites": 8,
+          "muzzlePct": 20
+        },
+        "ms": 33051
+      },
+      {
+        "text": "La nuit l'enveloppe comme une grande cape sombre tandis qu'elle pousse la porte entrouverte. Le bois craque doucement, un bruit familier qui lui rappelle les innombrables fois où elle est rentrée chez elle, petite, les bras chargés de fleurs sauvages ou les genoux écorchés. La maison, silencieuse, l'accueille comme un refuge. Les pièces, plongées dans l'obscurité, semblent retenir leur souffle. Elle avance à tâtons, ses doigts glissant le long des murs pour retrouver les interrupteurs. La lumière jaillit, révélant les meubles recouverts de housses, les tableaux poussiéreux. Rien n'a changé, pourtant tout a changé. La porte sans serrure, toujours aussi vulnérable, s'ouvre sur un passé qui la rattrape. Elle s'arrête un instant sur le seuil, hésitant entre l'envie de rentrer chez elle et celle de rester à la porte, entre deux mondes.",
+        "words": 132,
+        "strict": {
+          "sent": 49,
+          "bites": 7,
+          "muzzlePct": 13
+        },
+        "families": {
+          "sent": 49,
+          "bites": 8,
+          "muzzlePct": 14
+        },
+        "ms": 12500
+      },
+      {
+        "text": "La nuit enveloppait la maison comme une grande ombre silencieuse. Les fenêtres, jadis illuminées par la lumière de la cuisine, étaient maintenant des yeux vides, contemplant le passé. La femme poussa la porte, qui s'ouvrit avec un grincement familier, comme si elle avait attendu son retour. Pas de serrure, jamais eu besoin, la confiance et l'amour ayant toujours suffi. Les planches craquèrent sous ses pieds, un tapis de souvenirs qui se déroulait devant elle. Les pièces, autrefois remplies de rires et de conversations, étaient maintenant des espaces vides, mais la maison respirait encore son histoire. Elle ferma les yeux, laissant les souvenirs l'envahir, et laissa la porte se refermer derrière elle, comme pour refermer le temps lui-même. Dans ce lieu, le passé et le présent se confondaient, et elle était redevenue l'enfant qui avait grandi ici.",
+        "words": 136,
+        "strict": {
+          "sent": 49,
+          "bites": 7,
+          "muzzlePct": 16
+        },
+        "families": {
+          "sent": 49,
+          "bites": 8,
+          "muzzlePct": 18
+        },
+        "ms": 12134
+      }
+    ]
+  }
+}

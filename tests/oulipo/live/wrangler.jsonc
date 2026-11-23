@@ -1,0 +1,14 @@
+// tests/oulipo/live/wrangler.jsonc — the live sample harness.
+// One binding on purpose: Workers AI. No database, KV, R2 or routes, so the
+// harness can reach nothing but the model. Run locally only (npm run
+// sample:live); this Worker is never deployed.
+{
+	"$schema": "../../../node_modules/wrangler/config-schema.json",
+	"name": "oulipo-duel-live-sample",
+	"main": "worker.js",
+	"compatibility_date": "2025-09-13",
+	"send_metrics": false,
+	"ai": {
+		"binding": "AI"
+	}
+}
