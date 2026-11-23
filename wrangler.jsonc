@@ -24,6 +24,8 @@
 	},
 	// Weekly bridge export: Monday 06:00 — patrouch's top human writings
 	// enter ambientx's operator review queue (Phase 2 content bridge).
+	// This is the only Cloudflare cron. Sappho's weekly piece (Sunday 15:00
+	// UTC) is triggered from outside this repo and is not listed here.
 	"triggers": {
 		"crons": ["0 6 * * 1"]
 	},

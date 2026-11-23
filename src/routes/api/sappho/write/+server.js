@@ -3,9 +3,11 @@
 // POST /api/sappho/write — Sappho answers the day's community prompt.
 // With no body.locale she writes one piece per language (es/en/fr), her
 // historical footprint. Each run is self-sufficient: if a locale has no
-// community prompt yet for today, it is generated first (the weekly cron
-// fires Monday 15:00 UTC — 9 AM Mexico — usually before any English
-// visitor has created one, which silently starved her from June to Oct 2026).
+// community prompt yet for today, it is generated first (the weekly trigger
+// fires Sunday 15:00 UTC — 9 AM Mexico City — usually before any English
+// visitor has created one; it is set outside this repo, not in the
+// wrangler.jsonc cron, and nothing fired from June to Oct 2026, which
+// silently starved her).
 //
 // Oulipo game (cumulative): every word the community has reserved
 // (bq_keyword_proposals, per the writing's language) is FORBIDDEN

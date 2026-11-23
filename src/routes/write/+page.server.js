@@ -13,7 +13,7 @@ export async function load({ locals, url }) {
   if (!locals.user) return { user: null };
 
   const db = locals.db;
-  const ai = locals.env?.AI;
+  const ai = env?.AI;
   const lang = locals.locale || "es";
   const t = getTranslation(lang);
   const locale = ["en", "es", "fr"].includes(lang) ? lang : "es";

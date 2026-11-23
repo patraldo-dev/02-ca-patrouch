@@ -8,7 +8,7 @@ import { env } from 'cloudflare:workers';
 
 export async function GET({ locals, url }) {
   if (!locals.user) return json({ error: "Unauthorized" }, { status: 401 });
-  const ai = locals.env?.AI;
+  const ai = env?.AI;
   if (!ai) return json({ error: "AI not available" }, { status: 503 });
 
   const locale = url.searchParams.get("locale") || "en";
