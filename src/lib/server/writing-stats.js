@@ -3,7 +3,7 @@ import { checkAndUnlockBadges } from './engagement.js';
 
 const DAILY_PASS_LIMIT = 3;
 
-function getToday() {
+export function getToday() {
     // Use CST (America/Mexico_City) date, not UTC
     const now = new Date();
     const cst = new Date(now.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));

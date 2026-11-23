@@ -9,10 +9,16 @@ export const DUEL = Object.freeze({
     /** Hard caps on request size, before anything reaches the model. */
     maxStoryChars: 4000,
     minRopes: 1,
-    /** Generation passes for the rewrite; a pass that still uses a forbidden word is retried. */
+    /** Passes Sappho gets at the rewrite; one pass per request. */
     rewriteAttempts: 4,
-    /** Pieces are short: this bounds the model's output and the stored text. */
-    maxPieceTokens: 1024,
+    /**
+     * Output caps for the model. Her duel pieces run 120–180 words; the
+     * caps leave room for a long piece and stop a runaway one, since every
+     * token generated is seconds the player waits.
+     */
+    maxDraftTokens: 480,
+    maxRewriteTokens: 640,
+    /** The most text ever stored or shown for one of her pieces. */
     maxPieceChars: 8000,
     /** Names listed on the day's board. */
     boardSize: 10

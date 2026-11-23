@@ -16,6 +16,8 @@
         <h1><InkText text={$t('pages.oulipo.title')} step={60} /></h1>
         <p class="oulipo-intro">{$t('pages.oulipo.intro')}</p>
 
+        <a href="/oulipo/duel" class="oulipo-play">→ {$t('pages.oulipo.play_duel')}</a>
+
         <h2>{$t('pages.oulipo.how_title')}</h2>
         <ol class="oulipo-steps">
             <li>{$t('pages.oulipo.how_1')}</li>
@@ -58,7 +60,25 @@
         color: var(--text-dim);
         line-height: 1.75;
         font-size: 1.02rem;
-        margin-bottom: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .oulipo-play {
+        display: block;
+        background: var(--accent);
+        color: var(--bg);
+        border-radius: 999px;
+        padding: 0.85rem 1.5rem;
+        margin-bottom: 2rem;
+        font-weight: 700;
+        font-size: 1.05rem;
+        text-align: center;
+        text-decoration: none;
+        transition: background 0.2s, translate 0.2s;
+    }
+    .oulipo-play:hover {
+        background: var(--accent-hover);
+        translate: 0 -2px;
     }
 
     h2 {

@@ -8,8 +8,8 @@
 //
 // Two sources for the narrator's piece:
 //   - the hand-written "ai" fixture (always available);
-//   - tests/oulipo/live/drafts.json, when `npm run sample:live` has written
-//     real drafts there — those rows are marked "live".
+//   - tests/oulipo/live/drafts.json, which `npm run sample:live` writes from
+//     the real model — those rows are marked "live".
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,11 +73,10 @@ console.log(header.map((cell, i) => (i === 0 ? cell.padEnd(17) : cell.padStart(1
 for (const lang of LANGS) {
     const { human, ai } = FIXTURES[lang];
     console.log(row(`${lang} fixture`, human, ai, lang).join(''));
-    if (live?.[lang]?.draft) {
-        console.log(row(`${lang} live draft`, human, live[lang].draft, lang).join(''));
-    }
-    if (live?.[lang]?.draft) {
-        console.log(row(`${lang} live both`, live[lang].human ?? human, live[lang].draft, lang).join(''));
+    // Real drafts, when a live sample run has left any: one row each, so
+    // the spread between drafts of the same language stays visible.
+    for (const [index, sample] of (live?.[lang]?.drafts ?? []).entries()) {
+        console.log(row(`${lang} live ${index + 1}`, human, sample.text, lang).join(''));
     }
 }
 

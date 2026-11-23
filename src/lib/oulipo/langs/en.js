@@ -112,6 +112,7 @@ const IES_KEEP_E = wordSet('dies lies ties pies vies');
 const Z_KEEP_Z = wordSet('quizzes fezzes whizzes');
 
 /** Plural → singular, or null when no rule applies. */
+/** @param {string} form @returns {string | null} */
 function plural(form) {
     if (NOT_A_PLURAL.has(form)) return null;
     if (/(ss|us|is)$/.test(form)) return null;
@@ -129,6 +130,7 @@ function plural(form) {
     return null;
 }
 
+/** @type {import('../types.js').LangConfig} */
 const config = {
     code: 'en',
     minWordLength: 4,

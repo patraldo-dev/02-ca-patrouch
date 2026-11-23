@@ -207,6 +207,7 @@ acquisses acquît acquissions acquissiez acquissent acquis acquérant
 `;
 
 // Plurals that no rule can derive.
+/** @type {Record<string, string>} */
 const IRREGULAR_PLURAL = {
     // -aux plurals whose singular does not end in -al.
     mentaux: 'mental', sentimentaux: 'sentimental', fondamentaux: 'fondamental',
@@ -220,6 +221,7 @@ const IRREGULAR_PLURAL = {
 const NOT_A_PLURAL = wordSet('fils gens cours');
 
 /** Plural → singular, or null when no rule applies. */
+/** @param {string} form @returns {string | null} */
 function plural(form) {
     const hit = IRREGULAR_PLURAL[form];
     if (hit) return hit;
@@ -259,7 +261,7 @@ const GENDER_PAIRS = pairMap(
 // verbs whose stem would land on a noun: appelle ≠ appel, vente ≠ vent).
 const GENDER_GUARD = wordSet(`
 graine machine médecine colonne chante manière glande suive mousse issue moue
-sue tue due mère appelle rappelle vente étale avale motive
+sue tue due mère père frère appelle rappelle vente étale avale motive
 `);
 
 // [feminine ending, masculine ending]
@@ -291,10 +293,12 @@ const GENDER_RULES = [
     ['ue', 'u'] // venue → venu, connue → connu
 ];
 
+/** @param {string} form @returns {string} */
 function singularOf(form) {
     return IRREGULAR_PLURAL[form] ?? plural(form) ?? form;
 }
 
+/** @param {string} form @returns {string | null} */
 function genderRule(form) {
     if (GENDER_GUARD.has(form)) return null;
     for (const [suffix, to] of GENDER_RULES) {
@@ -303,6 +307,7 @@ function genderRule(form) {
     return null;
 }
 
+/** @param {string} form @returns {string | null} */
 function fold(form) {
     const singular = singularOf(form);
     const pair = GENDER_PAIRS.get(singular);
@@ -312,6 +317,7 @@ function fold(form) {
     return singular === form ? null : singular;
 }
 
+/** @type {import('../types.js').LangConfig} */
 const config = {
     code: 'fr',
     minWordLength: 4,

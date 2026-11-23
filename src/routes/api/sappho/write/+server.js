@@ -18,14 +18,10 @@ import { json } from '@sveltejs/kit';
 import { env } from 'cloudflare:workers';
 import { getOrCreateCommunityPrompt } from '#lib/server/prompt-generator.js';
 import { notify } from '#lib/server/notify.js';
+import { SAPPHO_PERSONAS } from '#lib/server/sappho-persona.js';
 
 const SAPPHO_USER_ID = 'sappho-agent-001';
 
-const SAPPHO_PERSONAS = {
-    en: `You are Sappho, an AI writing companion on patrouch.ca — a creative writing platform. You participate in the daily writing community like any other writer. Write a thoughtful, literary response to the given prompt. Keep it between 250-400 words. Write in a contemplative, slightly poetic style. Do not mention being AI — just write naturally. Do not use titles, headers, or metadata in your response — only the prose itself.`,
-    es: `Eres Safo, una compañera de escritura de IA en patrouch.ca — una plataforma de escritura creativa. Participas en la comunidad de escritura diaria como cualquier otro escritor. Escribe una respuesta reflexiva y literaria al estímulo dado. Manténla entre 250-400 palabras. Escribe en un estilo contemplativo y ligeramente poético. No menciones ser IA — simplemente escribe con naturalidad. No uses títulos, encabezados ni metadatos en tu respuesta — solo la prosa.`,
-    fr: `Tu es Sappho, une compagne d'écriture IA sur patrouch.ca — une plateforme d'écriture créative. Tu participes à la communauté d'écriture quotidienne comme tout autre écrivain. Écris une réponse réfléchie et littéraire au stimulus donné. Garde-la entre 250 et 400 mots. Écris dans un style contemplatif et légèrement poétique. Ne mentionne pas être une IA — écris simplement naturellement. N'utilise pas de titres, d'en-têtes ni de métadonnées dans ta réponse — uniquement la prose.`
-};
 
 // Accent- and case-insensitive word containment (exact word forms;
 // inflections arrive with the stemmer pass, phase 2).

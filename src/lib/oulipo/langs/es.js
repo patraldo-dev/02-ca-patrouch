@@ -198,6 +198,7 @@ jugarais jugaran jugase jugases jugásemos jugaseis jugasen jugado jugando
 `;
 
 /** Plural → singular, or null when no rule applies. */
+/** @param {string} form @returns {string | null} */
 function plural(form) {
     const n = form.length;
     if (n < 4) return null;
@@ -258,7 +259,7 @@ const GENDER_PAIRS = pairMap(
 const GENDER_GUARD = wordSet(`
 oliva cosa música política crítica física pica mosca abaja pecha cacha polla
 caballa cuchilla rodilla mejilla barra hora señora mejora hermana manzana crea
-marea talla porra chorra flora reina grana deseja
+marea talla porra chorra flora reina grana deseja guardiana
 vida hoja fecha tierra guerra sierra garra aurora maría ventana campana lana
 rana semana diana pena cadena arena vena escena antena melena idea línea azotea
 `);
@@ -289,6 +290,7 @@ const GENDER_RULES = [
     ['ea', 'eo'] // fea → feo
 ];
 
+/** @param {string} form @returns {string | null} */
 function genderRule(form) {
     if (GENDER_GUARD.has(form)) return null;
     for (const [suffix, to] of GENDER_RULES) {
@@ -297,8 +299,10 @@ function genderRule(form) {
     return null;
 }
 
+/** @param {string} form @returns {string} */
 const singularOf = (form) => plural(form) ?? form;
 
+/** @param {string} form @returns {string | null} */
 function fold(form) {
     const singular = singularOf(form);
     const pair = GENDER_PAIRS.get(singular);
@@ -308,6 +312,7 @@ function fold(form) {
     return singular === form ? null : singular;
 }
 
+/** @type {import('../types.js').LangConfig} */
 const config = {
     code: 'es',
     minWordLength: 4,
