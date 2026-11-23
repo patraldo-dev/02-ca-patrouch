@@ -14,7 +14,9 @@
     "deploy": "npm run build && wrangler deploy",
     "check-translations": "node cbp_scripts/check-translations.js",
     "check-book-cards": "node cbp_scripts/check-book-cards.js",
-    "replace-colors": "node cbp_scripts/replace-colors.js"
+    "replace-colors": "node cbp_scripts/replace-colors.js",
+    "test": "node --test \"tests/oulipo/*.test.js\"",
+    "test:parity": "node tests/oulipo/parity-harness.js"
   },
   "devDependencies": {
     "@better-auth/cli": "^1.4.21",
