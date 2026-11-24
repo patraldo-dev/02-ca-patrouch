@@ -93,6 +93,47 @@ async function verifyPassword(hash, password) {
 }
 
 /**
+ * A username nobody holds yet, for members who arrive without one (a Google or
+ * GitHub sign-in): the part of the address before the @ when that is free,
+ * otherwise the same with a short suffix. Letters, digits and underscores
+ * only, 3 to 30 characters, as the username plugin requires.
+ * @typedef {{ prepare(query: string): { bind(...args: unknown[]): { first(): Promise<unknown> } } }} UsernameLookup
+ * @param {UsernameLookup} db
+ * @param {string} email
+ */
+async function freeUsername(db, email) {
+  const base =
+    String(email || "")
+      .split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 24) || "member";
+  /** @param {number} length */
+  const suffixed = (length) =>
+    `${base.slice(0, 29 - length)}_${Math.random().toString(36).slice(2, 2 + length)}`;
+  // The library calls this hook without a context on this path, so the
+  // lookup goes to the database binding directly. When the lookup fails, or
+  // every try is taken, a longer suffix makes a collision vanishingly rare:
+  // a suffix costs nothing, a collision fails the whole sign-in.
+  if (!db) return suffixed(6);
+  let candidate = base.length >= 3 ? base : suffixed(3);
+  try {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const held = await db
+        .prepare('SELECT 1 FROM users WHERE "username" = ?')
+        .bind(candidate)
+        .first();
+      if (!held) return candidate;
+      candidate = suffixed(3);
+    }
+  } catch {
+    // fall through to the longer suffix
+  }
+  return suffixed(6);
+}
+
+/**
  * Create a Better Auth instance per-request using D1 binding from env.
  */
 export function createAuth(env) {
@@ -253,16 +294,16 @@ export function createAuth(env) {
               userData.email,
             );
 
+            // A Google or GitHub sign-in brings a display name but no
+            // username. The name is neither unique nor always a valid
+            // username, and users.username is a unique column: a second
+            // member arriving with the same display name collided there and
+            // the whole sign-in failed with "unable_to_create_user".
             if (!userData.username) {
-              userData.username =
-                userData.name ||
-                (() => {
-                  const base = userData.email
-                    .split("@")[0]
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]/g, "_");
-                  return `${base}_${Math.random().toString(36).slice(2, 6)}`;
-                })();
+              userData.username = await freeUsername(
+                env.DB_book,
+                userData.email,
+              );
             }
             return { data: userData };
           },
