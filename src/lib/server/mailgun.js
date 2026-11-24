@@ -31,16 +31,6 @@ export async function sendMailgunEmail(to, subject, html, text, env) {
     return response.json();
 }
 
-export async function sendVerificationEmail(to, verifyUrl, env) {
-    const html = `
-        <h2>Welcome to Patrouch!</h2>
-        <p>Click below to verify your email:</p>
-        <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#a8bdb3;color:#101915;text-decoration:none;border-radius:8px;font-weight:600;">Verify Email</a>
-        <p style="color:#888;font-size:0.85rem;margin-top:1rem;">Or paste: <code>${verifyUrl}</code></p>
-    `;
-    return sendMailgunEmail(to, 'Verify your email — Patrouch', html, `Verify your email: ${verifyUrl}`, env);
-}
-
 export async function sendSundaySparkEmail(to, dualPrompt, locale, env) {
     const content = {
         en: {

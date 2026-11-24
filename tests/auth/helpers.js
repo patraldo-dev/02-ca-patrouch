@@ -11,8 +11,9 @@ const SECRET = 'a-secret-that-is-long-enough-for-the-sign-in-tests';
  * The site's own auth module over an in-memory database that answers like
  * Cloudflare D1. The four tables come from the schema file the site maintains
  * by hand, with the unique constraint production has on users.username.
+ * `extraEnv` adds bindings and variables the site may carry.
  */
-export async function setup() {
+export async function setup(extraEnv = {}) {
     const sqlite = new DatabaseSync(':memory:');
     for (const table of Object.values(authSchema)) {
         const { name, columns } = getTableConfig(table);
@@ -52,6 +53,7 @@ export async function setup() {
 
     const auth = createAuth({
         DB_book: d1,
+        ...extraEnv,
         BETTER_AUTH_SECRET: SECRET,
         PATROUCH_BASE_URL: ORIGIN,
         GOOGLE_CLIENT_ID: 'google-id',
@@ -66,7 +68,7 @@ export async function setup() {
     const usernameOf = async (id) =>
         (await d1.prepare('SELECT "username" FROM users WHERE "id" = ?').bind(id).first())?.username ?? null;
 
-    return { internalAdapter, usernames, usernameOf, d1 };
+    return { auth, internalAdapter, usernames, usernameOf, d1 };
 }
 
 /**
@@ -78,3 +80,18 @@ export const arrives = (internalAdapter, { name, email }, provider = 'google') =
         { name, email: email.toLowerCase(), emailVerified: true },
         { providerId: provider, accountId: `account-of-${email}` }
     );
+
+/**
+ * A sign-up through the real endpoint, the way the sign-up form sends it.
+ * Returns the status and the answer, if any.
+ */
+export const signUp = async (auth, body) => {
+    const response = await auth.handler(
+        new Request(`${ORIGIN}/api/auth/sign-up/email`, {
+            method: 'POST',
+            headers: { origin: ORIGIN, 'content-type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+    );
+    return { status: response.status, json: await response.json().catch(() => null) };
+};

@@ -4,6 +4,11 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { drizzle } from "drizzle-orm/d1";
 import { username } from "better-auth/plugins";
 import { authSchema } from "../db/auth-schema.js";
+import {
+  emailConfigured,
+  sendEmail,
+  verificationMessage,
+} from "./server/email-sender.js";
 
 // PBKDF2 via WebCrypto — doesn't count against CF Workers CPU time
 // Format: pbkdf2:iterations:salt_base64:hash_base64
@@ -163,12 +168,11 @@ export function createAuth(env) {
         verify: ({ hash, password }) => verifyPassword(hash, password),
       },
       sendResetPassword: async ({ user, token, url }, request) => {
-        // Same staging guard as verification: no Mailgun config → skip send.
-        if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN) {
-          console.warn("[sendResetPassword] mailgun not configured — skipping send for", user.email);
+        // No mail service configured (a staging without one): skip the send.
+        if (!emailConfigured(env)) {
+          console.warn("[sendResetPassword] no email service configured — skipping send for", user.email);
           return;
         }
-        const { sendMailgunEmail } = await import("#lib/server/mailgun.js");
         const acceptLang = request?.headers?.get("accept-language") || "";
         const lang = acceptLang.startsWith("fr")
           ? "fr"
@@ -214,17 +218,12 @@ export function createAuth(env) {
             <p style="color:#999;font-size:0.75rem;text-align:center;">${t.footer}</p>
           </div>
         `;
-        await sendMailgunEmail(
-          user.email,
-          t.subject,
+        await sendEmail(env, {
+          to: user.email,
+          subject: t.subject,
           html,
-          `${t.title}: ${resetUrl}`,
-          {
-            MAILGUN_API_KEY: env.MAILGUN_API_KEY,
-            MAILGUN_DOMAIN: env.MAILGUN_DOMAIN,
-            MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL,
-          },
-        );
+          text: `${t.title}: ${resetUrl}`,
+        });
       },
       onPasswordReset: async () => {
         return new Response(null, {
@@ -237,24 +236,30 @@ export function createAuth(env) {
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, url }) => {
-        console.log("[sendVerificationEmail] called for:", user.email);
-        // Staging has no Mailgun key — a missing config must never fail
-        // the signup itself; skip the send and log (prod sends normally).
-        if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN) {
-          console.warn("[sendVerificationEmail] mailgun not configured — skipping send for", user.email);
+        // No mail service configured: a missing setup must never fail the
+        // signup itself; skip the send and log.
+        if (!emailConfigured(env)) {
+          console.warn("[sendVerificationEmail] no email service configured — skipping send for", user.email);
           return;
         }
-        const { sendVerificationEmail } =
-          await import("#lib/server/mailgun.js");
         const verifyUrl = url.replace(
           /callbackURL=[^&]*/,
           "callbackURL=%2Fwrite",
         );
-        await sendVerificationEmail(user.email, verifyUrl, {
-          MAILGUN_API_KEY: env.MAILGUN_API_KEY,
-          MAILGUN_DOMAIN: env.MAILGUN_DOMAIN,
-          MAILGUN_FROM_EMAIL: env.MAILGUN_FROM_EMAIL,
-        });
+        // Nor may a refused or failed send: the member keeps the account and
+        // can ask for the link again. Cloudflare refuses an address that is
+        // not verified on the account until the account is on Workers Paid.
+        try {
+          await sendEmail(env, { to: user.email, ...verificationMessage(verifyUrl) });
+        } catch (error) {
+          /** @type {{ code?: string, message?: string } | null} */
+          const refused = /** @type {any} */ (error);
+          console.error(
+            "[sendVerificationEmail] not sent:",
+            refused?.code ?? refused,
+            refused?.message ?? "",
+          );
+        }
       },
     },
     socialProviders: {

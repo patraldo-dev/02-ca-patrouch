@@ -15,7 +15,7 @@
     "check-translations": "node cbp_scripts/check-translations.js",
     "check-book-cards": "node cbp_scripts/check-book-cards.js",
     "replace-colors": "node cbp_scripts/replace-colors.js",
-    "test": "node --disable-warning=ExperimentalWarning --test \"tests/oulipo/*.test.js\" \"tests/auth/*.test.js\"",
+    "test": "node --disable-warning=ExperimentalWarning --test \"tests/oulipo/*.test.js\" \"tests/auth/*.test.js\" \"tests/email/*.test.js\"",
     "test:parity": "node tests/oulipo/parity-harness.js",
     "sample:live": "node tests/oulipo/live/run.mjs"
   },

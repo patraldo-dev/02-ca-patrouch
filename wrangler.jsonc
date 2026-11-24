@@ -148,6 +148,12 @@
 				"MAILGUN_DOMAIN": "patrouch.ca",
 				"CONTACT_EMAIL": "contact@patrouch.ca",
 				"MAILGUN_FROM_EMAIL": "noreply@patrouch.ca",
+				// Sign-up mail from Cloudflare's Email Sending (the binding
+				// above), sent from the game's own domain. Cloudflare refuses an
+				// address that is not verified on the account until the account
+				// is on Workers Paid; the sign-up itself never fails on that.
+				"EMAIL_BACKEND": "cloudflare",
+				"EMAIL_FROM": "Patrouch (staging) <staging@oulipo.party>",
 				// wrangler environments replace top-level vars wholesale — the
 				// OAuth client IDs must be repeated here or social sign-in
 				// breaks on staging. Staging uses the explicit _STAGING_
@@ -169,6 +175,9 @@
 			],
 			"images": { "binding": "IMAGES" },
 			"ai": { "binding": "AI" },
+			// Staging has no Mailgun key, so its sign-up mail used to be
+			// skipped. It now goes through Cloudflare's Email Sending.
+			"send_email": [{ "name": "EMAIL" }],
 			"vectorize": [
 				{ "binding": "VECTORIZE", "index_name": "patrouch-writings" }
 			],
