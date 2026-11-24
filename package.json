@@ -20,7 +20,6 @@
     "sample:live": "node tests/oulipo/live/run.mjs"
   },
   "devDependencies": {
-    "@better-auth/cli": "^1.4.21",
     "@cloudflare/workers-types": "^4.20260423.1",
     "@gltf-transform/core": "^4.4.1",
     "@gltf-transform/functions": "^4.4.1",
