@@ -30,6 +30,17 @@ export async function handle({ event, resolve }) {
     ? localeCookie
     : "es";
 
+  // /oulipo/duel — the solitaire duel has a site of its own now, oulipo.party.
+  // Anyone on an old link is sent there, in the language they were reading.
+  // Kept for good, for bookmarks and links elsewhere. It is answered here
+  // because the framework's own redirect refuses an address outside the site.
+  if (event.url.pathname.replace(/\/+$/, "") === "/oulipo/duel") {
+    return new Response(null, {
+      status: 302,
+      headers: { location: `https://oulipo.party/?lang=${event.locals.locale}` },
+    });
+  }
+
   // Better Auth — intercept /api/auth/* first
   const auth = createAuth(env);
   event.locals.auth = auth;

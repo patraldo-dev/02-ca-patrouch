@@ -5,6 +5,8 @@
 <script>
     import { t } from '#lib/i18n/index.js';
     import InkText from '#lib/components/InkText.svelte';
+
+    let { data } = $props();
 </script>
 
 <svelte:head>
@@ -16,7 +18,8 @@
         <h1><InkText text={$t('pages.oulipo.title')} step={60} /></h1>
         <p class="oulipo-intro">{$t('pages.oulipo.intro')}</p>
 
-        <a href="/oulipo/duel" class="oulipo-play">→ {$t('pages.oulipo.play_duel')}</a>
+        <!-- The duel has a site of its own now. It opens in the language being read. -->
+        <a href="https://oulipo.party/?lang={data.locale}" class="oulipo-play">→ {$t('pages.oulipo.play_duel')}</a>
 
         <h2>{$t('pages.oulipo.how_title')}</h2>
         <ol class="oulipo-steps">
