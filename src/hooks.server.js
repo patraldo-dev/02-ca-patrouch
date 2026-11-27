@@ -30,14 +30,15 @@ export async function handle({ event, resolve }) {
     ? localeCookie
     : "es";
 
-  // /oulipo/duel — the solitaire duel has a site of its own now, oulipo.party.
+  // /oulipo/duel — the solitaire duel has a site of its own now, oulipo.party,
+  // where it lives at /duel beside the Siege (/ is the landing page).
   // Anyone on an old link is sent there, in the language they were reading.
   // Kept for good, for bookmarks and links elsewhere. It is answered here
   // because the framework's own redirect refuses an address outside the site.
   if (event.url.pathname.replace(/\/+$/, "") === "/oulipo/duel") {
     return new Response(null, {
       status: 302,
-      headers: { location: `https://oulipo.party/?lang=${event.locals.locale}` },
+      headers: { location: `https://oulipo.party/duel?lang=${event.locals.locale}` },
     });
   }
 

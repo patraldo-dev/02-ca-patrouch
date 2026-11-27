@@ -19,7 +19,7 @@
         <p class="oulipo-intro">{$t('pages.oulipo.intro')}</p>
 
         <!-- The duel has a site of its own now. It opens in the language being read. -->
-        <a href="https://oulipo.party/?lang={data.locale}" class="oulipo-play">→ {$t('pages.oulipo.play_duel')}</a>
+        <a href="https://oulipo.party/duel?lang={data.locale}" class="oulipo-play">→ {$t('pages.oulipo.play_duel')}</a>
 
         <h2>{$t('pages.oulipo.how_title')}</h2>
         <ol class="oulipo-steps">
