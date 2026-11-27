@@ -52,4 +52,15 @@ export const verification = sqliteTable('verification', {
   updatedAt: integer('updatedAt', { mode: 'timestamp' }),
 });
 
-export const authSchema = { user, session, account, verification };
+// Where the sign-in library keeps its count of attempts, one row per address
+// and path. Written from the library's own definition of the table, for
+// rateLimit.storage "database" (migrations/026-rate-limit.sql). The time of
+// the last request is a plain number of milliseconds: the library writes it as one.
+export const rateLimit = sqliteTable('rate_limit', {
+  id: text('id').primaryKey(),
+  key: text('key').notNull().unique(),
+  count: integer('count').notNull(),
+  lastRequest: integer('lastRequest').notNull(),
+});
+
+export const authSchema = { user, session, account, verification, rateLimit };

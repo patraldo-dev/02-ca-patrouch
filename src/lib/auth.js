@@ -150,6 +150,15 @@ export function createAuth(env) {
     // trustedOrigins must match the host actually serving them); prod
     // stays pinned to the canonical domain.
     baseURL: env.PATROUCH_BASE_URL || "https://patrouch.ca",
+    rateLimit: {
+      // The library keeps its count in memory unless told otherwise, and
+      // switches itself on only when it believes it runs in production. An
+      // instance here lives for one request, so memory starts empty every
+      // time, and nothing tells a Worker what it runs as: the limits would
+      // never hold. In the database they hold for the whole site.
+      enabled: true,
+      storage: "database",
+    },
     advanced: {
       ipAddress: {
         ipAddressHeaders: ["cf-connecting-ip"],

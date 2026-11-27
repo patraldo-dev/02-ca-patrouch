@@ -4,12 +4,12 @@ import { getTableConfig } from 'drizzle-orm/sqlite-core';
 import { createAuth } from '../../src/lib/auth.js';
 import { authSchema } from '../../src/db/auth-schema.js';
 
-const ORIGIN = 'http://localhost:3000';
+export const ORIGIN = 'http://localhost:3000';
 const SECRET = 'a-secret-that-is-long-enough-for-the-sign-in-tests';
 
 /**
  * The site's own auth module over an in-memory database that answers like
- * Cloudflare D1. The four tables come from the schema file the site maintains
+ * Cloudflare D1. The tables come from the schema file the site maintains
  * by hand, with the unique constraint production has on users.username.
  * `extraEnv` adds bindings and variables the site may carry.
  */
@@ -24,6 +24,7 @@ export async function setup(extraEnv = {}) {
         sqlite.exec(`CREATE TABLE "${name}" (${definitions.join(', ')})`);
     }
     sqlite.exec('CREATE UNIQUE INDEX users_username_unique ON users ("username")');
+    sqlite.exec('CREATE UNIQUE INDEX rate_limit_key_unique ON rate_limit ("key")');
 
     // The library asks for the rows of an insert-with-returning as plain arrays.
     const d1 = {
